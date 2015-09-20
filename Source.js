@@ -1,39 +1,51 @@
 "use strict"
 class Source {
   constructor(string) {
-    this.text = string
-    this._currentCharIndex = 0
     this.EON = '\n'
     this.EOF = String.fromCharCode(0)
+
+    this.lines = string.split(/\n|\r/g)
+    this.lineAmount = lines.length
+
+    this.currentLine = lines[0]
+
+    this._currentCharIndex = 0
+    this._currentLineIndex = 0
   }
 
   currentChar() {
-    if (this._currentCharIndex === -1) {
+    if (this._currentCharIndex === -1)
       return this.EOF
-    }
-    else {
-      return this.text[this._currentCharIndex]
-    }
+    else
+      return this.currentLine[this._currentCharIndex]
   }
 
   nextChar() {
-    if (this._currentCharIndex + 1 < this.text.length) {
+
+    if (this._currentCharIndex + 1 < this.currentLine.length)
       ++this._currentCharIndex
-      return this.currentChar()
-    }
-    else {
-      this._currentCharIndex = -1
-      return this.currentChar()
-    }
+    else
+      if (this._currentLineIndex + 1 < this.lineAmount)
+        this.advanceLine()
+      else
+        this._currentCharIndex = -1
+
+    return this.currentChar()
   }
 
   peekChar() {
-    if (this._currentCharIndex + 1 < this.text.length) {
-      return this.text[this._currentCharIndex + 1]
+    if (this._currentCharIndex + 1 < this.currentLine.length) {
+      return this.currentLine[this._currentCharIndex + 1]
     }
     else {
     }
-      return this.EOF
+      return this.EON
+  }
+
+  advanceLine() {
+    ++this._currentLineIndex
+    this.currentLine = this.lines[this._currentLineIndex]
+    this._currentCharIndex = 0
   }
 }
 
