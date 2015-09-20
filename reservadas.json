@@ -1,0 +1,26 @@
+{
+  "lista":[
+    "variables"         ,
+    "inicio"            ,
+    "fin"               ,
+    "si"                ,
+    "entonces"          ,
+    "sino"              ,
+    "finsi"             ,
+    "para"              ,
+    "hasta"             ,
+    "finpara"           ,
+    "mientras"          ,
+    "finmientras"       ,
+    "repetir"           ,
+    "hastaque"          ,
+    "funcion"           ,
+    "finfuncion"        ,
+    "procedimiento"     ,
+    "finprocedimiento"  ,
+    "entero"            ,
+    "real"              ,
+    "logico"            ,
+    "caracter"
+  ]
+}
