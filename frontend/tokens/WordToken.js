@@ -24,7 +24,7 @@ var list = [
   'caracter'
 ]
 
-var reserved = new Set(lista)
+var reserved = new Set(list)
 
 function isDigit(string) {
   return /\d/.test(string)
@@ -62,3 +62,5 @@ class WordToken {
       this.kind = this.text.toLowerCase()
   }
 }
+
+module.exports = WordToken
