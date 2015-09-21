@@ -31,7 +31,7 @@ describe('Source:', () => {
 
 describe('WordToken', () => {
   let WordToken = require('../frontend/tokens/WordToken.js')
-  it('funciona correctamente', () => {
+  it('lee un nombre de variable', () => {
     let source = new Source('palabra123')
 
     let token = new WordToken(source)
@@ -39,14 +39,19 @@ describe('WordToken', () => {
     token.kind.should.equal('word')
     token.text.should.equal('palabra123')
 
-    source = new Source('variables')
-    token = new WordToken(source)
+  })
+
+  it('lee un nombre reservado', () => {
+    let source = new Source('variables')
+    let token = new WordToken(source)
 
     token.kind.should.equal('variables')
     token.text.should.equal('variables')
+  })
 
-    source = new Source('nombre24 chau')
-    token = new WordToken(source)
+  it('se detiene al encontrar un caracter que no sea numero o letra', () => {
+    let source = new Source('nombre24 chau')
+    let token = new WordToken(source)
 
     token.kind.should.equal('word')
     token.text.should.equal('nombre24')
