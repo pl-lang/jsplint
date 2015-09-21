@@ -78,5 +78,9 @@ describe('NumberToken', () => {
     token.text.should.equal('3.1487')
     token.value.should.equal(3.1487)
   })
+})
 
+describe('StringToken', () => {
+  // require StringToken
+  it('lee una cadena')
 })
