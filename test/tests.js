@@ -1,7 +1,7 @@
 "use strict"
 var should = require('should');
 var fs = require('fs');
-var Source = require('../Source.js')
+var Source = require('../frontend/Source.js')
 
 describe("Source:", () => {
   it("works properly", () => {
