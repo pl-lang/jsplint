@@ -52,3 +52,26 @@ describe('WordToken', () => {
     token.text.should.equal('nombre24')
   })
 })
+
+describe('NumberToken', () => {
+  let NumberToken = require('../frontend/tokens/NumberToken.js')
+  it('lee un entero', () => {
+    let source = new Source('22')
+
+    let token = new NumberToken(source)
+
+    token.kind.should.equal('integer')
+    token.text.should.equal('22')
+    token.value.should.equal(22)
+  })
+
+  it('lee un real', () => {
+    let  source = new Source('3.1487')
+    let  token = new NumberToken(source)
+
+    token.kind.should.equal('float')
+    token.text.should.equal('3.1487')
+    token.value.should.equal(3.1487)
+  })
+
+})
