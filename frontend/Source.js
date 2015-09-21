@@ -24,11 +24,14 @@ class Source {
     if (this._currentCharIndex !== -1)
       if (this._currentCharIndex + 1 < this.currentLine.length)
         ++this._currentCharIndex
-      else
+      else if (this._currentCharIndex + 1 === this.currentLine.length) {
         if (this._currentLineIndex + 1 < this.lineAmount)
           this.advanceLine()
         else
           this._currentCharIndex = -1
+
+        return '\n'
+      }
 
     return this.currentChar()
   }
