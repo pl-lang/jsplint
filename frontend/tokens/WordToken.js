@@ -41,7 +41,7 @@ class WordToken {
     //sumo 1 xq en la interfaz la primer columna del primer renglon
     // es 1:1 (en lugar de 0:0)
     this.lineNumber = source._currentLineIndex + 1
-    this.startIndex = source._currentCharIndex + 1
+    this.columnNumber = source._currentCharIndex + 1
     this.extract(source)
   }
 
