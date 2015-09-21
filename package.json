@@ -1,0 +1,15 @@
+{
+  "name": "interprete-pl",
+  "version": "1.0.0",
+  "description": "interprete",
+  "main": "main.js",
+  "scripts": {
+    "test": "mocha -w"
+  },
+  "author": "Rodrigo Maximiliano Bellusci",
+  "license": "MIT",
+  "devDependencies": {
+    "mocha": "^2.3.2",
+    "should": "^7.1.0"
+  }
+}
