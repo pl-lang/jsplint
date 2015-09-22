@@ -6,9 +6,10 @@ let list = [
   '/'   ,
   '*'   ,
   '^'   ,
+  '='   ,
   '<-'  ,
   '<='  ,
-  '<>'
+  '<>'  ,
   '<'   ,
   '>'   ,
   '>='  ,
@@ -64,8 +65,7 @@ class SpecialSymbolToken {
               this.text += source.nextChar()
               break
             default:
-              this.kind = 'less-than'
-              this.text += source.nextChar()
+              this.kind = 'minor-than'
               break
           }
         }
@@ -73,11 +73,16 @@ class SpecialSymbolToken {
       case '>':
         {
           let peek = source.peekChar()
-          if (peek === '=')
+          if (peek === '=') {
             this.kind = 'major-equal'
+            this.text += source.nextChar()
+          }
           else
             this.kind = 'major-than'
         }
+        break
+      case '=':
+        this.kind = 'equal'
         break
       case '(':
         this.kind = 'left-par'
@@ -103,3 +108,5 @@ class SpecialSymbolToken {
     source.nextChar()
   }
 }
+
+module.exports = SpecialSymbolToken

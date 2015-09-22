@@ -103,3 +103,103 @@ describe('StringToken', () => {
     token.message.should.equal('No esperaba \\n')
   })
 })
+
+describe('SpecialSymbolToken', () => {
+  let SpecialSymbolToken = require('../frontend/tokens/SpecialSymbolToken.js')
+  it('lee operadores aritmeticos', () => {
+    let source = new Source('+')
+    let token = new SpecialSymbolToken(source)
+
+    token.kind.should.equal('plus')
+    token.text.should.equal('+')
+
+    source = new Source('-')
+    token = new SpecialSymbolToken(source)
+
+    token.kind.should.equal('minus')
+    token.text.should.equal('-')
+
+    source = new Source('*')
+    token = new SpecialSymbolToken(source)
+
+    token.kind.should.equal('times')
+    token.text.should.equal('*')
+
+    source = new Source('/')
+    token = new SpecialSymbolToken(source)
+
+    token.kind.should.equal('divide')
+    token.text.should.equal('/')
+
+    source = new Source('^')
+    token = new SpecialSymbolToken(source)
+
+    token.kind.should.equal('power')
+    token.text.should.equal('^')
+
+  })
+
+  it('lee operadores relacionales', () => {
+    let source = new Source('<')
+    let token = new SpecialSymbolToken(source)
+    token.kind.should.equal('minor-than')
+    token.text.should.equal('<')
+
+    source = new Source('=')
+    token = new SpecialSymbolToken(source)
+    token.kind.should.equal('equal')
+    token.text.should.equal('=')
+
+    source = new Source('<=')
+    token = new SpecialSymbolToken(source)
+    token.kind.should.equal('minor-equal')
+    token.text.should.equal('<=')
+
+    source = new Source('<>')
+    token = new SpecialSymbolToken(source)
+    token.kind.should.equal('diff-than')
+    token.text.should.equal('<>')
+
+    source = new Source('>')
+    token = new SpecialSymbolToken(source)
+    token.kind.should.equal('major-than')
+    token.text.should.equal('>')
+
+    source = new Source('>=')
+    token = new SpecialSymbolToken(source)
+    token.kind.should.equal('major-equal')
+    token.text.should.equal('>=')
+  })
+
+  it('lee otros simbolos', () => {
+    let source = new Source('(')
+    let token = new SpecialSymbolToken(source)
+    token.kind.should.equal('left-par')
+    token.text.should.equal('(')
+
+    source = new Source(')')
+    token = new SpecialSymbolToken(source)
+    token.kind.should.equal('right-par')
+    token.text.should.equal(')')
+
+    source = new Source('[')
+    token = new SpecialSymbolToken(source)
+    token.kind.should.equal('left-bracket')
+    token.text.should.equal('[')
+
+    source = new Source(']')
+    token = new SpecialSymbolToken(source)
+    token.kind.should.equal('right-bracket')
+    token.text.should.equal(']')
+
+    source = new Source(',')
+    token = new SpecialSymbolToken(source)
+    token.kind.should.equal('comma')
+    token.text.should.equal(',')
+
+    source = new Source('<-')
+    token = new SpecialSymbolToken(source)
+    token.kind.should.equal('assignment')
+    token.text.should.equal('<-')
+  })
+})
