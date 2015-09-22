@@ -15,12 +15,12 @@ describe('Source:', () => {
     source.nextChar().should.equal('\n')
 
 
-    source.currentChar().should.equal('2')
+    source.nextChar().should.equal('2')
     source._currentLineIndex.should.equal(1)
     source._currentCharIndex.should.equal(0)
     source.nextChar() // consume '\n'
 
-    source.currentChar().should.equal('3')
+    source.nextChar().should.equal('3')
     source._currentLineIndex.should.equal(2)
     source._currentCharIndex.should.equal(0)
 
@@ -85,6 +85,21 @@ describe('NumberToken', () => {
 })
 
 describe('StringToken', () => {
-  // require StringToken
-  it('lee una cadena')
+  let StringToken = require('../frontend/tokens/StringToken.js')
+  it('lee una cadena', () => {
+    let source = new Source('"Hola Mundo"')
+    let token = new StringToken(source)
+
+    token.kind.should.equal('string')
+    token.text.should.equal('"Hola Mundo"')
+    token.value.should.equal('Hola Mundo')
+  })
+
+  it('devuelve error al encontrar \\n en medio de una cadena', () => {
+    let source = new Source('"Hola \n Mundo"')
+    let token = new StringToken(source)
+
+    token.kind.should.equal('error')
+    token.message.should.equal('No esperaba \\n')
+  })
 })
