@@ -1,4 +1,5 @@
 "use strict"
+
 class Source {
   constructor(string) {
     this.EON = '\n'
@@ -15,23 +16,24 @@ class Source {
 
   currentChar() {
     if (this._currentCharIndex === -1)
+      return this.EON
+    else if (this._currentCharIndex === -2)
       return this.EOF
     else
       return this.currentLine[this._currentCharIndex]
   }
 
   nextChar() {
-    if (this._currentCharIndex !== -1)
+    if (this._currentCharIndex === -1)
+      this.advanceLine()
+    else if (this._currentCharIndex !== -2)
       if (this._currentCharIndex + 1 < this.currentLine.length)
         ++this._currentCharIndex
-      else if (this._currentCharIndex + 1 === this.currentLine.length) {
+      else if (this._currentCharIndex + 1 === this.currentLine.length)
         if (this._currentLineIndex + 1 < this.lineAmount)
-          this.advanceLine()
-        else
           this._currentCharIndex = -1
-
-        return '\n'
-      }
+        else
+          this._currentCharIndex = -2
 
     return this.currentChar()
   }
