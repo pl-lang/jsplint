@@ -21,7 +21,12 @@ var list = [
   'entero'            ,
   'real'              ,
   'logico'            ,
-  'caracter'
+  'caracter'          ,
+  'div'               ,
+  'and'               ,
+  'or'                ,
+  'not'               ,
+  'mod'
 ]
 
 var reserved = new Set(list)
