@@ -15,7 +15,8 @@ let list = [
   '('   ,
   ')'   ,
   '['   ,
-  ']'
+  ']'   ,
+  ','
 ]
 
 let symbols = new Set(list)
@@ -89,6 +90,13 @@ class SpecialSymbolToken {
         break
       case ']':
         this.kind = 'right-bracket'
+        break
+      case ',':
+        this.kind = 'comma'
+        break
+      default:
+        this.kind = 'error'
+        this.message = 'SpecialSymbolToken ' + this.text + ' no reconocido.'
         break
     }
     // consumir el caracer actual
