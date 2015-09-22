@@ -1,4 +1,6 @@
 'use strict'
+let StringMethods = require('../../auxiliary/StringMethods.js')
+
 var list = [
   'variables'         ,
   'inicio'            ,
@@ -31,13 +33,9 @@ var list = [
 
 var reserved = new Set(list)
 
-function isDigit(string) {
-  return /\d/.test(string)
-}
+let isDigit = StringMethods.isDigit
 
-function isLetter(string) {
-  return /[a-zA-Z]/.test(string)
-}
+let isLetter = StringMethods.isLetter
 
 class WordToken {
   constructor(source) {
