@@ -106,6 +106,10 @@ describe('StringToken', () => {
 
 describe('SpecialSymbolToken', () => {
   let SpecialSymbolToken = require('../frontend/tokens/SpecialSymbolToken.js')
+  it ('isSpecialSymbolChar funciona', () => {
+    SpecialSymbolToken.isSpecialSymbolChar('<').should.equal(true)
+  })
+
   it('lee operadores aritmeticos', () => {
     let source = new Source('+')
     let token = new SpecialSymbolToken(source)

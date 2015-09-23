@@ -7,12 +7,8 @@ let list = [
   '*'   ,
   '^'   ,
   '='   ,
-  '<-'  ,
-  '<='  ,
-  '<>'  ,
   '<'   ,
   '>'   ,
-  '>='  ,
   '('   ,
   ')'   ,
   '['   ,
@@ -27,6 +23,10 @@ class SpecialSymbolToken {
     this.lineNumber = source._currentLineIndex
     this.columnNumber = source._currentCharIndex
     this.extract(source)
+  }
+
+  static isSpecialSymbolChar(c) {
+    return symbols.has(c)
   }
 
   extract(source) {
