@@ -31,6 +31,10 @@ class StringToken {
         , atLine          : source._currentLineIndex
       }
     }
+
+    // Consumo un caracter para dejar a currentChar() uno delante de la
+    // " o del \n
+    source.nextChar()
   }
 }
 
