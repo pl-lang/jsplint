@@ -5,3 +5,5 @@ class EoFToken {
     this.kind = 'eof'
   }
 }
+
+module.exports = EoFToken
