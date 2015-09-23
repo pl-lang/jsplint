@@ -220,3 +220,73 @@ describe('SpecialSymbolToken', () => {
     token.text.should.equal('<-')
   })
 })
+
+describe('Parser', () => {
+  let Parser = require('../frontend/Parser.js')
+  it('deberia fichar un numero, una palabra y otro numero para: "1a 2.3"', () => {
+    let source = new Source('1a 2.3')
+    let tokenizer = new Parser(source)
+    let tokenArray = []
+
+    let t = tokenizer.nextToken()
+
+    while ( t.kind !== 'eof' ) {
+      tokenArray.push(t)
+      t = tokenizer.nextToken()
+    }
+
+    // guarda el token EOF
+    tokenArray.push(t)
+
+    tokenArray[0].kind.should.equal('integer')
+    tokenArray[1].kind.should.equal('word')
+    tokenArray[2].kind.should.equal('float')
+    tokenArray[3].kind.should.equal('eof')
+  })
+
+  it('deberia fichar todos los tokens de un programa modelo', () => {
+    let programa = fs.readFileSync('./test/programa.md', 'utf-8')
+    let source = new Source(programa)
+    let tokenizer = new Parser(source)
+
+    let tokenArray = []
+    let t = tokenizer.nextToken()
+
+    while ( t.kind !== 'eof') {
+      tokenArray.push(t)
+      t = tokenizer.nextToken()
+    }
+    tokenArray.push(t)
+
+    tokenArray[0].kind.should.equal('variables')
+    tokenArray[1].kind.should.equal('entero')
+    tokenArray[2].kind.should.equal('word')
+    tokenArray[3].kind.should.equal('comma')
+    tokenArray[4].kind.should.equal('word')
+    tokenArray[5].kind.should.equal('inicio')
+    tokenArray[6].kind.should.equal('word')
+    tokenArray[7].kind.should.equal('assignment')
+    tokenArray[8].kind.should.equal('integer')
+    tokenArray[9].kind.should.equal('word')
+    tokenArray[10].kind.should.equal('assignment')
+    tokenArray[11].kind.should.equal('integer')
+    tokenArray[12].kind.should.equal('si')
+    tokenArray[13].kind.should.equal('left-par')
+    tokenArray[14].kind.should.equal('word')
+    tokenArray[15].kind.should.equal('major-than')
+    tokenArray[16].kind.should.equal('word')
+    tokenArray[17].kind.should.equal('right-par')
+    tokenArray[18].kind.should.equal('entonces')
+    tokenArray[19].kind.should.equal('word')
+    tokenArray[20].kind.should.equal('left-par')
+    tokenArray[21].kind.should.equal('string')
+    tokenArray[22].kind.should.equal('right-par')
+    tokenArray[23].kind.should.equal('sino')
+    tokenArray[24].kind.should.equal('word')
+    tokenArray[25].kind.should.equal('left-par')
+    tokenArray[26].kind.should.equal('string')
+    tokenArray[27].kind.should.equal('right-par')
+    tokenArray[28].kind.should.equal('fin')
+    tokenArray[29].kind.should.equal('eof')
+  })
+})
