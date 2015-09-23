@@ -1,5 +1,3 @@
-//comentario
-
 variables
   entero a, b
 inicio
