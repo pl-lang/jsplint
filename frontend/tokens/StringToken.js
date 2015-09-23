@@ -24,8 +24,12 @@ class StringToken {
     if (c === '"')
       this.text = '"' + this.value + '"'
     else {
-      this.kind = 'error'
-      this.message = 'No esperaba \\n'
+      this.kind = 'LEXICAL_ERROR'
+      this.errorInfo = {
+          unexpectedChar  : '\n'
+        , atColumn        : source._currentCharIndex
+        , atLine          : source._currentLineIndex
+      }
     }
   }
 }
