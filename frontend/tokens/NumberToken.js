@@ -22,14 +22,24 @@ class NumberToken {
       source.nextChar()
     }
 
-    if (c === '.' && isDigit(source.peekChar())) {
+    if (c === '.') {
       this.text += '.'
       source.nextChar()
-      while ( isDigit(c = source.currentChar()) ) {
-        this.text += c
-        source.nextChar()
+      if ( isDigit(source.currentChar()) ) {
+        while ( isDigit(c = source.currentChar()) ) {
+          this.text += c
+          source.nextChar()
+        }
+        this.kind = 'float'
       }
-      this.kind = 'float'
+      else {
+        this.kind = 'LEXICAL_ERROR'
+        this.errorInfo = {
+            unexpectedChar  : source.currentChar()
+          , atLine          : source._currentLineIndex
+          , atColumn        : source._currentCharIndex
+        }
+      }
     }
 
     if (this.kind === 'integer')

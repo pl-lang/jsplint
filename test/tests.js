@@ -75,12 +75,23 @@ describe('NumberToken', () => {
   })
 
   it('lee un real', () => {
-    let  source = new Source('3.1487')
-    let  token = new NumberToken(source)
+    let source = new Source('3.1487')
+    let token = new NumberToken(source)
 
     token.kind.should.equal('float')
     token.text.should.equal('3.1487')
     token.value.should.equal(3.1487)
+  })
+
+  it('devuelve un error al encontrar un caracter no permitido en un real', () => {
+    let source = new Source('3.A')
+    let token = new NumberToken(source)
+
+    token.kind.should.equal('LEXICAL_ERROR')
+    token.text.should.equal('3.')
+    token.errorInfo.unexpectedChar.should.equal('A')
+    token.errorInfo.atLine.should.equal(0)
+    token.errorInfo.atColumn.should.equal(2)
   })
 })
 
