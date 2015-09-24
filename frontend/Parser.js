@@ -8,6 +8,7 @@ let EoFToken = require('./tokens/EoFToken.js')
 let UnknownToken = require('./tokens/UnknownToken.js')
 
 let isSpecialSymbolChar = SpecialSymbolToken.isSpecialSymbolChar
+let couldBeComment       = (c) => {return c === '/'}
 let isWhiteSpace        = StringMethods.isWhiteSpace
 let isLetter            = StringMethods.isLetter
 let isDigit             = StringMethods.isDigit
@@ -35,14 +36,21 @@ class Parser {
 
 
   skipWhiteSpace() {
-    // TODO: skip comments
-    while( isWhiteSpace(this.currentChar()) )
+    while( isWhiteSpace(this.currentChar()) || this.currentChar() === '/')
+      if (this.currentChar() === '/' && this.peekChar() === '/')
+        this.skipCommment()
+      else
+        this.nextChar()
+  }
+
+  skipCommment() {
+    while ( this.currentChar() !== this.source.EON )
       this.nextChar()
   }
 
   nextToken() {
 
-    if (isWhiteSpace(this.currentChar()))
+    if (isWhiteSpace(this.currentChar()) || couldBeComment(this.currentChar()))
       this.skipWhiteSpace()
 
     let c = this.currentChar()
