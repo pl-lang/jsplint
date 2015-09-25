@@ -294,3 +294,16 @@ describe('Parser', () => {
     tokenArray[29].kind.should.equal('eof')
   })
 })
+
+describe('TokenQueue', () => {
+  let TokenQueue = require('../frontend/TokenQueue.js')
+  it('funciona correctamente', () => {
+    let q = new TokenQueue([1, 2, 3])
+
+    q.current().should.equal(1)
+    q.next().should.equal(2)
+    q.next().should.equal(3)
+    // devuelve un EoFToken cuando se alcanzó el final del arreglo
+    q.peek().kind.should.equal('eof')
+  })
+})
