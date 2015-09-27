@@ -30,7 +30,9 @@ nombre:
 
 lista de dimensiones:
 
-  `<numero>(','<lista de dimensiones>)?`
+  `<entero>`
+
+  `<entero>','<lista de dimensiones>`
 
 Cadenas que coinciden con el patron de declaracion:
 
