@@ -333,11 +333,11 @@ describe('DeclarationStruct', () => {
   })
 })
 
-describe('NumberPattern', () => {
+describe('IntegerPattern', () => {
   let Parser = require('../frontend/Parser.js')
   let TokenQueue = require('../frontend/TokenQueue.js')
-  let NumberPattern = require('../frontend/structures/NumberPattern.js')
-  it('captura un numero', () => {
+  let IntegerPattern = require('../frontend/structures/IntegerPattern.js')
+  it('captura token entero', () => {
     let source = new Source('36 a')
     let tokenizer = new Parser(source)
 
@@ -351,7 +351,7 @@ describe('NumberPattern', () => {
 
     let q = new TokenQueue(tokenArray)
 
-    let number = NumberPattern.capture(q)
+    let number = IntegerPattern.capture(q)
 
     number.error.should.equal(false)
     number.result.should.equal(36)
@@ -371,7 +371,7 @@ describe('NumberPattern', () => {
 
     let q = new TokenQueue(tokenArray)
 
-    let number = NumberPattern.capture(q)
+    let number = IntegerPattern.capture(q)
 
     number.error.should.equal(true)
 
