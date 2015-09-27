@@ -332,3 +332,53 @@ describe('DeclarationStruct', () => {
     declarations.variables.entero[1].text.should.equal('dos')
   })
 })
+
+describe('NumberPattern', () => {
+  let Parser = require('../frontend/Parser.js')
+  let TokenQueue = require('../frontend/TokenQueue.js')
+  let NumberPattern = require('../frontend/structures/NumberPattern.js')
+  it('captura un numero', () => {
+    let source = new Source('36 a')
+    let tokenizer = new Parser(source)
+
+    let tokenArray = []
+    let t = tokenizer.nextToken()
+
+    while ( t.kind !== 'eof') {
+      tokenArray.push(t)
+      t = tokenizer.nextToken()
+    }
+
+    let q = new TokenQueue(tokenArray)
+
+    let number = NumberPattern.capture(q)
+
+    number.error.should.equal(false)
+    number.result.should.equal(36)
+  })
+
+  it('devuelve un error cuando el primer token en la cola no coincide', () => {
+    let source = new Source('papa 389')
+    let tokenizer = new Parser(source)
+
+    let tokenArray = []
+    let t = tokenizer.nextToken()
+
+    while ( t.kind !== 'eof') {
+      tokenArray.push(t)
+      t = tokenizer.nextToken()
+    }
+
+    let q = new TokenQueue(tokenArray)
+
+    let number = NumberPattern.capture(q)
+
+    number.error.should.equal(true)
+
+    let info = number.result
+    info.expectedToken.should.equal('integer')
+    info.unexpectedToken.should.equal('word')
+    info.atLine.should.equal(1)
+    info.atColumn.should.equal(1)
+  })
+})
