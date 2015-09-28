@@ -18,11 +18,11 @@ tipo:
 
 lista de nombres:
 
-  `<nombre>`
+  `<nombre de variable>`
 
-  `<nombre>','<lista de nombres>`
+  `<nombre de variable>','<lista de nombres>`
 
-nombre:
+nombre de variable:
 
   `<palabra>`
 
