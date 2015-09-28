@@ -427,4 +427,26 @@ describe('IndexesPattern', () => {
     capture.error.should.equal(false)
     capture.result.should.deepEqual([3, 7])
   })
+
+  it('devuelve un error al encontrar un token inesperado', () => {
+    let source = new Source('3, 7, 2.78')
+    let tokenizer = new Parser(source)
+
+    let tokenArray = []
+    let t = tokenizer.nextToken()
+
+    while ( t.kind !== 'eof') {
+      tokenArray.push(t)
+      t = tokenizer.nextToken()
+    }
+
+    let q = new TokenQueue(tokenArray)
+
+    let capture = IndexesPattern.capture(q)
+
+    capture.error.should.equal(true)
+    capture.result.unexpectedToken.should.equal('float')
+    capture.result.atLine.should.equal(1)
+    capture.result.atColumn.should.equal(7)
+  })
 })
