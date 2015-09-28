@@ -143,3 +143,19 @@ describe('VariableNamePattern', () => {
     })
   })
 })
+
+describe('VariableListPattern', () => {
+  let VariableListPattern = require('../frontend/structures/VariableListPattern.js')
+  it('lee las variables de una lista', () => {
+    let q = queueFromSource('a, b, matriz[3, 3], v[8]')
+
+    let capture = VariableListPattern.capture(q)
+
+    capture.error.should.equal(false)
+    capture.result[0].should.deepEqual({text:'a', isArray:false})
+    capture.result[1].should.deepEqual({text:'b', isArray:false})
+    capture.result[2].should.deepEqual({text:'matriz', isArray:true, dimension:[3, 3]})
+    capture.result[3].should.deepEqual({text:'v', isArray:true, dimension:[8]})
+    q.current().kind.should.equal('eof')
+  })
+})
