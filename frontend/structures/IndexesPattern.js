@@ -32,7 +32,7 @@ class IndexesPattern {
     else {
       return {
           error  : true
-        , result : IntegerPattern.capture().result
+        , result : IntegerPattern.capture(source).result
       }
     }
   }
