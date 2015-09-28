@@ -159,3 +159,17 @@ describe('VariableListPattern', () => {
     q.current().kind.should.equal('eof')
   })
 })
+
+describe('TypePattern', () => {
+  let TypePattern = require('../frontend/structures/TypePattern.js')
+
+  it('extrae un token de tipo', () => {
+    let q = queueFromSource('entero, real')
+
+    let capture = TypePattern.capture(q)
+
+    capture.error.should.equal(false)
+    capture.result.should.equal('entero')
+    q.current().kind.should.equal('comma')
+  })
+})
