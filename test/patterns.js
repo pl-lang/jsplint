@@ -6,21 +6,28 @@ var Source = require('../frontend/Source.js')
 let Parser = require('../frontend/Parser.js')
 let TokenQueue = require('../frontend/TokenQueue.js')
 
+function queueFromSource(string) {
+  let source = new Source(string)
+  let tokenizer = new Parser(source)
+
+  let tokenArray = []
+  let t = tokenizer.nextToken()
+
+  while ( t.kind !== 'eof') {
+    tokenArray.push(t)
+    t = tokenizer.nextToken()
+  }
+  tokenArray.push(t)
+
+  let q = new TokenQueue(tokenArray)
+
+  return q
+}
+
 describe('IntegerPattern', () => {
   let IntegerPattern = require('../frontend/structures/IntegerPattern.js')
   it('captura token entero', () => {
-    let source = new Source('36 a')
-    let tokenizer = new Parser(source)
-
-    let tokenArray = []
-    let t = tokenizer.nextToken()
-
-    while ( t.kind !== 'eof') {
-      tokenArray.push(t)
-      t = tokenizer.nextToken()
-    }
-
-    let q = new TokenQueue(tokenArray)
+    let q = queueFromSource('36 a')
 
     let number = IntegerPattern.capture(q)
 
@@ -30,20 +37,8 @@ describe('IntegerPattern', () => {
   })
 
   it('devuelve un error cuando el primer token en la cola no coincide', () => {
-    let source = new Source('papa 389')
-    let tokenizer = new Parser(source)
-
-    let tokenArray = []
-    let t = tokenizer.nextToken()
-
-    while ( t.kind !== 'eof') {
-      tokenArray.push(t)
-      t = tokenizer.nextToken()
-    }
-    tokenArray.push(t)
-
-    let q = new TokenQueue(tokenArray)
-
+    let q = queueFromSource('papa 389'
+  )
     let number = IntegerPattern.capture(q)
 
     number.error.should.equal(true)
@@ -61,19 +56,7 @@ describe('IndexesPattern', () => {
   let IndexesPattern = require('../frontend/structures/IndexesPattern.js')
 
   it('captura el indice de un vector', () => {
-    let source = new Source('3')
-    let tokenizer = new Parser(source)
-
-    let tokenArray = []
-    let t = tokenizer.nextToken()
-
-    while ( t.kind !== 'eof') {
-      tokenArray.push(t)
-      t = tokenizer.nextToken()
-    }
-    tokenArray.push(t)
-
-    let q = new TokenQueue(tokenArray)
+    let q = queueFromSource('3')
 
     let capture = IndexesPattern.capture(q)
 
@@ -83,19 +66,7 @@ describe('IndexesPattern', () => {
   })
 
   it('captura los indices de una matriz', () => {
-    let source = new Source('3, 7')
-    let tokenizer = new Parser(source)
-
-    let tokenArray = []
-    let t = tokenizer.nextToken()
-
-    while ( t.kind !== 'eof') {
-      tokenArray.push(t)
-      t = tokenizer.nextToken()
-    }
-    tokenArray.push(t)
-
-    let q = new TokenQueue(tokenArray)
+    let q = queueFromSource('3, 7')
 
     let capture = IndexesPattern.capture(q)
 
@@ -105,20 +76,7 @@ describe('IndexesPattern', () => {
   })
 
   it('devuelve un error al encontrar un token inesperado', () => {
-    let source = new Source('3, 7, 2.78')
-    let tokenizer = new Parser(source)
-
-    let tokenArray = []
-    let t = tokenizer.nextToken()
-
-    while ( t.kind !== 'eof') {
-      tokenArray.push(t)
-      t = tokenizer.nextToken()
-    }
-    tokenArray.push(t)
-
-    let q = new TokenQueue(tokenArray)
-
+    let q = queueFromSource('3, 7, 2.78')
     let capture = IndexesPattern.capture(q)
 
     capture.error.should.equal(true)
@@ -133,19 +91,7 @@ describe('WordPattern', () => {
   let WordPattern = require('../frontend/structures/WordPattern.js')
 
   it('captura una palabra', () => {
-    let source = new Source('rodrigo')
-    let tokenizer = new Parser(source)
-
-    let tokenArray = []
-    let t = tokenizer.nextToken()
-
-    while ( t.kind !== 'eof') {
-      tokenArray.push(t)
-      t = tokenizer.nextToken()
-    }
-    tokenArray.push(t)
-
-    let q = new TokenQueue(tokenArray)
+    let q = queueFromSource('rodrigo')
 
     let capture = WordPattern.capture(q)
 
@@ -155,19 +101,7 @@ describe('WordPattern', () => {
   })
 
   it('devuelve un error cuando el patron no coincide', () => {
-    let source = new Source('32')
-    let tokenizer = new Parser(source)
-
-    let tokenArray = []
-    let t = tokenizer.nextToken()
-
-    while ( t.kind !== 'eof') {
-      tokenArray.push(t)
-      t = tokenizer.nextToken()
-    }
-    tokenArray.push(t)
-
-    let q = new TokenQueue(tokenArray)
+    let q = queueFromSource('32')
 
     let capture = WordPattern.capture(q)
 
@@ -179,5 +113,12 @@ describe('WordPattern', () => {
       atLine : 1
     })
     q.current().kind.should.equal('integer')
+  })
+})
+
+describe('VariableNamePattern', () => {
+  let VariableNamePattern = require('../frontend/structures/VariableNamePattern.js')
+  it('captura el nombre de una variable', () => {
+
   })
 })
