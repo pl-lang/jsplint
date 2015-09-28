@@ -15,7 +15,7 @@ class IntegerPattern {
       }
     }
     else {
-      // ...informacion sobre el error
+      // ...devolver informacion sobre el error
       return {
           error   :  true
         , result  : {

@@ -26,6 +26,7 @@ describe('IntegerPattern', () => {
 
     number.error.should.equal(false)
     number.result.should.equal(36)
+    q.current().kind.should.equal('word')
   })
 
   it('devuelve un error cuando el primer token en la cola no coincide', () => {
@@ -39,6 +40,7 @@ describe('IntegerPattern', () => {
       tokenArray.push(t)
       t = tokenizer.nextToken()
     }
+    tokenArray.push(t)
 
     let q = new TokenQueue(tokenArray)
 
@@ -51,6 +53,7 @@ describe('IntegerPattern', () => {
     info.unexpectedToken.should.equal('word')
     info.atLine.should.equal(1)
     info.atColumn.should.equal(1)
+    q.current().kind.should.equal('word')
   })
 })
 
@@ -68,6 +71,7 @@ describe('IndexesPattern', () => {
       tokenArray.push(t)
       t = tokenizer.nextToken()
     }
+    tokenArray.push(t)
 
     let q = new TokenQueue(tokenArray)
 
@@ -75,6 +79,7 @@ describe('IndexesPattern', () => {
 
     capture.error.should.equal(false)
     capture.result.should.deepEqual([3])
+    q.current().kind.should.equal('eof')
   })
 
   it('captura los indices de una matriz', () => {
@@ -88,6 +93,7 @@ describe('IndexesPattern', () => {
       tokenArray.push(t)
       t = tokenizer.nextToken()
     }
+    tokenArray.push(t)
 
     let q = new TokenQueue(tokenArray)
 
@@ -95,6 +101,7 @@ describe('IndexesPattern', () => {
 
     capture.error.should.equal(false)
     capture.result.should.deepEqual([3, 7])
+    q.current().kind.should.equal('eof')
   })
 
   it('devuelve un error al encontrar un token inesperado', () => {
@@ -108,6 +115,7 @@ describe('IndexesPattern', () => {
       tokenArray.push(t)
       t = tokenizer.nextToken()
     }
+    tokenArray.push(t)
 
     let q = new TokenQueue(tokenArray)
 
@@ -117,6 +125,7 @@ describe('IndexesPattern', () => {
     capture.result.unexpectedToken.should.equal('float')
     capture.result.atLine.should.equal(1)
     capture.result.atColumn.should.equal(7)
+    q.current().kind.should.equal('float')
   })
 })
 
@@ -134,6 +143,7 @@ describe('WordPattern', () => {
       tokenArray.push(t)
       t = tokenizer.nextToken()
     }
+    tokenArray.push(t)
 
     let q = new TokenQueue(tokenArray)
 
@@ -141,6 +151,7 @@ describe('WordPattern', () => {
 
     capture.error.should.equal(false)
     capture.result.should.equal('rodrigo')
+    q.current().kind.should.equal('eof')
   })
 
   it('devuelve un error cuando el patron no coincide', () => {
@@ -154,6 +165,7 @@ describe('WordPattern', () => {
       tokenArray.push(t)
       t = tokenizer.nextToken()
     }
+    tokenArray.push(t)
 
     let q = new TokenQueue(tokenArray)
 
@@ -166,5 +178,6 @@ describe('WordPattern', () => {
       atColumn : 1,
       atLine : 1
     })
+    q.current().kind.should.equal('integer')
   })
 })
