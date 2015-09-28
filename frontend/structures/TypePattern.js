@@ -21,7 +21,7 @@ class TypePattern {
             , atColumn        : current.columnNumber
             , atLine          : current.lineNumber
           }
-        , error   : false
+        , error   : true
       }
   }
 }

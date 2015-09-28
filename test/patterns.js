@@ -172,4 +172,19 @@ describe('TypePattern', () => {
     capture.result.should.equal('entero')
     q.current().kind.should.equal('comma')
   })
+
+  it('extrae un token de tipo', () => {
+    let q = queueFromSource('gatp, real')
+
+    let capture = TypePattern.capture(q)
+
+    capture.error.should.equal(true)
+    capture.result.should.deepEqual({
+        unexpectedToken : 'word'
+      , expectedTokens  : ['entero', 'real', 'logico', 'caracter']
+      , atColumn        : 1
+      , atLine          : 1
+    })
+    q.current().kind.should.equal('word')
+  })
 })
