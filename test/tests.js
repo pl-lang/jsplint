@@ -382,3 +382,49 @@ describe('IntegerPattern', () => {
     info.atColumn.should.equal(1)
   })
 })
+
+describe('IndexesPattern', () => {
+  let Parser = require('../frontend/Parser.js')
+  let TokenQueue = require('../frontend/TokenQueue.js')
+  let IndexesPattern = require('../frontend/structures/IndexesPattern.js')
+
+  it('captura el indice de un vector', () => {
+    let source = new Source('3')
+    let tokenizer = new Parser(source)
+
+    let tokenArray = []
+    let t = tokenizer.nextToken()
+
+    while ( t.kind !== 'eof') {
+      tokenArray.push(t)
+      t = tokenizer.nextToken()
+    }
+
+    let q = new TokenQueue(tokenArray)
+
+    let capture = IndexesPattern.capture(q)
+
+    capture.error.should.equal(false)
+    capture.result.should.deepEqual([3])
+  })
+
+  it('captura los indices de una matriz', () => {
+    let source = new Source('3, 7')
+    let tokenizer = new Parser(source)
+
+    let tokenArray = []
+    let t = tokenizer.nextToken()
+
+    while ( t.kind !== 'eof') {
+      tokenArray.push(t)
+      t = tokenizer.nextToken()
+    }
+
+    let q = new TokenQueue(tokenArray)
+
+    let capture = IndexesPattern.capture(q)
+
+    capture.error.should.equal(false)
+    capture.result.should.deepEqual([3, 7])
+  })
+})
