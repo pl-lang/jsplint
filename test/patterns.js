@@ -188,3 +188,28 @@ describe('TypePattern', () => {
     q.current().kind.should.equal('word')
   })
 })
+
+
+describe('BeginPattern', () => {
+  let BeginPattern = require('../frontend/structures/BeginPattern.js')
+  it ('captura el token inicio', () => {
+    let q = queueFromSource('inicio error')
+
+    let capt = BeginPattern.capture(q)
+
+    capt.error.should.equal(false)
+    capt.result.text.should.equal('inicio')
+    q.current().kind.should.equal('word')
+  })
+
+  it ('devuelve un error al encontrar un token inesperado', () => {
+    let q = queueFromSource('nombre inicio')
+
+    let capt = BeginPattern.capture(q)
+
+    capt.error.should.equal(true)
+    capt.result.unexpectedToken.should.equal('word')
+    capt.result.expectedToken.should.equal('inicio')
+    q.current().kind.should.equal('word')
+  })
+})
