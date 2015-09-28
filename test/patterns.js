@@ -119,3 +119,52 @@ describe('IndexesPattern', () => {
     capture.result.atColumn.should.equal(7)
   })
 })
+
+describe('WordPattern', () => {
+  let WordPattern = require('../frontend/structures/WordPattern.js')
+
+  it('captura una palabra', () => {
+    let source = new Source('rodrigo')
+    let tokenizer = new Parser(source)
+
+    let tokenArray = []
+    let t = tokenizer.nextToken()
+
+    while ( t.kind !== 'eof') {
+      tokenArray.push(t)
+      t = tokenizer.nextToken()
+    }
+
+    let q = new TokenQueue(tokenArray)
+
+    let capture = WordPattern.capture(q)
+
+    capture.error.should.equal(false)
+    capture.result.should.equal('rodrigo')
+  })
+
+  it('devuelve un error cuando el patron no coincide', () => {
+    let source = new Source('32')
+    let tokenizer = new Parser(source)
+
+    let tokenArray = []
+    let t = tokenizer.nextToken()
+
+    while ( t.kind !== 'eof') {
+      tokenArray.push(t)
+      t = tokenizer.nextToken()
+    }
+
+    let q = new TokenQueue(tokenArray)
+
+    let capture = WordPattern.capture(q)
+
+    capture.error.should.equal(true)
+    capture.result.should.deepEqual({
+      expectedToken : 'word',
+      unexpectedToken : 'integer',
+      atColumn : 1,
+      atLine : 1
+    })
+  })
+})
