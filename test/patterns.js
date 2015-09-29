@@ -186,6 +186,7 @@ describe('TypePattern', () => {
       , atLine          : 1
     })
     q.current().kind.should.equal('word')
+    q.current().text.should.equal('gatp')
   })
 })
 
@@ -211,5 +212,50 @@ describe('BeginPattern', () => {
     capt.result.unexpectedToken.should.equal('word')
     capt.result.expectedToken.should.equal('inicio')
     q.current().kind.should.equal('word')
+  })
+})
+
+describe('DeclarationPattern', () => {
+  let DeclarationPattern = require('../frontend/structures/DeclarationPattern.js')
+  it('captura dos variables de tipo entero y una real declaradas en un renglon', () => {
+    let q = queueFromSource('entero a, b, real c')
+
+    let capt = DeclarationPattern.capture(q)
+
+    capt.error.should.deepEqual(false)
+    capt.result.should.deepEqual({
+        caracter  : []
+      , logico    : []
+      , entero    : [{text:'a', isArray:false}, {text:'b', isArray:false}]
+      , real      : [{text:'c', isArray:false}]
+    })
+  })
+
+  it('captura variables de distintos tipos declaradas dos renglones distintos', () => {
+    let q = queueFromSource('caracter a, b\nlogico c')
+
+    let capt = DeclarationPattern.capture(q)
+
+    capt.error.should.deepEqual(false)
+    capt.result.should.deepEqual({
+        caracter  : [{text:'a', isArray:false}, {text:'b', isArray:false}]
+      , logico    : [{text:'c', isArray:false}]
+      , entero    : []
+      , real      : []
+    })
+  })
+
+  it('captura variables de un solo tipo', () => {
+    let q = queueFromSource('caracter a, b[4, 4]')
+
+    let capt = DeclarationPattern.capture(q)
+
+    capt.error.should.deepEqual(false)
+    capt.result.should.deepEqual({
+        caracter  : [{text:'a', isArray:false}, {text:'b', isArray:true, dimension:[4, 4]}]
+      , logico    : []
+      , entero    : []
+      , real      : []
+    })
   })
 })
