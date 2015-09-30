@@ -307,28 +307,3 @@ describe('TokenQueue', () => {
     q.peek().kind.should.equal('eof')
   })
 })
-
-describe('DeclarationStruct', () => {
-  let Parser = require('../frontend/Parser.js')
-  let TokenQueue = require('../frontend/TokenQueue.js')
-  let DeclarationStruct = require('../frontend/structures/DeclarationStruct.js')
-  it('funciona correctamente', () => {
-    let source = new Source('entero variable1, dos inicio')
-    let tokenizer = new Parser(source)
-
-    let tokenArray = []
-    let t = tokenizer.nextToken()
-
-    while ( t.kind !== 'eof') {
-      tokenArray.push(t)
-      t = tokenizer.nextToken()
-    }
-
-    let q = new TokenQueue(tokenArray)
-
-    let declarations = new DeclarationStruct(q)
-
-    declarations.variables.entero[0].text.should.equal('variable1')
-    declarations.variables.entero[1].text.should.equal('dos')
-  })
-})
