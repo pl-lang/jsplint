@@ -306,8 +306,6 @@ describe('BinaryOpPattern', () => {
     }
 
     {
-      // la prueba falla porque reconoce a la barra como un comentario y la elimina
-      // debería arreglar eso en Parser
       let q = queueFromSource('/')
       let capt = BinaryOpPattern.capture(q)
       capt.error.should.equal(false)
