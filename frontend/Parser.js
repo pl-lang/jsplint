@@ -34,11 +34,18 @@ class Parser {
     return this.source.peekChar()
   }
 
+  isCommentLine() {
+    return this.currentChar() === '/' && this.peekChar() === '/'
+  }
+
 
   skipWhiteSpace() {
-    while( isWhiteSpace(this.currentChar()) || this.currentChar() === '/')
-      if (this.currentChar() === '/' && this.peekChar() === '/')
+    let comment = false
+    while( isWhiteSpace(this.currentChar()) || (comment = this.isCommentLine()) )
+      if (comment) {
         this.skipCommment()
+        comment = false
+      }
       else
         this.nextChar()
   }
@@ -50,7 +57,7 @@ class Parser {
 
   nextToken() {
 
-    if (isWhiteSpace(this.currentChar()) || couldBeComment(this.currentChar()))
+    if (isWhiteSpace(this.currentChar()) || this.isCommentLine())
       this.skipWhiteSpace()
 
     let c = this.currentChar()
