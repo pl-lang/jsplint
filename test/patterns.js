@@ -259,3 +259,60 @@ describe('DeclarationPattern', () => {
     })
   })
 })
+
+describe('BinaryOpPattern', () => {
+  let BinaryOpPattern = require('../frontend/structures/BinaryOpPattern.js')
+  it('captura todos los operadores', () => {
+    {
+      let q = queueFromSource('and')
+      let capt = BinaryOpPattern.capture(q)
+      capt.error.should.equal(false)
+      capt.result.should.equal('and')
+    }
+
+    {
+      let q = queueFromSource('or')
+      let capt = BinaryOpPattern.capture(q)
+      capt.error.should.equal(false)
+      capt.result.should.equal('or')
+    }
+
+    {
+      let q = queueFromSource('mod')
+      let capt = BinaryOpPattern.capture(q)
+      capt.error.should.equal(false)
+      capt.result.should.equal('mod')
+    }
+
+    {
+      let q = queueFromSource('div')
+      let capt = BinaryOpPattern.capture(q)
+      capt.error.should.equal(false)
+      capt.result.should.equal('div')
+    }
+
+    {
+      let q = queueFromSource('*')
+      let capt = BinaryOpPattern.capture(q)
+      capt.error.should.equal(false)
+      capt.result.should.equal('times')
+    }
+
+    {
+      let q = queueFromSource('^')
+      let capt = BinaryOpPattern.capture(q)
+      capt.error.should.equal(false)
+      capt.result.should.equal('power')
+    }
+
+    {
+      // la prueba falla porque reconoce a la barra como un comentario y la elimina
+      // debería arreglar eso en Parser
+      let q = queueFromSource('/')
+      let capt = BinaryOpPattern.capture(q)
+      capt.error.should.equal(false)
+      capt.result.should.equal('divide')
+    }
+
+  })
+})
