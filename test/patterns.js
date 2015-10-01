@@ -46,8 +46,8 @@ describe('IntegerPattern', () => {
     let info = number.result
     info.expectedToken.should.equal('integer')
     info.unexpectedToken.should.equal('word')
-    info.atLine.should.equal(1)
-    info.atColumn.should.equal(1)
+    info.atLine.should.equal(0)
+    info.atColumn.should.equal(0)
     q.current().kind.should.equal('word')
   })
 })
@@ -81,8 +81,8 @@ describe('IndexesPattern', () => {
 
     capture.error.should.equal(true)
     capture.result.unexpectedToken.should.equal('float')
-    capture.result.atLine.should.equal(1)
-    capture.result.atColumn.should.equal(7)
+    capture.result.atLine.should.equal(0)
+    capture.result.atColumn.should.equal(6)
     q.current().kind.should.equal('float')
   })
 })
@@ -109,8 +109,8 @@ describe('WordPattern', () => {
     capture.result.should.deepEqual({
       expectedToken : 'word',
       unexpectedToken : 'integer',
-      atColumn : 1,
-      atLine : 1
+      atColumn : 0,
+      atLine : 0
     })
     q.current().kind.should.equal('integer')
   })
@@ -182,8 +182,8 @@ describe('TypePattern', () => {
     capture.result.should.deepEqual({
         unexpectedToken : 'word'
       , expectedTokens  : ['entero', 'real', 'logico', 'caracter']
-      , atColumn        : 1
-      , atLine          : 1
+      , atColumn        : 0
+      , atLine          : 0
     })
     q.current().kind.should.equal('word')
     q.current().text.should.equal('gatp')
@@ -333,8 +333,8 @@ describe('MainModulePattern', () => {
           , real      : []
         }
       , name            : 'main'
-      , atColumn        : 1
-      , atLine          : 1
+      , atColumn        : 0
+      , atLine          : 0
     })
     // TODO: Cambiar 'text' por 'name' en el resultado de VariableNamePattern
   })

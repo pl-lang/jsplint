@@ -7,8 +7,8 @@ class NumberToken {
     // todos los numeros son enteros hasta que se 'demuestre' lo contrario
     this.kind = 'integer'
     this.text = ''
-    this.lineNumber = source._currentLineIndex + 1
-    this.columnNumber = source._currentCharIndex + 1
+    this.lineNumber = source._currentLineIndex
+    this.columnNumber = source._currentCharIndex
     this.extract(source)
   }
 
