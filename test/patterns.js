@@ -338,4 +338,88 @@ describe('MainModulePattern', () => {
     })
     // TODO: Cambiar 'text' por 'name' en el resultado de VariableNamePattern
   })
+
+  it('funciona correctamente para un programa sin variables declaradas', () => {
+    let programa = 'variables\ninicio\nfin'
+
+    let q = queueFromSource(programa)
+    let capt = MainModulePattern.capture(q)
+
+    capt.error.should.equal(false)
+    capt.result.should.deepEqual({
+        localVariables  : {
+            caracter  : []
+          , logico    : []
+          , entero    : []
+          , real      : []
+        }
+      , name            : 'main'
+      , atColumn        : 0
+      , atLine          : 0
+    })
+  })
+
+  it('programa sin encabezado ("variables") para el modulo principal', () => {
+    let programa = 'entero a, b, c\ninicio\nfin'
+
+    let q = queueFromSource(programa)
+    let capt = MainModulePattern.capture(q)
+
+    capt.error.should.equal(true)
+    capt.result.should.deepEqual({
+        unexpected  : 'entero'
+      , expected    : 'variables'
+      , atColumn    : 0
+      , atLine      : 0
+      , reason      : 'missing-var-declaration'
+    })
+  })
+
+  it('programa sin "inicio" pero con varibles declaradas', () => {
+    let programa = 'variables entero a, b, c\nfin'
+
+    let q = queueFromSource(programa)
+    let capt = MainModulePattern.capture(q)
+
+    capt.error.should.equal(true)
+    capt.result.should.deepEqual({
+        unexpected  : 'fin'
+      , expected    : 'inicio'
+      , atColumn    : 0
+      , atLine      : 1
+      , reason      : 'missing-inicio'
+    })
+  })
+
+  it('programa sin "inicio" sin varibles declaradas', () => {
+    let programa = 'variables\nfin'
+
+    let q = queueFromSource(programa)
+    let capt = MainModulePattern.capture(q)
+
+    capt.error.should.equal(true)
+    capt.result.should.deepEqual({
+        unexpected  : 'fin'
+      , expected    : 'inicio'
+      , atColumn    : 0
+      , atLine      : 1
+      , reason      : 'missing-inicio'
+    })
+  })
+
+  it('programa sin "fin"', () => {
+    let programa = 'variables entero a, b, c\ninicio\n'
+
+    let q = queueFromSource(programa)
+    let capt = MainModulePattern.capture(q)
+
+    capt.error.should.equal(true)
+    capt.result.should.deepEqual({
+        unexpected  : 'eof'
+      , expected    : 'fin'
+      , atColumn    : 5
+      , atLine      : 1
+      , reason      : 'missing-fin'
+    })
+  })
 })
