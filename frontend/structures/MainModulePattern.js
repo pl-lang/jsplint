@@ -5,7 +5,12 @@ let DeclarationPattern = require('./DeclarationPattern.js')
 class MainModulePattern {
   static capture(source) {
     let moduleData = {
-        localVariables  : {}
+        localVariables  : {
+            caracter  : []
+          , logico    : []
+          , entero    : []
+          , real      : []
+        }
       , atColumn        : 0
       , atLine          : 0
       , name            : 'main'
