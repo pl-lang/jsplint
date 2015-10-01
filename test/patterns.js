@@ -314,3 +314,28 @@ describe('BinaryOpPattern', () => {
 
   })
 })
+
+describe('MainModulePattern', () => {
+  let MainModulePattern = require('../frontend/structures/MainModulePattern.js')
+  it('funciona correctamente en un programa con "inicio" y variables declaradas', () => {
+
+    let programa = '\nvariables\n  entero a, b, c\ninicio\nfin\n'
+    let q = queueFromSource(programa)
+
+    let capt = MainModulePattern.capture(q)
+
+    capt.error.should.equal(false)
+    capt.result.should.deepEqual({
+        localVariables  : {
+            caracter  : []
+          , logico    : []
+          , entero    : [{text:'a', isArray:false}, {text:'b', isArray:false}, {text:'c', isArray:false}]
+          , real      : []
+        }
+      , name            : 'main'
+      , atColumn        : 1
+      , atLine          : 1
+    })
+    // TODO: Cambiar 'text' por 'name' en el resultado de VariableNamePattern
+  })
+})
