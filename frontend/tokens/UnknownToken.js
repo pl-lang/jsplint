@@ -3,6 +3,8 @@
 class UnknownToken {
   constructor(source) {
     this.kind = 'UNKNOWN_TOKEN_ERROR'
+    this.lineNumber = source._currentLineIndex
+    this.columnNumber = source._currentCharIndex
     this.extract(source)
   }
 
