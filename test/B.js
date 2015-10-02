@@ -446,3 +446,17 @@ describe('LiteralPattern', () => {
     c.result.value.should.equal('Hola viejo')
   })
 })
+
+describe('ParameterListPattern', () => {
+  let ParameterListPattern = require('../frontend/structures/ParameterListPattern.js')
+  it('extrae correctamente varios parametros', () => {
+    let q = queueFromSource('1, "veintidos"')
+    let c = ParameterListPattern.capture(q)
+
+    c.error.should.equal(false)
+    c.result.should.deepEqual([
+        {type:'integer', value:1}
+      , {type:'string', value:'veintidos'}
+    ])
+  })
+})
