@@ -423,3 +423,26 @@ describe('MainModulePattern', () => {
     })
   })
 })
+
+describe('LiteralPattern', () => {
+  let LiteralPattern = require('../frontend/structures/LiteralPattern.js')
+  it('captura los tres tipos de literales', () => {
+    let q = queueFromSource('12')
+    let c = LiteralPattern.capture(q)
+    c.error.should.equal(false)
+    c.result.type.should.equal('integer')
+    c.result.value.should.equal(12)
+
+    q = queueFromSource('2.78')
+    c = LiteralPattern.capture(q)
+    c.error.should.equal(false)
+    c.result.type.should.equal('float')
+    c.result.value.should.equal(2.78)
+
+    q = queueFromSource('"Hola viejo"')
+    c = LiteralPattern.capture(q)
+    c.error.should.equal(false)
+    c.result.type.should.equal('string')
+    c.result.value.should.equal('Hola viejo')
+  })
+})
