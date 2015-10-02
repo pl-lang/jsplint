@@ -460,3 +460,60 @@ describe('ParameterListPattern', () => {
     ])
   })
 })
+
+
+describe('CallPattern', () => {
+  let CallPattern = require('../frontend/structures/CallPattern.js')
+  it('extrae una llamada a modulo', () => {
+    let q = queueFromSource('potenciar(2, 4)')
+    let c = CallPattern.capture(q)
+
+    c.error.should.equal(false)
+    c.result.should.deepEqual({
+        moduleName  : 'potenciar'
+      , parameters  : [{type:'integer', value:2}, {type:'integer', value:4}]
+    })
+  })
+
+  it('error cuando falta el parentesis izquiero', () => {
+    let q = queueFromSource('raizCuadrada2, 4)')
+    let c = CallPattern.capture(q)
+
+    c.error.should.equal(true)
+    c.result.should.deepEqual({
+        unexpected  : 'comma'
+      , expected    : 'left-par'
+      , atColumn    : 13
+      , atLine      : 0
+      , reason      : 'missing-left-par-in-module-call'
+    })
+  })
+
+  it('error cuando falta el parentesis derecho', () => {
+    let q = queueFromSource('raizCuadrada(16')
+    let c = CallPattern.capture(q)
+
+    c.error.should.equal(true)
+    c.result.should.deepEqual({
+        unexpected  : 'eof'
+      , expected    : 'right-par'
+      , atColumn    : 14
+      , atLine      : 0
+      , reason      : 'missing-right-par-in-module-call'
+    })
+  })
+
+  it('error cuando falta el parentesis derecho (sin parametros)', () => {
+    let q = queueFromSource('raizCuadrada(')
+    let c = CallPattern.capture(q)
+
+    c.error.should.equal(true)
+    c.result.should.deepEqual({
+        unexpected  : 'eof'
+      , expected    : ['integer', 'float', 'string']
+      , atColumn    : 12
+      , atLine      : 0
+      , reason      : 'invalid-param'
+    })
+  })
+})
