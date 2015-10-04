@@ -31,3 +31,28 @@ describe('ModuleTable', () => {
     table.has('main').should.equal(true)
   })
 })
+
+describe('Scanner', () => {
+  let Scanner = require('../frontend/Scanner.js')
+
+  it('Genera correctamente la tabla de un programa con modulo principal', () => {
+    let programa = `
+    variables
+      entero a, b[1, 2]
+    inicio
+    fin
+    `
+    let source = new Source(programa)
+    let tokenizer = new Parser(source)
+
+    let scanner = new Scanner(tokenizer)
+
+    let scanResult = scanner.getModuleTable()
+
+    scanResult.error.should.equal(false)
+
+    let table = scanResult.result
+
+    table.has('main').should.equal(true)
+  })
+})
