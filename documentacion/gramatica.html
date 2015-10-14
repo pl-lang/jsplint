@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="./gramatica.css" media="screen" title="no title" charset="utf-8">
+    <title>gramatica</title>
+  </head>
+  <body>
+    <div class="sheet">
+      <h5 id="ModuloPrincipal">modulo_principal</h5>
+      <ul>
+        <li>'variables' '\n' 'inicio' '\n' 'fin'</li>
+        <li>'variables' '\n' <a href="#declaracion">declaracion_de_identificadores</a> 'inicio' '\n' <a href="#lista_de_enunciados">lista_de_enunciados</a> 'fin'</li>
+        <li>'variables' '\n' 'inicio' '\n' <a href="#lista_de_enunciados">lista_de_enunciados</a> 'fin'</li>
+        <li>'variables' '\n' <a href="#declaracion">declaracion_de_identificadores</a> 'inicio' '\n' 'fin'</li>
+      </ul>
+    </div>
+
+    <div class="sheet">
+      <h5 id="declaracion">declaracion_de_identificadores</h5>
+      <ul>
+        <li><a href="#tipo">tipo</a> <a href="#lista_de_identificadores">lista_de_identificadores</a> '\n'</li>
+        <li><a href="#tipo">tipo</a> <a href="#lista_de_identificadores">lista_de_identificadores</a> '\n' <a href="#delcaracion">declaracion_de_identificadores</a></li>
+        <li><a href="#tipo">tipo</a> <a href="#lista_de_identificadores">lista_de_identificadores</a> ',' <a href="#delcaracion">declaracion_de_identificadores</a></li>
+      </ul>
+    </div>
+
+    <div class="sheet">
+      <h5 id="tipo">tipo</h5>
+      <ul>
+        <li>'caracter'</li>
+        <li>'logico'</li>
+        <li>'entero'</li>
+        <li>'real'</li>
+      </ul>
+    </div>
+
+    <div class="sheet">
+      <h5 id="lista_de_identificadores">lista_de_identificadores</h5>
+      <ul>
+        <li><a href="#identificador">identificador</a></li>
+        <li><a href="#identificador">identificador</a> ',' <a href="#lista_de_identificadores">lista_de_identificadores</a></li>
+      </ul>
+    </div>
+
+    <div class="sheet">
+      <h5 id="identificador">identificador</h5>
+      <ul>
+        <li><a href="#palabra">palabra</a></li>
+        <li><a href="#palabra">palabra</a> '[' <a href="#dimension">dimension</a> ']'
+      </ul>
+    </div>
+
+    <div class="sheet">
+      <h5 id="palabra">palabra</h5>
+      Token de tipo "palabra"
+    </div>
+
+    <div class="sheet">
+      <h5 id="dimension">dimension</h5>
+      <ul>
+        <li><a href="#entero">entero</a></li>
+        <li><a href="#entero">entero</a> ',' <a href="#dimension">dimension</a></li>
+      </ul>
+    </div>
+
+    <div class="sheet">
+      <h5 id="entero">entero</h5>
+      Token de tipo "entero"
+    </div>
+
+    <div class="sheet">
+      <h5 id="lista_de_enunciados">lista_de_enunciados</h5>
+      <ul>
+        <li><a href="#enunciado">enunciado</a> '\n'</li>
+        <li><a href="#enunciado">enunciado</a> '\n' <a href="#lista_de_enunciados">lista_de_enunciados</a></li>
+      </ul>
+    </div>
+
+    <div class="sheet">
+      <h5 id="enunciado">enunciado</h5>
+      <ul>
+        <li><a href="#asignacion">asignacion</a></li>
+        <li><a href="#estructura_de_seleccion">estructura_de_seleccion</a></li>
+        <li><a href="#estructura_de_repeticion">estructura_de_repeticion</a></li>
+      </ul>
+    </div>
+
+    <div class="sheet">
+      <h5 id="asignacion">asignacion</h5>
+      <ul>
+        <li><a href="#identificador">identificador</a> '&lt;-' <a href="#expresion">expresion</a></li>
+      </ul>
+    </div>
+
+    <div class="sheet">
+      <h5 id="expresion">expresion</h5>
+      <ul>
+        <li><a href="#termino">termino</a></li>
+        <li><a href="#signo">signo</a> <a href="#termino">termino</a></li>
+        <li><a href="#termino">termino</a> <a href="#signo">signo</a> <a href="#lista_de_terminos">lista_de_terminos</a></li>
+        <li><a href="#signo">signo</a> <a href="#termino">termino</a> <a href="#signo">signo</a> <a href="#lista_de_terminos">lista_de_terminos</a></li>
+      </ul>
+    </div>
+
+    <div class="sheet">
+      <h5 id="lista_de_terminos">lista_de_terminos</h5>
+      <ul>
+        <li><a href="#termino">termino</a></li>
+        <li><a href="#termino">termino</a> <a href="#signo">signo</a> <a href="#lista_de_terminos">lista_de_terminos</a></li>
+      </ul>
+    </div>
+
+    <div class="sheet">
+      <h5 id="termino">termino</h5>
+      <ul>
+        <li><a href="#factor">factor</a></li>
+        <li><a href="#factor">factor</a> <a href="#operador_binario">operador_binario</a> <a href="#termino">termino</a></li>
+      </ul>
+    </div>
+
+    <div class="sheet">
+      <h5 id="operador_binario">operador_binario</h5>
+      <ul>
+        <li><a href="#operadores_matematicos">operadores_matematicos</a></li>
+        <li><a href="#operadores_relacionales">operadores_relacionales</a></li>
+      </ul>
+    </div>
+
+    <div class="sheet">
+      <h5 id="factor">factor</h5>
+      <ul>
+        <li><a href="#constante_numerica">constante_numerica</a></li>
+        <li><a href="#invocacion">invocacion</a></li>
+        <li>'(' <a href="#expresion">expresion</a> ')'</li>
+      </ul>
+    </div>
+
+    <div class="sheet">
+      <h5>constante_numerica</h5>
+      <ul>
+        <li><a href="#entero">entero</a></li>
+        <li><a href="#real">real</a></li>
+      </ul>
+    </div>
+
+    <div class="sheet">
+      <h5>invocacion</h5>
+      <ul>
+        <li><a href="#identificador">identificador</a></li>
+        <li><a href="#llamada_a_funcion">llamada_a_funcion</a></li>
+      </ul>
+    </div>
+
+    <div class="sheet">
+      <h5 id="llamada_a_funcion">llamada_a_funcion</h5>
+      <ul>
+        <li><a href="#palabra">palabra</a> '(' ')'</li>
+        <li><a href="#palabra">palabra</a> '(' <a href="#lista_de_parametros">lista_de_parametros</a> ')'</li>
+      </ul>
+    </div>
+
+    <div class="sheet">
+      <h5 id="lista_de_parametros">lista_de_parametros</h5>
+      <ul>
+        <li><a href="#expresion">expresion</a></li>
+        <li><a href="#expresion">expresion</a> ',' <a href="#lista_de_parametros">lista_de_parametros</a></li>
+      </ul>
+    </div>
+
+    <div class="sheet">
+      <h5 id="estructura_de_seleccion">estructura_de_seleccion</h5>
+      <ul>
+        <li><a href="#seleccion_simple">seleccion_simple</a></li>
+        <li><a href="#seleccion_compuesta">seleccion_compuesta</a></li>
+      </ul>
+    </div>
+
+    <div class="sheet">
+      <h5 id="seleccion_simple">seleccion_simple</h5>
+      <ul>
+        <li>'si' '(' <a href="#expresion">expresion</a> ')'  'entonces' '\n' <a href="#lista_de_enunciados">lista_de_enunciados</a> 'finsi' '\n'</li>
+      </ul>
+    </div>
+
+    <div class="sheet">
+      <h5 id="seleccion_compuesta">seleccion_compuesta</h5>
+      <ul>
+        <li>'si' '(' <a href="#expresion">expresion</a> ')'  'entonces' '\n' <a href="#lista_de_enunciados">lista_de_enunciados</a> 'sino' '\n' <a href="#lista_de_enunciados">lista_de_enunciados</a> 'finsi' '\n'</li>
+      </ul>
+    </div>
+
+    <div class="sheet">
+      <h5 id="estructura_repetitiva">estructura_repetitiva</h5>
+      <ul>
+        <li><a href="#estructura_para">estructura_para</a></li>
+        <li><a href="#estructura_mientras">estructura_mientras</a></li>
+        <li><a href="#estructura_repetir">estructura_repetir</a></li>
+      </ul>
+    </div>
+
+    <div class="sheet">
+      <h5 id="estructura_para">estructura_para</h5>
+      <ul>
+        <li>'para' <a href="#identificador">identificador</a> '&lt;-' <a href="#expresion">expresion</a>  'hasta' <a href="#expresion">expresion</a> 'hacer' '\n' <a href="#lista_de_enunciados">lista_de_enunciados</a> 'finpara' '\n'</li>
+      </ul>
+    </div>
+
+    <div class="sheet">
+      <h5 id="estructura_mientras">estructura_mientras</h5>
+      <ul>
+        <li>'mientras' '(' <a href="#expresion">expresion</a> ')' '\n' <a href="#lista_de_enunciados">lista_de_enunciados</a> 'finmientras' '\n'</li>
+      </ul>
+    </div>
+
+    <div class="sheet">
+      <h5 id="estructura_repetir">estructura_repetir</h5>
+      <ul>
+        <li>'repetir' '\n' <a href="#lista_de_enunciados">lista_de_enunciados</a> 'hastaque' '(' <a href="#expresion">expresion</a> ')' '\n'</li>
+      </ul>
+    </div>
+  </body>
+</html>
