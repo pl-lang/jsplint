@@ -20,8 +20,8 @@
       <h5 id="declaracion">declaracion_de_identificadores</h5>
       <ul>
         <li><a href="#tipo">tipo</a> <a href="#lista_de_identificadores">lista_de_identificadores</a> '\n'</li>
-        <li><a href="#tipo">tipo</a> <a href="#lista_de_identificadores">lista_de_identificadores</a> '\n' <a href="#delcaracion">declaracion_de_identificadores</a></li>
-        <li><a href="#tipo">tipo</a> <a href="#lista_de_identificadores">lista_de_identificadores</a> ',' <a href="#delcaracion">declaracion_de_identificadores</a></li>
+        <li><a href="#tipo">tipo</a> <a href="#lista_de_identificadores">lista_de_identificadores</a> '\n' <a href="#declaracion">declaracion_de_identificadores</a></li>
+        <li><a href="#tipo">tipo</a> <a href="#lista_de_identificadores">lista_de_identificadores</a> ',' <a href="#declaracion">declaracion_de_identificadores</a></li>
       </ul>
     </div>
 
@@ -220,4 +220,58 @@
       </ul>
     </div>
   </body>
+
+  <div class="sheet">
+    <h5 id="modulo_procedimiento">modulo_procedimiento</h5>
+    <ul>
+      <li><a href="#encabezado_procedimiento">encabezado_procedimiento</a> '\n' 'inicio' 'finprocedimiento' '\n'</li>
+      <li><a href="#encabezado_procedimiento">encabezado_procedimiento</a> '\n' <a href="#declaracion">declaracion_de_identificadores</a> 'inicio' '\n' <a href="#lista_de_enunciados">lista_de_enunciados</a> 'finprocedimiento'</li></li>
+      <li><a href="#encabezado_procedimiento">encabezado_procedimiento</a> '\n' 'inicio' '\n' <a href="#lista_de_enunciados">lista_de_enunciados</a> 'finprocedimiento'</li></li>
+      <li><a href="#encabezado_procedimiento">encabezado_procedimiento</a> '\n' <a href="#declaracion">declaracion_de_identificadores</a> 'inicio' '\n' 'finprocedimiento'</li></li>
+    </ul>
+  </div>
+
+  <div class="sheet">
+    <h5 id="modulo_funcion">modulo_funcion</h5>
+    <ul>
+      <li><a href="#encabezado_funcion">encabezado_funcion</a> '\n' 'inicio' 'finfuncion' '\n'</li>
+      <li><a href="#encabezado_funcion">encabezado_funcion</a> '\n' <a href="#declaracion">declaracion_de_identificadores</a> 'inicio' '\n' <a href="#lista_de_enunciados">lista_de_enunciados</a> 'finfuncion'</li></li>
+      <li><a href="#encabezado_funcion">encabezado_funcion</a> '\n' 'inicio' '\n' <a href="#lista_de_enunciados">lista_de_enunciados</a> 'finfuncion'</li></li>
+      <li><a href="#encabezado_funcion">encabezado_funcion</a> '\n' <a href="#declaracion">declaracion_de_identificadores</a> 'inicio' '\n' 'finfuncion'</li></li>
+    </ul>
+  </div>
+
+  <div class="sheet">
+    <h5 id="encabezado_procedimiento">encabezado_procedimiento</h5>
+    <ul>
+      <li>'procedimiento' <a href="#palabra">palabra</a> '(' ')'</li>
+      <li>'procedimiento' <a href="#palabra">palabra</a> '(' <a href="#lista_de_argumentos">lista_de_argumentos</a> ')'</li>
+    </ul>
+  </div>
+
+  <div class="sheet">
+    <h5 id="encabezado_funcion">encabezado_funcion</h5>
+    <ul>
+      <li><a href="#tipo">tipo</a> 'funcion' <a href="#palabra">palabra</a> '(' ')'</li>
+      <li><a href="#tipo">tipo</a> 'funcion' <a href="#palabra">palabra</a> '(' <a href="#lista_de_argumentos">lista_de_argumentos</a> ')'</li>
+    </ul>
+  </div>
+
+  <div class="sheet">
+    <h5 id="lista_de_argumentos">lista_de_argumentos</h5>
+    <ul>
+      <li><a href="#argumento">argumento</a></li>
+      <li><a href="#argumento">argumento</a> ',' <a href="#lista_de_argumentos">lista_de_argumentos</a></li>
+    </ul>
+  </div>
+
+  <div class="sheet">
+    <h5 id="argumento">argumento</h5>
+    <ul>
+      <li><a href="#tipo">tipo</a> <a href="#palabra">palabra</a></li>
+      <li><a href="#tipo">tipo</a> 'ref' <a href="#palabra">palabra</a></li>
+      <li>'ref' <a href="#palabra">palabra</a></li>
+      <li><a href="#palabra">palabra</a></li>
+    </ul>
+  </div>
 </html>
