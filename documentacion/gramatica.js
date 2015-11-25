@@ -200,11 +200,65 @@ function ModuloPrincipal () {
 
 function Enunciado () {
   // TODO: Agregar el resto
-  return Asignacion()
+  let c = Math.random()
+
+  if (c <= 0.3)
+    return Asignacion()
+  else if (c <= 0.6)
+    return EstructuraDeSeleccion()
+  else
+    return EstructuraRepetitiva()
 }
 
 function ListaDeEnunciados () {
   return Enunciado() + '\n'
+}
+
+function EstructuraDeSeleccion () {
+  if (Math.random() <= 0.5)
+    return SeleccionSimple()
+  else
+    return SeleccionCompuesta()
+}
+
+function SeleccionSimple () {
+  return 'si (' + Expresion() + ') entonces \n' + ListaDeEnunciados() + 'finsi \n'
+}
+
+function SeleccionCompuesta () {
+  return 'si (' + Expresion() + ') entonces \n' + ListaDeEnunciados() + 'sino \n' + ListaDeEnunciados() + 'finsi \n'
+}
+
+function EstructuraRepetitiva () {
+  let n = Math.random()
+
+  if (n <= 0.3)
+    return EstructuraPara()
+  else if (n <= 0.6)
+    return EstructuraMientras()
+  else
+    return EstructuraRepetir()
+}
+
+function EstructuraPara () {
+  return 'para ' + Identificador() + ' <- ' + Expresion() + ' hasta ' + Expresion() + ' hacer \n' + ListaDeEnunciados() + 'finpara\n'
+}
+
+function EstructuraMientras () {
+  return 'mientras (' + Expresion() + ')\n' + ListaDeEnunciados() + 'finmientras\n'
+}
+
+function EstructuraRepetir  () {
+  return 'repetir\n' + ListaDeEnunciados() + 'hastaque(' + Expresion() + ')\n'
+}
+
+function ListaDeArgumentos () {
+  let n = Math.random()
+
+  if (n <= 0.3)
+    return Tipo() + ' ' + Argumento()
+  else if (n <= 0.6)
+    return Tipo() + ' ' + Argumento() + ', ' + Tipo() + ' ' + ListaDeArgumentos()
 }
 
 for (let i = 0; i < 2; i++) {
