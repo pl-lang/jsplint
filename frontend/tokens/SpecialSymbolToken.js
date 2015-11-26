@@ -13,7 +13,8 @@ let list = [
   ')'   ,
   '['   ,
   ']'   ,
-  ','
+  ','   ,
+  '\n'
 ]
 
 let symbols = new Set(list)
@@ -98,6 +99,9 @@ class SpecialSymbolToken {
         break
       case ',':
         this.kind = 'comma'
+        break
+      case '\n':
+        this.kind = 'eol'
         break
       default:
         this.kind = 'error'
