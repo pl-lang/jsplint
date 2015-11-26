@@ -4,7 +4,7 @@
   "description": "interprete",
   "main": "main.js",
   "scripts": {
-    "test": "mocha -w"
+    "test": "mocha -w -b"
   },
   "author": "Rodrigo Maximiliano Bellusci",
   "license": "MIT",
