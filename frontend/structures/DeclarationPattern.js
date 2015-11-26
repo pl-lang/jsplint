@@ -26,12 +26,17 @@ class DeclarationPattern {
 
         {
           let commaFound = false
+          let eolFound = false
           if (source.current().kind === 'comma') {
             source.next()
             commaFound = true
           }
+          else if (source.current().kind == 'eol') {
+            source.next()
+            eolFound = true
+          }
           let nextDeclaration = this.capture(source)
-          if (commaFound && nextDeclaration.error)
+          if ((commaFound || eolFound) && nextDeclaration.error)
             return nextDeclaration
           else if (nextDeclaration.error === false) {
             for (let datatype in nextDeclaration.result)
