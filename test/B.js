@@ -184,6 +184,7 @@ describe('TypePattern', () => {
       , expectedTokens  : ['entero', 'real', 'logico', 'caracter']
       , atColumn        : 0
       , atLine          : 0
+      , reason          : 'nonexistent-type'
     })
     q.current().kind.should.equal('word')
     q.current().text.should.equal('gatp')

@@ -20,6 +20,7 @@ class TypePattern {
             , expectedTokens  : ['entero', 'real', 'logico', 'caracter']
             , atColumn        : current.columnNumber
             , atLine          : current.lineNumber
+            , reason          : 'nonexistent-type'
           }
         , error   : true
       }
