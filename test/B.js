@@ -125,8 +125,8 @@ describe('VariableNamePattern', () => {
 
     capture.error.should.equal(false)
     capture.result.should.deepEqual({
-      text    : 'sueldo',
-      isArray : false
+      name    : 'sueldo',
+      data    : {isArray : false, type:'unknown'}
     })
   })
 
@@ -137,9 +137,8 @@ describe('VariableNamePattern', () => {
 
     capture.error.should.equal(false)
     capture.result.should.deepEqual({
-      text        : 'vuelos',
-      isArray     : true,
-      dimension   : [3, 12]
+      name        : 'vuelos',
+      data        : {isArray: true, dimension: [3, 12], type: 'unknown'}
     })
   })
 })
@@ -152,10 +151,10 @@ describe('VariableListPattern', () => {
     let capture = VariableListPattern.capture(q)
 
     capture.error.should.equal(false)
-    capture.result[0].should.deepEqual({text:'a', isArray:false})
-    capture.result[1].should.deepEqual({text:'b', isArray:false})
-    capture.result[2].should.deepEqual({text:'matriz', isArray:true, dimension:[3, 3]})
-    capture.result[3].should.deepEqual({text:'v', isArray:true, dimension:[8]})
+    capture.result[0].should.deepEqual({name:'a', data : {isArray:false, type:'unknown'}})
+    capture.result[1].should.deepEqual({name:'b', data : {isArray:false, type:'unknown'}})
+    capture.result[2].should.deepEqual({name:'matriz', data: {isArray:true, dimension:[3, 3], type:'unknown'}})
+    capture.result[3].should.deepEqual({name:'v', data: {isArray:true, dimension:[8], type:'unknown'}})
     q.current().kind.should.equal('eof')
   })
 })
