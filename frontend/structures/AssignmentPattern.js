@@ -22,6 +22,7 @@ class AssignmentPattern {
               result  : {
                   payload : payload.result
                 , target  : target
+                , action  : 'assignment'
               }
             , error   : false
           }
