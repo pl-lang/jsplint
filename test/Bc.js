@@ -35,3 +35,21 @@ describe('MainModuleScanner', () => {
     mod_data.error.should.equal(false)
   })
 })
+
+describe('Interpreter', () => {
+  let MainModuleScanner = require('../frontend/scanners/MainModuleScanner')
+  let Interpreter = require('../backend/Interpreter.js')
+  it('ejecuta las acciones de un programa', () => {
+    let programa = 'variables\nentero a, b\ninicio\na<-48\nb <- 32\nfin\n'
+    let q = queueFromSource(programa)
+
+    let mod_data = MainModuleScanner.capture(q)
+
+    let int = new Interpreter(mod_data.result, {})
+
+    int.run()
+
+    int.globalVariables.a.value.should.equal(48)
+    int.globalVariables.b.value.should.equal(32)
+  })
+})
