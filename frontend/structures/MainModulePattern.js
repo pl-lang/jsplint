@@ -21,6 +21,25 @@ class MainModulePattern {
       moduleData.atColumn = current.columnNumber
       moduleData.atLine   = current.lineNumber
       source.next()
+
+      // revisa que haya un salto luego de 'variables'
+      current = source.current()
+      if (current.kind !== 'eol') {
+        return {
+            error   : true
+          , result  : {
+              unexpected  : current.kind
+            , expected    : 'eol'
+            , atColumn    : current.columnNumber
+            , atLine      : current.lineNumber
+            , reason      : 'missing-eol-after-variables'
+          }
+        }
+      }
+      else {
+        source.next()
+      }
+
       let varDeclaration = DeclarationPattern.capture(source)
       current = source.current()
       if (current.kind !== 'inicio') {
@@ -36,11 +55,29 @@ class MainModulePattern {
         }
       }
       else {
+        current = source.next()
         if (varDeclaration.error === false) {
           moduleData.localVariables = varDeclaration.result
         }
-        current = source.next()
-        // let statements = StatementListPattern.capture(source)
+
+        current = source.current()
+        if (current.kind !== 'eol') {
+          return {
+              error   : true
+            , result  : {
+                unexpected  : current.kind
+              , expected    : 'eol'
+              , atColumn    : current.columnNumber
+              , atLine      : current.lineNumber
+              , reason      : 'missing-eol-after-inicio'
+            }
+          }
+        }
+        else {
+          source.next()
+        }
+
+        current = source.current()
         if (current.kind === 'fin') {
           return {
               error   : false
