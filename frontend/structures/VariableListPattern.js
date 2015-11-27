@@ -3,7 +3,7 @@ let VariableNamePattern = require('./VariableNamePattern.js')
 
 class VariableListPattern {
   static capture(source) {
-    let names = []
+    let variables = []
     let partialMatch = false
 
     let capture = VariableNamePattern.capture(source)
@@ -11,30 +11,30 @@ class VariableListPattern {
     if (capture.error)
       return capture
     else {
-      names.push(capture.result)
+      variables.push(capture.result)
       partialMatch = true
       if (source.current().kind === 'comma') {
         source.next()
-        let nameList = this.capture(source)
+        let varList = this.capture(source)
 
-        if (nameList.error)
+        if (varList.error)
             if (partialMatch === false)
-              return nameList
+              return varList
             else
               return {
-                  result  : names
+                  result  : variables
                 , error   : false
               }
         else {
           return {
-              result  : names.concat(nameList.result)
+              result  : variables.concat(varList.result)
             , error   : false
           }
         }
       }
       else
         return {
-            result  : names
+            result  : variables
           , error   : false
         }
     }

@@ -4,9 +4,9 @@ let IndexesPattern = require('./IndexesPattern.js')
 
 class VariableNamePattern {
   static capture(source) {
-    let name = {
-        isArray : false
-      , text    : ''
+    let variable = {
+        data    : {isArray : false, type:'unknown'}
+      , name    : ''
     }
 
     let text = WordPattern.capture(source)
@@ -14,7 +14,7 @@ class VariableNamePattern {
     if (text.error)
       return text
     else {
-      name.text = text.result
+      variable.name = text.result
 
       if (source.current().kind === 'left-bracket') {
         source.next()
@@ -22,12 +22,12 @@ class VariableNamePattern {
         if (dimension.error)
           return dimension
         else {
-          name.isArray = true
-          name.dimension = dimension.result
+          variable.data.isArray = true
+          variable.data.dimension = dimension.result
           if (source.current().kind === 'right-bracket') {
             source.next()
             return {
-                result : name
+                result : variable
               , error  : false
             }
           }
@@ -45,7 +45,7 @@ class VariableNamePattern {
       }
       else
         return {
-            result : name
+            result : variable
           , error  : false
         }
 

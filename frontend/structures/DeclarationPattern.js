@@ -4,12 +4,7 @@ let TypePattern = require('./TypePattern.js')
 
 class DeclarationPattern {
   static capture(source) {
-    let declarations = {
-        caracter  : []
-      , logico    : []
-      , entero    : []
-      , real      : []
-    }
+    let declarations = {}
 
     let typename = TypePattern.capture(source)
 
@@ -21,8 +16,12 @@ class DeclarationPattern {
       if (varList.error)
         return varList
       else {
-        for (let varname of varList.result)
-          declarations[typename.result].push(varname)
+        for (let variable of varList.result) {
+          let var_object = variable.data
+          var_object.type = typename
+          let name = variable.name
+          declarations[name] = var_object
+        }
 
         {
           let commaFound = false
@@ -39,8 +38,8 @@ class DeclarationPattern {
           if ((commaFound || eolFound) && nextDeclaration.error && source.current().kind != 'inicio')
             return nextDeclaration
           else if (nextDeclaration.error === false) {
-            for (let datatype in nextDeclaration.result)
-              declarations[datatype] = declarations[datatype].concat(nextDeclaration.result[datatype])
+            for (let name in nextDeclaration.result)
+              declarations[name] = nextDeclaration.result[name]
           }
         }
 
