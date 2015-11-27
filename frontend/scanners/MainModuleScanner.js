@@ -14,13 +14,8 @@ class MainModuleScanner {
 
   static capture(source) {
     let moduleData = {
-        localVariables  : {
-            caracter  : []
-          , logico    : []
-          , entero    : []
-          , real      : []
-        }
-      , statements      : []
+        statements      : []
+      , variables       : {}
       , atColumn        : 0
       , atLine          : 0
       , name            : 'main'
@@ -56,7 +51,7 @@ class MainModuleScanner {
       return varDeclaration
     }
     else {
-      moduleData.localVariables = varDeclaration.result
+      moduleData.variables = varDeclaration.result
     }
     current = source.current()
 
