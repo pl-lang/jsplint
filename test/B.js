@@ -423,3 +423,18 @@ describe('MainModulePattern', () => {
     })
   })
 })
+
+
+describe('AssignmentPattern', () => {
+  let AssignmentPattern = require('../frontend/structures/AssignmentPattern.js')
+  it('captura un enunciado de asignacion', () => {
+    let asignacion = 'var <- 48'
+
+    let q = queueFromSource(asignacion)
+    let capt = AssignmentPattern.capture(q)
+
+    capt.error.should.equal(false)
+    capt.result.payload.should.equal(48)
+    capt.result.target.should.equal('var')
+  })
+})
