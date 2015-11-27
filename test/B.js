@@ -376,7 +376,7 @@ describe('MainModulePattern', () => {
   })
 
   it('programa sin "inicio" pero con varibles declaradas', () => {
-    let programa = 'variables entero a, b, c\nfin'
+    let programa = 'variables\n entero a, b, c\nfin'
 
     let q = queueFromSource(programa)
     let capt = MainModulePattern.capture(q)
@@ -386,7 +386,7 @@ describe('MainModulePattern', () => {
         unexpected  : 'fin'
       , expected    : 'inicio'
       , atColumn    : 0
-      , atLine      : 1
+      , atLine      : 2
       , reason      : 'missing-inicio'
     })
   })
@@ -408,17 +408,17 @@ describe('MainModulePattern', () => {
   })
 
   it('programa sin "fin"', () => {
-    let programa = 'variables entero a, b, c\ninicio\n'
+    let programa = 'variables\n entero a, b, c\ninicio\nfi'
 
     let q = queueFromSource(programa)
     let capt = MainModulePattern.capture(q)
 
     capt.error.should.equal(true)
     capt.result.should.deepEqual({
-        unexpected  : 'eof'
+        unexpected  : 'word'
       , expected    : 'fin'
-      , atColumn    : 5
-      , atLine      : 1
+      , atColumn    : 0
+      , atLine      : 3
       , reason      : 'missing-fin'
     })
   })
