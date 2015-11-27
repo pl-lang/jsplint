@@ -31,6 +31,22 @@ describe('Source:', () => {
 
     source.nextChar().should.equal(source.EOF)
   })
+
+  it('cuenta bien los renglones', () => {
+    let string = '0\n1\n2'
+    let source = new Source(string)
+
+    source._currentLineIndex.should.equal(0)
+    source.nextChar()
+    source.nextChar()
+
+    source.currentChar().should.equal('1')
+    source._currentLineIndex.should.equal(1)
+    source.nextChar()
+    source.nextChar()
+
+    source._currentLineIndex.should.equal(2)
+  })
 })
 
 describe('WordToken', () => {
