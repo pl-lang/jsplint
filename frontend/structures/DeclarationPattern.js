@@ -36,7 +36,7 @@ class DeclarationPattern {
             eolFound = true
           }
           let nextDeclaration = this.capture(source)
-          if ((commaFound || eolFound) && nextDeclaration.error)
+          if ((commaFound || eolFound) && nextDeclaration.error && source.current().kind != 'inicio')
             return nextDeclaration
           else if (nextDeclaration.error === false) {
             for (let datatype in nextDeclaration.result)
