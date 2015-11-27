@@ -18,9 +18,18 @@ class DeclarationPattern {
       else {
         for (let variable of varList.result) {
           let var_object = variable.data
-          var_object.type = typename
+          var_object.type = typename.result
           let name = variable.name
-          declarations[name] = var_object
+
+          if (declarations.hasOwnProperty(name)) {
+            return {
+                result  : {reason:'repeatead-var-name'}
+              , error   : true
+            }
+          }
+          else {
+            declarations[name] = var_object
+          }
         }
 
         {
@@ -38,8 +47,17 @@ class DeclarationPattern {
           if ((commaFound || eolFound) && nextDeclaration.error && source.current().kind != 'inicio')
             return nextDeclaration
           else if (nextDeclaration.error === false) {
-            for (let name in nextDeclaration.result)
-              declarations[name] = nextDeclaration.result[name]
+            for (let name in nextDeclaration.result) {
+              if (declarations.hasOwnProperty(name)) {
+                return {
+                    result  : {reason:'repeatead-var-name'}
+                  , error   : true
+                }
+              }
+              else {
+                declarations[name] = nextDeclaration.result[name]
+              }
+            }
           }
         }
 
