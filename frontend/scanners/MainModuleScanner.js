@@ -87,6 +87,7 @@ class MainModuleScanner {
 
       if (current.kind == 'fin') {
         fin_found = true
+        current = source.next()
       }
       else if (current.kind == 'eof') {
         eof_found = true
