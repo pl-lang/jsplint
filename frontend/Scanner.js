@@ -46,14 +46,12 @@ class Scanner {
     }
 
     if (q.current().kind == 'eof') {
-      console.log("Fin de programa alcanzado")
       return {
           result : modules
         , error  : false
       }
     }
     else {
-      console.log("Fin no alcanzado, current:", q.current())
       return {error:true}
     }
   }
