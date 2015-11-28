@@ -34,25 +34,22 @@ describe('ModuleTable', () => {
 
 describe('Scanner', () => {
   let Scanner = require('../frontend/Scanner.js')
-
-  it('Genera correctamente la tabla de un programa con modulo principal', () => {
+  it('genera correctamente los modulos de un programa (solo main)', () => {
     let programa = `
     variables
       entero a, b[1, 2]
     inicio
+      a <- 32
     fin
     `
+
     let source = new Source(programa)
     let tokenizer = new Parser(source)
 
     let scanner = new Scanner(tokenizer)
 
-    let scanResult = scanner.getModuleTable()
+    let scanResult = scanner.getModules()
 
     scanResult.error.should.equal(false)
-
-    let table = scanResult.result
-
-    table.has('main').should.equal(true)
   })
 })
