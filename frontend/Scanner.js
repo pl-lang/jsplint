@@ -12,7 +12,7 @@
 // [ ] WhilePattern
 // [ ] RepeatPattern
 
-let MainModulePattern = require('./structures/MainModulePattern.js')
+let MainModuleScanner = require('./scanners/MainModuleScanner.js')
 let ModuleTable = require('./ModuleTable.js')
 let TokenQueue = require('./TokenQueue.js')
 
@@ -25,7 +25,8 @@ class Scanner {
 
   }
 
-  getModuleTable() {
+  getModules() {
+    let modules = {}
     let t
     let tokenArray = []
     while ( (t = this.parser.nextToken()).kind !== 'eof') {
@@ -35,30 +36,25 @@ class Scanner {
 
     let q = new TokenQueue(tokenArray)
 
-    let table = new ModuleTable()
+    let main_data = MainModuleScanner.capture(q)
 
-    let mainModule = MainModulePattern.capture(q)
-
-    // Por ahora, agregar la plantilla de main a la tabla no va a generar un error
-    // porque se la agrega solo una vez, pero cuando esto esté dentro de un bucle
-    // hay que guardar el retorno de add.
-    // TODO: cambiar el nombre del modulo principal por otra cosa puesto que 'main' puede chocar
-    // con el nombre del modulo de algun usuario
-    if (mainModule.error === false)
-      table.add(mainModule.result)
+    if (main_data.error) {
+      console.log(main_data)
+    }
     else {
-      // enviar mensaje con el error
-      // por ahora, console.log :/
-      console.log("ERROR on Scanner: ", mainModule.result.reason)
+      modules.main = main_data.result
     }
 
-    // Ahora, si el currentToken no es 'eof', habría que seguir buscando modulos
-    // pero como todavía no tengo echos esos patterns, devuelvo la tabla solo
-    // con el modulo principal
-
-    return {
-        result  : table
-      , error   : false
+    if (q.current().kind == 'eof') {
+      console.log("Fin de programa alcanzado")
+      return {
+          result : modules
+        , error  : false
+      }
+    }
+    else {
+      console.log("Fin no alcanzado, current:", q.current())
+      return {error:true}
     }
   }
 }
