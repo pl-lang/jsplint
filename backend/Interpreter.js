@@ -3,7 +3,7 @@
 let MessageHandler  = require('../messages/MessageHandler')
 let Evaluator       = require('./Evaluator.js')
 
-class Interprete {
+class Interpreter {
   constructor(main, user_modules) {
     this.message_handler = new MessageHandler()
     this.globalVariables = main.variables
@@ -29,4 +29,4 @@ class Interprete {
   }
 }
 
-module.exports = Interprete
+module.exports = Interpreter
