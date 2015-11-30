@@ -7,12 +7,26 @@ class Evaluator {
     this.statements = statements
   }
 
+  evaluateFactor(factor) {
+    return (factor.sign == 'plus') ? factor.value : factor.value*(-1)
+  }
+
+  evaluateTerms(terms) {
+    let result = 0
+    for (let term of terms) {
+      if (term.expression_type == 'literal') {
+        result = result + (term.sign == 'plus') ? this.evaluateFactor(term.content):this.evaluateFactor(term.content)*(-1)
+      }
+    }
+    return result
+  }
+
   run() {
     for (let statement of this.statements) {
       switch (statement.action) {
         case 'assignment':
-        // Habria que buscar la variable objetivo (primero entre las locales, lueglo entre las locales)
-        this.localVariables[statement.target].value = statement.payload
+        // Habria que buscar la variable objetivo (primero entre las locales, luego entre las globales)
+        this.localVariables[statement.target].value = this.evaluateTerms(statement.payload)
         break
       }
     }
