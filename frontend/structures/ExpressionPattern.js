@@ -23,7 +23,7 @@ function queueFromSource(string) {
   return q
 }
 
-let IntegerPattern = require('./IntegerPattern')
+let LiteralPattern = require('./LiteralPattern')
 let BinaryOpPattern = require('./BinaryOpPattern')
 
 class Expression {
@@ -67,10 +67,9 @@ class Factor {
       current = source.next()
     }
 
-    // POR AHORA SOLO CONSIDERO ENTEROS
-    if (current.kind == 'integer') {
-      let f = IntegerPattern.capture(source)
-      return {result:{value:f.result, type:'integer', expression_type:'literal', sign:factor_sign}, error:false}
+    if (current.kind == 'integer' || current.kind == 'float' || current.kind == 'string') {
+      let f = LiteralPattern.capture(source)
+      return {result:{value:f.result.value, type:f.result.type, expression_type:'literal', sign:factor_sign}, error:false}
     }
     // else if (current.kind == 'word') {
     //   // Llamada
@@ -136,7 +135,6 @@ class Term {
         return {result:term, error:false}
       }
       else {
-        term.op = op.result
         let operands = [factor.result]
 
         let next_operand = Term.capture(source, 'plus')
@@ -152,7 +150,7 @@ class Term {
             operands.push(next_operand.result)
           }
           term.expression_type = 'operation'
-          term.operands = operands
+          term.content = {operands:operands, op:op.result}
           return {result:term, error:false}
         }
       }
@@ -189,6 +187,4 @@ class TermList {
   }
 }
 
-let q = queueFromSource("-3")
-
-console.log(Expression.capture(q).result)
+module.exports = Expression
