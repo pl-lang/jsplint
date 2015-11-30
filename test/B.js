@@ -463,6 +463,7 @@ describe('ExpressionPattern', () => {
           content:
           {
             op:'times',
+            expression_type:'operation',
             operands:[
               {value:2, sign:'plus', type:'integer', expression_type:'literal'},
               {value:3, sign:'plus', type:'integer', expression_type:'literal'}
