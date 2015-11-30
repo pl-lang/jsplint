@@ -483,7 +483,15 @@ describe('AssignmentPattern', () => {
     let capt = AssignmentPattern.capture(q)
 
     capt.error.should.equal(false)
-    capt.result.payload.should.equal(48)
+    capt.result.payload.should.deepEqual(
+      [
+        {
+          expression_type:'literal',
+          content:{value:48, sign:'plus', type:'integer', expression_type:'literal'},
+          sign:'plus'
+        }
+      ]
+    )
     capt.result.target.should.equal('var')
   })
 })
