@@ -150,7 +150,7 @@ class Term {
             operands.push(next_operand.result)
           }
           term.expression_type = 'operation'
-          term.content = {operands:operands, op:op.result}
+          term.content = {operands:operands, op:op.result, expression_type:'operation'}
           return {result:term, error:false}
         }
       }
