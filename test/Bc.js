@@ -40,7 +40,7 @@ describe('Interpreter', () => {
   let MainModuleScanner = require('../frontend/scanners/MainModuleScanner')
   let Interpreter = require('../backend/Interpreter.js')
   it('ejecuta las acciones de un programa', () => {
-    let programa = 'variables\nentero a, b\ninicio\na<-48\nb <- 32\nfin\n'
+    let programa = 'variables\nentero a, b\ninicio\na<-48\nb <- -32\nfin\n'
     let q = queueFromSource(programa)
 
     let mod_data = MainModuleScanner.capture(q)
@@ -50,6 +50,6 @@ describe('Interpreter', () => {
     int.run()
 
     int.globalVariables.a.value.should.equal(48)
-    int.globalVariables.b.value.should.equal(32)
+    int.globalVariables.b.value.should.equal(-32)
   })
 })
