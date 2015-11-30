@@ -36,7 +36,8 @@ class Evaluator {
   evaluateTerms(terms) {
     let result = 0
     for (let term of terms) {
-        result = result + (term.sign == 'plus') ? this.evaluateFactor(term.content, term.expression_type):this.evaluateFactor(term.content, term.expression_type)*(-1)
+      let proximo_termino = (term.sign == 'plus') ? this.evaluateFactor(term.content, term.expression_type):this.evaluateFactor(term.content, term.expression_type)*(-1)
+      result += proximo_termino
     }
     return result
   }

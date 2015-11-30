@@ -36,6 +36,72 @@ describe('MainModuleScanner', () => {
   })
 })
 
+describe('Evaluator', () => {
+  let ExpressionPattern = require('../frontend/structures/ExpressionPattern.js')
+  let Evaluator = require('../backend/Evaluator.js')
+  let evaluator = new Evaluator([], {}, {})
+  it('multiplicacion', () => {
+    // 2*3
+    {
+      let a = '2*3'
+      let q = queueFromSource(a)
+      let exp = ExpressionPattern.capture(q)
+      exp.error.should.equal(false)
+      let resultado = evaluator.evaluateTerms(exp.result)
+      resultado.should.equal(6)
+    }
+
+    // -2*-3
+    {
+      let a = '-2*-3'
+      let q = queueFromSource(a)
+      let exp = ExpressionPattern.capture(q)
+      exp.error.should.equal(false)
+      let resultado = evaluator.evaluateTerms(exp.result)
+      resultado.should.equal(6)
+    }
+
+    // 2*2*2 (TODO: arreglar esto)
+    // {
+    //   let a = '2*2*2'
+    //   let q = queueFromSource(a)
+    //   let exp = ExpressionPattern.capture(q)
+    //   exp.error.should.equal(false)
+    //   let resultado = evaluator.evaluateTerms(exp.result)
+    //   resultado.should.equal(8)
+    // }
+  })
+
+  it('division', () => {
+    {
+      let a = '3/2'
+      let q = queueFromSource(a)
+      let exp = ExpressionPattern.capture(q)
+      exp.error.should.equal(false)
+      let resultado = evaluator.evaluateTerms(exp.result)
+      resultado.should.equal(1.5)
+    }
+
+    let a = '-3/-2'
+    let q = queueFromSource(a)
+    let exp = ExpressionPattern.capture(q)
+    exp.error.should.equal(false)
+    let resultado = evaluator.evaluateTerms(exp.result)
+    resultado.should.equal(1.5)
+  })
+
+  it('resta', () => {
+    {
+      let a = '3-3-3'
+      let q = queueFromSource(a)
+      let exp = ExpressionPattern.capture(q)
+      exp.error.should.equal(false)
+      let resultado = evaluator.evaluateTerms(exp.result)
+      resultado.should.equal(-3)
+    }
+  })
+})
+
 describe('Interpreter', () => {
   let MainModuleScanner = require('../frontend/scanners/MainModuleScanner')
   let Interpreter = require('../backend/Interpreter.js')
