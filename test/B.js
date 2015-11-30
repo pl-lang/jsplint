@@ -420,6 +420,59 @@ describe.skip('MainModulePattern', () => {
   })
 })
 
+describe('ExpressionPattern', () => {
+  let ExpressionPattern = require('../frontend/structures/ExpressionPattern.js')
+
+  it('lee una expresion compuesta por un entero (negativo o postivo)', () => {
+    let positivo = queueFromSource('3')
+
+    let e = ExpressionPattern.capture(positivo)
+
+    e.error.should.equal(false)
+    e.result.should.deepEqual([
+      {
+        expression_type:'literal',
+        content:{value:3, sign:'plus', type:'integer', expression_type:'literal'},
+        sign:'plus'
+      }
+    ])
+
+    let negativo = queueFromSource('-7')
+    let f = ExpressionPattern.capture(negativo)
+
+    f.error.should.equal(false)
+    f.result.should.deepEqual([
+      {
+        expression_type:'literal',
+        content:{value:7, sign:'plus', type:'integer', expression_type:'literal'},
+        sign:'minus'
+      }
+    ])
+  })
+
+  it('lee una operacion', () => {
+    let multiplicacion = queueFromSource('2*3')
+    let e = ExpressionPattern.capture(multiplicacion)
+
+    e.error.should.equal(false)
+    e.result.should.deepEqual(
+      [
+        {
+          sign:'plus',
+          expression_type:'operation',
+          content:
+          {
+            op:'times',
+            operands:[
+              {value:2, sign:'plus', type:'integer', expression_type:'literal'},
+              {value:3, sign:'plus', type:'integer', expression_type:'literal'}
+            ]
+          }
+        }
+      ]
+    )
+  })
+})
 
 describe('AssignmentPattern', () => {
   let AssignmentPattern = require('../frontend/structures/AssignmentPattern.js')
