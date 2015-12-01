@@ -47,7 +47,7 @@ describe('Evaluator', () => {
       let q = queueFromSource(a)
       let exp = ExpressionPattern.capture(q)
       exp.error.should.equal(false)
-      let resultado = evaluator.evaluateTerms(exp.result)
+      let resultado = evaluator.evaluateTerms(exp.result.terms)
       resultado.should.equal(6)
     }
 
@@ -57,19 +57,19 @@ describe('Evaluator', () => {
       let q = queueFromSource(a)
       let exp = ExpressionPattern.capture(q)
       exp.error.should.equal(false)
-      let resultado = evaluator.evaluateTerms(exp.result)
+      let resultado = evaluator.evaluateTerms(exp.result.terms)
       resultado.should.equal(6)
     }
 
-    // 2*2*2 (TODO: arreglar esto)
-    // {
-    //   let a = '2*2*2'
-    //   let q = queueFromSource(a)
-    //   let exp = ExpressionPattern.capture(q)
-    //   exp.error.should.equal(false)
-    //   let resultado = evaluator.evaluateTerms(exp.result)
-    //   resultado.should.equal(8)
-    // }
+    // 2*2*2
+    {
+      let a = '2*2*2'
+      let q = queueFromSource(a)
+      let exp = ExpressionPattern.capture(q)
+      exp.error.should.equal(false)
+      let resultado = evaluator.evaluateTerms(exp.result.terms)
+      resultado.should.equal(8)
+    }
   })
 
   it('division', () => {
@@ -78,16 +78,27 @@ describe('Evaluator', () => {
       let q = queueFromSource(a)
       let exp = ExpressionPattern.capture(q)
       exp.error.should.equal(false)
-      let resultado = evaluator.evaluateTerms(exp.result)
+      let resultado = evaluator.evaluateTerms(exp.result.terms)
       resultado.should.equal(1.5)
     }
 
-    let a = '-3/-2'
-    let q = queueFromSource(a)
-    let exp = ExpressionPattern.capture(q)
-    exp.error.should.equal(false)
-    let resultado = evaluator.evaluateTerms(exp.result)
-    resultado.should.equal(1.5)
+    {
+      let a = '-3/-2'
+      let q = queueFromSource(a)
+      let exp = ExpressionPattern.capture(q)
+      exp.error.should.equal(false)
+      let resultado = evaluator.evaluateTerms(exp.result.terms)
+      resultado.should.equal(1.5)
+    }
+
+    // {
+    //   let a = '2/2/2'
+    //   let q = queueFromSource(a)
+    //   let exp = ExpressionPattern.capture(q)
+    //   exp.error.should.equal(false)
+    //   let resultado = evaluator.evaluateTerms(exp.result.terms)
+    //   resultado.should.equal(2/2/2)
+    // }
   })
 
   it('resta', () => {
@@ -96,8 +107,66 @@ describe('Evaluator', () => {
       let q = queueFromSource(a)
       let exp = ExpressionPattern.capture(q)
       exp.error.should.equal(false)
-      let resultado = evaluator.evaluateTerms(exp.result)
+      let resultado = evaluator.evaluateTerms(exp.result.terms)
       resultado.should.equal(-3)
+    }
+  })
+
+  it('suma', () => {
+    {
+      let a = '2+43'
+      let q = queueFromSource(a)
+      let exp = ExpressionPattern.capture(q)
+      exp.error.should.equal(false)
+      let resultado = evaluator.evaluateTerms(exp.result.terms)
+      resultado.should.equal(45)
+    }
+  })
+
+  it('operaciones combinadas', () => {
+    {
+      let a = '2-(2-3)'
+      let q = queueFromSource(a)
+      let exp = ExpressionPattern.capture(q)
+      exp.error.should.equal(false)
+      let resultado = evaluator.evaluateTerms(exp.result.terms)
+      resultado.should.equal(3)
+    }
+
+    {
+      let a = '2+(2+3)'
+      let q = queueFromSource(a)
+      let exp = ExpressionPattern.capture(q)
+      exp.error.should.equal(false)
+      let resultado = evaluator.evaluateTerms(exp.result.terms)
+      resultado.should.equal(7)
+    }
+
+    {
+      let a = '2+(2+3*4)'
+      let q = queueFromSource(a)
+      let exp = ExpressionPattern.capture(q)
+      exp.error.should.equal(false)
+      let resultado = evaluator.evaluateTerms(exp.result.terms)
+      resultado.should.equal(16)
+    }
+
+    {
+      let a = '(3*2)-6'
+      let q = queueFromSource(a)
+      let exp = ExpressionPattern.capture(q)
+      exp.error.should.equal(false)
+      let resultado = evaluator.evaluateTerms(exp.result.terms)
+      resultado.should.equal(0)
+    }
+
+    {
+      let a = '(-(-(2+2)))'
+      let q = queueFromSource(a)
+      let exp = ExpressionPattern.capture(q)
+      exp.error.should.equal(false)
+      let resultado = evaluator.evaluateTerms(exp.result.terms)
+      resultado.should.equal(4)
     }
   })
 })
