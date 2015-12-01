@@ -131,7 +131,7 @@ class Term {
 
       if (op.error) {
         term.content = factor.result
-        term.expression_type = 'literal'
+        term.expression_type = term.content.expression_type
         return {result:term, error:false}
       }
       else {
@@ -167,7 +167,7 @@ class TermList {
     }
     else {
       if (source.current().kind != 'plus' && source.current().kind != 'minus') {
-        return {result:[first_term.result], error:false}
+        return {result:{terms:[first_term.result], expression_type:'term-list'}, error:false}
       }
       else {
         let term_sign = source.current().kind
@@ -178,9 +178,9 @@ class TermList {
         }
         else {
           let term_vector = [first_term.result]
-          term_vector = term_vector.concat(following_terms.result)
+          term_vector = term_vector.concat(following_terms.result.terms)
 
-          return {result:term_vector, error:false}
+          return {result:{terms:term_vector, expression_type:'term-list'}, error:false}
         }
       }
     }
