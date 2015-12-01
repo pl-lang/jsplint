@@ -420,7 +420,7 @@ describe.skip('MainModulePattern', () => {
   })
 })
 
-describe('ExpressionPattern', () => {
+describe.skip('ExpressionPattern', () => {
   let ExpressionPattern = require('../frontend/structures/ExpressionPattern.js')
 
   it('lee una expresion compuesta por un entero (negativo o postivo)', () => {
@@ -475,7 +475,7 @@ describe('ExpressionPattern', () => {
   })
 })
 
-describe('AssignmentPattern', () => {
+describe.skip('AssignmentPattern', () => {
   let AssignmentPattern = require('../frontend/structures/AssignmentPattern.js')
   it('captura un enunciado de asignacion', () => {
     let asignacion = 'var <- 48'
