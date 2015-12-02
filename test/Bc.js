@@ -91,14 +91,32 @@ describe('Evaluator', () => {
       resultado.should.equal(1.5)
     }
 
-    // {
-    //   let a = '2/2/2'
-    //   let q = queueFromSource(a)
-    //   let exp = ExpressionPattern.capture(q)
-    //   exp.error.should.equal(false)
-    //   let resultado = evaluator.evaluateTerms(exp.result.terms)
-    //   resultado.should.equal(2/2/2)
-    // }
+    {
+      let a = '2/2/2'
+      let q = queueFromSource(a)
+      let exp = ExpressionPattern.capture(q)
+      exp.error.should.equal(false)
+      let resultado = evaluator.evaluateTerms(exp.result.terms)
+      resultado.should.equal(2/2/2)
+    }
+
+    {
+      let a = '2/2/2/2'
+      let q = queueFromSource(a)
+      let exp = ExpressionPattern.capture(q)
+      exp.error.should.equal(false)
+      let resultado = evaluator.evaluateTerms(exp.result.terms)
+      resultado.should.equal(2/2/2/2)
+    }
+
+    {
+      let a = '4/2/2/2'
+      let q = queueFromSource(a)
+      let exp = ExpressionPattern.capture(q)
+      exp.error.should.equal(false)
+      let resultado = evaluator.evaluateTerms(exp.result.terms)
+      resultado.should.equal(4/2/2/2)
+    }
   })
 
   it('resta', () => {

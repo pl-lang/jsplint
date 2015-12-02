@@ -144,10 +144,10 @@ class Term {
         }
         else {
           if (next_operand.result.expression_type == 'literal') {
-            operands.push(next_operand.result.content)
+            operands.unshift(next_operand.result.content)
           }
           else {
-            operands.push(next_operand.result)
+            operands.unshift(next_operand.result)
           }
           term.expression_type = 'operation'
           term.content = {operands:operands, op:op.result, expression_type:'operation'}
@@ -155,6 +155,35 @@ class Term {
         }
       }
     }
+  }
+}
+
+function getOperandsAndOperators(operation) {
+  console.log("OP\n:", operation)
+  let result = {operators:[], operands:[]}
+  result.operators.push(operation.op)
+  for (let operand of operation.operands) {
+    if (operand.expression_type == 'operation') {
+      let expression_term = operand
+      let r = getOperandsAndOperators(expression_term.content)
+      // expression_term.content = reorderOperation(r)
+      result.operands = result.operands.concat(r.operands)
+      result.operators = result.operators.concat(r.operators)
+    }
+    else {
+      result.operands = result.operands.concat(operand)
+    }
+  }
+  return result
+}
+
+function reorderOperation(data) {
+  // data: operands and operators
+  if (data.operators.length > 0) {
+    return {expression_type:'operation', op:data.operators.pop(), operands:[data.operands.pop(), reorderOperation(data)]}
+  }
+  else {
+    return data.operands.pop()
   }
 }
 
@@ -166,6 +195,15 @@ class TermList {
       return first_term
     }
     else {
+      if (first_term.result.expression_type == 'operation' && first_term.result.content.op == 'divide') {
+        console.log("It's a division!:\n", first_term.result.content, "\n======\n")
+        // console.log("operands and operators:\n", getOperandsAndOperators(first_term.result.content))
+        // console.log("reordenada:\n", reorderOperation(getOperandsAndOperators(first_term.result.content)))
+        let new_op = reorderOperation(getOperandsAndOperators(first_term.result.content))
+        console.log("NEW_OP\n:",new_op)
+        first_term.result.content = new_op
+      }
+
       if (source.current().kind != 'plus' && source.current().kind != 'minus') {
         return {result:{terms:[first_term.result], expression_type:'term-list'}, error:false}
       }
