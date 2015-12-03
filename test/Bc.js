@@ -195,6 +195,15 @@ describe('Evaluator', () => {
       let resultado = evaluator.evaluateTerms(exp.result.terms)
       resultado.should.equal(4)
     }
+
+    {
+      let a = '2+8/2'
+      let q = queueFromSource(a)
+      let exp = ExpressionPattern.capture(q)
+      exp.error.should.equal(false)
+      let resultado = evaluator.evaluateTerms(exp.result.terms)
+      resultado.should.equal(6)
+    }
   })
 })
 
