@@ -9,9 +9,8 @@ class Evaluator {
 
   arithmeticOp(operation) {
     let operands = operation.operands
-    let operand_a = operands[0].expression_type == 'literal' ? this.evaluateFactor(operands[0], 'literal') : this.evaluateFactor(operands[0].content, 'operation')
-    let operand_b = operands[1].expression_type == 'literal' ? this.evaluateFactor(operands[1], 'literal') : this.evaluateFactor(operands[1].content, 'operation')
-
+    let operand_a = operands[0].expression_type == 'literal' ? this.evaluateFactor(operands[0], 'literal') : this.evaluateFactor(operands[0], 'operation')
+    let operand_b = operands[1].expression_type == 'literal' ? this.evaluateFactor(operands[1], 'literal') : this.evaluateFactor(operands[1], 'operation')
     switch (operation.op) {
       case  'times':
         return operand_a*operand_b
@@ -42,10 +41,10 @@ class Evaluator {
     for (let term of list_of_terms) {
       let proximo_termino = 0
       if (term.expression_type == 'literal' || term.expression_type == 'operation') {
-        proximo_termino = (term.sign == 'plus') ? this.evaluateFactor(term.content, term.expression_type):this.evaluateFactor(term.content, term.expression_type)*(-1)
+        proximo_termino = this.evaluateFactor(term, term.expression_type)
       }
       else if (term.expression_type == 'term-list') {
-        proximo_termino = (term.sign == 'plus') ? this.evaluateTerms(term.content.terms):this.evaluateTerms(term.content.terms)*(-1)
+        proximo_termino = (term.sign == 'plus') ? this.evaluateTerms(term.terms):this.evaluateTerms(term.terms)*(-1)
       }
       result += proximo_termino
     }
