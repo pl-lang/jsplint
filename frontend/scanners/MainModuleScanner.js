@@ -2,6 +2,7 @@
 
 let DeclarationPattern = require('../structures/DeclarationPattern')
 let AssignmentPattern = require('../structures/AssignmentPattern')
+let ModuleCallPattern = require('../structures/ModuleCallPattern')
 
 function skipWhiteSpace(source) {
   let current = source.current()
@@ -91,6 +92,15 @@ class MainModuleScanner {
       }
       else if (current.kind == 'eof') {
         eof_found = true
+      }
+      else if (current.kind == 'word' && source.peek().kind == 'left-par') {
+        let call = ModuleCallPattern.capture(source)
+        if (call.error) {
+          return call
+        }
+        else {
+          moduleData.statements.push(call.result)
+        }
       }
       else if (current.kind == 'word') {
         let assignment = AssignmentPattern.capture(source)
