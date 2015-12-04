@@ -207,6 +207,29 @@ describe('Evaluator', () => {
   })
 })
 
+describe('ArgumentListPattern', () => {
+  let ArgumentListPattern = require('../frontend/structures/ArgumentListPattern.js')
+  it('extrae una lista de expresiones', () => {
+    let ejemplo = '2, 3, 4'
+    let q = queueFromSource(ejemplo)
+
+    let args = ArgumentListPattern.capture(q)
+    args.error.should.equal(false)
+  })
+})
+
+describe('ModuleCallPattern', () => {
+  let ModuleCallPattern = require('../frontend/structures/ModuleCallPattern.js')
+  it('extrae una llamada a un modulo', () => {
+    let ejemplo = 'escribir(42)'
+    let q = queueFromSource(ejemplo)
+
+    let call = ModuleCallPattern.capture(q)
+    call.error.should.equal(false)
+    call.result.name.should.equal('escribir')
+  })
+})
+
 describe('Interpreter', () => {
   let MainModuleScanner = require('../frontend/scanners/MainModuleScanner')
   let Interpreter = require('../backend/Interpreter.js')
