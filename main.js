@@ -13,7 +13,7 @@ class InterpreterController {
 
     this.message_handler = new MessageHandler((message) => {
       if (message.subject == 'escribir') {
-        this.sendMessage({subject:'escribir'})
+        this.sendMessage(message)
       }
       else if (message.subject == 'leer') {
         this.sendMessage({subject:'leer'})
