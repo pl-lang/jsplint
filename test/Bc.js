@@ -34,6 +34,14 @@ describe('MainModuleScanner', () => {
 
     mod_data.error.should.equal(false)
   })
+
+  it('leer un modulo con "escribir"', () => {
+    let programa = 'variables\ninicio\nescribir(42)\nfin\n'
+    let q = queueFromSource(programa)
+
+    let mod_data = MainModuleScanner.capture(q)
+    mod_data.error.should.equal(false)
+  })
 })
 
 describe('Evaluator', () => {

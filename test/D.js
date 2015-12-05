@@ -20,4 +20,27 @@ describe('InterpreterController', () => {
 
     msn.sendMessage({subject:'run'})
   })
+
+  it('las llamadas a escribir funcionan bien', () => {
+    let programa = 'variables\ninicio\nescribir(42, 28)\nfin\n'
+    let controller = new InterpreterController(programa)
+
+    let variable;
+
+    let msn = new MessageHandler((message) => {
+      if (message.subject == 'scan-end') {
+        true.should.equal(true)
+      }
+      else if (message.subject == 'escribir') {
+        variable = message.things_to_print
+      }
+    })
+
+    controller.addMessageListener(msn)
+    msn.addMessageListener(controller.message_handler)
+
+    msn.sendMessage({subject:'run'})
+
+    variable.should.deepEqual([42, 28])
+  })
 })

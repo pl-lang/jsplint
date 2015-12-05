@@ -496,3 +496,16 @@ describe.skip('AssignmentPattern', () => {
     capt.result.target.should.equal('var')
   })
 })
+
+describe.skip('ModuleCallPattern', () => {
+  let ModuleCallPattern = require('../frontend/structures/ModuleCallPattern.js')
+  it('captura la llamada a un modulo', () => {
+    let asignacion = 'escribir(42)'
+
+    let q = queueFromSource(asignacion)
+    let capt = AssignmentPattern.capture(q)
+
+    capt.error.should.equal(false)
+    capt.result.name.should.equal('escribir')
+  })
+})
