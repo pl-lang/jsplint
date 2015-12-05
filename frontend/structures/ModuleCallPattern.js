@@ -30,22 +30,25 @@ class ModuleCallPattern {
         return arguments
       }
       else {
-        return {error:false, result:{args:args.result, name:name.result, action:'module_call', expression_type:'module_call'}}
-      }
-
-      return {
-          result  : {
-              unexpected  : source.current().kind
-            , expected    : 'right-par'
-            , atColumn    : source.current().columnNumber
-            , atLine      : source.current().lineNumber
+        if (source.current().kind == 'right-par') {
+          source.next()
+          return {error:false, result:{args:args.result, name:name.result, action:'module_call', expression_type:'module_call'}}
+        }
+        else {
+          return {
+              result  : {
+                  unexpected  : source.current().kind
+                , expected    : 'right-par'
+                , atColumn    : source.current().columnNumber
+                , atLine      : source.current().lineNumber
+              }
+            , error   : true
           }
-        , error   : true
+        }
       }
     }
     else {
       source.next()
-
       return {error:false, result:{args:[], name:name.result, action:'module_call', expression_type:'module_call'}}
     }
   }
