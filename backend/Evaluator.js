@@ -1,10 +1,36 @@
 'use strict'
 
+let MessageHandler = require('../messages/MessageHandler.js')
+
 class Evaluator {
   constructor(statements, localVariables, globalVariables) {
     this.globalVariables = globalVariables
     this.localVariables = localVariables
     this.statements = statements
+    this.message_handler = new MessageHandler()
+  }
+
+  sendMessage(message) {
+    this.message_handler.sendMessage(message)
+  }
+
+  addMessageListener(listener) {
+    this.message_handler.addMessageListener(listener)
+  }
+
+  removeMessageListener(listener) {
+    this.message_handler.removeMessageListener(listener)
+  }
+
+  callEscribir(call) {
+    let things_to_print = call.args.map((thing) => {
+      return this.evaluateFactor(thing, thing.expression_type)
+    })
+    this.sendMessage({subject:'escribir', things_to_print:things_to_print})
+  }
+
+  callLeer(call) {
+
   }
 
   arithmeticOp(operation) {
@@ -31,8 +57,8 @@ class Evaluator {
     else if (type == 'operation') {
       return this.arithmeticOp(factor)
     }
-    else if (type == 'term_list') {
-      return this.evaluateTerms(factor)
+    else if (type == 'term-list') {
+      return this.evaluateTerms(factor.terms)
     }
   }
 
@@ -54,9 +80,18 @@ class Evaluator {
   run() {
     for (let statement of this.statements) {
       switch (statement.action) {
-        case 'assignment':
+        case  'assignment':
         // Habria que buscar la variable objetivo (primero entre las locales, luego entre las globales)
         this.localVariables[statement.target].value = this.evaluateTerms(statement.payload.terms)
+        break
+
+        case  'module_call':
+        if (statement.name == 'escribir') {
+          this.callEscribir(statement)
+        }
+        else if (statement.name == 'leer') {
+          this.callLeer(statement)
+        }
         break
       }
     }
