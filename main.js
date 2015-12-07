@@ -8,7 +8,7 @@ let Parser         = require('./frontend/Parser')
 
 class InterpreterController {
   constructor(source_string) {
-    this.source_string = source_string
+    this._source_string = source_string
     this.eventListeners = {}
 
     this.message_handler = new MessageHandler((message) => {
@@ -28,6 +28,14 @@ class InterpreterController {
     })
   }
 
+  get source_string() {
+    return this._source_string
+  }
+
+  set source_string(val) {
+    this._source_string = val
+  }
+
   sendMessage(message) {
     this.message_handler.sendMessage(message)
   }
@@ -43,10 +51,11 @@ class InterpreterController {
   constructInterpreter() {
     this.interpreter = new Interpreter(this.scanResult.result.main, {}) // TODO: agregar user_modules
     this.interpreter.addMessageListener(this.message_handler)
+    this.sendMessage({subject:'interpreter-ready'})
   }
 
   scan() {
-    let source_wrapper = new Source(this.source_string)
+    let source_wrapper = new Source(this._source_string)
     let tokenizer = new Parser(source_wrapper)
     this.scanner = new Scanner(tokenizer)
 
@@ -57,11 +66,11 @@ class InterpreterController {
     this.sendMessage({subject:'scan-finished'})
 
     if (this.scanResult.error) {
-      this.sendMessage({subject:'syntax-errors'})
+      this.sendMessage({subject:'syntax-errors', body:this.scanResult.result})
     }
     else {
-      this.sendMessage({subject:'good-syntax'})
       this.constructInterpreter()
+      this.sendMessage({subject:'good-syntax'})
     }
   }
 
