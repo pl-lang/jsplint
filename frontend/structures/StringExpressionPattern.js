@@ -10,9 +10,9 @@ class StringExpression {
       return word
     }
     else {
-      expression_type     = 'string'
-      length              = word.result.length
-      value               = word.result
+      let expression_type     = 'string'
+      let length              = word.result.length
+      let value               = word.result
       return {error:false, result:{expression_type, value, length}}
     }
   }
