@@ -420,13 +420,13 @@ describe.skip('MainModulePattern', () => {
   })
 })
 
-describe.skip('ExpressionPattern', () => {
-  let ExpressionPattern = require('../frontend/structures/ExpressionPattern.js')
+describe.skip('MathExpressionPattern', () => {
+  let MathExpressionPattern = require('../frontend/structures/MathExpressionPattern.js')
 
   it('lee una expresion compuesta por un entero (negativo o postivo)', () => {
     let positivo = queueFromSource('3')
 
-    let e = ExpressionPattern.capture(positivo)
+    let e = MathExpressionPattern.capture(positivo)
 
     e.error.should.equal(false)
     e.result.should.deepEqual([
@@ -438,7 +438,7 @@ describe.skip('ExpressionPattern', () => {
     ])
 
     let negativo = queueFromSource('-7')
-    let f = ExpressionPattern.capture(negativo)
+    let f = MathExpressionPattern.capture(negativo)
 
     f.error.should.equal(false)
     f.result.should.deepEqual([
@@ -452,7 +452,7 @@ describe.skip('ExpressionPattern', () => {
 
   it('lee una operacion', () => {
     let multiplicacion = queueFromSource('2*3')
-    let e = ExpressionPattern.capture(multiplicacion)
+    let e = MathExpressionPattern.capture(multiplicacion)
 
     e.error.should.equal(false)
     e.result.should.deepEqual(

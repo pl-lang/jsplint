@@ -45,7 +45,7 @@ describe('MainModuleScanner', () => {
 })
 
 describe('Evaluator', () => {
-  let ExpressionPattern = require('../frontend/structures/ExpressionPattern.js')
+  let MathExpressionPattern = require('../frontend/structures/MathExpressionPattern.js')
   let Evaluator = require('../backend/Evaluator.js')
   let evaluator = new Evaluator([], {}, {})
   it('multiplicacion', () => {
@@ -53,7 +53,7 @@ describe('Evaluator', () => {
     {
       let a = '2*3'
       let q = queueFromSource(a)
-      let exp = ExpressionPattern.capture(q)
+      let exp = MathExpressionPattern.capture(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateTerms(exp.result.terms)
       resultado.should.equal(6)
@@ -63,7 +63,7 @@ describe('Evaluator', () => {
     {
       let a = '-2*-3'
       let q = queueFromSource(a)
-      let exp = ExpressionPattern.capture(q)
+      let exp = MathExpressionPattern.capture(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateTerms(exp.result.terms)
       resultado.should.equal(6)
@@ -73,7 +73,7 @@ describe('Evaluator', () => {
     {
       let a = '2*2*2'
       let q = queueFromSource(a)
-      let exp = ExpressionPattern.capture(q)
+      let exp = MathExpressionPattern.capture(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateTerms(exp.result.terms)
       resultado.should.equal(8)
@@ -84,7 +84,7 @@ describe('Evaluator', () => {
     {
       let a = '3/2'
       let q = queueFromSource(a)
-      let exp = ExpressionPattern.capture(q)
+      let exp = MathExpressionPattern.capture(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateTerms(exp.result.terms)
       resultado.should.equal(1.5)
@@ -93,7 +93,7 @@ describe('Evaluator', () => {
     {
       let a = '-3/-2'
       let q = queueFromSource(a)
-      let exp = ExpressionPattern.capture(q)
+      let exp = MathExpressionPattern.capture(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateTerms(exp.result.terms)
       resultado.should.equal(1.5)
@@ -102,7 +102,7 @@ describe('Evaluator', () => {
     {
       let a = '3/2/2'
       let q = queueFromSource(a)
-      let exp = ExpressionPattern.capture(q)
+      let exp = MathExpressionPattern.capture(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateTerms(exp.result.terms)
       resultado.should.equal(3/2/2)
@@ -111,7 +111,7 @@ describe('Evaluator', () => {
     {
       let a = '2/2/2/2'
       let q = queueFromSource(a)
-      let exp = ExpressionPattern.capture(q)
+      let exp = MathExpressionPattern.capture(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateTerms(exp.result.terms)
       resultado.should.equal(2/2/2/2)
@@ -120,7 +120,7 @@ describe('Evaluator', () => {
     {
       let a = '4/2/2/2'
       let q = queueFromSource(a)
-      let exp = ExpressionPattern.capture(q)
+      let exp = MathExpressionPattern.capture(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateTerms(exp.result.terms)
       resultado.should.equal(4/2/2/2)
@@ -129,7 +129,7 @@ describe('Evaluator', () => {
     {
       let a = '2/2/2/4'
       let q = queueFromSource(a)
-      let exp = ExpressionPattern.capture(q)
+      let exp = MathExpressionPattern.capture(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateTerms(exp.result.terms)
       resultado.should.equal(2/2/2/4)
@@ -140,7 +140,7 @@ describe('Evaluator', () => {
     {
       let a = '3-3-3'
       let q = queueFromSource(a)
-      let exp = ExpressionPattern.capture(q)
+      let exp = MathExpressionPattern.capture(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateTerms(exp.result.terms)
       resultado.should.equal(-3)
@@ -151,7 +151,7 @@ describe('Evaluator', () => {
     {
       let a = '2+43'
       let q = queueFromSource(a)
-      let exp = ExpressionPattern.capture(q)
+      let exp = MathExpressionPattern.capture(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateTerms(exp.result.terms)
       resultado.should.equal(45)
@@ -162,7 +162,7 @@ describe('Evaluator', () => {
     {
       let a = '2-(2-3)'
       let q = queueFromSource(a)
-      let exp = ExpressionPattern.capture(q)
+      let exp = MathExpressionPattern.capture(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateTerms(exp.result.terms)
       resultado.should.equal(3)
@@ -171,7 +171,7 @@ describe('Evaluator', () => {
     {
       let a = '2+(2+3)'
       let q = queueFromSource(a)
-      let exp = ExpressionPattern.capture(q)
+      let exp = MathExpressionPattern.capture(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateTerms(exp.result.terms)
       resultado.should.equal(7)
@@ -180,7 +180,7 @@ describe('Evaluator', () => {
     {
       let a = '2+(2+3*4)'
       let q = queueFromSource(a)
-      let exp = ExpressionPattern.capture(q)
+      let exp = MathExpressionPattern.capture(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateTerms(exp.result.terms)
       resultado.should.equal(16)
@@ -189,7 +189,7 @@ describe('Evaluator', () => {
     {
       let a = '(3*2)-6'
       let q = queueFromSource(a)
-      let exp = ExpressionPattern.capture(q)
+      let exp = MathExpressionPattern.capture(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateTerms(exp.result.terms)
       resultado.should.equal(0)
@@ -198,7 +198,7 @@ describe('Evaluator', () => {
     {
       let a = '(-(-(2+2)))'
       let q = queueFromSource(a)
-      let exp = ExpressionPattern.capture(q)
+      let exp = MathExpressionPattern.capture(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateTerms(exp.result.terms)
       resultado.should.equal(4)
@@ -207,7 +207,7 @@ describe('Evaluator', () => {
     {
       let a = '2+8/2'
       let q = queueFromSource(a)
-      let exp = ExpressionPattern.capture(q)
+      let exp = MathExpressionPattern.capture(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateTerms(exp.result.terms)
       resultado.should.equal(6)
