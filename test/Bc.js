@@ -45,7 +45,7 @@ describe('MainModuleScanner', () => {
 })
 
 describe('Evaluator', () => {
-  let MathExpressionPattern = require('../frontend/structures/MathExpressionPattern.js')
+  let MathExpressionPattern = require('../frontend/structures/ExpressionPattern.js')
   let Evaluator = require('../backend/Evaluator.js')
   let evaluator = new Evaluator([], {}, {})
   it('multiplicacion', () => {

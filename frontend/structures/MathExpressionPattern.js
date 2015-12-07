@@ -1,30 +1,7 @@
 'use strict'
 
-var Source = require('../Source.js')
-
-let Parser = require('../Parser.js')
-let TokenQueue = require('../TokenQueue.js')
-
-function queueFromSource(string) {
-  let source = new Source(string)
-  let tokenizer = new Parser(source)
-
-  let tokenArray = []
-  let t = tokenizer.nextToken()
-
-  while ( t.kind !== 'eof') {
-    tokenArray.push(t)
-    t = tokenizer.nextToken()
-  }
-  tokenArray.push(t)
-
-  let q = new TokenQueue(tokenArray)
-
-  return q
-}
-
-let LiteralPattern = require('./LiteralPattern')
-let BinaryOpPattern = require('./BinaryOpPattern')
+const LiteralPattern = require('./LiteralPattern')
+const BinaryOpPattern = require('./BinaryOpPattern')
 
 class MathExpression {
   static capture(source) {
