@@ -1,6 +1,6 @@
 'use strict'
 
-let ExpressionPattern = require('./ExpressionPattern')
+let MathExpressionPattern = require('./MathExpressionPattern')
 
 class AssignmentPattern {
   static capture(source) {
@@ -13,7 +13,7 @@ class AssignmentPattern {
       if (current.kind == 'assignment') {
         current = source.next()
         // Por ahora, las asignaciones solo funcionarian con enteros...
-        let payload = ExpressionPattern.capture(source)
+        let payload = MathExpressionPattern.capture(source)
         if (payload.error) {
           return payload
         }

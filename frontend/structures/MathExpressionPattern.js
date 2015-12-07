@@ -26,7 +26,7 @@ function queueFromSource(string) {
 let LiteralPattern = require('./LiteralPattern')
 let BinaryOpPattern = require('./BinaryOpPattern')
 
-class Expression {
+class MathExpression {
   static capture(source) {
     let term_sign = 'plus'
     if (source.current().kind == 'plus' || source.current().kind == 'minus') {
@@ -76,7 +76,7 @@ class Factor {
     // }
     else if (current.kind == 'left-par') {
       source.next()
-      let e = Expression.capture(source)
+      let e = MathExpression.capture(source)
       if (e.error) {
         return e
       }
@@ -217,4 +217,4 @@ class TermList {
   }
 }
 
-module.exports = Expression
+module.exports = MathExpression

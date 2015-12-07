@@ -1,11 +1,11 @@
 'use strict'
 
-let ExpressionPattern = require('./ExpressionPattern')
+let MathExpressionPattern = require('./MathExpressionPattern')
 
 class ArgumentListPattern {
   static capture(source) {
     let args = []
-    let exp = ExpressionPattern.capture(source)
+    let exp = MathExpressionPattern.capture(source)
 
     if (exp.error) {
       return exp
