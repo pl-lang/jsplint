@@ -60,6 +60,9 @@ class Evaluator {
     else if (type == 'term-list') {
       return this.evaluateTerms(factor.terms)
     }
+    else if (type == 'string') {
+      return factor.value
+    }
   }
 
   evaluateTerms(list_of_terms) {
@@ -75,6 +78,15 @@ class Evaluator {
       result += proximo_termino
     }
     return result
+  }
+
+  evaluateExp(exp) {
+    if (exp.expression_type == 'term-list') {
+      return this.evaluateTerms(exp.terms)
+    }
+    else {
+      return this.evaluateFactor(exp, exp.expression_type)
+    }
   }
 
   run() {
