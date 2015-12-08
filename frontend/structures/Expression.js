@@ -81,20 +81,35 @@ class LogicalAndExpression {
 
 class PrimaryExpression {
   static capture(source) {
-    if (source.current().kind == 'verdadero' || source.current().kind == 'false') {
+    let current = source.current()
+    if (current.kind == 'verdadero' || current.kind == 'falso') {
       let error = false
       let expression_type = 'literal'
-      let value = source.current().kind == 'verdadero'
+      let value = current.kind == 'verdadero'
       let type = 'logical'
       let result = {expression_type, value, type}
       source.next()
       return {error, result}
     }
+    else if (current.kind == 'integer' || current.kind == 'float' || current.kind == 'string') {
+      let error = false
+      let expression_type = 'literal'
+      let value = current.value
+      let type = current.kind
+      let result = {expression_type, value, type}
+
+      if (type == 'string') {
+        result.length = value.length
+      }
+
+      source.next()
+      return {error, result}
+    }
     else {
-      let unexpectedToken = source.current().kind
+      let unexpectedToken = current.kind
       let expectedToken   = ['verdadero', 'falso']
-      let atColumn        = source.current().columnNumber
-      let atLine          = source.current().lineNumber
+      let atColumn        = current.columnNumber
+      let atLine          = current.lineNumber
 
       let error           = true
       let result          = {unexpectedToken, expectedToken, atColumn, atLine}

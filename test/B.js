@@ -512,15 +512,70 @@ describe.skip('ModuleCallPattern', () => {
 
 describe('New Expression', () => {
   let Expression = require('../frontend/structures/Expression.js')
-  it('captura factores de todos los tipos de dato', () => {
-    let logico = 'verdadero'
-    let q = queueFromSource(logico)
-    let capt = Expression.capture(q)
-    capt.error.should.equal(false)
-    capt.result.should.deepEqual({
-      expression_type:'literal',
-      type:'logical',
-      value:true
-    })
+  it('captura factores logicos', () => {
+    {
+      let logico = 'verdadero'
+      let q = queueFromSource(logico)
+      let capt = Expression.capture(q)
+      capt.error.should.equal(false)
+      capt.result.should.deepEqual({
+        expression_type:'literal',
+        type:'logical',
+        value:true
+      })
+    }
+
+    {
+      let logico = 'falso'
+      let q = queueFromSource(logico)
+      let capt = Expression.capture(q)
+      capt.error.should.equal(false)
+      capt.result.should.deepEqual({
+        expression_type:'literal',
+        type:'logical',
+        value:false
+      })
+    }
+  })
+
+  it('captura factores numeros', () => {
+    {
+      let dato = '32'
+      let q = queueFromSource(dato)
+      let capt = Expression.capture(q)
+      capt.error.should.equal(false)
+      capt.result.should.deepEqual({
+        expression_type:'literal',
+        type:'integer',
+        value:32
+      })
+    }
+
+    {
+      let dato = '2.78'
+      let q = queueFromSource(dato)
+      let capt = Expression.capture(q)
+      capt.error.should.equal(false)
+      capt.result.should.deepEqual({
+        expression_type:'literal',
+        type:'float',
+        value:2.78
+      })
+    }
+  })
+
+  it('captura cadenas', () => {
+    {
+      let dato = '"hola mundo"'
+      let q = queueFromSource(dato)
+      let capt = Expression.capture(q)
+      capt.error.should.equal(false)
+      capt.result.should.deepEqual({
+        expression_type:'literal',
+        type:'string',
+        value:'hola mundo',
+        length:"hola mundo".length
+      })
+    }
   })
 })
