@@ -680,4 +680,42 @@ describe('New Expression', () => {
       capt.result.op.should.equal('plus')
     }
   })
+
+  it('captura expresiones MULTIPLICATIVAS (*, /, div y mod)', () => {
+    {
+      let dato = '3 mod 2'
+      let q = queueFromSource(dato)
+      let capt = Expression.capture(q)
+      capt.error.should.equal(false)
+      capt.result.expression_type.should.equal('operation')
+      capt.result.op.should.equal('mod')
+    }
+
+    {
+      let dato = '3 / 2'
+      let q = queueFromSource(dato)
+      let capt = Expression.capture(q)
+      capt.error.should.equal(false)
+      capt.result.expression_type.should.equal('operation')
+      capt.result.op.should.equal('divide')
+    }
+
+    {
+      let dato = '3 div 2'
+      let q = queueFromSource(dato)
+      let capt = Expression.capture(q)
+      capt.error.should.equal(false)
+      capt.result.expression_type.should.equal('operation')
+      capt.result.op.should.equal('div')
+    }
+
+    {
+      let dato = '3 * 2'
+      let q = queueFromSource(dato)
+      let capt = Expression.capture(q)
+      capt.error.should.equal(false)
+      capt.result.expression_type.should.equal('operation')
+      capt.result.op.should.equal('times')
+    }
+  })
 })

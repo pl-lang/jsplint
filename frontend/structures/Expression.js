@@ -160,7 +160,7 @@ class RelationalExpression {
 
 class AdditiveExpression {
   static capture(source) {
-    let exp = PrimaryExpression.capture(source)
+    let exp = MultiplicativeExpression.capture(source)
 
     if (exp.error) {
       return exp
@@ -177,6 +177,46 @@ class AdditiveExpression {
 
       if (op_found) {
         let other_exp = AdditiveExpression.capture(source)
+
+        if (other_exp.error) {
+          return other_exp
+        }
+        else {
+          let expression_type = 'operation'
+          let operands = [exp.result, other_exp.result]
+          let result = {expression_type, op, operands}
+          let error = false
+          return {error, result}
+        }
+      }
+      else {
+        let error = false
+        let result = exp.result
+        return {error, result}
+      }
+    }
+  }
+}
+
+class MultiplicativeExpression {
+  static capture(source) {
+    let exp = PrimaryExpression.capture(source)
+
+    if (exp.error) {
+      return exp
+    }
+    else {
+      let op_found = false
+      let op
+      let current = source.current()
+      if (current.kind == 'times' || current.kind == 'divide' || current.kind == 'mod' || current.kind == 'div') {
+        op_found = true
+        op = current.kind
+        source.next()
+      }
+
+      if (op_found) {
+        let other_exp = MultiplicativeExpression.capture(source)
 
         if (other_exp.error) {
           return other_exp
