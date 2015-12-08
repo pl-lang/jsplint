@@ -717,5 +717,14 @@ describe('New Expression', () => {
       capt.result.expression_type.should.equal('operation')
       capt.result.op.should.equal('times')
     }
+
+    {
+      let dato = '3 ^ 2'
+      let q = queueFromSource(dato)
+      let capt = Expression.capture(q)
+      capt.error.should.equal(false)
+      capt.result.expression_type.should.equal('operation')
+      capt.result.op.should.equal('power')
+    }
   })
 })

@@ -209,7 +209,7 @@ class MultiplicativeExpression {
       let op_found = false
       let op
       let current = source.current()
-      if (current.kind == 'times' || current.kind == 'divide' || current.kind == 'mod' || current.kind == 'div') {
+      if (current.kind == 'times' || current.kind == 'divide' || current.kind == 'mod' || current.kind == 'div' || current.kind == 'power') {
         op_found = true
         op = current.kind
         source.next()
