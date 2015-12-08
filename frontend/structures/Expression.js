@@ -81,7 +81,7 @@ class LogicalAndExpression {
 
 class EqualityExpression {
   static capture(source) {
-    let exp = PrimaryExpression.capture(source)
+    let exp = RelationalExpression.capture(source)
 
     if (exp.error) {
       return exp
@@ -97,6 +97,46 @@ class EqualityExpression {
 
       if (op_found) {
         let other_exp = EqualityExpression.capture(source)
+
+        if (other_exp.error) {
+          return other_exp
+        }
+        else {
+          let expression_type = 'operation'
+          let operands = [exp.result, other_exp.result]
+          let result = {expression_type, op, operands}
+          let error = false
+          return {error, result}
+        }
+      }
+      else {
+        let error = false
+        let result = exp.result
+        return {error, result}
+      }
+    }
+  }
+}
+
+class RelationalExpression {
+  static capture(source) {
+    let exp = PrimaryExpression.capture(source)
+
+    if (exp.error) {
+      return exp
+    }
+    else {
+      let op_found = false
+      let op
+      let current = source.current()
+      if (current.kind == 'minor-than' || current.kind == 'minor-equal' || current.kind == 'major-than' || current.kind == 'major-equal') {
+        op_found = true
+        op = current.kind
+        source.next()
+      }
+
+      if (op_found) {
+        let other_exp = RelationalExpression.capture(source)
 
         if (other_exp.error) {
           return other_exp

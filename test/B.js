@@ -622,4 +622,42 @@ describe('New Expression', () => {
       capt.result.op.should.equal('diff-than')
     }
   })
+
+  it('captura expresiones RELACIONALES', () => {
+    {
+      let dato = '3 > 2'
+      let q = queueFromSource(dato)
+      let capt = Expression.capture(q)
+      capt.error.should.equal(false)
+      capt.result.expression_type.should.equal('operation')
+      capt.result.op.should.equal('major-than')
+    }
+
+    {
+      let dato = '3 >= 2'
+      let q = queueFromSource(dato)
+      let capt = Expression.capture(q)
+      capt.error.should.equal(false)
+      capt.result.expression_type.should.equal('operation')
+      capt.result.op.should.equal('major-equal')
+    }
+
+    {
+      let dato = '2 < 7'
+      let q = queueFromSource(dato)
+      let capt = Expression.capture(q)
+      capt.error.should.equal(false)
+      capt.result.expression_type.should.equal('operation')
+      capt.result.op.should.equal('minor-than')
+    }
+
+    {
+      let dato = '2 <= 4'
+      let q = queueFromSource(dato)
+      let capt = Expression.capture(q)
+      capt.error.should.equal(false)
+      capt.result.expression_type.should.equal('operation')
+      capt.result.op.should.equal('minor-equal')
+    }
+  })
 })
