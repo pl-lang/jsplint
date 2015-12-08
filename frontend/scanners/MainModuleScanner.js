@@ -1,8 +1,6 @@
 'use strict'
 
-let DeclarationPattern = require('../structures/DeclarationPattern')
-let AssignmentPattern = require('../structures/AssignmentPattern')
-let ModuleCallPattern = require('../structures/ModuleCallPattern')
+const DeclarationPattern = require('../structures/DeclarationPattern')
 const StatementCollector = require('./StatementCollector')
 
 function skipWhiteSpace(source) {
