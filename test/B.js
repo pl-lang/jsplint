@@ -727,4 +727,32 @@ describe('New Expression', () => {
       capt.result.op.should.equal('power')
     }
   })
+
+  it('captura expresiones UNARIAS (-, +, not)', () => {
+    {
+      let dato = 'not verdadero'
+      let q = queueFromSource(dato)
+      let capt = Expression.capture(q)
+      capt.error.should.equal(false)
+      capt.result.expression_type.should.equal('unary-operation')
+      capt.result.op.should.equal('not')
+    }
+
+    {
+      let dato = '-2'
+      let q = queueFromSource(dato)
+      let capt = Expression.capture(q)
+      capt.error.should.equal(false)
+      capt.result.expression_type.should.equal('unary-operation')
+      capt.result.op.should.equal('unary-minus')
+    }
+
+    {
+      let dato = '+3'
+      let q = queueFromSource(dato)
+      let capt = Expression.capture(q)
+      capt.error.should.equal(false)
+      capt.result.expression_type.should.equal('literal')
+    }
+  })
 })

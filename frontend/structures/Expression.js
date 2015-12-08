@@ -200,7 +200,7 @@ class AdditiveExpression {
 
 class MultiplicativeExpression {
   static capture(source) {
-    let exp = PrimaryExpression.capture(source)
+    let exp = UnaryExpression.capture(source)
 
     if (exp.error) {
       return exp
@@ -228,6 +228,44 @@ class MultiplicativeExpression {
           let error = false
           return {error, result}
         }
+      }
+      else {
+        let error = false
+        let result = exp.result
+        return {error, result}
+      }
+    }
+  }
+}
+
+class UnaryExpression {
+  static capture(source) {
+    let op_found = false
+    let op
+    let current = source.current()
+    if (current.kind == 'minus' || current.kind == 'not' || current.kind == 'plus') {
+      op_found = true
+      if (current.kind == 'plus') {
+        op_found = false
+      }
+      else {
+        op = current.kind == 'minus' ? 'unary-minus' : 'not'
+      }
+      source.next()
+    }
+
+    let exp = PrimaryExpression.capture(source)
+
+    if (exp.error) {
+      return exp
+    }
+    else {
+      if (op_found) {
+        let expression_type = 'unary-operation'
+        let operand = exp.result
+        let result = {expression_type, op, operand}
+        let error = false
+        return {error, result}
       }
       else {
         let error = false
