@@ -28,7 +28,9 @@ var list = [
   'and'               ,
   'or'                ,
   'not'               ,
-  'mod'
+  'mod'               ,
+  'verdadero'         ,
+  'falso'
 ]
 
 var reserved = new Set(list)

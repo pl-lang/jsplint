@@ -509,3 +509,18 @@ describe.skip('ModuleCallPattern', () => {
     capt.result.name.should.equal('escribir')
   })
 })
+
+describe('New Expression', () => {
+  let Expression = require('../frontend/structures/Expression.js')
+  it('captura factores de todos los tipos de dato', () => {
+    let logico = 'verdadero'
+    let q = queueFromSource(logico)
+    let capt = Expression.capture(q)
+    capt.error.should.equal(false)
+    capt.result.should.deepEqual({
+      expression_type:'literal',
+      type:'logical',
+      value:true
+    })
+  })
+})
