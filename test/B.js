@@ -611,4 +611,15 @@ describe('New Expression', () => {
       capt.result.op.should.equal('equal')
     }
   })
+
+  it('captura una expresion DESIGUAL', () => {
+    {
+      let dato = 'verdadero <> falso'
+      let q = queueFromSource(dato)
+      let capt = Expression.capture(q)
+      capt.error.should.equal(false)
+      capt.result.expression_type.should.equal('operation')
+      capt.result.op.should.equal('diff-than')
+    }
+  })
 })

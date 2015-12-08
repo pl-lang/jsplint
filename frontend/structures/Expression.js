@@ -43,7 +43,7 @@ class LogicalOrExpression {
 
 class LogicalAndExpression {
   static capture(source) {
-    let exp = LogicalEqualityExpression.capture(source)
+    let exp = EqualityExpression.capture(source)
 
     if (exp.error) {
       return exp
@@ -79,7 +79,7 @@ class LogicalAndExpression {
   }
 }
 
-class LogicalEqualityExpression {
+class EqualityExpression {
   static capture(source) {
     let exp = PrimaryExpression.capture(source)
 
@@ -88,14 +88,15 @@ class LogicalEqualityExpression {
     }
     else {
       let op_found = false
-      if (source.current().kind == 'equal') {
+      let op
+      if (source.current().kind == 'equal' || source.current().kind == 'diff-than') {
         op_found = true
+        op = source.current().kind
         source.next()
       }
 
       if (op_found) {
-        let op = 'equal'
-        let other_exp = LogicalEqualityExpression.capture(source)
+        let other_exp = EqualityExpression.capture(source)
 
         if (other_exp.error) {
           return other_exp
