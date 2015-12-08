@@ -578,4 +578,37 @@ describe('New Expression', () => {
       })
     }
   })
+
+  it('captura una expresion OR', () => {
+    {
+      let dato = 'verdadero OR falso'
+      let q = queueFromSource(dato)
+      let capt = Expression.capture(q)
+      capt.error.should.equal(false)
+      capt.result.expression_type.should.equal('operation')
+      capt.result.op.should.equal('or')
+    }
+  })
+
+  it('captura una expresion AND', () => {
+    {
+      let dato = 'verdadero AND falso'
+      let q = queueFromSource(dato)
+      let capt = Expression.capture(q)
+      capt.error.should.equal(false)
+      capt.result.expression_type.should.equal('operation')
+      capt.result.op.should.equal('and')
+    }
+  })
+
+  it('captura una expresion IGUAL', () => {
+    {
+      let dato = 'verdadero = falso'
+      let q = queueFromSource(dato)
+      let capt = Expression.capture(q)
+      capt.error.should.equal(false)
+      capt.result.expression_type.should.equal('operation')
+      capt.result.op.should.equal('equal')
+    }
+  })
 })
