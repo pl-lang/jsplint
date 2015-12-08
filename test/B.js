@@ -755,4 +755,15 @@ describe('New Expression', () => {
       capt.result.expression_type.should.equal('literal')
     }
   })
+
+  it('captura expresiones entre parentesis', () => {
+    {
+      let dato = '(not verdadero)'
+      let q = queueFromSource(dato)
+      let capt = Expression.capture(q)
+      capt.error.should.equal(false)
+      capt.result.expression_type.should.equal('unary-operation')
+      capt.result.op.should.equal('not')
+    }
+  })
 })

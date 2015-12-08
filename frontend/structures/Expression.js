@@ -302,9 +302,35 @@ class PrimaryExpression {
       source.next()
       return {error, result}
     }
+    else if (current.kind == 'left-par') {
+      source.next()
+      let exp = LogicalOrExpression.capture(source)
+      if (exp.error) {
+        return exp
+      }
+      else {
+        if (source.current().kind == 'right-par') {
+          source.next()
+          let error = false
+          let result = exp.result
+          return {error, result}
+        }
+        else {
+          let unexpectedToken = source.current().kind
+          let expectedToken   = 'right-par'
+          let atColumn        = source.current().columnNumber
+          let atLine          = source.current().lineNumber
+
+          let error = false
+          let result = {unexpectedToken, expectedToken, atColumn, atLine}
+
+          return {error, result}
+        }
+      }
+    }
     else {
       let unexpectedToken = current.kind
-      let expectedToken   = ['verdadero', 'falso']
+      let expectedToken   = ['entero', 'real', 'cadena', 'verdadero', 'falso', '(expresion)']
       let atColumn        = current.columnNumber
       let atLine          = current.lineNumber
 
