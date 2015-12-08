@@ -3,6 +3,7 @@
 let DeclarationPattern = require('../structures/DeclarationPattern')
 let AssignmentPattern = require('../structures/AssignmentPattern')
 let ModuleCallPattern = require('../structures/ModuleCallPattern')
+const StatementCollector = require('./StatementCollector')
 
 function skipWhiteSpace(source) {
   let current = source.current()
@@ -79,45 +80,21 @@ class MainModuleScanner {
     if (current.kind == 'eol')
       skipWhiteSpace(source)
 
-    let fin_found = false
-    let eof_found = false
-    let error = false
+    let statements = StatementCollector.capture(source)
 
-    while (!fin_found && !eof_found) {
-      current = source.current()
-
-      if (current.kind == 'fin') {
-        fin_found = true
-        current = source.next()
-      }
-      else if (current.kind == 'eof') {
-        eof_found = true
-      }
-      else if (current.kind == 'word' && source.peek().kind == 'left-par') {
-        let call = ModuleCallPattern.capture(source)
-        if (call.error) {
-          return call
-        }
-        else {
-          moduleData.statements.push(call.result)
-        }
-      }
-      else if (current.kind == 'word') {
-        let assignment = AssignmentPattern.capture(source)
-        if (assignment.error) {
-          return assignment
-        }
-        else {
-          moduleData.statements.push(assignment.result)
-        }
-      }
-
-      current = source.current()
-      if (current.kind == 'eol')
-        skipWhiteSpace(source)
+    if (statements.error) {
+      return statements
+    }
+    else {
+      moduleData.statements = statements.result
     }
 
-    if (eof_found && !fin_found) {
+    if (source.current().kind == 'eol')
+      skipWhiteSpace(source)
+
+    current = source.current()
+
+    if (current.kind != 'fin') {
       return {
           error   : true
         , result  : {
@@ -129,6 +106,12 @@ class MainModuleScanner {
         }
       }
     }
+    else {
+      source.next()
+    }
+
+    if (source.current().kind == 'eol')
+      skipWhiteSpace(source)
 
     return {error:false, result:moduleData}
   }
