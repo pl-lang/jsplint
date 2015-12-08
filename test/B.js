@@ -660,4 +660,24 @@ describe('New Expression', () => {
       capt.result.op.should.equal('minor-equal')
     }
   })
+
+  it('captura expresiones de ADICION (suma y resta)', () => {
+    {
+      let dato = '3 - 2'
+      let q = queueFromSource(dato)
+      let capt = Expression.capture(q)
+      capt.error.should.equal(false)
+      capt.result.expression_type.should.equal('operation')
+      capt.result.op.should.equal('minus')
+    }
+
+    {
+      let dato = '3 + 2'
+      let q = queueFromSource(dato)
+      let capt = Expression.capture(q)
+      capt.error.should.equal(false)
+      capt.result.expression_type.should.equal('operation')
+      capt.result.op.should.equal('plus')
+    }
+  })
 })
