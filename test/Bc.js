@@ -216,7 +216,7 @@ describe('Evaluator', () => {
 
   it('cadenas', () => {
     {
-      let a = 'hola'
+      let a = '"hola"'
       let q = queueFromSource(a)
       let exp = ExpressionPattern.capture(q)
       exp.error.should.equal(false)

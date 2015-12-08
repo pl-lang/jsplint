@@ -5,7 +5,7 @@ const MathExpressionPattern   = require('./MathExpressionPattern')
 
 class Expression {
   static capture(source) {
-    if (source.current().kind == 'word') {
+    if (source.current().kind == 'string') {
       return StringExpressionPattern.capture(source)
     }
     else {

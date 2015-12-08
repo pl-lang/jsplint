@@ -1,10 +1,10 @@
 'use strict'
 
-const WordPattern = require('./WordPattern')
+const StringPattern = require('./StringPattern')
 
 class StringExpression {
   static capture(source) {
-    let word = WordPattern.capture(source)
+    let word = StringPattern.capture(source)
 
     if (word.error) {
       return word
