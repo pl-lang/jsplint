@@ -762,8 +762,8 @@ describe('New Expression', () => {
       let q = queueFromSource(dato)
       let capt = Expression.capture(q)
       capt.error.should.equal(false)
-      capt.result.expression_type.should.equal('unary-operation')
-      capt.result.op.should.equal('not')
+      capt.result.expression_type.should.equal('expression')
+      capt.result.expression.should.deepEqual({expression_type:'unary-operation', op:'not', operand:{expression_type:'literal', type:'logical', value:true}})
     }
   })
 })

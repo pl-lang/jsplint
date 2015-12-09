@@ -2,26 +2,42 @@
 
 'use strict'
 
+let precedence_by_op = {
+  'or'          : 0   ,
+  'and'         : 1   ,
+  'equal'       : 2   ,
+  'diff-than'   : 3   ,
+  'minor-than'  : 4   ,
+  'minor-equal' : 5   ,
+  'major-than'  : 6   ,
+  'major-equal' : 7   ,
+  'div'         : 8   ,
+  'mod'         : 9   ,
+  'power'       : 10  ,
+  'times'       : 11  ,
+  'divide'      : 12  ,
+  'minus'       : 13  ,
+  'plus'        : 14
+}
+
+
+
 function getOperandsAndOperators(operation) {
-  let result = {operators:[], operands:[]}
-  result.operators.push(operation.op)
+  let operators = []
+  let operands = []
+  operators.push(operation.op)
   for (let operand of operation.operands) {
     if (operand.expression_type == 'operation') {
       let r = getOperandsAndOperators(operand)
-      for (let i = 0; i < r.operands.length; i++) {
-        result.operands.unshift(r.operands[i])
-      }
-      for (let i = 0; i < r.operators.length; i++) {
-        result.operators.unshift(r.operators[i])
-      }
-      // result.operands = result.operands.concat(r.operands)
-      // result.operators = result.operators.concat(r.operators)
+      operands = operands.concat(r.operands)
+      operators = operators.concat(r.operators)
     }
     else {
-      result.operands.push(operand)
+      operands.push(operand)
     }
   }
-  return result
+  operators = operators.sort((a, b) => {return precedence_by_op[a] > precedence_by_op[b]})
+  return {operators, operands}
 }
 
 function reorderOperation(data) {
@@ -32,6 +48,23 @@ function reorderOperation(data) {
   }
   else {
     return data.operands.pop()
+  }
+}
+
+class ReorderedExpression {
+  static capture(source) {
+    let exp = LogicalOrExpression.capture(source)
+
+    if (exp.error) {
+      return exp
+    }
+    else if (exp.result.expression_type == 'operation') {
+      let new_op = reorderOperation(getOperandsAndOperators(exp.result))
+      return {error:false, result:new_op}
+    }
+    else {
+      return exp
+    }
   }
 }
 
@@ -59,7 +92,7 @@ class LogicalOrExpression {
         else {
           let expression_type = 'operation'
           let operands = [exp.result, other_exp.result]
-          let result = reorderOperation(getOperandsAndOperators({expression_type, op, operands}))
+          let result = {expression_type, op, operands}
           let error = false
           return {error, result}
         }
@@ -344,7 +377,9 @@ class PrimaryExpression {
         if (source.current().kind == 'right-par') {
           source.next()
           let error = false
-          let result = exp.result
+          let expression_type = 'expression'
+          let expression = exp.result
+          let result = {expression_type, expression}
           return {error, result}
         }
         else {
@@ -374,4 +409,4 @@ class PrimaryExpression {
   }
 }
 
-module.exports = LogicalOrExpression
+module.exports = ReorderedExpression

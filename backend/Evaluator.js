@@ -80,12 +80,55 @@ class Evaluator {
     return result
   }
 
-  evaluateExp(exp) {
-    if (exp.expression_type == 'term-list') {
-      return this.evaluateTerms(exp.terms)
+  evaluateOperation(exp) {
+    let operand_a = this.evaluateExp(exp.operands[0])
+    let operand_b = this.evaluateExp(exp.operands[1])
+    switch (exp.op) {
+      case  'plus':
+      return operand_a + operand_b
+
+      case  'minus':
+      return operand_a - operand_b
+
+      case  'times':
+      return operand_a * operand_b
+
+      case  'divide':
+      return operand_a / operand_b
+
+      case  'div':
+      return (operand_a - (operand_a % operand_b)) / operand_b
+
+      case  'mod':
+      return operand_a % operand_b
+
+      case  'power':
+      return Math.pow(operand_a, operand_b)
     }
-    else {
-      return this.evaluateFactor(exp, exp.expression_type)
+  }
+
+  evaluateUnaryOperation(exp) {
+    let operand = this.evaluateExp(exp.operand)
+
+    switch (exp.op) {
+      case 'unary-minus':
+      return (-1)*operand
+
+      case 'not':
+      return !operand
+    }
+  }
+
+  evaluateExp(exp) {
+    switch (exp.expression_type) {
+      case  'literal':
+        return exp.value
+      case  'operation':
+        return this.evaluateOperation(exp)
+      case  'unary-operation':
+        return this.evaluateUnaryOperation(exp)
+      case  'expression':
+        return this.evaluateExp(exp.expression)
     }
   }
 

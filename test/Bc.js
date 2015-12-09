@@ -45,7 +45,7 @@ describe('MainModuleScanner', () => {
 })
 
 describe('Evaluator', () => {
-  let ExpressionPattern = require('../frontend/structures/ExpressionPattern.js')
+  let ExpressionPattern = require('../frontend/structures/Expression.js')
   let Evaluator = require('../backend/Evaluator.js')
   let evaluator = new Evaluator([], {}, {})
   it('multiplicacion', () => {
@@ -165,7 +165,7 @@ describe('Evaluator', () => {
       let exp = ExpressionPattern.capture(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateExp(exp.result)
-      resultado.should.equal(3)
+      resultado.should.equal(2-(2-3))
     }
 
     {
@@ -210,7 +210,7 @@ describe('Evaluator', () => {
       let exp = ExpressionPattern.capture(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateExp(exp.result)
-      resultado.should.equal(6)
+      resultado.should.equal(2+8/2)
     }
   })
 
