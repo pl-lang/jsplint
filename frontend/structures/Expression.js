@@ -1,7 +1,39 @@
 // based on https://www.lysator.liu.se/c/ANSI-C-grammar-y.html#primary-expression
 
-
 'use strict'
+
+function getOperandsAndOperators(operation) {
+  let result = {operators:[], operands:[]}
+  result.operators.push(operation.op)
+  for (let operand of operation.operands) {
+    if (operand.expression_type == 'operation') {
+      let r = getOperandsAndOperators(operand)
+      for (let i = 0; i < r.operands.length; i++) {
+        result.operands.unshift(r.operands[i])
+      }
+      for (let i = 0; i < r.operators.length; i++) {
+        result.operators.unshift(r.operators[i])
+      }
+      // result.operands = result.operands.concat(r.operands)
+      // result.operators = result.operators.concat(r.operators)
+    }
+    else {
+      result.operands.push(operand)
+    }
+  }
+  return result
+}
+
+function reorderOperation(data) {
+  // data: operands and operators
+  if (data.operators.length > 0) {
+    let operand = data.operands.pop()
+    return {expression_type:'operation', op:data.operators.pop(), operands:[reorderOperation(data), operand]}
+  }
+  else {
+    return data.operands.pop()
+  }
+}
 
 class LogicalOrExpression {
   static capture(source) {
@@ -27,7 +59,7 @@ class LogicalOrExpression {
         else {
           let expression_type = 'operation'
           let operands = [exp.result, other_exp.result]
-          let result = {expression_type, op, operands}
+          let result = reorderOperation(getOperandsAndOperators({expression_type, op, operands}))
           let error = false
           return {error, result}
         }
