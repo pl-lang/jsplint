@@ -43,8 +43,8 @@ function getOperandsAndOperators(operation) {
 function reorderOperation(data) {
   // data: operands and operators
   if (data.operators.length > 0) {
-    let operand = data.operands.pop()
-    return {expression_type:'operation', op:data.operators.pop(), operands:[reorderOperation(data), operand]}
+    let operand = data.operands.shift()
+    return {expression_type:'operation', op:data.operators.pop(), operands:[operand, reorderOperation(data)]}
   }
   else {
     return data.operands.pop()
@@ -59,6 +59,7 @@ class ReorderedExpression {
       return exp
     }
     else if (exp.result.expression_type == 'operation') {
+      console.log("OLD:", getOperandsAndOperators(exp.result))
       let new_op = reorderOperation(getOperandsAndOperators(exp.result))
       return {error:false, result:new_op}
     }
