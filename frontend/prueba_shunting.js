@@ -36,8 +36,8 @@ function infixtoRPN(exp_string) {
     }
   }
 
-  if (operator_stack.length > 0) {
-    output_stack = output_stack.concat(operator_stack)
+  while (operator_stack.length > 0) {
+    output_stack.push(operator_stack.pop())
   }
 
   return output_stack
@@ -57,5 +57,5 @@ function RPNtoTree(rpn_stack) {
   }
 }
 
-console.log(infixtoRPN('2+3*3-1'))
-console.log(RPNtoTree(infixtoRPN('2+3*3-1')).operands[0])
+console.log(infixtoRPN('2+8/2'))
+console.log(RPNtoTree(infixtoRPN('2+8/2')))

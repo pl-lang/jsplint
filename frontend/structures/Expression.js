@@ -369,6 +369,14 @@ class streamToRPN {
     let output_stack = []
 
     while ( source.current().kind != 'eol' && source.current().kind != 'eof') {
+      let operand_exp  = UnaryExpression.capture(source)
+      if (operand_exp.error) {
+        return operand_exp
+      }
+      else {
+        output_stack.push(operand_exp.result)
+      }
+
       if (operator_names.has(source.current().kind)) {
         while (operator_stack.length > 0 && precedence_by_op[source.current().kind] <= precedence_by_op[operator_stack[operator_stack.length-1]]) {
           output_stack.push(operator_stack.pop())
@@ -376,18 +384,10 @@ class streamToRPN {
         operator_stack.push(source.current().kind)
         source.next()
       }
-      else {
-        let operand_exp  = UnaryExpression.capture(source)
-        if (operand_exp.error) {
-          return operand_exp
-        }
-        else {
-          output_stack.push(operand_exp.result)
-        }
-      }
     }
-    if (operator_stack.length > 0) {
-      output_stack = output_stack.concat(operator_stack)
+    
+    while (operator_stack.length > 0) {
+      output_stack.push(operator_stack.pop())
     }
 
     return {error:false, result:output_stack}
