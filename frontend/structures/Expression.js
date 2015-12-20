@@ -3,71 +3,24 @@
 'use strict'
 
 let precedence_by_op = {
-  'or'          : 0   ,
-  'and'         : 1   ,
-  'equal'       : 2   ,
-  'diff-than'   : 3   ,
-  'minor-than'  : 4   ,
-  'minor-equal' : 5   ,
-  'major-than'  : 6   ,
-  'major-equal' : 7   ,
-  'div'         : 8   ,
-  'mod'         : 9   ,
-  'power'       : 10  ,
-  'times'       : 11  ,
-  'divide'      : 12  ,
-  'minus'       : 13  ,
-  'plus'        : 14
+  'or'          : 6  ,
+  'and'         : 5  ,
+  'equal'       : 4  ,
+  'diff-than'   : 4  ,
+  'minor-than'  : 3  ,
+  'minor-equal' : 3  ,
+  'major-than'  : 3  ,
+  'major-equal' : 3  ,
+  'power'       : 2  ,
+  'div'         : 1  ,
+  'mod'         : 1  ,
+  'times'       : 1  ,
+  'divide'      : 1  ,
+  'minus'       : 0  ,
+  'plus'        : 0
 }
 
-
-
-function getOperandsAndOperators(operation) {
-  let operators = []
-  let operands = []
-  operators.push(operation.op)
-  for (let operand of operation.operands) {
-    if (operand.expression_type == 'operation') {
-      let r = getOperandsAndOperators(operand)
-      operands = operands.concat(r.operands)
-      operators = operators.concat(r.operators)
-    }
-    else {
-      operands.push(operand)
-    }
-  }
-  operators = operators.sort((a, b) => {return precedence_by_op[a] > precedence_by_op[b]})
-  return {operators, operands}
-}
-
-function reorderOperation(data) {
-  // data: operands and operators
-  if (data.operators.length > 0) {
-    let operand = data.operands.shift()
-    return {expression_type:'operation', op:data.operators.pop(), operands:[operand, reorderOperation(data)]}
-  }
-  else {
-    return data.operands.pop()
-  }
-}
-
-class ReorderedExpression {
-  static capture(source) {
-    let exp = LogicalOrExpression.capture(source)
-
-    if (exp.error) {
-      return exp
-    }
-    else if (exp.result.expression_type == 'operation') {
-      console.log("OLD:", getOperandsAndOperators(exp.result))
-      let new_op = reorderOperation(getOperandsAndOperators(exp.result))
-      return {error:false, result:new_op}
-    }
-    else {
-      return exp
-    }
-  }
-}
+let operator_names = new Set(Object.getOwnPropertyNames(precedence_by_op))
 
 class LogicalOrExpression {
   static capture(source) {
@@ -410,4 +363,64 @@ class PrimaryExpression {
   }
 }
 
-module.exports = ReorderedExpression
+class streamToRPN {
+  static capture(source) {
+    let operator_stack = []
+    let output_stack = []
+
+    while ( source.current().kind != 'eol' && source.current().kind != 'eof') {
+      if (operator_names.has(source.current().kind)) {
+        while (operator_stack.length > 0 && precedence_by_op[source.current().kind] <= precedence_by_op[operator_stack[operator_stack.length-1]]) {
+          output_stack.push(operator_stack.pop())
+        }
+        operator_stack.push(source.current().kind)
+        source.next()
+      }
+      else {
+        let operand_exp  = UnaryExpression.capture(source)
+        if (operand_exp.error) {
+          return operand_exp
+        }
+        else {
+          output_stack.push(operand_exp.result)
+        }
+      }
+    }
+    if (operator_stack.length > 0) {
+      output_stack = output_stack.concat(operator_stack)
+    }
+
+    return {error:false, result:output_stack}
+  }
+}
+
+function RPNtoTree(rpn_stack) {
+  let last_token = rpn_stack.pop()
+
+  if (operator_names.has(last_token)) {
+    let op = last_token
+    let operands = [RPNtoTree(rpn_stack)]
+    operands.unshift(RPNtoTree(rpn_stack))
+    let expression_type = 'operation'
+    return {expression_type, op, operands}
+  }
+  else {
+    return last_token
+  }
+}
+
+class ExpressionAST {
+  static capture(source) {
+    let rpn = streamToRPN.capture(source)
+
+    if (rpn.error) {
+      return rpn
+    }
+    else {
+      let tree = RPNtoTree(rpn.result)
+      return {error:false, result:tree}
+    }
+  }
+}
+
+module.exports = ExpressionAST
