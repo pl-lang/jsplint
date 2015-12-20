@@ -100,6 +100,15 @@ describe('Evaluator', () => {
     }
 
     {
+      let a = '2+3/3+4'
+      let q = queueFromSource(a)
+      let exp = ExpressionPattern.capture(q)
+      exp.error.should.equal(false)
+      let resultado = evaluator.evaluateExp(exp.result)
+      resultado.should.equal(2+3/3+4)
+    }
+
+    {
       let a = '3/2/2'
       let q = queueFromSource(a)
       let exp = ExpressionPattern.capture(q)
@@ -209,6 +218,7 @@ describe('Evaluator', () => {
       let q = queueFromSource(a)
       let exp = ExpressionPattern.capture(q)
       exp.error.should.equal(false)
+      console.log(exp)
       let resultado = evaluator.evaluateExp(exp.result)
       resultado.should.equal(2+8/2)
     }
