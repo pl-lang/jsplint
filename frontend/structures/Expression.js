@@ -385,7 +385,7 @@ class streamToRPN {
         source.next()
       }
     }
-    
+
     while (operator_stack.length > 0) {
       output_stack.push(operator_stack.pop())
     }

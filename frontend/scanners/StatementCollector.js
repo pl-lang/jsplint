@@ -2,11 +2,125 @@
 
 const AssignmentPattern = require('../structures/AssignmentPattern')
 const ModuleCallPattern = require('../structures/ModuleCallPattern')
+const Expression = require('../structures/Expression.js')
+const TokenQueue = require('../TokenQueue')
 
 function skipWhiteSpace(source) {
   let current = source.current()
   while (current.kind == 'eol') {
     current = source.next()
+  }
+}
+
+class IfScanner {
+  static capture(source) {
+    let condition
+    let true_statements = []
+    let false_statements = []
+
+    source.next() // consumir el 'si'
+
+    if (source.current().kind == 'left-par') {
+      source.next()
+    }
+    else {
+      return {
+          error   : true
+        , result  : {
+            unexpected  : source.current().kind
+          , expected    : 'left-par'
+          , atColumn    : source.current().columnNumber
+          , atLine      : source.current().lineNumber
+          , reason      : 'missing-par-at-if'
+        }
+      }
+    }
+
+    let token_array = []
+    let current_token = source.current()
+
+    while (current_token.kind != 'right-par' && current_token.kind != 'eof') {
+      token_array.push(current_token)
+      current_token = source.next()
+    }
+
+    if (current_token.kind == 'right-par') {
+      source.next()
+    }
+    else {
+      return {
+          error   : true
+        , result  : {
+            unexpected  : source.current().kind
+          , expected    : 'right-par'
+          , atColumn    : source.current().columnNumber
+          , atLine      : source.current().lineNumber
+          , reason      : 'missing-par-at-if'
+        }
+      }
+    }
+
+    let expression_q = new TokenQueue(token_array)
+
+    let condition_exp = Expression.capture(expression_q)
+
+    if (condition_exp.error) {
+      return condition_exp
+    }
+    else {
+      condition = condition_exp.result
+    }
+
+    if (source.current().kind == 'entonces') {
+      source.next() // consumir el token
+    }
+    else {
+      return {
+          error   : true
+        , result  : {
+            unexpected  : source.current().kind
+          , expected    : 'entonces'
+          , atColumn    : source.current().columnNumber
+          , atLine      : source.current().lineNumber
+          , reason      : 'missing-entonces-at-if'
+        }
+      }
+    }
+
+    if (source.current().kind == 'eol')
+      skipWhiteSpace(source)
+
+    let statements = StatementCollector.capture(source)
+
+    if (statements.error) {
+      return statements
+    }
+    else {
+      true_statements = statements.result
+    }
+
+    if (source.current().kind == 'eol')
+      skipWhiteSpace(source)
+
+    if (source.current().kind == 'finsi') {
+      source.next() // consumir finsi
+      source.next() // consumir \n
+      let error = false
+      let result = {condition, true_statements, false_statements, action:'if'}
+      return {error, result}
+    }
+    else {
+      return {
+          error   : true
+        , result  : {
+            unexpected  : source.current().kind
+          , expected    : 'finsi'
+          , atColumn    : source.current().columnNumber
+          , atLine      : source.current().lineNumber
+          , reason      : 'missing-finsi-at-if'
+        }
+      }
+    }
   }
 }
 
@@ -39,6 +153,16 @@ class StatementCollector {
         }
         else {
           result.push(assignment.result)
+        }
+      }
+      else if (current.kind == 'si') {
+        let if_block = IfScanner.capture(source)
+
+        if (if_block.error) {
+          return if_block
+        }
+        else {
+          result.push(if_block.result)
         }
       }
       else {

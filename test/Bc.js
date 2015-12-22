@@ -259,6 +259,18 @@ describe('ModuleCallPattern', () => {
   })
 })
 
+describe('StatementCollector', () => {
+  let StatementCollector = require('../frontend/scanners/StatementCollector')
+  it('si-entonces', () => {
+    let if_block = 'si (verdadero) entonces \n escribir("verdadero") \n finsi \n'
+    let q = queueFromSource(if_block)
+
+    let statements = StatementCollector.capture(q)
+
+    statements.error.should.equal(false)
+  })
+})
+
 describe('Interpreter', () => {
   let MainModuleScanner = require('../frontend/scanners/MainModuleScanner')
   let Interpreter = require('../backend/Interpreter.js')

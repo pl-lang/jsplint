@@ -6,15 +6,23 @@ class TokenQueue {
     this.tokens = array
     this.totalElements = array.length
     this.currentIndex = 0
+    this.eof_reached = false
   }
 
   current() {
-    return this.tokens[this.currentIndex]
+    if (this.eof_reached) {
+      return new EoFToken()
+    }
+    else {
+      return this.tokens[this.currentIndex]
+    }
   }
 
   next() {
     if (this.currentIndex + 1 < this.totalElements)
       ++this.currentIndex
+    else
+      this.eof_reached = true
 
     return this.current()
   }
