@@ -102,9 +102,32 @@ class IfScanner {
     if (source.current().kind == 'eol')
       skipWhiteSpace(source)
 
+    if (source.current().kind == 'sino') {
+      source.next() // consumir sino
+
+      if (source.current().kind == 'eol')
+        skipWhiteSpace(source)
+
+      let statements = StatementCollector.capture(source)
+
+      if (statements.error) {
+        return statements
+      }
+      else {
+        false_branch = statements.result
+      }
+    }
+
+    if (source.current().kind == 'eol')
+      skipWhiteSpace(source)
+
     if (source.current().kind == 'finsi') {
       source.next() // consumir finsi
-      source.next() // consumir \n
+
+      if (source.current().kind == 'eol')
+        skipWhiteSpace(source)
+
+
       let error = false
       let result = {condition, true_branch, false_branch, action:'if'}
       return {error, result}
@@ -114,10 +137,10 @@ class IfScanner {
           error   : true
         , result  : {
             unexpected  : source.current().kind
-          , expected    : 'finsi'
+          , expected    : ['finsi', 'sino']
           , atColumn    : source.current().columnNumber
           , atLine      : source.current().lineNumber
-          , reason      : 'missing-finsi-at-if'
+          , reason      : 'missing-sino-finsi-at-if'
         }
       }
     }
