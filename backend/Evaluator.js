@@ -50,6 +50,7 @@ class Evaluator {
         return  (operand_a - (operand_a % operand_b)) / operand_b
     }
   }
+
   evaluateFactor(factor, type) {
     if (type == 'literal') {
       return (factor.sign == 'plus') ? factor.value : factor.value*(-1)
@@ -132,8 +133,12 @@ class Evaluator {
     }
   }
 
-  run() {
-    for (let statement of this.statements) {
+  start() {
+    this.run(this.statements)
+  }
+
+  run(statements) {
+    for (let statement of statements) {
       switch (statement.action) {
         case  'assignment':
         // Habria que buscar la variable objetivo (primero entre las locales, luego entre las globales)
@@ -148,6 +153,14 @@ class Evaluator {
           this.callLeer(statement)
         }
         break
+
+        case 'if':
+        if (this.evaluateExp(statement.condition)) {
+          this.run(statement.true_branch)
+        }
+        else {
+          this.run(statement.false_branch)
+        }
       }
     }
   }

@@ -15,8 +15,8 @@ function skipWhiteSpace(source) {
 class IfScanner {
   static capture(source) {
     let condition
-    let true_statements = []
-    let false_statements = []
+    let true_branch = []
+    let false_branch = []
 
     source.next() // consumir el 'si'
 
@@ -96,7 +96,7 @@ class IfScanner {
       return statements
     }
     else {
-      true_statements = statements.result
+      true_branch = statements.result
     }
 
     if (source.current().kind == 'eol')
@@ -106,7 +106,7 @@ class IfScanner {
       source.next() // consumir finsi
       source.next() // consumir \n
       let error = false
-      let result = {condition, true_statements, false_statements, action:'if'}
+      let result = {condition, true_branch, false_branch, action:'if'}
       return {error, result}
     }
     else {

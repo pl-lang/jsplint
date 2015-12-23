@@ -18,7 +18,7 @@ class Interpreter {
   }
 
   run() {
-    this.mainEvaluator.run()
+    this.mainEvaluator.start()
   }
 
   sendMessage(message) {
