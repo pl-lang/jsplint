@@ -455,6 +455,19 @@ describe.skip('ModuleCallPattern', () => {
 
 describe('New Expression', () => {
   let Expression = require('../frontend/structures/Expression.js')
+  it ('captura la invocacion de una variable', () => {
+    {
+      let nombre = 'contador'
+      let q = queueFromSource(nombre)
+      let capt = Expression.capture(q)
+      capt.error.should.equal(false)
+      capt.result.should.deepEqual({
+        expression_type:'invocation',
+        varname:'contador'
+      })
+    }
+  })
+
   it('captura factores logicos', () => {
     {
       let logico = 'verdadero'

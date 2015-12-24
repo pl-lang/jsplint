@@ -298,7 +298,21 @@ class UnaryExpression {
 class PrimaryExpression {
   static capture(source) {
     let current = source.current()
-    if (current.kind == 'verdadero' || current.kind == 'falso') {
+    if (current.kind == 'word') {
+      if (source.peek().kind != 'left-par') {
+        let error = false
+        let expression_type = 'invocation'
+        let varname = current.text
+        let result = {expression_type, varname}
+        source.next()
+
+        return {error, result}
+      }
+      else {
+
+      }
+    }
+    else if (current.kind == 'verdadero' || current.kind == 'falso') {
       let error = false
       let expression_type = 'literal'
       let value = current.kind == 'verdadero'
