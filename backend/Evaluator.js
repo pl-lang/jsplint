@@ -33,6 +33,16 @@ class Evaluator {
 
   }
 
+  getValue(varname) {
+    // Manejar el caso donde la variable no tiene ningun valor. Por ahora devuelve null
+    if (this.localVariables.hasOwnProperty(varname)) {
+      return this.localVariables[varname].value
+    }
+    else if (this.globalVariables.hasOwnProperty(varname)) {
+      return this.globalVariables[varname].value
+    }
+  }
+
   evaluateOperation(exp) {
     let operand_a = this.evaluateExp(exp.operands[0])
     let operand_b = this.evaluateExp(exp.operands[1])
@@ -74,6 +84,8 @@ class Evaluator {
 
   evaluateExp(exp) {
     switch (exp.expression_type) {
+      case 'invocation':
+        return this.getValue(exp.varname)
       case  'literal':
         return exp.value
       case  'operation':
