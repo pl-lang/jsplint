@@ -420,62 +420,7 @@ describe.skip('MainModulePattern', () => {
   })
 })
 
-describe.skip('MathExpressionPattern', () => {
-  let MathExpressionPattern = require('../frontend/structures/MathExpressionPattern.js')
-
-  it('lee una expresion compuesta por un entero (negativo o postivo)', () => {
-    let positivo = queueFromSource('3')
-
-    let e = MathExpressionPattern.capture(positivo)
-
-    e.error.should.equal(false)
-    e.result.should.deepEqual([
-      {
-        expression_type:'literal',
-        content:{value:3, sign:'plus', type:'integer', expression_type:'literal'},
-        sign:'plus'
-      }
-    ])
-
-    let negativo = queueFromSource('-7')
-    let f = MathExpressionPattern.capture(negativo)
-
-    f.error.should.equal(false)
-    f.result.should.deepEqual([
-      {
-        expression_type:'literal',
-        content:{value:7, sign:'plus', type:'integer', expression_type:'literal'},
-        sign:'minus'
-      }
-    ])
-  })
-
-  it('lee una operacion', () => {
-    let multiplicacion = queueFromSource('2*3')
-    let e = MathExpressionPattern.capture(multiplicacion)
-
-    e.error.should.equal(false)
-    e.result.should.deepEqual(
-      [
-        {
-          sign:'plus',
-          expression_type:'operation',
-          content:
-          {
-            op:'times',
-            expression_type:'operation',
-            operands:[
-              {value:2, sign:'plus', type:'integer', expression_type:'literal'},
-              {value:3, sign:'plus', type:'integer', expression_type:'literal'}
-            ]
-          }
-        }
-      ]
-    )
-  })
-})
-
-describe.skip('AssignmentPattern', () => {
+describe('AssignmentPattern', () => {
   let AssignmentPattern = require('../frontend/structures/AssignmentPattern.js')
   it('captura un enunciado de asignacion', () => {
     let asignacion = 'var <- 48'
@@ -485,13 +430,11 @@ describe.skip('AssignmentPattern', () => {
 
     capt.error.should.equal(false)
     capt.result.payload.should.deepEqual(
-      [
-        {
-          expression_type:'literal',
-          content:{value:48, sign:'plus', type:'integer', expression_type:'literal'},
-          sign:'plus'
-        }
-      ]
+      {
+        expression_type:'literal',
+        value:48,
+        type:'integer',
+      }
     )
     capt.result.target.should.equal('var')
   })
