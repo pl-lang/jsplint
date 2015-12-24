@@ -142,7 +142,7 @@ class Evaluator {
       switch (statement.action) {
         case  'assignment':
         // Habria que buscar la variable objetivo (primero entre las locales, luego entre las globales)
-        this.localVariables[statement.target].value = this.evaluateTerms(statement.payload.terms)
+        this.localVariables[statement.target].value = this.evaluateExp(statement.payload)
         break
 
         case  'module_call':
