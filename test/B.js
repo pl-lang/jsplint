@@ -466,6 +466,21 @@ describe('New Expression', () => {
         varname:'contador'
       })
     }
+
+    {
+      let nombre = 'contador + 1'
+      let q = queueFromSource(nombre)
+      let capt = Expression.capture(q)
+      capt.error.should.equal(false)
+      capt.result.should.deepEqual({
+        expression_type:'operation',
+        op:'plus',
+        operands:[
+          {expression_type:'invocation', varname:'contador'},
+          {expression_type:'literal', type:'integer', value:1}
+        ]
+      })
+    }
   })
 
   it('captura factores logicos', () => {
