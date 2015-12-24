@@ -218,7 +218,6 @@ describe('Evaluator', () => {
       let q = queueFromSource(a)
       let exp = ExpressionPattern.capture(q)
       exp.error.should.equal(false)
-      console.log(exp)
       let resultado = evaluator.evaluateExp(exp.result)
       resultado.should.equal(2+8/2)
     }

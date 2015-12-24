@@ -368,7 +368,7 @@ class streamToRPN {
     let operator_stack = []
     let output_stack = []
 
-    while ( source.current().kind != 'eol' && source.current().kind != 'eof') {
+    while ( source.current().kind != 'eol' && source.current().kind != 'eof' && source.current().kind != 'comma' && source.current().kind != 'right-par' && source.current().kind != 'right-bracket') {
       let operand_exp  = UnaryExpression.capture(source)
       if (operand_exp.error) {
         return operand_exp

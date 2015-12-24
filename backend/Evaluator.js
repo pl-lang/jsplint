@@ -24,7 +24,7 @@ class Evaluator {
 
   callEscribir(call) {
     let things_to_print = call.args.map((thing) => {
-      return this.evaluateFactor(thing, thing.expression_type)
+      return this.evaluateExp(thing, thing.expression_type)
     })
     this.sendMessage({subject:'escribir', things_to_print:things_to_print})
   }
