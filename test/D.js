@@ -16,7 +16,7 @@ describe('InterpreterController', () => {
     })
 
     controller.addMessageListener(msn)
-    msn.addMessageListener(controller.message_handler)
+    msn.addMessageListener(controller)
 
     msn.sendMessage({subject:'run'})
   })
@@ -37,7 +37,7 @@ describe('InterpreterController', () => {
     })
 
     controller.addMessageListener(msn)
-    msn.addMessageListener(controller.message_handler)
+    msn.addMessageListener(controller)
 
     msn.sendMessage({subject:'run'})
 

@@ -1,17 +1,14 @@
 'use strict'
 
-let MessageHandler = require('./messages/MessageHandler')
-let Interpreter    = require('./backend/Interpreter.js')
-let Scanner        = require('./frontend/Scanner')
-let Source         = require('./frontend/Source')
-let Parser         = require('./frontend/Parser')
+const MessageHandler = require('./messages/MessageHandler')
+const Interpreter    = require('./backend/Interpreter.js')
+const Scanner        = require('./frontend/Scanner')
+const Source         = require('./frontend/Source')
+const Parser         = require('./frontend/Parser')
 
-class InterpreterController {
+class InterpreterController extends MessageHandler {
   constructor(source_string) {
-    this._source_string = source_string
-    this.eventListeners = {}
-
-    this.message_handler = new MessageHandler((message) => {
+    super((message) => {
       if (message.subject == 'escribir') {
         this.sendMessage(message)
       }
@@ -26,6 +23,9 @@ class InterpreterController {
         this.sendMessage({subject:message.subject + ' - unknown subject'})
       }
     })
+
+    this._source_string = source_string
+    this.eventListeners = {}
   }
 
   get source_string() {
@@ -36,21 +36,9 @@ class InterpreterController {
     this._source_string = val
   }
 
-  sendMessage(message) {
-    this.message_handler.sendMessage(message)
-  }
-
-  addMessageListener(listener) {
-    this.message_handler.addMessageListener(listener)
-  }
-
-  removeMessageListener(listener) {
-    this.message_handler.removeMessageListener(listener)
-  }
-
   constructInterpreter() {
     this.interpreter = new Interpreter(this.scanResult.result.main, {}) // TODO: agregar user_modules
-    this.interpreter.addMessageListener(this.message_handler)
+    this.interpreter.addMessageListener(this)
     this.sendMessage({subject:'interpreter-ready'})
   }
 
