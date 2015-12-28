@@ -15,10 +15,6 @@ class InterpreterController extends MessageHandler {
       else if (message.subject == 'leer') {
         this.sendMessage({subject:'leer'})
       }
-      else if (message.subject == 'run') {
-        this.scan()
-        this.run()
-      }
       else {
         this.sendMessage({subject:message.subject + ' - unknown subject'})
       }
@@ -36,33 +32,32 @@ class InterpreterController extends MessageHandler {
     this._source_string = val
   }
 
-  constructInterpreter() {
-    this.interpreter = new Interpreter(this.scanResult.result.main, {}) // TODO: agregar user_modules
+  constructInterpreter(program_data) {
+    this.interpreter = new Interpreter(program_data.main, {}) // TODO: agregar user_modules
     this.interpreter.addMessageListener(this)
-    this.sendMessage({subject:'interpreter-ready'})
   }
 
-  scan() {
+  scan(source_string) {
     let source_wrapper = new Source(this._source_string)
     let tokenizer = new Parser(source_wrapper)
-    this.scanner = new Scanner(tokenizer)
+    let scanner = new Scanner(tokenizer)
 
     this.sendMessage({subject:'scan-started'})
 
-    this.scanResult = this.scanner.getModules()
+    let scan_result = scanner.getModules()
 
     this.sendMessage({subject:'scan-finished'})
 
-    if (this.scanResult.error) {
-      this.sendMessage({subject:'syntax-errors', body:this.scanResult.result})
+    if (scan_result.error) {
+      this.sendMessage({subject:'incorrect-syntax', body:scan_result.result})
     }
     else {
-      this.constructInterpreter()
-      this.sendMessage({subject:'good-syntax'})
+      this.sendMessage({subject:'correct-syntax', body:scan_result.result})
     }
   }
 
-  run() {
+  run(program_data) {
+    this.constructInterpreter(program_data)
     this.interpreter.run()
   }
 }

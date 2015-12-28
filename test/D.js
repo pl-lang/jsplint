@@ -10,15 +10,18 @@ describe('InterpreterController', () => {
     let controller = new InterpreterController(programa)
 
     let msn = new MessageHandler((message) => {
-      if (message.subject == 'scan-end') {
+      if (message.subject == 'scan-finished') {
         true.should.equal(true)
+      }
+      else if (message.subject == 'correct-syntax') {
+        controller.run(message.body)
       }
     })
 
     controller.addMessageListener(msn)
     msn.addMessageListener(controller)
 
-    msn.sendMessage({subject:'run'})
+    controller.scan(programa)
   })
 
   it('las llamadas a escribir funcionan bien', () => {
@@ -34,12 +37,15 @@ describe('InterpreterController', () => {
       else if (message.subject == 'escribir') {
         variable = message.things_to_print
       }
+      else if (message.subject == 'correct-syntax') {
+        controller.run(message.body)
+      }
     })
 
     controller.addMessageListener(msn)
     msn.addMessageListener(controller)
 
-    msn.sendMessage({subject:'run'})
+    controller.scan(programa)
 
     variable.should.deepEqual([42, 28])
   })
