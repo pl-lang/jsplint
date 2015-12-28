@@ -7,7 +7,7 @@ const Source         = require('./frontend/Source')
 const Parser         = require('./frontend/Parser')
 
 class InterpreterController extends MessageHandler {
-  constructor(source_string) {
+  constructor(config) {
     super((message) => {
       if (message.subject == 'escribir') {
         this.sendMessage(message)
@@ -20,16 +20,7 @@ class InterpreterController extends MessageHandler {
       }
     })
 
-    this._source_string = source_string
     this.eventListeners = {}
-  }
-
-  get source_string() {
-    return this._source_string
-  }
-
-  set source_string(val) {
-    this._source_string = val
   }
 
   constructInterpreter(program_data) {
@@ -38,7 +29,7 @@ class InterpreterController extends MessageHandler {
   }
 
   scan(source_string) {
-    let source_wrapper = new Source(this._source_string)
+    let source_wrapper = new Source(source_string)
     let tokenizer = new Parser(source_wrapper)
     let scanner = new Scanner(tokenizer)
 
