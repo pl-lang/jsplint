@@ -23,7 +23,7 @@ class InterpreterController extends MessageHandler {
     this.eventListeners = {}
   }
 
-  constructInterpreter(program_data) {
+  setUpInterpreter(program_data) {
     this.interpreter = new Interpreter(program_data.main, {}) // TODO: agregar user_modules
     this.interpreter.addMessageListener(this)
   }
@@ -48,7 +48,6 @@ class InterpreterController extends MessageHandler {
   }
 
   run(program_data) {
-    this.constructInterpreter(program_data)
     this.interpreter.run()
   }
 }

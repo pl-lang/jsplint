@@ -14,7 +14,8 @@ describe('InterpreterController', () => {
         true.should.equal(true)
       }
       else if (message.subject == 'correct-syntax') {
-        controller.run(message.body)
+        controller.setUpInterpreter(message.body)
+        controller.run()
       }
     })
 
@@ -38,7 +39,8 @@ describe('InterpreterController', () => {
         variable = message.things_to_print
       }
       else if (message.subject == 'correct-syntax') {
-        controller.run(message.body)
+        controller.setUpInterpreter(message.body)
+        controller.run()
       }
     })
 
