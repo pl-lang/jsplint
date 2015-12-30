@@ -12,6 +12,104 @@ function skipWhiteSpace(source) {
   }
 }
 
+class RepeatScanner {
+  static capture(source) {
+    let condition
+    let body = []
+
+    source.next()
+
+    if (source.current().kind == 'eol')
+      skipWhiteSpace(source)
+
+
+    let statements = StatementCollector.capture(source)
+
+    if (statements.error) {
+      return statements
+    }
+    else {
+      body = statements.result
+    }
+
+    if (source.current().kind == 'eol')
+      skipWhiteSpace(source)
+
+    if (source.current().kind == 'hastaque') {
+      source.next()
+    }
+    else {
+      return {
+          error   : true
+        , result  : {
+            unexpected  : source.current().kind
+          , expected    : 'hastaque'
+          , atColumn    : source.current().columnNumber
+          , atLine      : source.current().lineNumber
+        }
+      }
+    }
+
+    if (source.current().kind == 'left-par') {
+      source.next()
+    }
+    else {
+      return {
+          error   : true
+        , result  : {
+            unexpected  : source.current().kind
+          , expected    : 'left-par'
+          , atColumn    : source.current().columnNumber
+          , atLine      : source.current().lineNumber
+        }
+      }
+    }
+
+    let token_array = []
+    let current_token = source.current()
+
+    while (current_token.kind != 'right-par' && current_token.kind != 'eof') {
+      token_array.push(current_token)
+      current_token = source.next()
+    }
+
+    if (current_token.kind == 'right-par') {
+      source.next()
+    }
+    else {
+      return {
+          error   : true
+        , result  : {
+            unexpected  : source.current().kind
+          , expected    : 'right-par'
+          , atColumn    : source.current().columnNumber
+          , atLine      : source.current().lineNumber
+        }
+      }
+    }
+
+    let expression_q = new TokenQueue(token_array)
+
+    let condition_exp = Expression.capture(expression_q)
+
+    if (condition_exp.error) {
+      return condition_exp
+    }
+    else {
+      condition = condition_exp.result
+    }
+
+    if (source.current().kind == 'eol')
+      skipWhiteSpace(source)
+
+    let error = false
+    let action = 'repeat'
+    let result = {action, condition, body}
+
+    return {error, result}
+  }
+}
+
 class IfScanner {
   static capture(source) {
     let condition
@@ -186,6 +284,16 @@ class StatementCollector {
         }
         else {
           result.push(if_block.result)
+        }
+      }
+      else if (current.kind == 'repetir') {
+        let repeat_block = RepeatScanner.capture(source)
+
+        if (repeat_block.error) {
+          return repeat_block
+        }
+        else {
+          result.push(repeat_block.result)
         }
       }
       else {
