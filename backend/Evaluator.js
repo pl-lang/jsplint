@@ -67,6 +67,30 @@ class Evaluator {
 
       case  'power':
       return Math.pow(operand_a, operand_b)
+
+      case 'equal':
+        return operand_a === operand_b
+
+      case 'diff-than':
+        return operand_a != operand_b
+
+      case 'minor-than':
+        return operand_a < operand_b
+
+      case 'major-than':
+        return operand_a > operand_b
+
+      case 'minor-equal':
+        return operand_a >= operand_b
+
+      case 'major-equal':
+        return operand_a >= operand_b
+
+      case 'and':
+        return operand_a && operand_b
+
+      case 'or':
+        return operand_a || operand_b
     }
   }
 
@@ -136,7 +160,7 @@ class Evaluator {
           }
         }
         break
-        
+
       }
     }
   }

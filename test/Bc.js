@@ -223,6 +223,80 @@ describe('Evaluator', () => {
     }
   })
 
+  it('relacionales', () => {
+    {
+      let a = '2 = 2'
+      let q = queueFromSource(a)
+      let exp = ExpressionPattern.capture(q)
+      exp.error.should.equal(false)
+      let resultado = evaluator.evaluateExp(exp.result)
+      resultado.should.equal(true)
+    }
+
+    {
+      let a = '2 <> 2'
+      let q = queueFromSource(a)
+      let exp = ExpressionPattern.capture(q)
+      exp.error.should.equal(false)
+      let resultado = evaluator.evaluateExp(exp.result)
+      resultado.should.equal(false)
+    }
+
+    {
+      let a = '2 >= 2'
+      let q = queueFromSource(a)
+      let exp = ExpressionPattern.capture(q)
+      exp.error.should.equal(false)
+      let resultado = evaluator.evaluateExp(exp.result)
+      resultado.should.equal(true)
+    }
+
+    {
+      let a = '2 <= 2'
+      let q = queueFromSource(a)
+      let exp = ExpressionPattern.capture(q)
+      exp.error.should.equal(false)
+      let resultado = evaluator.evaluateExp(exp.result)
+      resultado.should.equal(true)
+    }
+
+    {
+      let a = '5 > 4'
+      let q = queueFromSource(a)
+      let exp = ExpressionPattern.capture(q)
+      exp.error.should.equal(false)
+      let resultado = evaluator.evaluateExp(exp.result)
+      resultado.should.equal(true)
+    }
+
+    {
+      let a = '2 < 4'
+      let q = queueFromSource(a)
+      let exp = ExpressionPattern.capture(q)
+      exp.error.should.equal(false)
+      let resultado = evaluator.evaluateExp(exp.result)
+      resultado.should.equal(true)
+    }
+
+    {
+      let a = 'verdadero or falso'
+      let q = queueFromSource(a)
+      let exp = ExpressionPattern.capture(q)
+      exp.error.should.equal(false)
+      let resultado = evaluator.evaluateExp(exp.result)
+      resultado.should.equal(true)
+    }
+
+    {
+      let a = 'verdadero and falso'
+      let q = queueFromSource(a)
+      let exp = ExpressionPattern.capture(q)
+      exp.error.should.equal(false)
+      let resultado = evaluator.evaluateExp(exp.result)
+      resultado.should.equal(false)
+    }
+  })
+
   it('cadenas', () => {
     {
       let a = '"hola"'
