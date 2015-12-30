@@ -395,6 +395,16 @@ class StatementCollector {
           result.push(repeat_block.result)
         }
       }
+      else if (current.kind == 'mientras') {
+        let while_block = WhileScanner.capture(source)
+
+        if (while_block.error) {
+          return while_block
+        }
+        else {
+          result.push(while_block.result)
+        }
+      }
       else {
         done = true
       }

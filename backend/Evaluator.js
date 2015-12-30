@@ -81,7 +81,7 @@ class Evaluator {
         return operand_a > operand_b
 
       case 'minor-equal':
-        return operand_a >= operand_b
+        return operand_a <= operand_b
 
       case 'major-equal':
         return operand_a >= operand_b
@@ -161,6 +161,14 @@ class Evaluator {
         }
         break
 
+        case 'while': {
+          let loop = statement
+
+          while (this.evaluateExp(loop.condition)) {
+            this.run(loop.body)
+          }
+        }
+        break
       }
     }
   }
