@@ -12,6 +12,105 @@ function skipWhiteSpace(source) {
   }
 }
 
+class WhileScanner {
+  static capture(source) {
+    let condition
+    let body = []
+
+    source.next() // consume 'mientras'
+
+    if (source.current().kind == 'eol')
+      skipWhiteSpace(source)
+
+    if (source.current().kind == 'left-par') {
+      source.next()
+    }
+    else {
+      let error = true
+      let current = source.current()
+      let unexpected = current.kind
+      let expected = 'left-par'
+      let atColumn = current.columnNumber
+      let atLine = current.lineNumber
+      let result = {unexpected, expected, atColumn, atLine}
+      return {error, result}
+    }
+
+    // Esto arma un TokenQueue con los tokens de la condicion del bucle
+
+    let token_array = []
+    let current_token = source.current()
+
+    while (current_token.kind != 'right-par' && current_token.kind != 'eof') {
+      token_array.push(current_token)
+      current_token = source.next()
+    }
+
+    if (source.current().kind == 'right-par') {
+      source.next()
+    }
+    else {
+      let error = true
+      let current = source.current()
+      let unexpected = current.kind
+      let expected = 'right-par'
+      let atColumn = current.columnNumber
+      let atLine = current.lineNumber
+      let result = {unexpected, expected, atColumn, atLine}
+      return {error, result}
+    }
+
+    let expression_q = new TokenQueue(token_array)
+
+    let condition_exp = Expression.capture(expression_q)
+
+    if (condition_exp.error) {
+      return condition_exp
+    }
+    else {
+      condition = condition_exp.result
+    }
+
+    if (source.current().kind == 'eol')
+      skipWhiteSpace(source)
+
+    let statements = StatementCollector.capture(source)
+
+    if (statements.error) {
+      return statements
+    }
+    else {
+      body = statements.result
+    }
+
+    if (source.current().kind == 'eol')
+      skipWhiteSpace(source)
+
+    if (source.current().kind == 'finmientras') {
+      source.next()
+    }
+    else {
+      let error = true
+      let current = source.current()
+      let unexpected = current.kind
+      let expected = 'finmientras'
+      let atColumn = current.columnNumber
+      let atLine = current.lineNumber
+      let result = {unexpected, expected, atColumn, atLine}
+      return {error, result}
+    }
+
+    if (source.current().kind == 'eol')
+      skipWhiteSpace(source)
+
+    let action = 'while'
+    let error = false
+    let result = {action, condition, body}
+
+    return {error, result}
+  }
+}
+
 class RepeatScanner {
   static capture(source) {
     let condition
