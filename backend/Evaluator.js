@@ -125,6 +125,18 @@ class Evaluator {
         else {
           this.run(statement.false_branch)
         }
+        break
+
+        case 'repeat': {
+          let loop = statement
+          this.run(loop.body)
+
+          while (this.evaluateExp(loop.condition) == false) {
+            this.run(loop.body)
+          }
+        }
+        break
+        
       }
     }
   }
