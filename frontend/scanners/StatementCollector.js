@@ -134,7 +134,7 @@ class RepeatScanner {
     if (source.current().kind == 'eol')
       skipWhiteSpace(source)
 
-    if (source.current().kind == 'hastaque') {
+    if (source.current().kind == 'hasta') {
       source.next()
     }
     else {
@@ -142,7 +142,22 @@ class RepeatScanner {
           error   : true
         , result  : {
             unexpected  : source.current().kind
-          , expected    : 'hastaque'
+          , expected    : 'hasta'
+          , atColumn    : source.current().columnNumber
+          , atLine      : source.current().lineNumber
+        }
+      }
+    }
+
+    if (source.current().kind == 'que') {
+      source.next()
+    }
+    else {
+      return {
+          error   : true
+        , result  : {
+            unexpected  : source.current().kind
+          , expected    : 'que'
           , atColumn    : source.current().columnNumber
           , atLine      : source.current().lineNumber
         }

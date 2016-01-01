@@ -122,12 +122,23 @@ describe('NumberToken', () => {
 describe('StringToken', () => {
   let StringToken = require('../frontend/tokens/StringToken.js')
   it('lee una cadena', () => {
-    let source = new Source('"Hola Mundo"')
-    let token = new StringToken(source)
+    {
+      let source = new Source('"Hola Mundo"')
+      let token = new StringToken(source)
 
-    token.kind.should.equal('string')
-    token.text.should.equal('"Hola Mundo"')
-    token.value.should.equal('Hola Mundo')
+      token.kind.should.equal('string')
+      token.text.should.equal('"Hola Mundo"')
+      token.value.should.equal('Hola Mundo')
+    }
+
+    {
+      let source = new Source('"hasta que los chanchos vuelen..."')
+      let token = new StringToken(source)
+
+      token.kind.should.equal('string')
+      token.text.should.equal('"hasta que los chanchos vuelen..."')
+      token.value.should.equal('hasta que los chanchos vuelen...')
+    }
   })
 
   it('devuelve error al encontrar \\n en medio de una cadena', () => {
