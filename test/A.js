@@ -76,6 +76,14 @@ describe('WordToken', () => {
     token.kind.should.equal('word')
     token.text.should.equal('nombre24')
   })
+
+  it('funciona con nombres que contengan guion bajo', () => {
+    let source = new Source('costo_total')
+    let token = new WordToken(source)
+
+    token.kind.should.equal('word')
+    token.text.should.equal('costo_total')
+  })
 })
 
 describe('NumberToken', () => {

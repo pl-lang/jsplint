@@ -55,7 +55,7 @@ class WordToken {
     this.text += source.currentChar()
     source.nextChar()
 
-    let isDigitOrLetter = (s) => {return isDigit(s) || isLetter(s)}
+    let isDigitOrLetter = (s) => {return isDigit(s) || isLetter(s) || s === '_'}
 
     let c
     while ( isDigitOrLetter(c = source.currentChar()) ) {
