@@ -8,6 +8,7 @@ class Evaluator {
     this.localVariables = localVariables
     this.statements = statements
     this.message_handler = new MessageHandler()
+    this.running = true
   }
 
   sendMessage(message) {
@@ -126,7 +127,10 @@ class Evaluator {
   }
 
   run(statements) {
-    for (let statement of statements) {
+    let i = 0
+    while (i < statements.length && this.running) {
+      let statement = statements[i]
+
       switch (statement.action) {
         case  'assignment':
         // Habria que buscar la variable objetivo (primero entre las locales, luego entre las globales)
@@ -170,6 +174,7 @@ class Evaluator {
         }
         break
       }
+      i++
     }
   }
 }
