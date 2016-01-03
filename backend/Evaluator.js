@@ -35,12 +35,23 @@ class Evaluator {
   }
 
   getValue(varname) {
-    // Manejar el caso donde la variable no tiene ningun valor. Por ahora devuelve null
     if (this.localVariables.hasOwnProperty(varname)) {
-      return this.localVariables[varname].value
+      if (this.localVariables[varname].hasOwnProperty('value')) {
+        return this.localVariables[varname].value
+      }
+      else {
+        console.log('variable local no inicializada')
+        return this.localVariables[varname].value // Por ahora devuelve null
+      }
     }
     else if (this.globalVariables.hasOwnProperty(varname)) {
-      return this.globalVariables[varname].value
+      if (this.globalVariables[varname].hasOwnProperty('value')) {
+        return this.globalVariables[varname].value
+      }
+      else {
+        console.log('variable global no inicializada')
+        return this.globalVariables[varname].value // Por ahora devuelve null
+      }
     }
   }
 
