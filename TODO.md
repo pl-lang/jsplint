@@ -2,6 +2,6 @@
 
 - [ ] En las asignaciones, revisar que la carga y la variable objetivo sean del mismo tipo
 
-- [ ] Implementar el rango espicificado por el libro al tipo entero y al tipo real.
+- [ ] Implementar el rango especificado por el libro al tipo entero y al tipo real.
 
-- [ ] Verificar que `'(2 - 2 - 2)'` de -2
+- [x] Verificar que `'(2 - 2 - 2)'` de -2

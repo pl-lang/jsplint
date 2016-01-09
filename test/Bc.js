@@ -154,6 +154,15 @@ describe('Evaluator', () => {
       let resultado = evaluator.evaluateExp(exp.result)
       resultado.should.equal(-3)
     }
+
+    {
+      let a = '(3-3-3)'
+      let q = queueFromSource(a)
+      let exp = ExpressionPattern.capture(q)
+      exp.error.should.equal(false)
+      let resultado = evaluator.evaluateExp(exp.result)
+      resultado.should.equal(-3)
+    }
   })
 
   it('suma', () => {
