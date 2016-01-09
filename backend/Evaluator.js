@@ -40,8 +40,8 @@ class Evaluator {
         return this.localVariables[varname].value
       }
       else {
-        console.log('variable local no inicializada')
-        return this.localVariables[varname].value // Por ahora devuelve null
+        this.sendMessage({subject:'eval-error'})
+        this.running = false
       }
     }
     else if (this.globalVariables.hasOwnProperty(varname)) {
@@ -49,8 +49,8 @@ class Evaluator {
         return this.globalVariables[varname].value
       }
       else {
-        console.log('variable global no inicializada')
-        return this.globalVariables[varname].value // Por ahora devuelve null
+        this.sendMessage({subject:'eval-error'})
+        this.running = false
       }
     }
   }

@@ -15,6 +15,9 @@ class InterpreterController extends MessageHandler {
       else if (message.subject == 'leer') {
         this.sendMessage({subject:'leer'})
       }
+      else if (message.subject == 'eval-error') {
+        this.sendMessage(message)
+      }
       else {
         this.sendMessage({subject:message.subject + ' - unknown subject'})
       }

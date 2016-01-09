@@ -9,6 +9,9 @@ class Interpreter {
       if (message.subject == 'escribir') {
         this.sendMessage(message)
       }
+      else if (message.subject == 'eval-error') {
+        this.sendMessage(message)
+      }
     })
     this.globalVariables = main.variables
     this.main_statements = main.statements
