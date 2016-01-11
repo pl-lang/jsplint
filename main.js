@@ -25,6 +25,9 @@ class InterpreterController {
   }
 
   emit(event_info) {
+    // Se encarga de llamar a los callbacks de los eventos.
+    // Si se registro un callback para 'any' entonces se lo llama para cada evento que sea emitido. Es el callback por defecto.
+    // Si un evento tiene registrado un callback entonces este se ejecuta antes que el callback por defecto. 
     if (this.callbacks.hasOwnProperty(event_info.name)) {
       this.callbacks[event_info.name](...arguments)
     }
@@ -37,6 +40,14 @@ class InterpreterController {
   setUpInterpreter(program_data) {
     this.interpreter = new Interpreter(program_data.main, {}) // TODO: agregar user_modules
     this.interpreter.on('any', genericHandler)
+
+    if (this.callbacks.hasOwnProperty('write')) {
+      this.interpreter.on('write', this.callbacks.write)
+    }
+
+    if (this.callbacks.hasOwnProperty('read')) {
+      this.interpreter.on('read', this.callbacks.read)
+    }
   }
 
   run(source_string) {
