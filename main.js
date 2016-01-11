@@ -5,6 +5,20 @@ const Scanner        = require('./frontend/Scanner')
 const Source         = require('./frontend/Source')
 const Parser         = require('./frontend/Parser')
 
+const defaults = {
+  event_logging : true,
+  step_by_step : false
+}
+
+function applyConfig(template, custom_options) {
+  for (let option_name in template) {
+    if ( !(option_name in custom_options) ) {
+      custom_options[option_name] = template[option_name]
+    }
+  }
+  return custom_options
+}
+
 function genericHandler(event_info) {
   console.log('Evento:', event_info.name)
   console.log('Origen:', event_info.origin)
@@ -15,7 +29,17 @@ class InterpreterController {
   constructor(config) {
     this.callbacks = {}
 
-    this.on('any', genericHandler)
+    if (config) {
+      this.config = applyConfig(defaults, config)
+      console.log(this.config)
+    }
+    else {
+      this.config = defaults
+    }
+
+    if (this.config.event_logging === true) {
+      this.on('any', genericHandler)
+    }
 
     this.emit({name:'test-event', origin:'controller'})
   }
@@ -27,7 +51,7 @@ class InterpreterController {
   emit(event_info) {
     // Se encarga de llamar a los callbacks de los eventos.
     // Si se registro un callback para 'any' entonces se lo llama para cada evento que sea emitido. Es el callback por defecto.
-    // Si un evento tiene registrado un callback entonces este se ejecuta antes que el callback por defecto. 
+    // Si un evento tiene registrado un callback entonces este se ejecuta antes que el callback por defecto.
     if (this.callbacks.hasOwnProperty(event_info.name)) {
       this.callbacks[event_info.name](...arguments)
     }
@@ -39,7 +63,10 @@ class InterpreterController {
 
   setUpInterpreter(program_data) {
     this.interpreter = new Interpreter(program_data.main, {}) // TODO: agregar user_modules
-    this.interpreter.on('any', genericHandler)
+
+    if (this.config.event_logging === true) {
+      this.interpreter.on('any', genericHandler)
+    }
 
     if (this.callbacks.hasOwnProperty('write')) {
       this.interpreter.on('write', this.callbacks.write)
