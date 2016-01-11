@@ -25,7 +25,7 @@ class Evaluator {
     }
   }
 
-  callEscribir(call) {
+  writeCall(call) {
     let value_list = call.args.map((expression) => {
       return this.evaluateExp(expression, expression.expression_type)
     })
@@ -33,7 +33,7 @@ class Evaluator {
     this.emit({name:'write', origin:'evaluator'}, value_list)
   }
 
-  callLeer(call) {
+  readCall(call) {
 
   }
 
@@ -148,10 +148,10 @@ class Evaluator {
 
         case  'module_call':
         if (statement.name == 'escribir') {
-          this.callEscribir(statement)
+          this.writeCall(statement)
         }
         else if (statement.name == 'leer') {
-          this.callLeer(statement)
+          this.readCall(statement)
         }
         break
 
