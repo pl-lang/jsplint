@@ -30,8 +30,8 @@ class Evaluator {
     this.sendMessage({subject:'escribir', things_to_print:things_to_print})
   }
 
-  callLeer(call) {
-
+  readCall(call) {
+    
   }
 
   getValue(varname) {
