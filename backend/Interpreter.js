@@ -1,39 +1,47 @@
   'use strict'
 
-let MessageHandler  = require('../messages/MessageHandler')
-let Evaluator       = require('./Evaluator.js')
+const Evaluator       = require('./Evaluator.js')
 
 class Interpreter {
   constructor(main, user_modules) {
-    this.message_handler = new MessageHandler((message) => {
-      if (message.subject == 'escribir') {
-        this.sendMessage(message)
-      }
-      else if (message.subject == 'eval-error') {
-        this.sendMessage(message)
-      }
-    })
     this.globalVariables = main.variables
     this.main_statements = main.statements
     this.user_modules = user_modules
+    this.callbacks = {}
+
     this.mainEvaluator = new Evaluator(this.main_statements, this.globalVariables, this.globalVariables)
-    this.mainEvaluator.addMessageListener(this.message_handler)
+    this.mainEvaluator.on('write', (event_info, value_list) => {this.emit(event_info, value_list)})
+    this.mainEvaluator.on('evaluation-error', (event_info) => {this.emit(event_info)})
+  }
+
+  on(event_name, callback) {
+    this.callbacks[event_name] = callback
+  }
+
+  emit(event_info) {
+    if (this.callbacks.hasOwnProperty(event_info.name)) {
+      this.callbacks[event_info.name](...arguments)
+    }
+
+    if (this.callbacks.hasOwnProperty('any')) {
+      this.callbacks.any(...arguments)
+    }
   }
 
   run() {
-    this.mainEvaluator.start()
-  }
+    let done = false
 
-  sendMessage(message) {
-    this.message_handler.sendMessage(message)
-  }
+    this.emit({name:'program-started', origin:'interpreter'})
 
-  addMessageListener(listener) {
-    this.message_handler.addMessageListener(listener)
-  }
+    while (!done) {
+      let state = this.mainEvaluator.runStatement()
 
-  removeMessageListener(listener) {
-    this.message_handler.removeMessageListener(listener)
+      this.emit({name:'step-executed', origin:'interpreter'}, state.executed_statement)
+
+      done = state.done
+    }
+
+    this.emit({name:'program-finished', origin:'interpreter'})
   }
 }
 

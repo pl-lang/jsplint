@@ -1,57 +1,65 @@
 'use strict'
 
-const MessageHandler = require('./messages/MessageHandler')
 const Interpreter    = require('./backend/Interpreter.js')
 const Scanner        = require('./frontend/Scanner')
 const Source         = require('./frontend/Source')
 const Parser         = require('./frontend/Parser')
 
-class InterpreterController extends MessageHandler {
-  constructor(config) {
-    super((message) => {
-      if (message.subject == 'escribir') {
-        this.sendMessage(message)
-      }
-      else if (message.subject == 'leer') {
-        this.sendMessage({subject:'leer'})
-      }
-      else if (message.subject == 'eval-error') {
-        this.sendMessage(message)
-      }
-      else {
-        this.sendMessage({subject:message.subject + ' - unknown subject'})
-      }
-    })
+function genericHandler(event_info) {
+  console.log('Evento:', event_info.name)
+  console.log('Origen:', event_info.origin)
+  console.log('Args:', ...arguments, '\n')
+}
 
-    this.eventListeners = {}
+class InterpreterController {
+  constructor(config) {
+    this.callbacks = {}
+
+    this.on('any', genericHandler)
+
+    this.emit({name:'test-event', origin:'controller'})
+  }
+
+  on(event_name, callback) {
+    this.callbacks[event_name] = callback
+  }
+
+  emit(event_info) {
+    if (this.callbacks.hasOwnProperty(event_info.name)) {
+      this.callbacks[event_info.name](...arguments)
+    }
+
+    if (this.callbacks.hasOwnProperty('any')) {
+      this.callbacks.any(...arguments)
+    }
   }
 
   setUpInterpreter(program_data) {
     this.interpreter = new Interpreter(program_data.main, {}) // TODO: agregar user_modules
-    this.interpreter.addMessageListener(this)
+    this.interpreter.on('any', genericHandler)
   }
 
-  scan(source_string) {
+  run(source_string) {
     let source_wrapper = new Source(source_string)
     let tokenizer = new Parser(source_wrapper)
     let scanner = new Scanner(tokenizer)
 
-    this.sendMessage({subject:'scan-started'})
+    this.emit({name:'scan-started', origin:'controller'})
 
     let scan_result = scanner.getModules()
 
-    this.sendMessage({subject:'scan-finished'})
+    this.emit({name:'scan-finished', origin:'controller'})
 
     if (scan_result.error) {
-      this.sendMessage({subject:'incorrect-syntax', body:scan_result.result})
+      this.emit({name:'syntax-error', origin:'controller'}, scan_result.result)
     }
     else {
-      this.sendMessage({subject:'correct-syntax', body:scan_result.result})
-    }
-  }
+      this.emit({name:'correct-syntax', origin:'controller'})
 
-  run(program_data) {
-    this.interpreter.run()
+      this.setUpInterpreter(scan_result.result)
+
+      this.interpreter.run()
+    }
   }
 }
 
