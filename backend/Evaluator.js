@@ -1,37 +1,40 @@
 'use strict'
 
-let MessageHandler = require('../messages/MessageHandler.js')
 
 class Evaluator {
   constructor(statements, localVariables, globalVariables) {
     this.globalVariables = globalVariables
     this.localVariables = localVariables
     this.statements = statements
-    this.message_handler = new MessageHandler()
     this.running = true
+    this.current_index = 0
+    this.callbacks = {}
   }
 
-  sendMessage(message) {
-    this.message_handler.sendMessage(message)
+  on(event, callback) {
+    this.callbacks[event] = callback
   }
 
-  addMessageListener(listener) {
-    this.message_handler.addMessageListener(listener)
+  emit(event_info) {
+    if (this.callbacks.hasOwnProperty(event_info.name)) {
+      this.callbacks[event_info.name](...arguments)
+    }
+
+    if (this.callbacks.hasOwnProperty('any')) {
+      this.callbacks.any(...arguments)
+    }
   }
 
-  removeMessageListener(listener) {
-    this.message_handler.removeMessageListener(listener)
-  }
-
-  callEscribir(call) {
-    let things_to_print = call.args.map((thing) => {
-      return this.evaluateExp(thing, thing.expression_type)
+  writeCall(call) {
+    let value_list = call.args.map((expression) => {
+      return this.evaluateExp(expression, expression.expression_type)
     })
-    this.sendMessage({subject:'escribir', things_to_print:things_to_print})
+
+    this.emit({name:'write', origin:'evaluator'}, value_list)
   }
 
   readCall(call) {
-    
+
   }
 
   getValue(varname) {
@@ -40,8 +43,8 @@ class Evaluator {
         return this.localVariables[varname].value
       }
       else {
-        this.sendMessage({subject:'eval-error'})
         this.running = false
+        this.emit({name:'evaluation-error', origin:'evaluator'})
       }
     }
     else if (this.globalVariables.hasOwnProperty(varname)) {
@@ -49,8 +52,8 @@ class Evaluator {
         return this.globalVariables[varname].value
       }
       else {
-        this.sendMessage({subject:'eval-error'})
         this.running = false
+        this.emit({name:'evaluation-error', origin:'evaluator'})
       }
     }
   }
@@ -133,14 +136,9 @@ class Evaluator {
     }
   }
 
-  start() {
-    this.run(this.statements)
-  }
-
-  run(statements) {
-    let i = 0
-    while (i < statements.length && this.running) {
-      let statement = statements[i]
+  runStatement() {
+    if (this.current_index < this.statements.length) {
+      let statement = this.statements[this.current_index]
 
       switch (statement.action) {
         case  'assignment':
@@ -150,10 +148,10 @@ class Evaluator {
 
         case  'module_call':
         if (statement.name == 'escribir') {
-          this.callEscribir(statement)
+          this.writeCall(statement)
         }
         else if (statement.name == 'leer') {
-          this.callLeer(statement)
+          this.readCall(statement)
         }
         break
 
@@ -185,7 +183,15 @@ class Evaluator {
         }
         break
       }
-      i++
+
+      let executed_statement = this.statements[this.current_index]
+
+      this.current_index++
+
+      return {done:false, executed_statement}
+    }
+    else {
+      return {done:true}
     }
   }
 }
