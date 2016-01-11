@@ -1,54 +1,30 @@
 # Qué es esto?
 
-Este paquete es un programa escrito en JavaScript que sirve para interpretar programas escritos en un lenguaje similar a Pascal.
+Este paquete es un interprete para un lenguaje de programacion diseñado para ser facil de aprender y para introducir el paradigma de la programacion estructurada.
 
 # Cómo se usa?
-Importarlo al proyecto:
+Primero se debe importar el modulo y luego hay que crear una una instancia del controlador.
 
 ```js
 const InterpreterController = require('interprete-pl')
 
+const controlador = new InterpreterController()
 ```
-Tambien hace falta un objeto que se encargue de reaccionar a los mensajes que este genera:
+
+El proceso de ejecucion (traduccion y evaluacion) de un programa genera eventos (como un pedido de datos al usuario o la escritura de datos en pantalla). Para usar el interprete hay que registrar funciones que se ejecutaran cuando un evento particular ocurra. Hay una descripcion detallada de los eventos en [OTRO ARCHIVO]
+
 ```js
-const MessageHandler = require('message-handler')
+controlador.on('write', (value_list) => {})
 
-```
-Crear una instancia de ``MessageHandler`` pasandole una funcion. Dicha funcion toma un mensaje y es la que se debe encargar de reaccionar
-a cada tipo de mensaje que ``InterpreterController`` puede generar:
-```js
-let mensajero = new MessageHandler( (mensaje) => {
-  if (mensaje.subject == 'scan-started') {
-    // ...
-  }
-  else if (mensaje.subject == 'scan-finished') {
-    // ...
-  }
-  else {
-    // ...
-  }
-} )
+controlador.on('read', (var_list) => {})
 
-```
-Ahora hay que crear una instancia de InterpreterController y agregar ``mensajero`` a la lista de receptores.
-```js
-let controller = new InterpreterController()
-controller.addMessageListener(mensajero)
+controlador.on('syntax-error', () => {})
 
-```
-Echo eso, ya se puede utilizar el interprete para ejecutar codigo. Esto consta de tres pasos:
-  - Escanear el codigo
-  - Preparar el interprete
-  - Ejecutar el codigo
+controlador.on('evaluation-error', () => {})
 
-Para escanear el còdigo hay que llamar a ``controller.scan(codigo)`` pasandole una cadena. Cualquier error de sintaxis que se encuentre sera informado en esta etapa por medio de un mensaje *incorrect-syntax*.
-
-Si no hubo errores, ``controller`` envia un mensaje *correct-syntax*. Ahora solo queda preparar el interprete y ejecutar el codigo:
-```js
-controller.setUpInterpreter()
-controller.run()
-
+controlador.on('correct-syntax', () => {})
 ```
 
+Una vez que se han registrado todas las funciones necesarias se puede llamar a la funcion `controller.run()` pasandole como unico argumento el codigo del programa. Dicha funcion se encarga de reaelizar todos los pasos necesarios para ejecutar el programa.
 
 # Desarrollo
