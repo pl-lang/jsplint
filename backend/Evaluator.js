@@ -136,14 +136,31 @@ class Evaluator {
     }
   }
 
+  assignToVar(varname, expression) {
+    let target
+
+    if (varname in this.localVariables) {
+      target = this.localVariables[varname]
+    }
+    else if (varname in this.globalVariables) {
+      target = this.globalVariables[varname]
+    }
+    else {
+      // TODO: la variable no existe (ni en locales ni en globales)
+    }
+
+    // TODO revisar que el tipo de la carga sea compatible con la var objetivo
+
+    target.value = this.evaluateExp(expression)
+  }
+
   runStatement() {
     if (this.current_index < this.statements.length) {
       let statement = this.statements[this.current_index]
 
       switch (statement.action) {
         case  'assignment':
-        // Habria que buscar la variable objetivo (primero entre las locales, luego entre las globales)
-        this.localVariables[statement.target].value = this.evaluateExp(statement.payload)
+        this.assignToVar(statement.target, statement.payload)
         break
 
         case  'module_call':
