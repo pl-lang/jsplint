@@ -3,26 +3,21 @@ var should = require('should');
 
 describe('InterpreterController', () => {
   let InterpreterController = require('../main.js')
-  let MessageHandler        = require('../messages/MessageHandler')
 
   it('el pasaje de mensajes funciona bien', () => {
     let programa = 'variables\nentero a, b\ninicio\na<-48\nb <- 32\nfin\n'
-    let controller = new InterpreterController()
+    let controller = new InterpreterController({event_logging:true})
 
-    let msn = new MessageHandler((message) => {
-      if (message.subject == 'scan-finished') {
-        true.should.equal(true)
-      }
-      else if (message.subject == 'correct-syntax') {
-        controller.setUpInterpreter(message.body)
-        controller.run()
-      }
-    })
+    let program_finished = false
 
-    controller.addMessageListener(msn)
-    msn.addMessageListener(controller)
+    controller.on('program-finished', () => {program_finished = true})
 
-    controller.scan(programa)
+    console.log(controller.callbacks)
+
+    controller.run(programa)
+
+    program_finished.should.equal(true)
+
   })
 
   it('las llamadas a escribir funcionan bien', () => {
