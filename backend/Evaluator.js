@@ -4,7 +4,7 @@ const Emitter = require('../auxiliary/Emitter.js')
 
 class Evaluator extends Emitter {
   constructor(statements, localVariables, globalVariables) {
-    super()
+    super(['read', 'write', 'evaluation-error'])
     this.globalVariables = globalVariables
     this.localVariables = localVariables
     this.statements = statements
