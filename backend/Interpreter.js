@@ -1,31 +1,19 @@
   'use strict'
 
 const Evaluator       = require('./Evaluator.js')
+const Emitter         = require('../auxiliary/Emitter.js')
 
-class Interpreter {
+class Interpreter extends Emitter {
   constructor(main, user_modules) {
+    super(['program-started', 'program-finished', 'step-executed'])
     this.globalVariables = main.variables
     this.main_statements = main.statements
     this.user_modules = user_modules
     this.callbacks = {}
 
     this.mainEvaluator = new Evaluator(this.main_statements, this.globalVariables, this.globalVariables)
-    this.mainEvaluator.on('write', (event_info, value_list) => {this.emit(event_info, value_list)})
-    this.mainEvaluator.on('evaluation-error', (event_info) => {this.emit(event_info)})
-  }
 
-  on(event_name, callback) {
-    this.callbacks[event_name] = callback
-  }
-
-  emit(event_info) {
-    if (this.callbacks.hasOwnProperty(event_info.name)) {
-      this.callbacks[event_info.name](...arguments)
-    }
-
-    if (this.callbacks.hasOwnProperty('any')) {
-      this.callbacks.any(...arguments)
-    }
+    this.exposeChildrenEvents(this.mainEvaluator)
   }
 
   run() {
