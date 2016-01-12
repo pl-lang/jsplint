@@ -1,17 +1,22 @@
 'use strict'
 
 class Emitter {
-  constructor() {
+  constructor(event_list) {
+    this.events = new Set(event_list)
     this.callbacks = {}
   }
 
   exposeChildrenEvents(child_emitter) {
     // Esta funcion siver para emitir los eventos de otro emisor como si fueran propios.
+    let self = this
+
     for (let event_name of child_emitter.events) {
-      let self = this
+      this.events.add(event_name)
 
       child_emitter.on(event_name, function () {self.emit(...arguments)})
     }
+
+    child_emitter.on('any', function () {self.emit(...arguments)})
   }
 
   on(event_name, callback) {
