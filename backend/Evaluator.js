@@ -1,28 +1,16 @@
 'use strict'
 
+const Emitter = require('../auxiliary/Emitter.js')
 
-class Evaluator {
+class Evaluator extends Emitter {
   constructor(statements, localVariables, globalVariables) {
+    super()
     this.globalVariables = globalVariables
     this.localVariables = localVariables
     this.statements = statements
     this.running = true
     this.current_index = 0
     this.callbacks = {}
-  }
-
-  on(event, callback) {
-    this.callbacks[event] = callback
-  }
-
-  emit(event_info) {
-    if (this.callbacks.hasOwnProperty(event_info.name)) {
-      this.callbacks[event_info.name](...arguments)
-    }
-
-    if (this.callbacks.hasOwnProperty('any')) {
-      this.callbacks.any(...arguments)
-    }
   }
 
   writeCall(call) {
