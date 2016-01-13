@@ -6,7 +6,7 @@ describe('InterpreterController', () => {
 
   it('el pasaje de mensajes funciona bien', () => {
     let programa = 'variables\nentero a, b\ninicio\na<-48\nb <- 32\nfin\n'
-    let controller = new InterpreterController({event_logging:true})
+    let controller = new InterpreterController({event_logging:false})
 
     let program_finished = false
 
@@ -22,28 +22,14 @@ describe('InterpreterController', () => {
 
   it('las llamadas a escribir funcionan bien', () => {
     let programa = 'variables\ninicio\nescribir(42, 28)\nfin\n'
-    let controller = new InterpreterController()
+    let controller = new InterpreterController({event_logging:false})
 
-    let variable;
+    let flag = false;
 
-    let msn = new MessageHandler((message) => {
-      if (message.subject == 'scan-end') {
-        true.should.equal(true)
-      }
-      else if (message.subject == 'escribir') {
-        variable = message.things_to_print
-      }
-      else if (message.subject == 'correct-syntax') {
-        controller.setUpInterpreter(message.body)
-        controller.run()
-      }
-    })
+    controller.on('write', () => {flag = true})
 
-    controller.addMessageListener(msn)
-    msn.addMessageListener(controller)
+    controller.run(programa)
 
-    controller.scan(programa)
-
-    variable.should.deepEqual([42, 28])
+    flag.should.equal(true)
   })
 })
