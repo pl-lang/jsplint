@@ -15,8 +15,6 @@ class Emitter {
 
       child_emitter.on(event_name, function () {self.emit(...arguments)})
     }
-
-    child_emitter.on('any', function () {self.emit(...arguments)})
   }
 
   on(event_name, callback) {
