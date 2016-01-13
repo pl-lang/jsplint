@@ -1,7 +1,6 @@
 'use strict'
 
 // Requisitos:
-// [x] ModuleTable
 // [x] MainModulePattern
 // [ ] ModuleStruct
 // [x] DeclarationPattern
@@ -12,9 +11,8 @@
 // [ ] WhilePattern
 // [ ] RepeatPattern
 
-let MainModuleScanner = require('./scanners/MainModuleScanner.js')
-let ModuleTable = require('./ModuleTable.js')
-let TokenQueue = require('./TokenQueue.js')
+const MainModuleScanner = require('./scanners/MainModuleScanner.js')
+const TokenQueue = require('./TokenQueue.js')
 
 class Scanner {
   constructor(parser, messageHandler) {
