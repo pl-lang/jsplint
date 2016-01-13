@@ -1,6 +1,7 @@
 'use strict'
 
 const Interpreter    = require('./backend/Interpreter.js')
+const Emitter        = require('./auxiliary/Emitter.js')
 const Scanner        = require('./frontend/Scanner')
 const Source         = require('./frontend/Source')
 const Parser         = require('./frontend/Parser')
@@ -25,9 +26,9 @@ function genericHandler(event_info) {
   console.log('Args:', ...arguments, '\n')
 }
 
-class InterpreterController {
+class InterpreterController extends Emitter {
   constructor(config) {
-    this.callbacks = {}
+    super(['scan-started', 'scan-finished', 'syntax-error', 'correct-syntax'])
 
     if (config) {
       this.config = applyConfig(defaults, config)
@@ -40,41 +41,12 @@ class InterpreterController {
     if (this.config.event_logging === true) {
       this.on('any', genericHandler)
     }
-
-    this.emit({name:'test-event', origin:'controller'})
-  }
-
-  on(event_name, callback) {
-    this.callbacks[event_name] = callback
-  }
-
-  emit(event_info) {
-    // Se encarga de llamar a los callbacks de los eventos.
-    // Si se registro un callback para 'any' entonces se lo llama para cada evento que sea emitido. Es el callback por defecto.
-    // Si un evento tiene registrado un callback entonces este se ejecuta antes que el callback por defecto.
-    if (this.callbacks.hasOwnProperty(event_info.name)) {
-      this.callbacks[event_info.name](...arguments)
-    }
-
-    if (this.callbacks.hasOwnProperty('any')) {
-      this.callbacks.any(...arguments)
-    }
   }
 
   setUpInterpreter(program_data) {
     this.interpreter = new Interpreter(program_data.main, {}) // TODO: agregar user_modules
 
-    if (this.config.event_logging === true) {
-      this.interpreter.on('any', genericHandler)
-    }
-
-    if (this.callbacks.hasOwnProperty('write')) {
-      this.interpreter.on('write', this.callbacks.write)
-    }
-
-    if (this.callbacks.hasOwnProperty('read')) {
-      this.interpreter.on('read', this.callbacks.read)
-    }
+    this.exposeChildrenEvents(this.interpreter)
   }
 
   run(source_string) {

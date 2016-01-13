@@ -9,7 +9,6 @@ class Interpreter extends Emitter {
     this.globalVariables = main.variables
     this.main_statements = main.statements
     this.user_modules = user_modules
-    this.callbacks = {}
 
     this.mainEvaluator = new Evaluator(this.main_statements, this.globalVariables, this.globalVariables)
 
