@@ -4,7 +4,7 @@ var fs = require('fs');
 var Source = require('../frontend/Source.js')
 
 let Parser = require('../frontend/Parser.js')
-let TokenQueue = require('../frontend/TokenQueue.js')
+let TokenQueue = require('../intermediate/TokenQueue')
 
 function queueFromSource(string) {
   let source = new Source(string)
@@ -25,7 +25,7 @@ function queueFromSource(string) {
 }
 
 describe('MainModuleScanner', () => {
-  let MainModuleScanner = require('../frontend/scanners/MainModuleScanner')
+  let MainModuleScanner = require('../intermediate/scanners/MainModuleScanner')
   it('leer un modulo principal', () => {
     let programa = 'variables\nentero a, b\ninicio\na<-48\nb <- 32\nfin\n'
     let q = queueFromSource(programa)
@@ -45,7 +45,7 @@ describe('MainModuleScanner', () => {
 })
 
 describe('Evaluator', () => {
-  let ExpressionPattern = require('../frontend/structures/Expression.js')
+  let ExpressionPattern = require('../intermediate\/structures\/Expression.js')
   let Evaluator = require('../backend/Evaluator.js')
   let evaluator = new Evaluator([], {}, {})
   it('multiplicacion', () => {
@@ -319,7 +319,7 @@ describe('Evaluator', () => {
 })
 
 describe('ArgumentListPattern', () => {
-  let ArgumentListPattern = require('../frontend/structures/ArgumentListPattern.js')
+  let ArgumentListPattern = require('../intermediate\/structures\/ArgumentListPattern.js')
   it('extrae una lista de expresiones', () => {
     let ejemplo = '2, 3, 4'
     let q = queueFromSource(ejemplo)
@@ -330,7 +330,7 @@ describe('ArgumentListPattern', () => {
 })
 
 describe('ModuleCallPattern', () => {
-  let ModuleCallPattern = require('../frontend/structures/ModuleCallPattern.js')
+  let ModuleCallPattern = require('../intermediate\/structures\/ModuleCallPattern.js')
   it('extrae una llamada a un modulo', () => {
     let ejemplo = 'escribir(42)'
     let q = queueFromSource(ejemplo)
@@ -342,7 +342,7 @@ describe('ModuleCallPattern', () => {
 })
 
 describe('StatementCollector', () => {
-  let StatementCollector = require('../frontend/scanners/StatementCollector')
+  let StatementCollector = require('../intermediate/scanners/StatementCollector')
   it('si-entonces', () => {
     let if_block = 'si (verdadero) entonces \n escribir("verdadero") \n finsi \n'
     let q = queueFromSource(if_block)
@@ -354,7 +354,7 @@ describe('StatementCollector', () => {
 })
 
 describe('Interpreter', () => {
-  let MainModuleScanner = require('../frontend/scanners/MainModuleScanner')
+  let MainModuleScanner = require('../intermediate/scanners/MainModuleScanner')
   let Interpreter = require('../backend/Interpreter.js')
   it('ejecuta las acciones de un programa', () => {
     let programa = 'variables\nentero a, b\ninicio\na<-48\nb <- -32\nfin\n'

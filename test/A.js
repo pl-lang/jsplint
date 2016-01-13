@@ -337,7 +337,7 @@ describe('Parser', () => {
 })
 
 describe('TokenQueue', () => {
-  let TokenQueue = require('../frontend/TokenQueue.js')
+  let TokenQueue = require('../intermediate/TokenQueue')
   it('funciona correctamente', () => {
     let q = new TokenQueue([1, 2, 3])
 

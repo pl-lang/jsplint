@@ -2,7 +2,7 @@
 
 const Interpreter    = require('./backend/Interpreter.js')
 const Emitter        = require('./auxiliary/Emitter.js')
-const Scanner        = require('./frontend/Scanner')
+const Scanner        = require('./intermediate/Scanner')
 const Source         = require('./frontend/Source')
 const Parser         = require('./frontend/Parser')
 

@@ -4,10 +4,10 @@ var fs = require('fs');
 var Source = require('../frontend/Source.js')
 
 let Parser = require('../frontend/Parser.js')
-let TokenQueue = require('../frontend/TokenQueue.js')
+let TokenQueue = require('../intermediate/TokenQueue')
 
 describe('Scanner', () => {
-  let Scanner = require('../frontend/Scanner.js')
+  let Scanner = require('../intermediate/Scanner')
   it('genera correctamente los modulos de un programa (solo main)', () => {
     let programa = `
     variables

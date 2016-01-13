@@ -4,7 +4,7 @@ var fs = require('fs');
 var Source = require('../frontend/Source.js')
 
 let Parser = require('../frontend/Parser.js')
-let TokenQueue = require('../frontend/TokenQueue.js')
+let TokenQueue = require('../intermediate/TokenQueue')
 
 function queueFromSource(string) {
   let source = new Source(string)
@@ -25,7 +25,7 @@ function queueFromSource(string) {
 }
 
 describe('IntegerPattern', () => {
-  let IntegerPattern = require('../frontend/structures/IntegerPattern.js')
+  let IntegerPattern = require('../intermediate\/structures\/IntegerPattern.js')
   it('captura token entero', () => {
     let q = queueFromSource('36 a')
 
@@ -53,7 +53,7 @@ describe('IntegerPattern', () => {
 })
 
 describe('IndexesPattern', () => {
-  let IndexesPattern = require('../frontend/structures/IndexesPattern.js')
+  let IndexesPattern = require('../intermediate\/structures\/IndexesPattern.js')
 
   it('captura el indice de un vector', () => {
     let q = queueFromSource('3')
@@ -88,7 +88,7 @@ describe('IndexesPattern', () => {
 })
 
 describe('WordPattern', () => {
-  let WordPattern = require('../frontend/structures/WordPattern.js')
+  let WordPattern = require('../intermediate\/structures\/WordPattern.js')
 
   it('captura una palabra', () => {
     let q = queueFromSource('rodrigo')
@@ -117,7 +117,7 @@ describe('WordPattern', () => {
 })
 
 describe('VariableNamePattern', () => {
-  let VariableNamePattern = require('../frontend/structures/VariableNamePattern.js')
+  let VariableNamePattern = require('../intermediate\/structures\/VariableNamePattern.js')
   it('captura el nombre de una variable', () => {
     let q = queueFromSource('sueldo')
 
@@ -144,7 +144,7 @@ describe('VariableNamePattern', () => {
 })
 
 describe('VariableListPattern', () => {
-  let VariableListPattern = require('../frontend/structures/VariableListPattern.js')
+  let VariableListPattern = require('../intermediate\/structures\/VariableListPattern.js')
   it('lee las variables de una lista', () => {
     let q = queueFromSource('a, b, matriz[3, 3], v[8]')
 
@@ -160,7 +160,7 @@ describe('VariableListPattern', () => {
 })
 
 describe('TypePattern', () => {
-  let TypePattern = require('../frontend/structures/TypePattern.js')
+  let TypePattern = require('../intermediate\/structures\/TypePattern.js')
 
   it('extrae un token de tipo', () => {
     let q = queueFromSource('entero, real')
@@ -192,7 +192,7 @@ describe('TypePattern', () => {
 
 
 describe('BeginPattern', () => {
-  let BeginPattern = require('../frontend/structures/BeginPattern.js')
+  let BeginPattern = require('../intermediate\/structures\/BeginPattern.js')
   it ('captura el token inicio', () => {
     let q = queueFromSource('inicio error')
 
@@ -216,7 +216,7 @@ describe('BeginPattern', () => {
 })
 
 describe('DeclarationPattern', () => {
-  let DeclarationPattern = require('../frontend/structures/DeclarationPattern.js')
+  let DeclarationPattern = require('../intermediate\/structures\/DeclarationPattern.js')
   it('captura dos variables de tipo entero y una real declaradas en un renglon', () => {
     let q = queueFromSource('entero a, b, real c')
 
@@ -257,7 +257,7 @@ describe('DeclarationPattern', () => {
 })
 
 describe('BinaryOpPattern', () => {
-  let BinaryOpPattern = require('../frontend/structures/BinaryOpPattern.js')
+  let BinaryOpPattern = require('../intermediate\/structures\/BinaryOpPattern.js')
   it('captura todos los operadores', () => {
     {
       let q = queueFromSource('and')
@@ -312,7 +312,7 @@ describe('BinaryOpPattern', () => {
 })
 
 describe.skip('MainModulePattern', () => {
-  let MainModulePattern = require('../frontend/structures/MainModulePattern.js')
+  let MainModulePattern = require('../intermediate\/structures\/MainModulePattern.js')
   it('funciona correctamente en un programa con "inicio" y variables declaradas', () => {
 
     let programa = '\nvariables\n  entero a, b, c\ninicio\nfin\n'
@@ -421,7 +421,7 @@ describe.skip('MainModulePattern', () => {
 })
 
 describe('AssignmentPattern', () => {
-  let AssignmentPattern = require('../frontend/structures/AssignmentPattern.js')
+  let AssignmentPattern = require('../intermediate\/structures\/AssignmentPattern.js')
   it('captura un enunciado de asignacion', () => {
     let asignacion = 'var <- 48'
 
@@ -441,7 +441,7 @@ describe('AssignmentPattern', () => {
 })
 
 describe.skip('ModuleCallPattern', () => {
-  let ModuleCallPattern = require('../frontend/structures/ModuleCallPattern.js')
+  let ModuleCallPattern = require('../intermediate\/structures\/ModuleCallPattern.js')
   it('captura la llamada a un modulo', () => {
     let asignacion = 'escribir(42)'
 
@@ -454,7 +454,7 @@ describe.skip('ModuleCallPattern', () => {
 })
 
 describe('New Expression', () => {
-  let Expression = require('../frontend/structures/Expression.js')
+  let Expression = require('../intermediate\/structures\/Expression.js')
   it ('captura la invocacion de una variable', () => {
     {
       let nombre = 'contador'

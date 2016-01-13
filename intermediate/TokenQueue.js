@@ -1,5 +1,5 @@
 'use strict'
-let EoFToken = require('./tokens/EoFToken.js')
+const EoFToken = require('../frontend/tokens/EoFToken.js')
 
 class TokenQueue {
   constructor(array) {
