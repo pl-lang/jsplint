@@ -1,14 +1,14 @@
 'use strict'
-let StringMethods = require('../auxiliary/StringMethods.js')
-let NumberToken = require('./tokens/NumberToken.js')
-let SpecialSymbolToken = require('./tokens/SpecialSymbolToken.js')
-let StringToken = require('./tokens/StringToken.js')
-let WordToken = require('./tokens/WordToken.js')
-let EoFToken = require('./tokens/EoFToken.js')
-let UnknownToken = require('./tokens/UnknownToken.js')
+const SpecialSymbolToken = require('./tokens/SpecialSymbolToken.js')
+const StringMethods = require('../auxiliary/StringMethods.js')
+const UnknownToken = require('./tokens/UnknownToken.js')
+const NumberToken = require('./tokens/NumberToken.js')
+const StringToken = require('./tokens/StringToken.js')
+const WordToken = require('./tokens/WordToken.js')
+const EoFToken = require('./tokens/EoFToken.js')
 
 let isSpecialSymbolChar = SpecialSymbolToken.isSpecialSymbolChar
-let couldBeComment       = (c) => {return c === '/'}
+let couldBeComment      = (c) => {return c === '/'}
 let isWhiteSpace        = StringMethods.isWhiteSpace
 let isLetter            = StringMethods.isLetter
 let isDigit             = StringMethods.isDigit
