@@ -32,7 +32,6 @@ class InterpreterController extends Emitter {
 
     if (config) {
       this.config = applyConfig(defaults, config)
-      console.log(this.config)
     }
     else {
       this.config = defaults

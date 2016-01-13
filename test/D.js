@@ -12,8 +12,6 @@ describe('InterpreterController', () => {
 
     controller.on('program-finished', () => {program_finished = true})
 
-    console.log(controller.callbacks)
-
     controller.run(programa)
 
     program_finished.should.equal(true)
