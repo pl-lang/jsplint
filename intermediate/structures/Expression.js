@@ -208,7 +208,7 @@ class ExpressionAST {
     let tokenizer = new Parser(source)
 
     let tokenArray = []
-    let t = tokenizer.nextToke()
+    let t = tokenizer.nextToken()
 
     while ( t.kind !== 'eof') {
       tokenArray.push(t)
@@ -218,7 +218,7 @@ class ExpressionAST {
 
     let tokenq = new TokenQueue(tokenArray)
 
-    let exp = ExpressionAST.fromQueue(tokenq)
+    return ExpressionAST.fromQueue(tokenq)
   }
 }
 
