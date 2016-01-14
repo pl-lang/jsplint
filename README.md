@@ -27,4 +27,21 @@ controlador.on('correct-syntax', () => {})
 
 Una vez que se han registrado todas las funciones necesarias se puede llamar a la funcion `controller.run()` pasandole como unico argumento el codigo del programa. Dicha funcion se encarga de reaelizar todos los pasos necesarios para ejecutar el programa.
 
+## Ejemplo
+Este ejemplo demuestra lo facil que es crear una interfaz de consola/terminal para el interprete.
+```js
+const fs = require('fs')
+const InterpreterController = require('interprete-pl')
+
+if (process.argv[2] != undefined) {
+  let codigo = fs.readFileSync(process.argv[2], 'utf-8')
+
+  let controlador = new InterpreterController()
+
+  controlador.on('write', (event_info, value_list) => {console.log(...value_list)})
+
+  controlador.run(codigo)
+}
+```
+
 # Desarrollo
