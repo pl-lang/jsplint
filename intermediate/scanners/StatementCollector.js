@@ -62,7 +62,7 @@ class WhileScanner {
 
     let expression_q = new TokenQueue(token_array)
 
-    let condition_exp = Expression.capture(expression_q)
+    let condition_exp = Expression.fromQueue(expression_q)
 
     if (condition_exp.error) {
       return condition_exp
@@ -204,7 +204,7 @@ class RepeatScanner {
 
     let expression_q = new TokenQueue(token_array)
 
-    let condition_exp = Expression.capture(expression_q)
+    let condition_exp = Expression.fromQueue(expression_q)
 
     if (condition_exp.error) {
       return condition_exp
@@ -274,7 +274,7 @@ class IfScanner {
 
     let expression_q = new TokenQueue(token_array)
 
-    let condition_exp = Expression.capture(expression_q)
+    let condition_exp = Expression.fromQueue(expression_q)
 
     if (condition_exp.error) {
       return condition_exp

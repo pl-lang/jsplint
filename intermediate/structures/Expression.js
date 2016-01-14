@@ -1,6 +1,8 @@
-// based on https://www.lysator.liu.se/c/ANSI-C-grammar-y.html#primary-expression
-
 'use strict'
+
+const Source = require('../../frontend/Source')
+const Parser = require('../../frontend/Parser')
+const TokenQueue = require('../TokenQueue')
 
 let precedence_by_op = {
   'or'          : 6  ,
@@ -102,7 +104,7 @@ class PrimaryExpression {
     }
     else if (current.kind == 'left-par') {
       source.next()
-      let exp = ExpressionAST.capture(source)
+      let exp = ExpressionAST.fromQueue(source)
       if (exp.error) {
         return exp
       }
@@ -189,7 +191,7 @@ function RPNtoTree(rpn_stack) {
 }
 
 class ExpressionAST {
-  static capture(source) {
+  static fromQueue(source) {
     let rpn = streamToRPN.capture(source)
 
     if (rpn.error) {
@@ -199,6 +201,24 @@ class ExpressionAST {
       let tree = RPNtoTree(rpn.result)
       return {error:false, result:tree}
     }
+  }
+
+  static fromString(string) {
+    let source = new Source(string)
+    let tokenizer = new Parser(source)
+
+    let tokenArray = []
+    let t = tokenizer.nextToke()
+
+    while ( t.kind !== 'eof') {
+      tokenArray.push(t)
+      t = tokenizer.nextToken()
+    }
+    tokenArray.push(t)
+
+    let tokenq = new TokenQueue(tokenArray)
+
+    let exp = ExpressionAST.fromQueue(tokenq)
   }
 }
 

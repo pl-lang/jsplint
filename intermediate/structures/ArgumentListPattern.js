@@ -5,7 +5,7 @@ const Expression = require('./Expression')
 class ArgumentListPattern {
   static capture(source) {
     let args = []
-    let exp = Expression.capture(source)
+    let exp = Expression.fromQueue(source)
 
     if (exp.error) {
       return exp

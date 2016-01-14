@@ -13,7 +13,7 @@ class AssignmentPattern {
       if (current.kind == 'assignment') {
         current = source.next()
         // Por ahora, las asignaciones solo funcionarian con enteros...
-        let payload = Expression.capture(source)
+        let payload = Expression.fromQueue(source)
         if (payload.error) {
           return payload
         }
