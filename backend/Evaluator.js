@@ -1,5 +1,6 @@
 'use strict'
 
+const Expression = require('../intermediate/structures/Expression')
 const Emitter = require('../auxiliary/Emitter.js')
 
 class Evaluator extends Emitter {
@@ -27,10 +28,18 @@ class Evaluator extends Emitter {
     this.emit({name:'read', origin:'evaluator'}, varname_list, (varname_list, read_data) => {
       let i = 0
 
+      // TODO limitar las expresiones a literal
+
       while ( i < varname_list.length) {
-        // let exp = Expression.fromString(read_data[i])
-        this.assignToVar(varname_list[i], read_data[i])
-        i++
+        let exp = Expression.fromString(read_data[i])
+        if (exp.error) {
+          // this.emit('error') etc...
+          // detener el bucle bla bla bla
+        }
+        else {
+          this.assignToVar(varname_list[i], exp.result)
+          i++
+        }
       }
     })
   }
