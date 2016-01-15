@@ -25,23 +25,27 @@ class Evaluator extends Emitter {
   readCall(call) {
     let varname_list = call.args.map((expression) => {return expression.varname})
 
-    this.emit({name:'read', origin:'evaluator'}, varname_list, (varname_list, read_data) => {
-      let i = 0
+    let i = 0
 
-      // TODO limitar las expresiones a literal
+    while (i < varname_list.length) {
+      let varname = varname_list[i]
 
-      while ( i < varname_list.length) {
-        let exp = Expression.fromString(read_data[i])
+      this.emit({name:'read', origin:'evaluator'}, varname, (varname, data_read) => {
+        // TODO limitar las expresiones a literal
+
+        let exp = Expression.fromString(data_read)
+
         if (exp.error) {
           // this.emit('error') etc...
           // detener el bucle bla bla bla
         }
         else {
-          this.assignToVar(varname_list[i], exp.result)
-          i++
+          this.assignToVar(varname, exp.result)
         }
-      }
-    })
+
+        i++
+      })
+    }
   }
 
   getValue(varname) {
