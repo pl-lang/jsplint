@@ -20,10 +20,12 @@ function applyConfig(template, custom_options) {
   return custom_options
 }
 
-function genericHandler(event_info) {
+function genericHandler(event_info, ...callback_arguments) {
   console.log('Evento:', event_info.name)
   console.log('Origen:', event_info.origin)
-  console.log('Args:', ...arguments, '\n')
+  if (callback_arguments.length > 0) {
+    console.log('Callback args:', ...callback_arguments, '\n')
+  }
 }
 
 class InterpreterController extends Emitter {
