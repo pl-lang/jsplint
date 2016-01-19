@@ -39,15 +39,13 @@ class InterpreterController extends Emitter {
       this.config = defaults
     }
 
+    this.interpreter = new Interpreter()
+
+    this.exposeChildrenEvents(this.interpreter)
+
     if (this.config.event_logging === true) {
       this.on('any', genericHandler)
     }
-  }
-
-  setUpInterpreter(program_data) {
-    this.interpreter = new Interpreter(program_data.main, {}) // TODO: agregar user_modules
-
-    this.exposeChildrenEvents(this.interpreter)
   }
 
   compile(source_string) {
@@ -74,7 +72,7 @@ class InterpreterController extends Emitter {
     else {
       this.emit({name:'correct-syntax', origin:'controller'})
 
-      this.setUpInterpreter(program.result)
+      this.interpreter.current_program = program.result
 
       this.interpreter.run()
     }
