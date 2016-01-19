@@ -77,6 +77,10 @@ class InterpreterController extends Emitter {
       this.interpreter.run()
     }
   }
+
+  sendReadData(varname_list, data) {
+    this.interpreter.sendReadData(varname_list, data)
+  }
 }
 
 module.exports = InterpreterController

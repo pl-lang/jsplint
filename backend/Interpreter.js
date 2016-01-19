@@ -55,6 +55,14 @@ class Interpreter extends Emitter {
 
     this.emit({name:'program-finished', origin:'interpreter'})
   }
+
+  sendReadData(varname_list, data) {
+    let i = 0
+    while (this._state.ready && i < data.length) {
+      this._evaluator.assignReadData(varname_list[i], data[0])
+      i++
+    }
+  }
 }
 
 module.exports = Interpreter
