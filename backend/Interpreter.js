@@ -7,21 +7,31 @@ class Interpreter extends Emitter {
   constructor(main_module) {
     super(['program-started', 'program-finished', 'step-executed'])
 
-    this.evaluator = new Evaluator()
-    this.exposeChildrenEvents(this.evaluator)
+    this._state = {
+      eval_error : false,
+      ready : false
+    }
+
+    this._evaluator = new Evaluator()
+    this._evaluator.on('evaluation-error', (event_info) => {
+      this._state.eval_error = true
+    })
+    this.exposeChildrenEvents(this._evaluator)
 
     if (main_module) {
+      this._state.ready = true
       this._current_program = main_module
-      this.evaluator.local_vars = main_module.variables
-      this.evaluator.global_vars = main_module.variables
+      this._evaluator.local_vars = main_module.variables
+      this._evaluator.global_vars = main_module.variables
       this.main_module_statements = main_module.statements
     }
   }
 
   set current_program(program_data) {
+    this._state.ready = true
     this._current_program = program_data
-    this.evaluator.local_vars = program_data.main.variables
-    this.evaluator.global_vars = program_data.main.variables
+    this._evaluator.local_vars = program_data.main.variables
+    this._evaluator.global_vars = program_data.main.variables
     this.main_module_statements = program_data.main.statements
   }
 
@@ -30,14 +40,13 @@ class Interpreter extends Emitter {
   }
 
   run() {
-    let done = false
 
     let i = 0
 
     this.emit({name:'program-started', origin:'interpreter'})
 
-    while (!done && i < this.main_module_statements.length) {
-      this.evaluator.runStatement(this.main_module_statements[i])
+    while (this._state.ready && i < this.main_module_statements.length) {
+      this._evaluator.runStatement(this.main_module_statements[i])
 
       this.emit({name:'step-executed', origin:'interpreter'})
 
