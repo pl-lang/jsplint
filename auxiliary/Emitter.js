@@ -31,7 +31,9 @@ class Emitter {
     // Si se registro un callback para 'any' entonces se lo llama para cada evento que sea emitido. Es el callback por defecto.
     // Si un evento tiene registrado un callback entonces este se ejecuta despues del callback por defecto.
     if (this.callbacks.hasOwnProperty('any')) {
-      this.callbacks.any(...arguments)
+      for (let callback of this.callbacks.any) {
+        callback(...arguments)
+      }
     }
 
     if (this.callbacks.hasOwnProperty(event_info.name)) {
