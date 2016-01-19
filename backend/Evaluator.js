@@ -42,9 +42,9 @@ class Evaluator extends Emitter {
         else {
           this.assignToVar(varname, exp.result)
         }
-
-        i++
       })
+
+      i++
     }
   }
 
