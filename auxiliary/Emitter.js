@@ -18,7 +18,12 @@ class Emitter {
   }
 
   on(event_name, callback) {
-    this.callbacks[event_name] = callback
+    if (event_name in this.callbacks) {
+      this.callbacks[event_name].push(callback)
+    }
+    else {
+      this.callbacks[event_name] = [callback]
+    }
   }
 
   emit(event_info) {
@@ -30,7 +35,9 @@ class Emitter {
     }
 
     if (this.callbacks.hasOwnProperty(event_info.name)) {
-      this.callbacks[event_info.name](...arguments)
+      for (let callback of this.callbacks[event_info.name]) {
+        callback(...arguments)
+      }
     }
   }
 }
