@@ -20,11 +20,11 @@ function applyConfig(template, custom_options) {
   return custom_options
 }
 
-function genericHandler(event_info, ...callback_arguments) {
+function genericHandler(event_info) {
   console.log('Evento:', event_info.name)
   console.log('Origen:', event_info.origin)
-  if (callback_arguments.length > 0) {
-    console.log('Callback args:', ...callback_arguments, '\n')
+  if (arguments.length > 1) {
+    console.log('Callback args:', ...arguments, '\n')
   }
 }
 
