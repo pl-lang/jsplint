@@ -362,11 +362,11 @@ describe('Interpreter', () => {
 
     let mod_data = MainModuleScanner.capture(q)
 
-    let int = new Interpreter(mod_data.result, {})
+    let int = new Interpreter(mod_data.result)
 
     int.run()
 
-    int.globalVariables.a.value.should.equal(48)
-    int.globalVariables.b.value.should.equal(-32)
+    int.current_program.variables.a.value.should.equal(48)
+    int.current_program.variables.b.value.should.equal(-32)
   })
 })
