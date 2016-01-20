@@ -9,12 +9,17 @@ class Interpreter extends Emitter {
 
     this._state = {
       eval_error : false,
-      ready : false
+      ready : false,
+      waiting_data : false,
+      current_statement : 0
     }
 
     this._evaluator = new Evaluator()
     this._evaluator.on('evaluation-error', (event_info) => {
       this._state.eval_error = true
+    })
+    this._evaluator.on('read', () => {
+      this._state.waiting_data = true
     })
     this.exposeChildrenEvents(this._evaluator)
 
@@ -39,29 +44,38 @@ class Interpreter extends Emitter {
     return this._current_program
   }
 
-  run() {
+  canProceed() {
+    return this._state.ready && !this._state.eval_error && !this._state.waiting_data
+  }
 
-    let i = 0
+  run() {
 
     this.emit({name:'program-started', origin:'interpreter'})
 
-    while (this._state.ready && i < this.main_module_statements.length) {
-      this._evaluator.runStatement(this.main_module_statements[i])
+    while (this.canProceed() && this._state.current_statement < this.main_module_statements.length) {
+      this._evaluator.runStatement(this.main_module_statements[this._state.current_statement])
 
       this.emit({name:'step-executed', origin:'interpreter'})
 
-      i++
+      this._state.current_statement++
     }
 
-    this.emit({name:'program-finished', origin:'interpreter'})
+    if (this._state.current_statement == this.main_module_statements.length) {
+      this.emit({name:'program-finished', origin:'interpreter'})
+    }
+    else {
+      this.emit({name:'program-paused', origin:'interpreter'})
+    }
+
   }
 
   sendReadData(varname_list, data) {
     let i = 0
     while (this._state.ready && i < data.length) {
-      this._evaluator.assignReadData(varname_list[i], data[0])
+      this._evaluator.assignReadData(varname_list[i], data[i])
       i++
     }
+    this._state.waiting_data = false
   }
 }
 
