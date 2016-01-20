@@ -176,19 +176,28 @@ class Evaluator extends Emitter {
 
       case 'if':
       if (this.evaluateExp(statement.condition)) {
-        this.run(statement.true_branch)
+        for (let instruction of statement.true_branch) {
+          this.runStatement(instruction)
+        }
       }
       else {
-        this.run(statement.false_branch)
+        for (let instruction of statement.false_branch) {
+          this.runStatement(instruction)
+        }
       }
       break
 
       case 'repeat': {
         let loop = statement
-        this.run(loop.body)
+
+        for (let instruction of loop.body) {
+          this.runStatement(instruction)
+        }
 
         while (this.evaluateExp(loop.condition) == false) {
-          this.run(loop.body)
+          for (let instruction of loop.body) {
+            this.runStatement(instruction)
+          }
         }
       }
       break
@@ -197,7 +206,9 @@ class Evaluator extends Emitter {
         let loop = statement
 
         while (this.evaluateExp(loop.condition)) {
-          this.run(loop.body)
+          for (let instruction of loop.body) {
+            this.runStatement(instruction)
+          }
         }
       }
       break
