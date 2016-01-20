@@ -4,14 +4,17 @@ const Expression = require('../intermediate/structures/Expression')
 const Emitter = require('../auxiliary/Emitter.js')
 
 class Evaluator extends Emitter {
-  constructor(statements, localVariables, globalVariables) {
+  constructor() {
     super(['read', 'write', 'evaluation-error'])
-    this.globalVariables = globalVariables
-    this.localVariables = localVariables
-    this.statements = statements
     this.running = true
-    this.current_index = 0
-    this.callbacks = {}
+  }
+
+  set local_vars(variables) {
+    this._local_vars = variables
+  }
+
+  set global_vars(variables) {
+    this._global_vars = variables
   }
 
   writeCall(call) {
@@ -25,42 +28,33 @@ class Evaluator extends Emitter {
   readCall(call) {
     let varname_list = call.args.map((expression) => {return expression.varname})
 
-    let i = 0
+    this.emit({name:'read', origin:'evaluator'}, varname_list)
+  }
 
-    while (i < varname_list.length) {
-      let varname = varname_list[i]
+  assignReadData(varname, string) {
+    let exp = Expression.fromString(string)
 
-      this.emit({name:'read', origin:'evaluator'}, varname, (varname, data_read) => {
-        // TODO limitar las expresiones a literal
-
-        let exp = Expression.fromString(data_read)
-
-        if (exp.error) {
-          // this.emit('error') etc...
-          // detener el bucle bla bla bla
-        }
-        else {
-          this.assignToVar(varname, exp.result)
-        }
-      })
-
-      i++
+    if (exp.error) {
+      // TODO
+    }
+    else {
+      this.assignToVar(varname, exp.result)
     }
   }
 
   getValue(varname) {
-    if (this.localVariables.hasOwnProperty(varname)) {
-      if (this.localVariables[varname].hasOwnProperty('value')) {
-        return this.localVariables[varname].value
+    if (this._local_vars.hasOwnProperty(varname)) {
+      if (this._local_vars[varname].hasOwnProperty('value')) {
+        return this._local_vars[varname].value
       }
       else {
         this.running = false
         this.emit({name:'evaluation-error', origin:'evaluator'})
       }
     }
-    else if (this.globalVariables.hasOwnProperty(varname)) {
-      if (this.globalVariables[varname].hasOwnProperty('value')) {
-        return this.globalVariables[varname].value
+    else if (this._global_vars.hasOwnProperty(varname)) {
+      if (this._global_vars[varname].hasOwnProperty('value')) {
+        return this._global_vars[varname].value
       }
       else {
         this.running = false
@@ -150,11 +144,11 @@ class Evaluator extends Emitter {
   assignToVar(varname, expression) {
     let target
 
-    if (varname in this.localVariables) {
-      target = this.localVariables[varname]
+    if (varname in this._local_vars) {
+      target = this._local_vars[varname]
     }
-    else if (varname in this.globalVariables) {
-      target = this.globalVariables[varname]
+    else if (varname in this._global_vars) {
+      target = this._global_vars[varname]
     }
     else {
       // TODO: la variable no existe (ni en locales ni en globales)
@@ -165,61 +159,59 @@ class Evaluator extends Emitter {
     target.value = this.evaluateExp(expression)
   }
 
-  runStatement() {
-    if (this.current_index < this.statements.length) {
-      let statement = this.statements[this.current_index]
+  runStatement(statement) {
+    switch (statement.action) {
+      case  'assignment':
+      this.assignToVar(statement.target, statement.payload)
+      break
 
-      switch (statement.action) {
-        case  'assignment':
-        this.assignToVar(statement.target, statement.payload)
-        break
-
-        case  'module_call':
-        if (statement.name == 'escribir') {
-          this.writeCall(statement)
-        }
-        else if (statement.name == 'leer') {
-          this.readCall(statement)
-        }
-        break
-
-        case 'if':
-        if (this.evaluateExp(statement.condition)) {
-          this.run(statement.true_branch)
-        }
-        else {
-          this.run(statement.false_branch)
-        }
-        break
-
-        case 'repeat': {
-          let loop = statement
-          this.run(loop.body)
-
-          while (this.evaluateExp(loop.condition) == false) {
-            this.run(loop.body)
-          }
-        }
-        break
-
-        case 'while': {
-          let loop = statement
-
-          while (this.evaluateExp(loop.condition)) {
-            this.run(loop.body)
-          }
-        }
-        break
+      case  'module_call':
+      if (statement.name == 'escribir') {
+        this.writeCall(statement)
       }
+      else if (statement.name == 'leer') {
+        this.readCall(statement)
+      }
+      break
 
-      let executed_statement = this.statements[this.current_index]
+      case 'if':
+      if (this.evaluateExp(statement.condition)) {
+        for (let instruction of statement.true_branch) {
+          this.runStatement(instruction)
+        }
+      }
+      else {
+        for (let instruction of statement.false_branch) {
+          this.runStatement(instruction)
+        }
+      }
+      break
 
-      this.current_index++
+      case 'repeat': {
+        let loop = statement
 
-      return {done:false, executed_statement}
-    }
-    else {
-      return {done:true}
+        for (let instruction of loop.body) {
+          this.runStatement(instruction)
+        }
+
+        while (this.evaluateExp(loop.condition) == false) {
+          for (let instruction of loop.body) {
+            this.runStatement(instruction)
+          }
+        }
+      }
+      break
+
+      case 'while': {
+        let loop = statement
+
+        while (this.evaluateExp(loop.condition)) {
+          for (let instruction of loop.body) {
+            this.runStatement(instruction)
+          }
+        }
+      }
+      break
     }
   }
 }

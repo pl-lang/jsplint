@@ -39,38 +39,47 @@ class InterpreterController extends Emitter {
       this.config = defaults
     }
 
+    this.interpreter = new Interpreter()
+
+    this.exposeChildrenEvents(this.interpreter)
+
     if (this.config.event_logging === true) {
       this.on('any', genericHandler)
     }
   }
 
-  setUpInterpreter(program_data) {
-    this.interpreter = new Interpreter(program_data.main, {}) // TODO: agregar user_modules
-
-    this.exposeChildrenEvents(this.interpreter)
-  }
-
-  run(source_string) {
+  compile(source_string) {
     let source_wrapper = new Source(source_string)
     let tokenizer = new Parser(source_wrapper)
     let scanner = new Scanner(tokenizer)
 
-    this.emit({name:'scan-started', origin:'controller'})
+    this.emit({name:'compilation-started', origin:'controller'})
 
     let scan_result = scanner.getModules()
 
-    this.emit({name:'scan-finished', origin:'controller'})
+    this.emit({name:'compilation-finished', origin:'controller'})
 
-    if (scan_result.error) {
-      this.emit({name:'syntax-error', origin:'controller'}, scan_result.result)
+    return scan_result
+  }
+
+  run(source_string) {
+
+    let program = this.compile(source_string)
+
+    if (program.error) {
+      this.emit({name:'syntax-error', origin:'controller'}, program.result)
     }
     else {
       this.emit({name:'correct-syntax', origin:'controller'})
 
-      this.setUpInterpreter(scan_result.result)
+      this.interpreter.current_program = program.result
 
       this.interpreter.run()
     }
+  }
+
+  sendReadData(varname_list, data) {
+    this.interpreter.sendReadData(varname_list, data)
   }
 }
 
