@@ -37,7 +37,7 @@ class Scanner {
     let main_data = MainModuleScanner.capture(q)
 
     if (main_data.error) {
-      console.log(main_data)
+      return main_data
     }
     else {
       modules.main = main_data.result
