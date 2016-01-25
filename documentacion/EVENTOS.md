@@ -1,21 +1,17 @@
-# Referencia corta
+Durante el proceso de ejecutar un programa se emiten diferentes eventos. Estos son listados a continuacion en el orden en el cual serian emitidos.
 
-Eventos emitidios con mas de un argumento.
+#### Durante la "compilacion"
+- scan-started
+- syntax-error o correct-syntax
+- scan-finished
 
-- write: este evento le pasa a su callback como segundo argumento una lista de los valores que se deben mostrar en la pantalla.
+Si no se encontraron errores de sintaxis, el programa pasa al interprete donde este lo ejecuta.
 
-- read: este evento le pasa a su callback dos argumentos extra. El primero es un arreglo de los nombres de las variables que el programador quiere cargar. El segundo es una funcion que debe llamarse cuando todos los valores han sido leidos. Esa funcion toma el arreglo de nombres y un arreglo que contenga los valores ingresados por el usuario.
+#### Durante la interpretacion
+- program-started
+- evaluation-error (opcional)
+- step-executed (se emite tantes veces como enunciados tenga el programa)
+- program-paused (opcional)
+- program-finished
 
-# Eventos
-
-Los eventos que emite el controlador del interprete son:
-
-scan-started
-scan-finished
-correct-syntax
-program-started
-program-finished
-step-executed
-read
-write
-error
+Cabe aclarar que una vez que se ha emitido `evaluation-error` la ejecucion del programa finaliza, por lo que tambien se emite `program-finished`.
