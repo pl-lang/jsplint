@@ -7,11 +7,10 @@ const StringToken = require('./tokens/StringToken.js')
 const WordToken = require('./tokens/WordToken.js')
 const EoFToken = require('./tokens/EoFToken.js')
 
-let isSpecialSymbolChar = SpecialSymbolToken.isSpecialSymbolChar
-let couldBeComment      = (c) => {return c === '/'}
-let isWhiteSpace        = StringMethods.isWhiteSpace
-let isLetter            = StringMethods.isLetter
-let isDigit             = StringMethods.isDigit
+const isSpecialSymbolChar = SpecialSymbolToken.isSpecialSymbolChar
+const isWhiteSpace        = StringMethods.isWhiteSpace
+const isLetter            = StringMethods.isLetter
+const isDigit             = StringMethods.isDigit
 
 class Parser {
   constructor(source, messageHandler) {
