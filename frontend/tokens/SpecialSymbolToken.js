@@ -103,10 +103,6 @@ class SpecialSymbolToken {
       case '\n':
         this.kind = 'eol'
         break
-      default:
-        this.kind = 'error'
-        this.message = 'SpecialSymbolToken ' + this.text + ' no reconocido.'
-        break
     }
     // consumir el caracer actual
     source.nextChar()
