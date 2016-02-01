@@ -6,6 +6,7 @@ const NumberToken = require('./tokens/NumberToken.js')
 const StringToken = require('./tokens/StringToken.js')
 const WordToken = require('./tokens/WordToken.js')
 const EoFToken = require('./tokens/EoFToken.js')
+const Source = require('./Source')
 
 const isSpecialSymbolChar = SpecialSymbolToken.isSpecialSymbolChar
 const isWhiteSpace        = StringMethods.isWhiteSpace
@@ -14,26 +15,33 @@ const isDigit             = StringMethods.isDigit
 
 class Parser {
   constructor(source) {
-    this.source = source
+    this._source = source
   }
 
   // Envolturas para algunos metodos de Source
   currentChar() {
-    return this.source.currentChar()
+    return this._source.currentChar()
   }
 
   nextChar() {
-    return this.source.nextChar()
+    return this._source.nextChar()
   }
 
   peekChar() {
-    return this.source.peekChar()
+    return this._source.peekChar()
   }
 
   isCommentLine() {
     return this.currentChar() === '/' && this.peekChar() === '/'
   }
 
+  get source() {
+    return this._source
+  }
+
+  set source(string) {
+    this._source = new Source(string)
+  }
 
   skipWhiteSpace() {
     let comment = false
@@ -47,7 +55,7 @@ class Parser {
   }
 
   skipCommment() {
-    while ( this.currentChar() !== this.source.EON )
+    while ( this.currentChar() !== this._source.EON )
       this.nextChar()
   }
 
@@ -61,17 +69,17 @@ class Parser {
     let result
 
     if (isDigit(c))
-      result = new NumberToken(this.source)
+      result = new NumberToken(this._source)
     else if (isLetter(c))
-      result = new WordToken(this.source)
+      result = new WordToken(this._source)
     else if (isSpecialSymbolChar(c))
-      result = new SpecialSymbolToken(this.source)
+      result = new SpecialSymbolToken(this._source)
     else if (c === '"')
-      result = new StringToken(this.source)
-    else if (c === this.source.EOF)
-      result = new EoFToken(this.source)
+      result = new StringToken(this._source)
+    else if (c === this._source.EOF)
+      result = new EoFToken(this._source)
     else
-      result = new UnknownToken(this.source)
+      result = new UnknownToken(this._source)
 
     return result
   }
