@@ -13,11 +13,8 @@ const isLetter            = StringMethods.isLetter
 const isDigit             = StringMethods.isDigit
 
 class Parser {
-  constructor(source, messageHandler) {
+  constructor(source) {
     this.source = source
-    if (messageHandler) {
-      this.messageHandler = messageHandler
-    }
   }
 
   // Envolturas para algunos metodos de Source
