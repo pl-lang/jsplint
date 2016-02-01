@@ -1,6 +1,6 @@
 'use strict'
-let StringMethods = require('../../auxiliary/StringMethods.js')
-let isDigit = StringMethods.isDigit
+const StringMethods = require('../../auxiliary/StringMethods.js')
+const isDigit = StringMethods.isDigit
 
 class NumberToken {
   constructor(source) {
