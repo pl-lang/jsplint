@@ -352,7 +352,7 @@ describe('Parser', () => {
     bad_token.unexpectedChar.should.equal('N')
     bad_token.atLine.should.equal(0)
     bad_token.atColumn.should.equal(2)
-    bad_token.reason.should.equal('unexpected_char_at_float')
+    bad_token.reason.should.equal('unexpectedCharAtFloat')
   })
 })
 

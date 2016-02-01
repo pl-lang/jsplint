@@ -38,7 +38,7 @@ class NumberToken {
         this.expectedChar   = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
         this.atLine         = source._currentLineIndex
         this.atColumn       = source._currentCharIndex
-        this.reason         = 'unexpected_char_at_float'
+        this.reason         = 'unexpectedCharAtFloat'
       }
     }
 

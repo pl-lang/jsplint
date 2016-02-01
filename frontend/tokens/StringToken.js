@@ -29,6 +29,7 @@ class StringToken {
       this.expectedChar = ['caracteres', '"']
       this.atColumn = source._currentCharIndex
       this.atLine = source._currentLineIndex
+      this.reason = 'unexpectedCharAtString'
     }
 
     // Consumo un caracter para dejar a currentChar() uno delante de la
