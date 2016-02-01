@@ -44,7 +44,7 @@ class NumberToken {
 
     if (this.kind === 'integer')
       this.value = parseInt(this.text)
-    else
+    else if (this.kind === 'float')
       this.value = parseFloat(this.text)
   }
 }
