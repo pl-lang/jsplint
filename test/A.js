@@ -113,9 +113,9 @@ describe('NumberToken', () => {
 
     token.kind.should.equal('LEXICAL_ERROR')
     token.text.should.equal('3.')
-    token.errorInfo.unexpectedChar.should.equal('A')
-    token.errorInfo.atLine.should.equal(0)
-    token.errorInfo.atColumn.should.equal(2)
+    token.unexpectedChar.should.equal('A')
+    token.atLine.should.equal(0)
+    token.atColumn.should.equal(2)
   })
 })
 
@@ -333,6 +333,26 @@ describe('Parser', () => {
     tokenArray[37].kind.should.equal('eol')
     tokenArray[38].kind.should.equal('fin')
     tokenArray[39].kind.should.equal('eof')
+  })
+
+  it('emite un evento al encontrar un error lexico', () => {
+    let source = new Source('3.NumeroRealMalEscrito')
+    let parser = new Parser(source)
+
+    let event_emitted = false
+
+    parser.on('lexical-error', (event_info, error_data) => {
+      event_emitted = true
+    })
+
+    let bad_token = parser.nextToken()
+
+    event_emitted.should.equal(true)
+    bad_token.kind.should.equal('LEXICAL_ERROR')
+    bad_token.unexpectedChar.should.equal('N')
+    bad_token.atLine.should.equal(0)
+    bad_token.atColumn.should.equal(2)
+    bad_token.reason.should.equal('unexpected_char_at_float')
   })
 })
 

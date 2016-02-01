@@ -6,6 +6,7 @@ const NumberToken = require('./tokens/NumberToken.js')
 const StringToken = require('./tokens/StringToken.js')
 const WordToken = require('./tokens/WordToken.js')
 const EoFToken = require('./tokens/EoFToken.js')
+const Emitter = require('../auxiliary/Emitter')
 const Source = require('./Source')
 
 const isSpecialSymbolChar = SpecialSymbolToken.isSpecialSymbolChar
@@ -13,9 +14,11 @@ const isWhiteSpace        = StringMethods.isWhiteSpace
 const isLetter            = StringMethods.isLetter
 const isDigit             = StringMethods.isDigit
 
-class Parser {
+class Parser extends Emitter {
   constructor(source) {
+    super(['lexical-error'])
     this._source = source
+    this._source_contains_errors = false
   }
 
   // Envolturas para algunos metodos de Source
@@ -40,6 +43,7 @@ class Parser {
   }
 
   set source(string) {
+    this._source_contains_errors = false
     this._source = new Source(string)
   }
 
@@ -80,6 +84,11 @@ class Parser {
       result = new EoFToken(this._source)
     else
       result = new UnknownToken(this._source)
+
+    if (result.kind === 'LEXICAL_ERROR') {
+      this._source_contains_errors = true
+      this.emit({name:'lexical-error', origin:'parser'}, result)
+    }
 
     return result
   }
