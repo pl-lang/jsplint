@@ -146,9 +146,9 @@ describe('StringToken', () => {
     let token = new StringToken(source)
 
     token.kind.should.equal('LEXICAL_ERROR')
-    token.errorInfo.unexpectedChar.should.equal('\n')
-    token.errorInfo.atLine.should.equal(0)
-    token.errorInfo.atColumn.should.equal(5)
+    token.unexpectedChar.should.equal('\n')
+    token.atLine.should.equal(0)
+    token.atColumn.should.equal(5)
   })
 })
 

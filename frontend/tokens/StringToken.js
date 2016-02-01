@@ -25,11 +25,10 @@ class StringToken {
       this.text = '"' + this.value + '"'
     else {
       this.kind = 'LEXICAL_ERROR'
-      this.errorInfo = {
-          unexpectedChar  : '\n'
-        , atColumn        : source._currentCharIndex
-        , atLine          : source._currentLineIndex
-      }
+      this.unexpectedChar = '\n'
+      this.expectedChar = ['caracteres', '"']
+      this.atColumn = source._currentCharIndex
+      this.atLine = source._currentLineIndex
     }
 
     // Consumo un caracter para dejar a currentChar() uno delante de la
