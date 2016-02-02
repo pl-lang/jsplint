@@ -44,8 +44,6 @@ class WordToken {
   constructor(source) {
     this.kind = 'word'
     this.text = ''
-    //sumo 1 xq en la interfaz la primer columna del primer renglon
-    // es 1:1 (en lugar de 0:0)
     this.lineNumber = source._currentLineIndex
     this.columnNumber = source._currentCharIndex
     this.extract(source)
