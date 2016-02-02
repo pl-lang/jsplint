@@ -32,12 +32,22 @@ class InterpreterController extends Emitter {
   constructor(config) {
     super(['scan-started', 'scan-finished', 'syntax-error', 'correct-syntax'])
 
+    this.state = {
+      compilationError : false
+    }
+
     if (config) {
       this.config = applyConfig(defaults, config)
     }
     else {
       this.config = defaults
     }
+
+    this.parser = new Parser()
+
+    this.parser.on('lexical-error', () => {this.state.compilationError = true})
+
+    this.exposeChildrenEvents(this.parser)
 
     this.interpreter = new Interpreter()
 
@@ -49,17 +59,27 @@ class InterpreterController extends Emitter {
   }
 
   compile(source_string) {
+    this.state.compilationError = false
+
     let source_wrapper = new Source(source_string)
-    let tokenizer = new Parser(source_wrapper)
-    let scanner = new Scanner(tokenizer)
+
+    this.parser.source = source_wrapper
+
+    let scanner = new Scanner(this.parser)
 
     this.emit({name:'compilation-started', origin:'controller'})
 
     let scan_result = scanner.getModules()
 
-    this.emit({name:'compilation-finished', origin:'controller'})
+    if (!this.state.compilationError) {
+      this.emit({name:'compilation-finished', origin:'controller'}, {error:false})
 
-    return scan_result
+      return scan_result
+    } else {
+      this.emit({name:'compilation-finished', origin:'controller'}, {error:true})
+      
+      return {error:true}
+    }
   }
 
   run(source_string) {
