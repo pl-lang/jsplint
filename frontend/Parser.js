@@ -17,8 +17,7 @@ const isDigit             = StringMethods.isDigit
 class Parser extends Emitter {
   constructor(source) {
     super(['lexical-error'])
-    this._source = source
-    this._source_contains_errors = false
+    if (source) this._source = source;
   }
 
   // Envolturas para algunos metodos de Source
@@ -42,9 +41,12 @@ class Parser extends Emitter {
     return this._source
   }
 
-  set source(string) {
-    this._source_contains_errors = false
-    this._source = new Source(string)
+  set source(source_wrapper) {
+    this._source = source_wrapper
+  }
+
+  get source() {
+    return this._source
   }
 
   skipWhiteSpace() {
@@ -86,7 +88,6 @@ class Parser extends Emitter {
       result = new UnknownToken(this._source)
 
     if (result.kind === 'LEXICAL_ERROR') {
-      this._source_contains_errors = true
       this.emit({name:'lexical-error', origin:'parser'}, result)
     }
 
