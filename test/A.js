@@ -354,6 +354,27 @@ describe('Parser', () => {
     bad_token.atColumn.should.equal(2)
     bad_token.reason.should.equal('unexpectedCharAtFloat')
   })
+
+  it('emite un evento por cada error en la cadena', () => {
+    // La siguiente cadena contiene 3 errores
+    let string = `
+    "Cadena invalida
+    3.A4
+    !
+    `
+    let source = new Source(string)
+    let parser = new Parser(source)
+
+    let counter = 0
+
+    parser.on('lexical-error', (event, errorInfo) => {
+      counter++
+    })
+
+    while (parser.nextToken().kind != 'eof');
+
+    counter.should.equal(3)
+  })
 })
 
 describe('TokenQueue', () => {
