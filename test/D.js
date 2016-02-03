@@ -50,5 +50,11 @@ describe('InterpreterController', () => {
     lexicalErrorEmitted.should.equal(true)
     compilationStarted.should.equal(true)
     compilationFinishedWithErrors.should.equal(true)
+
+    // TODO: verificar que el programa no se ejecute
+  })
+
+  it.skip('la compilacion finaliza y el programa no se ejecuta cuando hay un error de sintaxis', () => {
+
   })
 })
