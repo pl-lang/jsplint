@@ -77,6 +77,16 @@ class InterpreterController extends Emitter {
 
     let scanReport = scanner.getModules()
 
+    if (scanReport.error) {
+      this.emit({name:'syntax-error', origin:'controller'}, scanReport.result);
+
+      this.emit({name:'compilation-finished', origin:'controller'}, {error:true});
+
+      return {error:true}
+    }
+
+    this.emit({name:'correct-syntax', origin:'controller'});
+
     this.emit({name:'compilation-finished', origin:'controller'}, {error:false});
 
     return scanReport
@@ -86,16 +96,8 @@ class InterpreterController extends Emitter {
 
     let program = this.compile(source_string)
 
-    // TODO: Si hubo errores de compilacion, salir de la funcion sin hacer nada
-
-    if (program.error) {
-      this.emit({name:'syntax-error', origin:'controller'}, program.result)
-    }
-    else {
-      this.emit({name:'correct-syntax', origin:'controller'})
-
+    if (!program.error) {
       this.interpreter.current_program = program.result
-
       this.interpreter.run()
     }
   }
