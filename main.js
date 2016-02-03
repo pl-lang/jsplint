@@ -31,7 +31,7 @@ function genericHandler(event_info) {
 
 class InterpreterController extends Emitter {
   constructor(config) {
-    super(['scan-started', 'scan-finished', 'syntax-error', 'correct-syntax'])
+    super(['compilation-started', 'compilation-finished', 'lexical-error', 'syntax-error', 'correct-syntax'])
 
     this.state = {
       compilationError : false
