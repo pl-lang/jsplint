@@ -14,7 +14,15 @@ const isWhiteSpace        = StringMethods.isWhiteSpace
 const isLetter            = StringMethods.isLetter
 const isDigit             = StringMethods.isDigit
 
+/**
+ * Clase para convertir una cadena en fichas.
+ * @extends Emitter
+ */
 class Parser extends Emitter {
+  /**
+   * Crea un Parser.
+   * @param  {source} source Fuente a utilizar para construir las fichas
+   */
   constructor(source) {
     super(['lexical-error'])
     if (source) this._source = source;
