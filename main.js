@@ -1,6 +1,7 @@
 'use strict'
 
 const Interpreter    = require('./backend/Interpreter.js')
+const TokenQueue     = require('./intermediate/TokenQueue')
 const Emitter        = require('./auxiliary/Emitter.js')
 const Scanner        = require('./intermediate/Scanner')
 const Source         = require('./frontend/Source')
@@ -65,6 +66,15 @@ class InterpreterController extends Emitter {
 
     this.parser.source = source_wrapper
 
+    // Fichar la fuente y crear TokenQueue
+    let t = this.parser.nextToken()
+    let tokenArray = []
+    while (t.kind !== 'eof') {
+      tokenArray.push(t)
+      t = this.parser.nextToken()
+    }
+    tokenArray.push(t)
+
     let scanner = new Scanner(this.parser)
 
     this.emit({name:'compilation-started', origin:'controller'})
@@ -77,7 +87,7 @@ class InterpreterController extends Emitter {
       return scan_result
     } else {
       this.emit({name:'compilation-finished', origin:'controller'}, {error:true})
-      
+
       return {error:true}
     }
   }
