@@ -31,7 +31,7 @@ class Scanner {
       modules.main = main_data.result
     }
 
-    if (q.current().kind == 'eof') {
+    if (this.queue.current().kind == 'eof') {
       return {
           result : modules
         , error  : false
