@@ -46,10 +46,6 @@ class InterpreterController extends Emitter {
 
     this.parser = new Parser()
 
-    this.parser.on('lexical-error', () => {this.state.compilationError = true})
-
-    this.exposeChildrenEvents(this.parser)
-
     this.interpreter = new Interpreter()
 
     this.exposeChildrenEvents(this.interpreter)
@@ -60,36 +56,28 @@ class InterpreterController extends Emitter {
   }
 
   compile(source_string) {
-    this.state.compilationError = false
+    this.emit({name:'compilation-started', origin:'controller'})
 
     let source_wrapper = new Source(source_string)
 
-    this.parser.source = source_wrapper
+    let parserReport = this.parser.parse(source_wrapper);
 
-    // Fichar la fuente y crear TokenQueue
-    let t = this.parser.nextToken()
-    let tokenArray = []
-    while (t.kind !== 'eof') {
-      tokenArray.push(t)
-      t = this.parser.nextToken()
-    }
-    tokenArray.push(t)
-
-    let scanner = new Scanner(new TokenQueue(tokenArray))
-
-    this.emit({name:'compilation-started', origin:'controller'})
-
-    let scan_result = scanner.getModules()
-
-    if (!this.state.compilationError) {
-      this.emit({name:'compilation-finished', origin:'controller'}, {error:false})
-
-      return scan_result
-    } else {
-      this.emit({name:'compilation-finished', origin:'controller'}, {error:true})
+    if (parserReport.error) {
+      // Se encontro al menos un error lexico
+      for (let bad_token of parserReport.result) {
+        this.emit({name:'lexical-error',  origin:'controller'}, bad_token);
+      }
+      // emitir compilation-finished avisando que hubo errores
+      this.emit({name:'compilation-finished', origin:'controller'}, {error:true});
 
       return {error:true}
     }
+
+    let scanner = new Scanner(new TokenQueue(parserReport.result))
+
+    let scanReport = scanner.getModules()
+
+    return scanReport
   }
 
   run(source_string) {

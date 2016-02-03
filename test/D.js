@@ -33,18 +33,22 @@ describe('InterpreterController', () => {
 
   it('los errores lexicos emiten eventos y detienen la compilacion', () => {
     let programa = 'variables\ninicio\nescribir(4.A2, 28)\nfin\n'
-    let controller = new InterpreterController({event_logging:false})
+    let controller = new InterpreterController({event_logging:true})
 
     let lexicalErrorEmitted = false
-    let compilationFinishedWithError = false
+    let compilationStarted = false
+    let compilationFinishedWithErrors = false
+
+    controller.on('compilation-started', (event) => {compilationStarted = true})
 
     controller.on('lexical-error', () => {lexicalErrorEmitted = true})
 
-    controller.on('compilation-finished', (event, report) => {compilationFinishedWithError = report.error})
+    controller.on('compilation-finished', (event, report) => {compilationFinishedWithErrors = true})
 
     controller.run(programa)
 
     lexicalErrorEmitted.should.equal(true)
-    compilationFinishedWithError.should.equal(true)
+    compilationStarted.should.equal(true)
+    compilationFinishedWithErrors.should.equal(true)
   })
 })
