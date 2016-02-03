@@ -1,16 +1,5 @@
 'use strict'
 
-// Requisitos:
-// [x] MainModulePattern
-// [ ] ModuleStruct
-// [x] DeclarationPattern
-// [ ] ModuleCallPattern
-// [ ] AssignmentPattern
-// [ ] IfPattern
-// [ ] ForPattern
-// [ ] WhilePattern
-// [ ] RepeatPattern
-
 const MainModuleScanner = require('./scanners/MainModuleScanner.js')
 const TokenQueue = require('./TokenQueue.js')
 
