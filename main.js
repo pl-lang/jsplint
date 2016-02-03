@@ -84,6 +84,8 @@ class InterpreterController extends Emitter {
 
     let program = this.compile(source_string)
 
+    // TODO: Si hubo errores de compilacion, salir de la funcion sin hacer nada
+
     if (program.error) {
       this.emit({name:'syntax-error', origin:'controller'}, program.result)
     }

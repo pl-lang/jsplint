@@ -33,7 +33,7 @@ describe('InterpreterController', () => {
 
   it('los errores lexicos emiten eventos y detienen la compilacion', () => {
     let programa = 'variables\ninicio\nescribir(4.A2, 28)\nfin\n'
-    let controller = new InterpreterController({event_logging:true})
+    let controller = new InterpreterController({event_logging:false})
 
     let lexicalErrorEmitted = false
     let compilationStarted = false
