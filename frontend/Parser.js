@@ -6,7 +6,6 @@ const NumberToken = require('./tokens/NumberToken.js')
 const StringToken = require('./tokens/StringToken.js')
 const WordToken = require('./tokens/WordToken.js')
 const EoFToken = require('./tokens/EoFToken.js')
-const Emitter = require('../auxiliary/Emitter')
 const Source = require('./Source')
 
 const isSpecialSymbolChar = SpecialSymbolToken.isSpecialSymbolChar
@@ -16,15 +15,13 @@ const isDigit             = StringMethods.isDigit
 
 /**
  * Clase para convertir una cadena en fichas.
- * @extends Emitter
  */
-class Parser extends Emitter {
+class Parser {
   /**
    * Crea un Parser.
    * @param  {source} source Fuente a utilizar para construir las fichas
    */
   constructor(source) {
-    super(['lexical-error'])
     if (source) this._source = source;
   }
 
@@ -119,10 +116,6 @@ class Parser extends Emitter {
       result = new EoFToken(this._source)
     else
       result = new UnknownToken(this._source)
-
-    if (result.kind === 'LEXICAL_ERROR') {
-      this.emit({name:'lexical-error', origin:'parser'}, result)
-    }
 
     return result
   }

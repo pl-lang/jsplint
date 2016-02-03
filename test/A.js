@@ -334,47 +334,6 @@ describe('Parser', () => {
     tokenArray[38].kind.should.equal('fin')
     tokenArray[39].kind.should.equal('eof')
   })
-
-  it('emite un evento al encontrar un error lexico', () => {
-    let source = new Source('3.NumeroRealMalEscrito')
-    let parser = new Parser(source)
-
-    let event_emitted = false
-
-    parser.on('lexical-error', (event_info, error_data) => {
-      event_emitted = true
-    })
-
-    let bad_token = parser.nextToken()
-
-    event_emitted.should.equal(true)
-    bad_token.kind.should.equal('LEXICAL_ERROR')
-    bad_token.unexpectedChar.should.equal('N')
-    bad_token.atLine.should.equal(0)
-    bad_token.atColumn.should.equal(2)
-    bad_token.reason.should.equal('unexpectedCharAtFloat')
-  })
-
-  it('emite un evento por cada error en la cadena', () => {
-    // La siguiente cadena contiene 3 errores
-    let string = `
-    "Cadena invalida
-    3.A4
-    !
-    `
-    let source = new Source(string)
-    let parser = new Parser(source)
-
-    let counter = 0
-
-    parser.on('lexical-error', (event, errorInfo) => {
-      counter++
-    })
-
-    while (parser.nextToken().kind != 'eof');
-
-    counter.should.equal(3)
-  })
 })
 
 describe('TokenQueue', () => {
