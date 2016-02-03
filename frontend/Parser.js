@@ -37,10 +37,6 @@ class Parser extends Emitter {
     return this.currentChar() === '/' && this.peekChar() === '/'
   }
 
-  get source() {
-    return this._source
-  }
-
   set source(source_wrapper) {
     this._source = source_wrapper
   }
