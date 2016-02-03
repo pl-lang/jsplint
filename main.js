@@ -77,6 +77,8 @@ class InterpreterController extends Emitter {
 
     let scanReport = scanner.getModules()
 
+    this.emit({name:'compilation-finished', origin:'controller'}, {error:false});
+
     return scanReport
   }
 
