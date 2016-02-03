@@ -1,10 +1,7 @@
 'use strict'
-var should = require('should');
-var fs = require('fs');
-var Source = require('../frontend/Source.js')
-
-let Parser = require('../frontend/Parser.js')
-let TokenQueue = require('../intermediate/TokenQueue')
+const should = require('should');
+const fs = require('fs');
+const queueFromString = require('../auxiliary/queueFromString')
 
 describe('Scanner', () => {
   let Scanner = require('../intermediate/Scanner')
@@ -16,11 +13,9 @@ describe('Scanner', () => {
       a <- 32
     fin
     `
+    let q = queueFromString(programa)
 
-    let source = new Source(programa)
-    let tokenizer = new Parser(source)
-
-    let scanner = new Scanner(tokenizer)
+    let scanner = new Scanner(q)
 
     let scanResult = scanner.getModules()
 

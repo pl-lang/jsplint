@@ -75,7 +75,7 @@ class InterpreterController extends Emitter {
     }
     tokenArray.push(t)
 
-    let scanner = new Scanner(this.parser)
+    let scanner = new Scanner(new TokenQueue(tokenArray))
 
     this.emit({name:'compilation-started', origin:'controller'})
 
