@@ -1,30 +1,24 @@
-  'use strict'
+'use strict'
+
+/**
+ * Responsabilidades de esta clase:
+ *   - Manejar la pila de llamadas
+ *   - Pasar los datos leidos al modulo que los haya pedido
+ *   - Pasar el retorno de un modulo B al modulo A que lo llamó
+ */
 
 const Evaluator       = require('./Evaluator.js')
 const Emitter         = require('../auxiliary/Emitter.js')
 
 class Interpreter extends Emitter {
   constructor(main_module) {
-    super(['program-started', 'program-finished', 'step-executed'])
-
-    this._state = {
-      eval_error : false,
-      ready : false,
-      waiting_data : false,
-      current_statement : 0
-    }
+    super(['program-started', 'program-paused', 'program-finished'])
 
     this._evaluator = new Evaluator()
-    this._evaluator.on('evaluation-error', (event_info) => {
-      this._state.eval_error = true
-    })
-    this._evaluator.on('read', () => {
-      this._state.waiting_data = true
-    })
+
     this.exposeChildrenEvents(this._evaluator)
 
     if (main_module) {
-      this._state.ready = true
       this._current_program = main_module
       this._evaluator.local_vars = main_module.variables
       this._evaluator.global_vars = main_module.variables
@@ -33,7 +27,6 @@ class Interpreter extends Emitter {
   }
 
   set current_program(program_data) {
-    this._state.ready = true
     this._current_program = program_data
     this._evaluator.local_vars = program_data.main.variables
     this._evaluator.global_vars = program_data.main.variables
@@ -44,29 +37,15 @@ class Interpreter extends Emitter {
     return this._current_program
   }
 
-  canProceed() {
-    return this._state.ready && !this._state.eval_error && !this._state.waiting_data
-  }
-
   run() {
 
     this.emit({name:'program-started', origin:'interpreter'})
 
-    while (this.canProceed() && this._state.current_statement < this.main_module_statements.length) {
-      this._evaluator.runStatement(this.main_module_statements[this._state.current_statement])
+    let evaluationReport = this._evaluator.runStatements(this.main_module_statements)
 
-      this.emit({name:'step-executed', origin:'interpreter'})
+    this.emit({name:'program-finished', origin:'interpreter'})
 
-      this._state.current_statement++
-    }
-
-    if (this._state.current_statement == this.main_module_statements.length) {
-      this.emit({name:'program-finished', origin:'interpreter'})
-    }
-    else {
-      this.emit({name:'program-paused', origin:'interpreter'})
-    }
-
+    return evaluationReport
   }
 
   sendReadData(varname_list, data) {
