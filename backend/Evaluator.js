@@ -159,60 +159,65 @@ class Evaluator extends Emitter {
     target.value = this.evaluateExp(expression)
   }
 
-  runStatement(statement) {
-    switch (statement.action) {
-      case  'assignment':
-      this.assignToVar(statement.target, statement.payload)
-      break
+  runStatements(statements) {
+    for (let statement of statements) {
+      switch (statement.action) {
+        case  'assignment':
+        this.assignToVar(statement.target, statement.payload)
+        break
 
-      case  'module_call':
-      if (statement.name == 'escribir') {
-        this.writeCall(statement)
-      }
-      else if (statement.name == 'leer') {
-        this.readCall(statement)
-      }
-      break
-
-      case 'if':
-      if (this.evaluateExp(statement.condition)) {
-        for (let instruction of statement.true_branch) {
-          this.runStatement(instruction)
+        case  'module_call':
+        if (statement.name == 'escribir') {
+          this.writeCall(statement)
         }
-      }
-      else {
-        for (let instruction of statement.false_branch) {
-          this.runStatement(instruction)
+        else if (statement.name == 'leer') {
+          this.readCall(statement)
         }
-      }
-      break
+        break
 
-      case 'repeat': {
-        let loop = statement
-
-        for (let instruction of loop.body) {
-          this.runStatement(instruction)
-        }
-
-        while (this.evaluateExp(loop.condition) == false) {
-          for (let instruction of loop.body) {
+        case 'if':
+        if (this.evaluateExp(statement.condition)) {
+          for (let instruction of statement.true_branch) {
             this.runStatement(instruction)
           }
         }
-      }
-      break
-
-      case 'while': {
-        let loop = statement
-
-        while (this.evaluateExp(loop.condition)) {
-          for (let instruction of loop.body) {
+        else {
+          for (let instruction of statement.false_branch) {
             this.runStatement(instruction)
           }
         }
+        break
+
+        case 'repeat': {
+          let loop = statement
+
+          for (let instruction of loop.body) {
+            this.runStatement(instruction)
+          }
+
+          while (this.evaluateExp(loop.condition) == false) {
+            for (let instruction of loop.body) {
+              this.runStatement(instruction)
+            }
+          }
+        }
+        break
+
+        case 'while': {
+          let loop = statement
+
+          while (this.evaluateExp(loop.condition)) {
+            for (let instruction of loop.body) {
+              this.runStatement(instruction)
+            }
+          }
+        }
+        break
       }
-      break
     }
+
+    // TODO: hacer que esta funcion reporte error:true cuando ocurran errores de evaluacion
+    return {error:false}
   }
 }
 
