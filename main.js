@@ -94,11 +94,33 @@ class InterpreterController extends Emitter {
 
   run(source_string) {
 
-    let program = this.compile(source_string)
+    let program = this.compile(source_string);
 
-    if (!program.error) {
-      this.interpreter.current_program = program.result
-      this.interpreter.run()
+    // El programa no se ejecuta debido a un error durante la compilacion
+    if (program.error) {
+
+      return {error:true};
+
+    } else {
+
+      // Establecer el programa actual del interpete
+      this.interpreter.current_program = program.result;
+
+      // Hacer que el interprete ejecute dicho programa
+      let runReport = this.interpreter.run();
+
+      // Evaluar el reporte del interpete. Si la prop error es true entonces
+      // se encontro un error de evaluacion durante la ejecucion.
+      // A esta altura el evento correspondiente ya fue emitido
+      if (runReport.error) {
+
+        return {error:true};
+
+      } else {
+
+        return {error:false};
+
+      }
     }
   }
 
