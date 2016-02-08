@@ -63,6 +63,10 @@ describe.skip('Pruebas que verifican la correcta evaluacion de los programas', (
   // De momento, obtengo los resultados de las pruebas a traves de llamadas a escribir
   const InterpreterController = require('../main.js');
 
+  // TODO: hacer que un mismo controlador pueda usarse mas de una vez
+  // Esto evitaria que tenga que agregar los event handlers en cada una de las
+  // siguientes pruebas...
+
   it('Estructura si...entonces');
 
   it('Estructura si...entonces...sino...');
