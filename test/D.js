@@ -91,13 +91,31 @@ describe('Pruebas que verifican la correcta evaluacion de los programas', () => 
 
   });
 
-  it.skip('Estructura si...entonces...sino...', () => {
+  it('Estructura si...entonces...sino...', () => {
     let controller = new InterpreterController({event_logging:false});
     let bandera = false;
 
+    let programa = `
+    variables
+    logico a
+    inicio
+    a <- falso
+    si (a) entonces
+      escribir(a)
+    sino
+      a <- verdadero
+      escribir(a)
+    finsi
+    fin
+    `;
+
     controller.on('write', (event_info, value_list) => {
-      if (varname = true) bandera = true;
+      if (value_list[0] == true) bandera = true;
     });
+
+    controller.run(programa);
+
+    bandera.should.equal(true);
   });
 
   it.skip('Estructura repetir...hasta que...', () => {

@@ -178,11 +178,8 @@ class Evaluator extends Emitter {
         case 'if':
         if (this.evaluateExp(statement.condition)) {
           this.runStatements(statement.true_branch);
-        }
-        else {
-          for (let instruction of statement.false_branch) {
-            this.runStatement(instruction)
-          }
+        } else {
+          this.runStatements(statement.false_branch);
         }
         break
 
