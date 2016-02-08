@@ -59,21 +59,70 @@ describe('InterpreterController', () => {
   })
 })
 
-describe.skip('Pruebas que verifican la correcta evaluacion de los programas', () => {
+describe('Pruebas que verifican la correcta evaluacion de los programas', () => {
   // De momento, obtengo los resultados de las pruebas a traves de llamadas a escribir
   const InterpreterController = require('../main.js');
 
   // TODO: hacer que un mismo controlador pueda usarse mas de una vez
-  // Esto evitaria que tenga que agregar los event handlers en cada una de las
-  // siguientes pruebas...
 
-  it('Estructura si...entonces');
+  it('Estructura si...entonces', () => {
+    let controller = new InterpreterController({event_logging:false});
+    let bandera = false;
 
-  it('Estructura si...entonces...sino...');
+    controller.on('write', (event_info, value_list) => {
+      if (varname = true) bandera = true;
+    });
 
-  it('Estructura repetir...hasta que...');
+    let programa = `
+    variables
+    logico a
+    inicio
+    a <- 32
+    si (a = 32) entonces
+      escribir(a)
+    finsi
+    fin
+    `;
 
-  it('Estructura mientras...');
+    controller.run(programa);
 
-  it('Estructura para...hasta...');
-})
+    bandera.should.equal(true);
+
+  });
+
+  it.skip('Estructura si...entonces...sino...', () => {
+    let controller = new InterpreterController({event_logging:false});
+    let bandera = false;
+
+    controller.on('write', (event_info, value_list) => {
+      if (varname = true) bandera = true;
+    });
+  });
+
+  it.skip('Estructura repetir...hasta que...', () => {
+    let controller = new InterpreterController({event_logging:false});
+    let bandera = false;
+
+    controller.on('write', (event_info, value_list) => {
+      if (varname = true) bandera = true;
+    });
+  });
+
+  it.skip('Estructura mientras...', () => {
+    let controller = new InterpreterController({event_logging:false});
+    let bandera = false;
+
+    controller.on('write', (event_info, value_list) => {
+      if (varname = true) bandera = true;
+    });
+  });
+
+  it.skip('Estructura para...hasta...', () => {
+    let controller = new InterpreterController({event_logging:false});
+    let bandera = false;
+
+    controller.on('write', (event_info, value_list) => {
+      if (varname = true) bandera = true;
+    });
+  });
+});
