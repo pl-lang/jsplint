@@ -186,14 +186,10 @@ class Evaluator extends Emitter {
         case 'repeat': {
           let loop = statement
 
-          for (let instruction of loop.body) {
-            this.runStatement(instruction)
-          }
+          this.runStatements(loop.body)
 
           while (this.evaluateExp(loop.condition) == false) {
-            for (let instruction of loop.body) {
-              this.runStatement(instruction)
-            }
+            this.runStatements(loop.body)
           }
         }
         break

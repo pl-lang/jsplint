@@ -118,13 +118,27 @@ describe('Pruebas que verifican la correcta evaluacion de los programas', () => 
     bandera.should.equal(true);
   });
 
-  it.skip('Estructura repetir...hasta que...', () => {
+  it('Estructura repetir...hasta que...', () => {
     let controller = new InterpreterController({event_logging:false});
     let bandera = false;
 
+    let programa = `
+    variables
+    entero contador
+    inicio
+    contador <- 0
+    repetetir
+      contador <- contador + 1
+    hasta que (contador = 10)
+    escribir(contador)
+    fin
+    `;
+
     controller.on('write', (event_info, value_list) => {
-      if (varname = true) bandera = true;
+      if (value_list[0] == 10) bandera = true;
     });
+
+    bandera.should.equal(true)
   });
 
   it.skip('Estructura mientras...', () => {
