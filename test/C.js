@@ -35,6 +35,33 @@ describe('Captura de estructuras sintacticas', () => {
 
   });
 
+  it('Estructura mientras...', () => {
+    let code = `
+    mientras(a)
+      escribir(a)
+    finmientras
+    `;
+    let q = queueFromString(code);
+
+    let capture = StatementCollector.capture(q);
+
+    capture.error.should.equal(false);
+
+    let struct = capture.result[0];
+
+    struct.condition.should.deepEqual({expression_type:'invocation', varname:'a'});
+
+    struct.body.should.deepEqual([{
+      expression_type:'module_call',
+      action:'module_call',
+      name:'escribir',
+      args:[
+        {expression_type:'invocation', varname:'a'}
+      ]}
+    ]);
+
+  });
+
 });
 
 describe('Scanner', () => {
