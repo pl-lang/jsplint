@@ -58,3 +58,18 @@ describe('InterpreterController', () => {
 
   })
 })
+
+describe.skip('Pruebas que verifican la correcta evaluacion de los programas', () => {
+  // De momento, obtengo los resultados de las pruebas a traves de llamadas a escribir
+  const InterpreterController = require('../main.js');
+
+  it('Estructura si...entonces');
+
+  it('Estructura si...entonces...sino...');
+
+  it('Estructura repetir...hasta que...');
+
+  it('Estructura mientras...');
+
+  it('Estructura para...hasta...');
+})
