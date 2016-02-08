@@ -70,15 +70,16 @@ describe('Pruebas que verifican la correcta evaluacion de los programas', () => 
     let bandera = false;
 
     controller.on('write', (event_info, value_list) => {
-      if (varname = true) bandera = true;
+      if (value_list[0] == true) bandera = true;
     });
 
     let programa = `
     variables
     logico a
     inicio
-    a <- 32
-    si (a = 32) entonces
+    a <- falso
+    si (NOT a) entonces
+      a <- verdadero
       escribir(a)
     finsi
     fin
