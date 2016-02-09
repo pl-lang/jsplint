@@ -62,6 +62,46 @@ describe('Captura de estructuras sintacticas', () => {
 
   });
 
+  // IDEA: Cambiar la sintaxis ->> Reemplazar 'sino' por 'si no'
+  it('Estructura si...entonces...si no...', () => {
+    let code = `
+    si (a) entonces
+      escribir(a)
+    sino
+      escribir(a)
+    finsi
+    `
+
+    let q = queueFromString(code)
+
+    let capture = StatementCollector.capture(q)
+
+    capture.error.should.equal(false)
+
+    let struct = capture.result[0]
+
+    struct.condition.should.deepEqual({expression_type:'invocation', varname:'a'})
+
+    struct.true_branch.should.deepEqual([{
+      expression_type:'module_call',
+      action:'module_call',
+      name:'escribir',
+      args:[
+        {expression_type:'invocation', varname:'a'}
+      ]}
+    ])
+
+    struct.false_branch.should.deepEqual([{
+      expression_type:'module_call',
+      action:'module_call',
+      name:'escribir',
+      args:[
+        {expression_type:'invocation', varname:'a'}
+      ]}
+    ])
+
+  })
+
 });
 
 describe('Scanner', () => {
