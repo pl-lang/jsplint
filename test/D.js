@@ -143,14 +143,30 @@ describe('Pruebas que verifican la correcta evaluacion de los programas', () => 
     bandera.should.equal(true)
   });
 
-  it.skip('Estructura mientras...', () => {
+  it('Estructura mientras...', () => {
     let controller = new InterpreterController({event_logging:false});
     let bandera = false;
 
+    let programa = `
+    variables
+    entero contador
+    inicio
+      contador <- 0
+    mientras (contador < 10)
+      contador <- contador + 1
+    finmientras
+    escribir(contador)
+    fin
+    `
+
     controller.on('write', (event_info, value_list) => {
-      if (varname = true) bandera = true;
+      if (value_list[0] == 10) bandera = true
     });
-  });
+
+    controller.run(programa)
+
+    bandera.should.equal(true)
+  })
 
   it.skip('Estructura para...hasta...', () => {
     let controller = new InterpreterController({event_logging:false});
