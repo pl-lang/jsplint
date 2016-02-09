@@ -59,7 +59,7 @@ describe('InterpreterController', () => {
   })
 })
 
-describe.skip('Pruebas que verifican la correcta evaluacion de los programas', () => {
+describe('Pruebas que verifican la correcta evaluacion de los programas', () => {
   // De momento, obtengo los resultados de las pruebas a traves de llamadas a escribir
   const InterpreterController = require('../main.js');
 
@@ -126,8 +126,8 @@ describe.skip('Pruebas que verifican la correcta evaluacion de los programas', (
     variables
     entero contador
     inicio
-    contador <- 0
-    repetetir
+      contador <- 0
+    repetir
       contador <- contador + 1
     hasta que (contador = 10)
     escribir(contador)
@@ -137,6 +137,8 @@ describe.skip('Pruebas que verifican la correcta evaluacion de los programas', (
     controller.on('write', (event_info, value_list) => {
       if (value_list[0] == 10) bandera = true;
     });
+
+    controller.run(programa)
 
     bandera.should.equal(true)
   });
