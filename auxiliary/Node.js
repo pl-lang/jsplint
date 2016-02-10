@@ -4,9 +4,19 @@ class Node {
   constructor(data) {
     if (data) {
       this.data = data
+    } else {
+      this.data = null
     }
 
-    this.next = null;
+    this._next = null;
+  }
+
+  setNext(nextNode) {
+    this._next = nextNode
+  }
+
+  getNext() {
+    return this._next
   }
 }
 
