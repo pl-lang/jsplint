@@ -63,7 +63,7 @@ describe('BranchingNode', () => {
     branching.getNext(true).should.equal(rightNode)
   })
 
-  it('Cuando a getNext no se le pasa nada devuelve el nodo "izquierdo"', () => {
+  it('Cuando a getNext no se le pasa nada (o false) devuelve el nodo "izquierdo"', () => {
     let leftNode = new Node('left')
     let rightNode = new Node('right')
 
@@ -73,5 +73,6 @@ describe('BranchingNode', () => {
     branching.rightBranchNode = rightNode
 
     branching.getNext().should.equal(leftNode)
+    branching.getNext(false).should.equal(leftNode)
   })
 })
