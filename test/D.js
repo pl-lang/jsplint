@@ -172,8 +172,26 @@ describe('Pruebas que verifican la correcta evaluacion de los programas', () => 
     let controller = new InterpreterController({event_logging:false});
     let bandera = false;
 
-    controller.on('write', (event_info, value_list) => {
-      if (varname = true) bandera = true;
-    });
   });
+
+  it('Asignacion', () => {
+    let controller = new InterpreterController({event_logging:false})
+    let bandera = false
+
+    controller.on('write', (event_info, value_list) => {
+      if (value_list[0] === 32) bandera = true;
+    })
+
+    let code = `
+    variables
+    entero a
+    inicio
+    a <- 32
+    escribir(a)
+    fin
+    `
+    controller.run(code)
+
+    bandera.should.equal(true)
+  })
 });
