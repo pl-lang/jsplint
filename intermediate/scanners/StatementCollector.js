@@ -359,6 +359,16 @@ class IfScanner {
   }
 }
 
+/**
+ * Lo que StatementCollector debe devolver es el primer Nodo de una lista.
+ * Los nodos tienen una propiedad que se llama next. Esta es una funcion que
+ * devuelve una referencia al proximo nodo. Debe ser una funcion por que ciertos
+ * nodos (como el while) deben devolver una referencia si se da una condicion
+ * y otra referencia distinta si dicha condicion no se da.
+ * En java (o typescript) Nodo seria una interfaz. Ya que aca no puedo usar eso,
+ * escribí esto para explicar deben funcionar los nodos.
+ */
+
 class StatementCollector {
   static capture(source) {
     let result  = []
