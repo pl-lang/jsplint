@@ -335,9 +335,16 @@ describe('ModuleCallPattern', () => {
     let ejemplo = 'escribir(42)'
     let q = queueFromSource(ejemplo)
 
+    let expected = {
+      args:[{expression_type:'literal', type:'integer', value:42}],
+      name:'escribir',
+      action:'module_call',
+      expression_type:'module_call'
+    }
+
     let call = ModuleCallPattern.capture(q)
     call.error.should.equal(false)
-    call.result.name.should.equal('escribir')
+    call.result.data.should.deepEqual(expected)
   })
 })
 

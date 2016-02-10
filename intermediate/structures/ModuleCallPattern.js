@@ -34,12 +34,13 @@ class ModuleCallPattern {
         if (source.current().kind == 'right-par') {
           source.next()
           let error = false
-          let result = {
+          let data = {
             args:args.result,
             name:name.result,
             action:'module_call',
             expression_type:'module_call'
           }
+          let result = new Node(data)
           return {error, result}
         }
         else {
@@ -58,12 +59,13 @@ class ModuleCallPattern {
     else {
       source.next()
       let error = false
-      let result = {
+      let data = {
         args:[],
         name:name.result,
         action:'module_call',
         expression_type:'module_call'
       }
+      let result = new Node(data)
       return {error, result}
     }
   }
