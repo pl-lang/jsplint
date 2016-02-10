@@ -1,7 +1,8 @@
 'use strict'
 
-let WordPattern = require('./WordPattern')
-let ArgumentListPattern = require('./ArgumentListPattern')
+const WordPattern = require('./WordPattern')
+const ArgumentListPattern = require('./ArgumentListPattern')
+const Node = require('../../auxiliary/Node')
 
 class ModuleCallPattern {
   static capture(source) {
@@ -32,7 +33,14 @@ class ModuleCallPattern {
       else {
         if (source.current().kind == 'right-par') {
           source.next()
-          return {error:false, result:{args:args.result, name:name.result, action:'module_call', expression_type:'module_call'}}
+          let error = false
+          let result = {
+            args:args.result,
+            name:name.result,
+            action:'module_call',
+            expression_type:'module_call'
+          }
+          return {error, result}
         }
         else {
           return {
@@ -49,7 +57,14 @@ class ModuleCallPattern {
     }
     else {
       source.next()
-      return {error:false, result:{args:[], name:name.result, action:'module_call', expression_type:'module_call'}}
+      let error = false
+      let result = {
+        args:[],
+        name:name.result,
+        action:'module_call',
+        expression_type:'module_call'
+      }
+      return {error, result}
     }
   }
 }
