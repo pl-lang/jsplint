@@ -429,14 +429,14 @@ describe('AssignmentPattern', () => {
     let capt = AssignmentPattern.capture(q)
 
     capt.error.should.equal(false)
-    capt.result.payload.should.deepEqual(
+    capt.result.data.payload.should.deepEqual(
       {
         expression_type:'literal',
         value:48,
         type:'integer',
       }
     )
-    capt.result.target.should.equal('var')
+    capt.result.data.target.should.equal('var')
   })
 })
 

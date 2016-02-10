@@ -1,6 +1,7 @@
 'use strict'
 
-let Expression = require('./Expression')
+const Node = require('../../auxiliary/Node')
+const Expression = require('./Expression')
 
 class AssignmentPattern {
   static capture(source) {
@@ -18,14 +19,14 @@ class AssignmentPattern {
           return payload
         }
         else {
-          return {
-              result  : {
-                  payload : payload.result
-                , target  : target
-                , action  : 'assignment'
-              }
-            , error   : false
+          let error = false
+          let data = {
+              payload : payload.result
+            , target  : target
+            , action  : 'assignment'
           }
+          let result = new Node(data)
+          return {error, result}
         }
       }
       else {
