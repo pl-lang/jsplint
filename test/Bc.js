@@ -360,7 +360,7 @@ describe('StatementCollector', () => {
   })
 })
 
-describe('Interpreter', () => {
+describe.skip('Interpreter', () => {
   let MainModuleScanner = require('../intermediate/scanners/MainModuleScanner')
   let Interpreter = require('../backend/Interpreter.js')
   it('ejecuta las acciones de un programa', () => {
