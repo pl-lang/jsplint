@@ -4,6 +4,8 @@ const AssignmentPattern = require('../structures/AssignmentPattern')
 const ModuleCallPattern = require('../structures/ModuleCallPattern')
 const Expression = require('../structures/Expression.js')
 const TokenQueue = require('../TokenQueue')
+const BranchingNode = require('../../auxiliary/BranchingNode')
+const LinkedList = require('../../auxiliary/LinkedList')
 
 function skipWhiteSpace(source) {
   let current = source.current()
@@ -227,25 +229,24 @@ class RepeatScanner {
 class IfScanner {
   static capture(source) {
     let condition
-    let true_branch = []
-    let false_branch = []
+    let true_branch = new LinkedList()
+    let false_branch = new LinkedList()
+    let node = new BranchingNode()
 
     source.next() // consumir el 'si'
 
     if (source.current().kind == 'left-par') {
       source.next()
-    }
-    else {
-      return {
-          error   : true
-        , result  : {
-            unexpected  : source.current().kind
-          , expected    : 'left-par'
-          , atColumn    : source.current().columnNumber
-          , atLine      : source.current().lineNumber
-          , reason      : 'missing-par-at-if'
-        }
+    } else {
+      let error = true
+      let result = {
+          unexpected  : source.current().kind
+        , expected    : 'left-par'
+        , atColumn    : source.current().columnNumber
+        , atLine      : source.current().lineNumber
+        , reason      : 'missing-par-at-if'
       }
+      return {error, result}
     }
 
     let token_array = []
@@ -258,18 +259,16 @@ class IfScanner {
 
     if (current_token.kind == 'right-par') {
       source.next()
-    }
-    else {
-      return {
-          error   : true
-        , result  : {
-            unexpected  : source.current().kind
-          , expected    : 'right-par'
-          , atColumn    : source.current().columnNumber
-          , atLine      : source.current().lineNumber
-          , reason      : 'missing-par-at-if'
-        }
+    } else {
+      let error = true
+      let result = {
+          unexpected  : source.current().kind
+        , expected    : 'right-par'
+        , atColumn    : source.current().columnNumber
+        , atLine      : source.current().lineNumber
+        , reason      : 'missing-par-at-if'
       }
+      return {error, result}
     }
 
     let expression_q = new TokenQueue(token_array)
@@ -285,18 +284,16 @@ class IfScanner {
 
     if (source.current().kind == 'entonces') {
       source.next() // consumir el token
-    }
-    else {
-      return {
-          error   : true
-        , result  : {
-            unexpected  : source.current().kind
-          , expected    : 'entonces'
-          , atColumn    : source.current().columnNumber
-          , atLine      : source.current().lineNumber
-          , reason      : 'missing-entonces-at-if'
-        }
+    } else {
+      let error = false
+      let result = {
+          unexpected  : source.current().kind
+        , expected    : 'entonces'
+        , atColumn    : source.current().columnNumber
+        , atLine      : source.current().lineNumber
+        , reason      : 'missing-entonces-at-if'
       }
+      return {error, result}
     }
 
     if (source.current().kind == 'eol')
@@ -340,21 +337,25 @@ class IfScanner {
         skipWhiteSpace(source)
 
 
+      node.leftBranchNode = true_branch.firstNode
+      node.rightBranchNode = false_branch.firstNode
+      let data = {condition, action:'if'}
+      node.data = data
+
       let error = false
-      let result = {condition, true_branch, false_branch, action:'if'}
+      let result = node
+
       return {error, result}
-    }
-    else {
-      return {
-          error   : true
-        , result  : {
-            unexpected  : source.current().kind
-          , expected    : ['finsi', 'sino']
-          , atColumn    : source.current().columnNumber
-          , atLine      : source.current().lineNumber
-          , reason      : 'missing-sino-finsi-at-if'
-        }
+    } else {
+      let error = true
+      let result = {
+          unexpected  : source.current().kind
+        , expected    : ['finsi', 'sino']
+        , atColumn    : source.current().columnNumber
+        , atLine      : source.current().lineNumber
+        , reason      : 'missing-sino-finsi-at-if'
       }
+      return {error, result}
     }
   }
 }
@@ -371,7 +372,7 @@ class IfScanner {
 
 class StatementCollector {
   static capture(source) {
-    let result  = []
+    let result  = new LinkedList()
     let error   = false
 
     let current = source.current()
@@ -388,7 +389,7 @@ class StatementCollector {
           return call
         }
         else {
-          result.push(call.result)
+          result.addNode(call.result)
         }
       }
       else if (current.kind == 'word') {
@@ -397,7 +398,7 @@ class StatementCollector {
           return assignment
         }
         else {
-          result.push(assignment.result)
+          result.addNode(assignment.result)
         }
       }
       else if (current.kind == 'si') {
@@ -407,27 +408,7 @@ class StatementCollector {
           return if_block
         }
         else {
-          result.push(if_block.result)
-        }
-      }
-      else if (current.kind == 'repetir') {
-        let repeat_block = RepeatScanner.capture(source)
-
-        if (repeat_block.error) {
-          return repeat_block
-        }
-        else {
-          result.push(repeat_block.result)
-        }
-      }
-      else if (current.kind == 'mientras') {
-        let while_block = WhileScanner.capture(source)
-
-        if (while_block.error) {
-          return while_block
-        }
-        else {
-          result.push(while_block.result)
+          result.addNode(if_block.result)
         }
       }
       else {
