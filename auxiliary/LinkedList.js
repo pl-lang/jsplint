@@ -44,4 +44,8 @@ class LinkedList {
   }
 }
 
-module.exports = LinkedList
+module.exports = {
+  LinkedList:LinkedList,
+  getChainLenght:getChainLenght,
+  getLastNode:getLastNode
+}
