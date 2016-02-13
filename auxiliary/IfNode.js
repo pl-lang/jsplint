@@ -1,5 +1,7 @@
 'use strict'
 
+const getLastNode = require('./List').getLastNode
+
 /**
  * Este nodo va a ser utilizado para representar una if [else]
  * Al igual que BranchingNode, este nodo tiene dos ramas y devuelve una de las
@@ -27,4 +29,22 @@ class IfNode {
     this.leftBranchNode = null
     this.rightBranchNode = null
   }
+
+  setNext(node) {
+    let lastLeft = getLastNode(this.leftBranchNode)
+    let lastRight = getLastNode(this.rightBranchNode)
+
+    lastLeft.setNext(node)
+    lastRight.setNext(node)
+  }
+
+  getNext(getRight) {
+    if (getRight) {
+      return this.rightBranchNode
+    } else {
+      return this.leftBranchNode
+    }
+  }
 }
+
+module.exports = IfNode

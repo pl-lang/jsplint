@@ -102,3 +102,23 @@ describe('BranchingNode', () => {
     branching.getNext(false).should.equal(leftNode)
   })
 })
+
+describe('IfNode', () => {
+  const IfNode = require('../auxiliary/IfNode')
+  it('Ambas raman "convergen" en el mismo nodo', () => {
+    let leftNode = new Node('left')
+    let rightNode = new Node('right')
+
+    let testNode = new Node('test')
+
+    let ifNode = new IfNode()
+
+    ifNode.leftBranchNode = leftNode
+    ifNode.rightBranchNode = rightNode
+
+    ifNode.setNext(testNode)
+
+    ifNode.leftBranchNode.getNext().should.equal(testNode)
+    ifNode.rightBranchNode.getNext().should.equal(testNode)
+  })
+})
