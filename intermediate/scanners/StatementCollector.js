@@ -5,7 +5,7 @@ const ModuleCallPattern = require('../structures/ModuleCallPattern')
 const Expression = require('../structures/Expression.js')
 const TokenQueue = require('../TokenQueue')
 const BranchingNode = require('../../auxiliary/BranchingNode')
-const LinkedList = require('../../auxiliary/LinkedList')
+const LinkedList = require('../../auxiliary/List').LinkedList
 
 function skipWhiteSpace(source) {
   let current = source.current()

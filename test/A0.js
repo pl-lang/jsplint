@@ -6,8 +6,34 @@
 
 const should = require('should');
 const BranchingNode = require('../auxiliary/BranchingNode')
-const LinkedList = require('../auxiliary/LinkedList')
+const LinkedList = require('../auxiliary/List').LinkedList
+const getChainLenght = require('../auxiliary/List').getChainLenght
+const getLastNode = require('../auxiliary/List').getLastNode
 const Node = require('../auxiliary/Node')
+
+describe("Metodos auxiliares de listas", () => {
+  it('getChainLenght funciona bien', () => {
+    let nodeA = new Node('a')
+    let nodeB = new Node('b')
+    let nodeC = new Node('c')
+
+    nodeA.setNext(nodeB)
+    nodeB.setNext(nodeC)
+
+    getChainLenght(nodeA).should.equal(3)
+  })
+
+  it('getLastNode funciona bien', () => {
+    let nodeA = new Node('a')
+    let nodeB = new Node('b')
+    let nodeC = new Node('c')
+
+    nodeA.setNext(nodeB)
+    nodeB.setNext(nodeC)
+
+    getLastNode(nodeA).data.should.equal('c')
+  })
+})
 
 describe('LinkedList', () => {
   it('Los nodos guardan sus datos correctamente', () => {
