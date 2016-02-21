@@ -18,7 +18,7 @@ describe('Captura de estructuras sintacticas', () => {
 
     capture.error.should.equal(false);
 
-    let node = capture.result.firstNode;
+    let node = capture.result;
 
     node.data.condition.should.deepEqual({expression_type:'invocation', varname:'a'});
 
@@ -71,7 +71,7 @@ describe('Captura de estructuras sintacticas', () => {
 
     capture.error.should.equal(false);
 
-    let node = capture.result.firstNode;
+    let node = capture.result;
 
     node.data.condition.should.deepEqual({expression_type:'invocation', varname:'a'});
 
