@@ -22,7 +22,7 @@ describe('Captura de estructuras sintacticas', () => {
 
     node.data.condition.should.deepEqual({expression_type:'invocation', varname:'a'});
 
-    node.leftBranchNode.data.should.deepEqual({
+    node.rightBranchNode.data.should.deepEqual({
       action:'assignment',
       target:'a',
       payload:{expression_type:'literal', type:'integer', value:32}
@@ -75,13 +75,13 @@ describe('Captura de estructuras sintacticas', () => {
 
     node.data.condition.should.deepEqual({expression_type:'invocation', varname:'a'});
 
-    node.leftBranchNode.data.should.deepEqual({
+    node.rightBranchNode.data.should.deepEqual({
       action:'assignment',
       target:'a',
       payload:{expression_type:'literal', type:'integer', value:32}
     })
 
-    node.rightBranchNode.data.should.deepEqual({
+    node.leftBranchNode.data.should.deepEqual({
       action:'assignment',
       target:'a',
       payload:{expression_type:'literal', type:'integer', value:48}
