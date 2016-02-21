@@ -28,6 +28,7 @@ class IfNode {
 
     this.leftBranchNode = null
     this.rightBranchNode = null
+    this.returnRightBranch = true
   }
 
   setNext(node) {
@@ -38,10 +39,20 @@ class IfNode {
     lastRight.setNext(node)
   }
 
-  getNext(getRight) {
-    if (getRight) {
+  switchReturnedBranch(returnRight) {
+    if (returnRight) {
+      this.returnRightBranch = true
+    }
+    else {
+      this.returnRightBranch = false
+    }
+  }
+
+  getNext() {
+    if (this.returnRightBranch) {
       return this.rightBranchNode
-    } else {
+    }
+    else {
       return this.leftBranchNode
     }
   }
