@@ -232,9 +232,9 @@ class RepeatScanner {
 class IfScanner {
   static capture(source) {
     let condition
-    let true_branch = new LinkedList()
-    let false_branch = new LinkedList()
-    let node = new BranchingNode()
+    let true_branch = null
+    let false_branch = null
+    let node = new IfNode()
 
     source.next() // consumir el 'si'
 
@@ -340,8 +340,8 @@ class IfScanner {
         skipWhiteSpace(source)
 
 
-      node.leftBranchNode = true_branch.firstNode
-      node.rightBranchNode = false_branch.firstNode
+      node.leftBranchNode = false_branch
+      node.rightBranchNode = true_branch
       let data = {condition, action:'if'}
       node.data = data
 
@@ -375,7 +375,7 @@ class IfScanner {
 
 class StatementCollector {
   static capture(source) {
-    let result  = new LinkedList()
+    let list  = new LinkedList()
     let error   = false
 
     let current = source.current()
@@ -392,7 +392,7 @@ class StatementCollector {
           return call
         }
         else {
-          result.addNode(call.result)
+          list.addNode(call.result)
         }
       }
       else if (current.kind == 'word') {
@@ -401,7 +401,7 @@ class StatementCollector {
           return assignment
         }
         else {
-          result.addNode(assignment.result)
+          list.addNode(assignment.result)
         }
       }
       else if (current.kind == 'si') {
@@ -411,7 +411,7 @@ class StatementCollector {
           return if_block
         }
         else {
-          result.addNode(if_block.result)
+          list.addNode(if_block.result)
         }
       }
       else {
@@ -422,6 +422,8 @@ class StatementCollector {
         skipWhiteSpace(source)
       }
     }
+
+    let result = list.firstNode
 
     return {error, result}
   }
