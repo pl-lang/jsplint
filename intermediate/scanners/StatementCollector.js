@@ -5,6 +5,7 @@ const ModuleCallPattern = require('../structures/ModuleCallPattern')
 const Expression = require('../structures/Expression.js')
 const TokenQueue = require('../TokenQueue')
 const BranchingNode = require('../../auxiliary/BranchingNode')
+const IfNode = require('../../auxiliary/IfNode')
 const LinkedList = require('../../auxiliary/List').LinkedList
 const getChainLength = require('../../auxiliary/List').getChainLength
 const getLastNode = require('../../auxiliary/List').getLastNode
