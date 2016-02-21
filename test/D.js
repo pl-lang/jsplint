@@ -91,7 +91,7 @@ describe.skip('Pruebas que verifican la correcta evaluacion de los programas', (
 
   });
 
-  it('Estructura si...entonces...sino...', () => {
+  it.skip('Estructura si...entonces...sino...', () => {
     let controller = new InterpreterController({event_logging:false});
     let bandera = false;
 
@@ -118,7 +118,7 @@ describe.skip('Pruebas que verifican la correcta evaluacion de los programas', (
     bandera.should.equal(true);
   });
 
-  it('Estructura repetir...hasta que...', () => {
+  it.skip('Estructura repetir...hasta que...', () => {
     let controller = new InterpreterController({event_logging:false});
     let bandera = false;
 
