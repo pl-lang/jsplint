@@ -37,10 +37,13 @@ class LinkedList {
   addNode(node) {
     if (this.length == 0) {
       this.firstNode = node
+      this.lastNode = node
+      this.length++
+    } else {
+      this.lastNode.setNext(node)
+      this.lastNode = node
+      this.length++
     }
-
-    this.length = getChainLenght(node)
-    this.lastNode = getLastNode(node)
   }
 }
 
