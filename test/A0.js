@@ -159,4 +159,18 @@ describe('IfNode', () => {
     ifNode.leftBranchNode.getNext().should.equal(testNode)
     ifNode.rightBranchNode.getNext().should.equal(testNode)
   })
+
+  it('Cuando solo existe la rama verdadera, el nodo de la rama izquierda es el que le sigue al bloque if', () => {
+    let rightNode = new Node('right')
+
+    let testNode = new Node('test')
+
+    let ifNode = new IfNode()
+
+    ifNode.rightBranchNode = rightNode
+
+    ifNode.setNext(testNode)
+
+    ifNode.leftBranchNode.should.equal(testNode)
+  })
 })

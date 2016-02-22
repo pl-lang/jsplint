@@ -32,11 +32,21 @@ class IfNode {
   }
 
   setNext(node) {
-    let lastLeft = getLastNode(this.leftBranchNode)
-    let lastRight = getLastNode(this.rightBranchNode)
+    if (this.leftBranchNode === null) {
+      this.leftBranchNode = node
+    }
+    else {
+      let lastLeft = getLastNode(this.leftBranchNode)
+      lastLeft.setNext(node)
+    }
 
-    lastLeft.setNext(node)
-    lastRight.setNext(node)
+    if (this.rightBranchNode === null) {
+      this.rightBranchNode = node
+    }
+    else {
+      let lastRight = getLastNode(this.rightBranchNode)
+      lastRight.setNext(node)
+    }
   }
 
   switchReturnedBranch(returnRight) {
