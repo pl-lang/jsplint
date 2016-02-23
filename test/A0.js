@@ -173,4 +173,30 @@ describe('IfNode', () => {
 
     ifNode.leftBranchNode.should.equal(testNode)
   })
+
+  it('Se devuelve la rama derecha por defecto', () => {
+    let rightNode = new Node('right')
+    let leftNode = new Node('left')
+
+    let ifNode = new IfNode()
+
+    ifNode.rightBranchNode = rightNode
+    ifNode.leftBranchNode = leftNode
+
+    ifNode.getNext().should.equal(rightNode)
+  })
+
+  it('Al llamar a IfNode.switchReturnedBranch() con false se devuelve la rama izquierda', () => {
+    let rightNode = new Node('right')
+    let leftNode = new Node('left')
+
+    let ifNode = new IfNode()
+
+    ifNode.rightBranchNode = rightNode
+    ifNode.leftBranchNode = leftNode
+
+    ifNode.switchReturnedBranch(false)
+
+    ifNode.getNext().should.equal(leftNode)
+  })
 })
