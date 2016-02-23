@@ -59,7 +59,7 @@ describe.skip('InterpreterController', () => {
   })
 })
 
-describe.skip('Pruebas que verifican la correcta evaluacion de los programas', () => {
+describe('Pruebas que verifican la correcta evaluacion de los programas', () => {
   // De momento, obtengo los resultados de las pruebas a traves de llamadas a escribir
   const InterpreterController = require('../main.js');
 
@@ -91,7 +91,7 @@ describe.skip('Pruebas que verifican la correcta evaluacion de los programas', (
 
   });
 
-  it.skip('Estructura si...entonces...sino...', () => {
+  it('Estructura si...entonces...sino...', () => {
     let controller = new InterpreterController({event_logging:false});
     let bandera = false;
 
@@ -118,6 +118,32 @@ describe.skip('Pruebas que verifican la correcta evaluacion de los programas', (
     bandera.should.equal(true);
   });
 
+  it('Estructura si...entonces con condicion falsa', () => {
+    let controller = new InterpreterController({event_logging:false});
+    let bandera = false;
+
+    let programa = `
+    variables
+    logico a
+    inicio
+    a <- falso
+    si (a) entonces
+      escribir(a)
+    finsi
+    a <- verdadero
+    escribir(a)
+    fin
+    `;
+
+    controller.on('write', (event_info, value_list) => {
+      if (value_list[0] == true) bandera = true;
+    });
+
+    controller.run(programa);
+
+    bandera.should.equal(true);
+  })
+
   it.skip('Estructura repetir...hasta que...', () => {
     let controller = new InterpreterController({event_logging:false});
     let bandera = false;
@@ -143,7 +169,7 @@ describe.skip('Pruebas que verifican la correcta evaluacion de los programas', (
     bandera.should.equal(true)
   });
 
-  it('Estructura mientras...', () => {
+  it.skip('Estructura mientras...', () => {
     let controller = new InterpreterController({event_logging:false});
     let bandera = false;
 
