@@ -159,8 +159,13 @@ class Evaluator extends Emitter {
     target.value = this.evaluateExp(expression)
   }
 
-  runStatements(statements) {
-    for (let statement of statements) {
+  runStatements(firstNode) {
+    let currentNode = firstNode
+
+    while (currentNode !== null) {
+
+      let statement = currentNode.data
+
       switch (statement.action) {
         case  'assignment':
         this.assignToVar(statement.target, statement.payload)
@@ -176,11 +181,7 @@ class Evaluator extends Emitter {
         break
 
         case 'if':
-        if (this.evaluateExp(statement.condition)) {
-          this.runStatements(statement.true_branch);
-        } else {
-          this.runStatements(statement.false_branch);
-        }
+        currentNode.switchReturnedBranch(this.evaluateExp(statement.condition))
         break
 
         case 'repeat': {
@@ -203,6 +204,8 @@ class Evaluator extends Emitter {
         }
         break
       }
+
+      currentNode = currentNode.getNext()
     }
 
     // TODO: hacer que esta funcion reporte error:true cuando ocurran errores de evaluacion
