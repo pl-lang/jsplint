@@ -162,3 +162,55 @@ describe('IfNode', () => {
     ifNode.getNext().should.equal(leftNode)
   })
 })
+
+describe('WhileNode', () => {
+  const WhileNode = require('../auxiliary/WhileNode')
+
+  it('Al llamar a getNext (por defecto) se entra al bucle', () => {
+    let while_node = new WhileNode()
+
+    let body_root = new Node('test')
+
+    let other_node = new Node('asdasd')
+
+    while_node.loop_body_root = body_root
+
+    while_node.setNext(other_node)
+
+    while_node.getNext().should.equal(body_root)
+  })
+
+  it('El ultimo nodo del bucle apunta al nodo de la condicion de entrada', () => {
+    let while_node = new WhileNode()
+
+    let body_root = new Node('test')
+
+    let other_node = new Node('asdasd')
+
+    while_node.loop_body_root = body_root
+
+    while_node.setNext(other_node)
+
+    body_root.getNext().should.equal(while_node)
+  })
+
+  it('con setCurrentBranchTo se puede cambiar el nodo que le "sigue" a un WhileNode', () => {
+    let while_node = new WhileNode()
+
+    let body_root = new Node('body_root')
+
+    let other_node = new Node('next statement node')
+
+    while_node.loop_body_root = body_root
+
+    while_node.setNext(other_node)
+
+    while_node.setCurrentBranchTo('program_body')
+
+    while_node.getNext().should.equal(other_node)
+
+    while_node.setCurrentBranchTo('loop_body')
+
+    while_node.getNext().should.equal(body_root)
+  })
+})
