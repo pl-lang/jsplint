@@ -339,9 +339,14 @@ class IfScanner {
       if (source.current().kind == 'eol')
         skipWhiteSpace(source)
 
+      if (false_branch !== null) {
+        node.leftBranchNode = false_branch
+      }
 
-      node.leftBranchNode = false_branch
-      node.rightBranchNode = true_branch
+      if (true_branch !== null) {
+        node.rightBranchNode = true_branch
+      }
+      
       let data = {condition, action:'if'}
       node.data = data
 
