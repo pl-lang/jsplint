@@ -1,7 +1,7 @@
 'use strict'
 
 function getLastNode(node) {
-  if (node.next === null) {
+  if (node.getNext() === null) {
     return node
   }
   else {
@@ -35,31 +35,14 @@ class LinkedList {
   }
 
   addNode(node) {
-    let chain_length = getChainLenght(node)
-
-    if (chain_length !== 0) {
-      let last_node = getLastNode(node)
-      if (this.length === 0) {
-        this.length = chain_length
-        this.firstNode = node
-        this.lastNode = last_node
-      }
-      else {
-        this.length += chain_length
-        this.lastNode.setNext(node)
-        this.lastNode = last_node
-      }
-    }
-    else {
-      if (this.length === 0) {
-        this.firstNode = node
-        this.lastNode = node
-        this.length++
-      } else {
-        this.lastNode.setNext(node)
-        this.lastNode = node
-        this.length++
-      }
+    if (this.length === 0) {
+      this.firstNode = node
+      this.lastNode = node
+      this.length++
+    } else {
+      this.lastNode.setNext(node)
+      this.lastNode = node
+      this.length++
     }
   }
 }
