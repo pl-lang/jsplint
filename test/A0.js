@@ -55,44 +55,6 @@ describe('LinkedList', () => {
     list.firstNode.should.equal(list.lastNode)
   })
 
-  it('Agregar una cadena de nodos a una lista vacia', () => {
-    let list = new LinkedList()
-
-    let nodeA = new Node('a')
-    let nodeB = new Node('b')
-    let nodeC = new Node('c')
-
-    nodeA.setNext(nodeB)
-    nodeB.setNext(nodeC)
-
-    list.addNode(nodeA)
-
-    list.length.should.equal(3)
-    list.firstNode.should.equal(nodeA)
-    list.lastNode.should.equal(nodeC)
-  })
-
-  it('Agregar una cadena de nodos a una lista con un nodo', () => {
-    let list = new LinkedList()
-
-    let node = new Node(1)
-    list.addNode(node)
-
-    let nodeA = new Node('a')
-    let nodeB = new Node('b')
-    let nodeC = new Node('c')
-
-    nodeA.setNext(nodeB)
-    nodeB.setNext(nodeC)
-
-    list.addNode(nodeA)
-
-    list.length.should.equal(4)
-    list.firstNode.should.equal(node)
-    list.firstNode.getNext().should.equal(nodeA)
-    list.lastNode.should.equal(nodeC)
-  })
-
   it('Los datos de una lista se guardan bien', () => {
     let data = [1, 2, 3, 4]
 
