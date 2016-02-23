@@ -87,7 +87,7 @@ class InterpreterController extends Emitter {
 
     this.emit({name:'correct-syntax', origin:'controller'});
 
-    this.emit({name:'compilation-finished', origin:'controller'}, {error:false});
+    this.emit({name:'compilation-finished', origin:'controller'}, scanReport);
 
     return scanReport
   }
