@@ -59,7 +59,7 @@ describe.skip('InterpreterController', () => {
   })
 })
 
-describe('Pruebas que verifican la correcta evaluacion de los programas', () => {
+describe.skip('Pruebas que verifican la correcta evaluacion de los programas', () => {
   // De momento, obtengo los resultados de las pruebas a traves de llamadas a escribir
   const InterpreterController = require('../main.js');
 
