@@ -29,10 +29,10 @@ describe('Captura de estructuras sintacticas', () => {
     })
   })
 
-  it.skip('Estructura mientras...', () => {
+  it('Estructura mientras...', () => {
     let code = `
     mientras(a)
-      escribir(a)
+      a <- 32
     finmientras
     `;
     let q = queueFromString(code);
@@ -41,20 +41,16 @@ describe('Captura de estructuras sintacticas', () => {
 
     capture.error.should.equal(false);
 
-    let struct = capture.result[0];
+    let node = capture.result;
 
-    struct.condition.should.deepEqual({expression_type:'invocation', varname:'a'});
+    node.data.condition.should.deepEqual({expression_type:'invocation', varname:'a'});
 
-    struct.body.should.deepEqual([{
-      expression_type:'module_call',
-      action:'module_call',
-      name:'escribir',
-      args:[
-        {expression_type:'invocation', varname:'a'}
-      ]}
-    ]);
-
-  });
+    node.loop_body_root.data.should.deepEqual({
+      action:'assignment',
+      target:'a',
+      payload:{expression_type:'literal', type:'integer', value:32}
+    })
+  })
 
   // IDEA: Cambiar la sintaxis ->> Reemplazar 'sino' por 'si no'
   it('Estructura si...entonces...si no...', () => {

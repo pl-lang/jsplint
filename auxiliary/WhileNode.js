@@ -48,6 +48,11 @@ class WhileNode {
     // dicho nodo debe apuntar al nodo con la condicion de entrada del bucle,
     // o sea, este
     lastNode.setNext(this)
+
+    // Cuando se escribe un mientras con el cuerpo vacio lastNode va a ser null
+    // y va a tirar una excepcion...
+    // El resultado correcto de un mientras con el cuerpo vacio es un bucle
+    // infinito
   }
 }
 
