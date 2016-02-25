@@ -83,6 +83,40 @@ describe('Captura de estructuras sintacticas', () => {
       payload:{expression_type:'literal', type:'integer', value:48}
     })
   })
+
+  it('Estructura repetir', () => {
+    const getLastNode = require('../auxiliary/List').getLastNode
+
+    let code = `repetir
+    a <- 32
+    hasta que (verdadero)
+    `
+
+    let q = queueFromString(code);
+
+    let capture = StatementCollector.capture(q)
+
+    capture.error.should.equal(false)
+
+    let first_node = capture.result
+    let until_node = getLastNode(first_node)
+
+    first_node.data.should.deepEqual({
+      action:'assignment',
+      target:'a',
+      payload:{expression_type:'literal', type:'integer', value:32}
+    })
+
+    first_node.getNext().should.equal(until_node)
+
+    until_node.data.action.should.equal('repeat')
+
+    until_node.data.condition.should.deepEqual({
+      expression_type:'literal',
+      type:'logical',
+      value:true
+    })
+  })
 })
 
 describe('Scanner', () => {
