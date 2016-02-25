@@ -144,7 +144,7 @@ describe('Pruebas que verifican la correcta evaluacion de los programas', () => 
     bandera.should.equal(true);
   })
 
-  it.skip('Estructura repetir...hasta que...', () => {
+  it('Estructura repetir...hasta que...', () => {
     let controller = new InterpreterController({event_logging:false});
     let bandera = false;
 
