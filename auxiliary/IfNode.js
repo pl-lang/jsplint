@@ -28,7 +28,8 @@ class IfNode {
 
     this.leftBranchNode = null
     this.rightBranchNode = null
-    this.returnRightBranch = true
+
+    this.returnedNode = this
   }
 
   setNext(node) {
@@ -49,22 +50,17 @@ class IfNode {
     }
   }
 
-  switchReturnedBranch(returnRight) {
-    if (returnRight) {
-      this.returnRightBranch = true
+  setCurrentBranchTo(branch_name) {
+    if (branch_name === 'true_branch') {
+      this.returnedNode = this.rightBranchNode
     }
-    else {
-      this.returnRightBranch = false
+    else if (branch_name === 'false_branch') {
+      this.returnedNode = this.leftBranchNode
     }
   }
 
   getNext() {
-    if (this.returnRightBranch) {
-      return this.rightBranchNode
-    }
-    else {
-      return this.leftBranchNode
-    }
+    return this.returnedNode
   }
 }
 

@@ -35,14 +35,13 @@ class LinkedList {
   }
 
   addNode(node) {
-    if (this.length === 0) {
+    if (this.firstNode === null) {
       this.firstNode = node
       this.lastNode = node
-      this.length++
-    } else {
+    }
+    else {
       this.lastNode.setNext(node)
-      this.lastNode = node
-      this.length++
+      this.lastNode = getLastNode(node)
     }
   }
 }
