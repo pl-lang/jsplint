@@ -51,7 +51,6 @@ describe('LinkedList', () => {
 
     list.addNode(node)
 
-    list.length.should.equal(1)
     list.firstNode.should.equal(list.lastNode)
   })
 
@@ -136,7 +135,7 @@ describe('IfNode', () => {
     ifNode.leftBranchNode.should.equal(testNode)
   })
 
-  it('Se devuelve la rama derecha por defecto', () => {
+  it('setCurrentBranchTo cambia el nodo que getNext devuelve', () => {
     let rightNode = new Node('right')
     let leftNode = new Node('left')
 
@@ -145,21 +144,13 @@ describe('IfNode', () => {
     ifNode.rightBranchNode = rightNode
     ifNode.leftBranchNode = leftNode
 
-    ifNode.getNext().should.equal(rightNode)
-  })
-
-  it('Al llamar a IfNode.switchReturnedBranch() con false se devuelve la rama izquierda', () => {
-    let rightNode = new Node('right')
-    let leftNode = new Node('left')
-
-    let ifNode = new IfNode()
-
-    ifNode.rightBranchNode = rightNode
-    ifNode.leftBranchNode = leftNode
-
-    ifNode.switchReturnedBranch(false)
+    ifNode.setCurrentBranchTo('false_branch')
 
     ifNode.getNext().should.equal(leftNode)
+
+    ifNode.setCurrentBranchTo('true_branch')
+
+    ifNode.getNext().should.equal(rightNode)
   })
 })
 
