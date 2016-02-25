@@ -1,17 +1,17 @@
 'use strict'
 
 function getLastNode(node) {
-  if (node.getNext() === null) {
+  if (node.getNextStatementNode() === null) {
     return node
   }
   else {
     let current = node
     while (current !== null) {
-      if (current.getNext() === null) {
+      if (current.getNextStatementNode() === null) {
         return current
       }
       else {
-        current = current.getNext()
+        current = current.getNextStatementNode()
       }
     }
   }

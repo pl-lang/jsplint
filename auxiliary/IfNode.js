@@ -29,7 +29,7 @@ class IfNode {
     this.leftBranchNode = null
     this.rightBranchNode = null
 
-    this.returnedNode = this
+    this.next_statement_node = null
   }
 
   setNext(node) {
@@ -48,6 +48,8 @@ class IfNode {
       let lastRight = getLastNode(this.rightBranchNode)
       lastRight.setNext(node)
     }
+
+    this.next_statement_node = node
   }
 
   setCurrentBranchTo(branch_name) {
@@ -61,6 +63,10 @@ class IfNode {
 
   getNext() {
     return this.returnedNode
+  }
+
+  getNextStatementNode() {
+    return this.next_statement_node
   }
 }
 

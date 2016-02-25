@@ -12,8 +12,9 @@ class WhileNode {
     }
 
     this.loop_body_root = null
-    this.next_node = null
+    this.next_statement_node = null
     this.enter_loop_body = true
+    this.next_statement_node = null
   }
 
   /**
@@ -35,12 +36,16 @@ class WhileNode {
       return this.loop_body_root
     }
     else {
-      return this.next_node
+      return this.next_statement_node
     }
   }
 
+  getNextStatementNode() {
+    return this.next_statement_node
+  }
+
   setNext(node) {
-    this.next_node = node
+    this.next_statement_node = node
 
     // el ultimo nodo del cuerpo de este bucle
     let lastNode = getLastNode(this.loop_body_root)

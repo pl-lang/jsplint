@@ -18,6 +18,10 @@ class Node {
   getNext() {
     return this._next
   }
+
+  getNextStatementNode() {
+    return this.getNext()
+  }
 }
 
 module.exports = Node

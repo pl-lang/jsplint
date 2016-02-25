@@ -10,8 +10,8 @@ class UntilNode {
     }
 
     this.loop_body_root = null
-    this.next_node = null
     this.enter_loop_body = true
+    this.next_statetement_node = null
   }
 
   /**
@@ -33,12 +33,16 @@ class UntilNode {
       return this.loop_body_root
     }
     else {
-      return this.next_node
+      return this.next_statement_node
     }
   }
 
+  getNextStatementNode() {
+    return this.next_statetement_node
+  }
+
   setNext(node) {
-    this.next_node = node
+    this.next_statement_node = node
   }
 }
 
