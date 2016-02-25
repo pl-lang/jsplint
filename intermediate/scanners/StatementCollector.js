@@ -6,6 +6,7 @@ const Expression = require('../structures/Expression.js')
 const TokenQueue = require('../TokenQueue')
 const BranchingNode = require('../../auxiliary/BranchingNode')
 const IfNode = require('../../auxiliary/IfNode')
+const WhileNode = require('../../auxiliary/WhileNode')
 const LinkedList = require('../../auxiliary/List').LinkedList
 const getChainLength = require('../../auxiliary/List').getChainLength
 const getLastNode = require('../../auxiliary/List').getLastNode
@@ -20,7 +21,8 @@ function skipWhiteSpace(source) {
 class WhileScanner {
   static capture(source) {
     let condition
-    let body = []
+    let body = null
+    let node = new WhileNode()
 
     source.next() // consume 'mientras'
 
@@ -110,7 +112,10 @@ class WhileScanner {
 
     let action = 'while'
     let error = false
-    let result = {action, condition, body}
+
+    node.data = {action, condition}
+    node.loop_body_root = body
+    let result = node
 
     return {error, result}
   }
@@ -346,7 +351,7 @@ class IfScanner {
       if (true_branch !== null) {
         node.rightBranchNode = true_branch
       }
-      
+
       let data = {condition, action:'if'}
       node.data = data
 
@@ -417,6 +422,16 @@ class StatementCollector {
         }
         else {
           list.addNode(if_block.result)
+        }
+      }
+      else if (current.kind === 'mientras') {
+        let while_node = WhileScanner.capture(source)
+
+        if (while_node.error) {
+          return while_node
+        }
+        else {
+          list.addNode(while_node.result)
         }
       }
       else {
