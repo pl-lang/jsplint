@@ -180,8 +180,10 @@ class Evaluator extends Emitter {
         }
         break
 
-        case 'if':
-        currentNode.switchReturnedBranch(this.evaluateExp(statement.condition))
+        case 'if':{
+          let branch_name = this.evaluateExp(statement.condition) ? 'true_branch':'false_branch'
+          currentNode.setCurrentBranchTo(branch_name)
+        }
         break
 
         case 'repeat': {
