@@ -196,11 +196,8 @@ class Evaluator extends Emitter {
         break
 
         case 'while': {
-          let loop = statement
-
-          while (this.evaluateExp(loop.condition)) {
-            this.runStatements(loop.body)
-          }
+          let branch_name = this.evaluateExp(statement.condition) ? 'loop_body':'program_body'
+          currentNode.setCurrentBranchTo(branch_name)
         }
         break
       }

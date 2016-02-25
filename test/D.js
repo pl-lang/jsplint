@@ -169,7 +169,9 @@ describe('Pruebas que verifican la correcta evaluacion de los programas', () => 
     bandera.should.equal(true)
   });
 
-  it.skip('Estructura mientras...', () => {
+  // TODO: Arreglar el caso de la estructura mientras vacia
+
+  it('Estructura mientras...', () => {
     let controller = new InterpreterController({event_logging:false});
     let bandera = false;
 
