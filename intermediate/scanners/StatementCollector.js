@@ -125,7 +125,7 @@ class WhileScanner {
 class RepeatScanner {
   static capture(source) {
     let condition
-    let body = []
+    let body_root_node = null
 
     source.next()
 
@@ -139,7 +139,7 @@ class RepeatScanner {
       return statements
     }
     else {
-      body = statements.result
+      body_root_node = statements.result
     }
 
     if (source.current().kind == 'eol')
@@ -227,9 +227,17 @@ class RepeatScanner {
     if (source.current().kind == 'eol')
       skipWhiteSpace(source)
 
-    let error = false
     let action = 'repeat'
-    let result = {action, condition, body}
+    let data = {action, condition}
+
+    let until_node = new UntilNode(data)
+    until_node.loop_body_root = body_root_node
+
+    let last_body_node = getLastNode(body_root_node)
+    last_body_node.setNext(until_node)
+
+    let error = false
+    let result = body_root_node
 
     return {error, result}
   }
@@ -433,6 +441,16 @@ class StatementCollector {
         }
         else {
           list.addNode(while_node.result)
+        }
+      }
+      else if (current.kind === 'repetir') {
+        let loop_body_root = RepeatScanner.capture(source)
+
+        if (loop_body_root.error) {
+          return loop_body_root
+        }
+        else {
+          list.addNode(loop_body_root.result)
         }
       }
       else {
