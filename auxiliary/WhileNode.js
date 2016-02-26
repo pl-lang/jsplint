@@ -11,7 +11,7 @@ class WhileNode {
       this.data = null
     }
 
-    this.loop_body_root = null
+    this._loop_body_root = null
     this.next_statement_node = null
     this.enter_loop_body = true
     this.next_statement_node = null
@@ -33,7 +33,7 @@ class WhileNode {
 
   getNext() {
     if (this.enter_loop_body === true) {
-      return this.loop_body_root
+      return this._loop_body_root
     }
     else {
       return this.next_statement_node
@@ -47,17 +47,24 @@ class WhileNode {
   setNext(node) {
     this.next_statement_node = node
 
-    // el ultimo nodo del cuerpo de este bucle
-    let lastNode = getLastNode(this.loop_body_root)
-
-    // dicho nodo debe apuntar al nodo con la condicion de entrada del bucle,
-    // o sea, este
-    lastNode.setNext(this)
-
     // Cuando se escribe un mientras con el cuerpo vacio lastNode va a ser null
     // y va a tirar una excepcion...
     // El resultado correcto de un mientras con el cuerpo vacio es un bucle
     // infinito
+  }
+
+  set loop_body_root(root_node) {
+    this._loop_body_root = root_node
+
+    //  necesario para hacer que el ultimo nodo del bucle apunte al nodo de cond
+    let lastNode = getLastNode(this._loop_body_root)
+
+    // o sea, este
+    lastNode.setNext(this)
+  }
+
+  get loop_body_root() {
+    return this._loop_body_root
   }
 }
 
