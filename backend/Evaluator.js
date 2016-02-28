@@ -14,7 +14,6 @@ const Emitter = require('../auxiliary/Emitter.js')
   un solo uso.
 */
 
-
 class Evaluator extends Emitter {
   constructor(globals, locals, body_root_node, modules_info ) {
     super(['read', 'write', 'evaluation-error'])
