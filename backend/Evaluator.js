@@ -3,11 +3,26 @@
 const Expression = require('../intermediate/structures/Expression')
 const Emitter = require('../auxiliary/Emitter.js')
 
+/*
+  Un evaluador sirve para ejecutar las acciones/enunciados de un modulo.
+  Se crea con la info necesaria para dicha tarea. El retorno de su modulo se
+  devuelve a traves de la funcion run.
+*/
+
+/*
+  Los evaluadores son eleiminados cuando terminan de ejecutar su modulo. Son de
+  un solo uso.
+*/
+
+
 class Evaluator extends Emitter {
-  constructor() {
+  constructor(globals, locals, body_root_node, modules_info ) {
     super(['read', 'write', 'evaluation-error'])
+    this.globals = globals
+    this.locals = locals
+    this.current_node = body_root_node
+    this.modules_info = modules_info
     this.running = true
-    this.current_node = null
   }
 
   set local_vars(variables) {
