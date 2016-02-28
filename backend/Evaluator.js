@@ -7,6 +7,7 @@ class Evaluator extends Emitter {
   constructor() {
     super(['read', 'write', 'evaluation-error'])
     this.running = true
+    this.current_node = null
   }
 
   set local_vars(variables) {
@@ -160,11 +161,11 @@ class Evaluator extends Emitter {
   }
 
   runStatements(firstNode) {
-    let currentNode = firstNode
+    this.current_node = firstNode
 
-    while (currentNode !== null) {
+    while (this.current_node !== null && this.running) {
 
-      let statement = currentNode.data
+      let statement = this.current_node.data
 
       switch (statement.action) {
         case  'assignment':
@@ -182,24 +183,24 @@ class Evaluator extends Emitter {
 
         case 'if':{
           let branch_name = this.evaluateExp(statement.condition) ? 'true_branch':'false_branch'
-          currentNode.setCurrentBranchTo(branch_name)
+          this.current_node.setCurrentBranchTo(branch_name)
         }
         break
 
         case 'repeat': {
           let branch_name = !this.evaluateExp(statement.condition) ? 'loop_body':'program_body'
-          currentNode.setCurrentBranchTo(branch_name)
+          this.current_node.setCurrentBranchTo(branch_name)
         }
         break
 
         case 'while': {
           let branch_name = this.evaluateExp(statement.condition) ? 'loop_body':'program_body'
-          currentNode.setCurrentBranchTo(branch_name)
+          this.current_node.setCurrentBranchTo(branch_name)
         }
         break
       }
 
-      currentNode = currentNode.getNext()
+      this.current_node = this.current_node.getNext()
     }
 
     // TODO: hacer que esta funcion reporte error:true cuando ocurran errores de evaluacion
