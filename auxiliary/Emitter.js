@@ -7,13 +7,11 @@ class Emitter {
   }
 
   exposeChildrenEvents(child_emitter) {
-    // Esta funcion siver para emitir los eventos de otro emisor como si fueran propios.
+    // Esta funcion sive para emitir los eventos de otro emisor como si fueran propios.
     let self = this
 
     for (let event_name of child_emitter.events) {
-      this.events.add(event_name)
-
-      child_emitter.on(event_name, function () {self.emit(...arguments)})
+      this.repeat(event_name, child_emitter)
     }
   }
 
@@ -41,6 +39,14 @@ class Emitter {
         callback(...arguments)
       }
     }
+  }
+
+  repeat(event_name, emitter) {
+    this.events.add(event_name)
+    let self = this
+    emitter.on(event_name, function () {
+      self.emit(...arguments)
+    })
   }
 }
 
