@@ -61,6 +61,12 @@ class Interpreter extends Emitter {
 
   bindEvaluatorEvents(evaluator) {
     this.repeat('write', evaluator)
+
+    // Las llamadas a leer pausan la ejecucion para poder realizar la lectura
+    evaluator.on('read', () => {
+      this.running = false
+    })
+
     this.repeat('read', evaluator)
     evaluator.on('evaluation-error', this.evaluationErrorHandler)
     evaluator.on('module_call', this.moduleCallHandler)
