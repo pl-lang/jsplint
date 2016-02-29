@@ -14,23 +14,23 @@ class Interpreter extends Emitter {
   constructor(main_module) {
     super(['program-started', 'program-paused', 'program-finished'])
 
+    this.running = false
+    this.stack = []
+
     this._evaluator = new Evaluator()
 
     this.exposeChildrenEvents(this._evaluator)
-
-    if (main_module) {
-      this._current_program = main_module
-      this._evaluator.local_vars = main_module.variables
-      this._evaluator.global_vars = main_module.variables
-      this.main_module_statements = main_module.statements
-    }
   }
 
   set current_program(program_data) {
     this._current_program = program_data
-    this._evaluator.local_vars = program_data.main.variables
-    this._evaluator.global_vars = program_data.main.variables
-    this.main_module_statements = program_data.main.statements
+    let main = program_data.main
+    let main_evaluator = new Evaluator(main.variables, main.variables, main.statements, {})
+    // NOTE: exposeChildrenEvents va a ser reemplazada mas adelante
+    this.exposeChildrenEvents(main_evaluator)
+    this.stack = []
+    this.stack.push(main_evaluator)
+    this.running = true
   }
 
   get current_program() {
@@ -41,11 +41,17 @@ class Interpreter extends Emitter {
 
     this.emit({name:'program-started', origin:'interpreter'})
 
-    let evaluationReport = this._evaluator.runStatements(this.main_module_statements)
+    let evaluation_report
+
+    while (this.stack.length > 0 && this.running) {
+      let current_module = this.stack.pop()
+      evaluation_report = current_module.run()
+      this.running = !evaluation_report.error
+    }
 
     this.emit({name:'program-finished', origin:'interpreter'})
 
-    return evaluationReport
+    return evaluation_report
   }
 
   sendReadData(varname_list, data) {
