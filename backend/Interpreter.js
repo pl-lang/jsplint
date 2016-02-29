@@ -35,7 +35,7 @@ class Interpreter extends Emitter {
     let main = program_data.main
     let main_evaluator = new Evaluator(main.variables, main.variables, main.statements, {})
     // NOTE: exposeChildrenEvents va a ser reemplazada mas adelante
-    this.exposeChildrenEvents(main_evaluator)
+    this.bindEvaluatorEvents(main_evaluator)
     this.stack = []
     this.stack.push(main_evaluator)
     this.running = true
@@ -60,6 +60,22 @@ class Interpreter extends Emitter {
     this.emit({name:'program-finished', origin:'interpreter'})
 
     return evaluation_report
+  }
+
+  bindEvaluatorEvents(evaluator) {
+    this.repeat('write', evaluator)
+    this.repeat('read', evaluator)
+    evaluator.on('evaluation-error', this.evaluationErrorHandler)
+    evaluator.on('module_call', this.modulceCallHandler)
+  }
+
+  modulceCallHandler() {
+    // Poner el modulo que realizó la llamada en la pila
+    // Poner el nuevo modulo en la pila
+  }
+
+  evaluationErrorHandler() {
+    // Repetir este evento ?
   }
 
   sendReadData(varname_list, data) {
