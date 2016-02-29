@@ -21,13 +21,7 @@ const Emitter         = require('../auxiliary/Emitter.js')
 class Interpreter extends Emitter {
   constructor(main_module) {
     super(['program-started', 'program-paused', 'program-finished'])
-
-    this.running = false
-    this.stack = []
-
-    this._evaluator = new Evaluator()
-
-    this.exposeChildrenEvents(this._evaluator)
+    this.current_program = main_module
   }
 
   set current_program(program_data) {

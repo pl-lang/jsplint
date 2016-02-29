@@ -55,10 +55,6 @@ class InterpreterController extends Emitter {
 
     this.parser = new Parser()
 
-    this.interpreter = new Interpreter()
-
-    this.exposeChildrenEvents(this.interpreter)
-
     if (this.config.event_logging === true) {
       this.on('any', genericHandler)
     }
@@ -113,10 +109,12 @@ class InterpreterController extends Emitter {
     } else {
 
       // Establecer el programa actual del interpete
-      this.interpreter.current_program = program.result;
+      let interpreter = new Interpreter(program.result)
+      this.repeat('read', interpreter)
+      this.repeat('write', interpreter)
 
       // Hacer que el interprete ejecute dicho programa
-      let runReport = this.interpreter.run();
+      let runReport = interpreter.run();
 
       // Evaluar el reporte del interpete. Si la prop error es true entonces
       // se encontro un error de evaluacion durante la ejecucion.
