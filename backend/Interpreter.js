@@ -7,6 +7,14 @@
  *   - Pasar el retorno de un modulo B al modulo A que lo llamó
  */
 
+/**
+ * Eventos que emite:
+ * 	- program-started
+ * 	- program-paused
+ * 	- program-finished
+ * 	- evaluation-error (repite el de un Evaluator)
+ */
+
 const Evaluator       = require('./Evaluator.js')
 const Emitter         = require('../auxiliary/Emitter.js')
 

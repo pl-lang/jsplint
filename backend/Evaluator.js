@@ -14,6 +14,14 @@ const Emitter = require('../auxiliary/Emitter.js')
   un solo uso.
 */
 
+/**
+ * Eventos que emite:
+ * 	- read
+ * 	- write
+ * 	- evaluation-error
+ * 	- module-call
+ */
+
 class Evaluator extends Emitter {
   constructor(globals, locals, body_root_node, modules_info ) {
     super(['read', 'write', 'evaluation-error'])

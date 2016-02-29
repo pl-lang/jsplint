@@ -29,6 +29,15 @@ function genericHandler(event_info) {
   }
 }
 
+/**
+ * Eventos que emite:
+ * 	- compilation-started
+ * 	- compilation-finished
+ * 	- lexical-error
+ * 	- syntax-error
+ * 	- correct-syntax
+ */
+
 class InterpreterController extends Emitter {
   constructor(config) {
     super(['compilation-started', 'compilation-finished', 'lexical-error', 'syntax-error', 'correct-syntax'])
