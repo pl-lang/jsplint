@@ -6,13 +6,6 @@ class Emitter {
     this.callbacks = {}
   }
 
-  exposeChildrenEvents(child_emitter) {
-    // Esta funcion sive para emitir los eventos de otro emisor como si fueran propios.
-    for (let event_name of child_emitter.events) {
-      this.repeat(event_name, child_emitter)
-    }
-  }
-
   on(event_name, callback) {
     if (event_name in this.callbacks) {
       this.callbacks[event_name].push(callback)
@@ -45,6 +38,13 @@ class Emitter {
     emitter.on(event_name, function () {
       self.emit(...arguments)
     })
+  }
+
+  repeatAllEvents(emitter) {
+    // Esta funcion sive para emitir los eventos de otro emisor como si fueran propios.
+    for (let event_name of emitter.events) {
+      this.repeat(event_name, emitter)
+    }
   }
 }
 
