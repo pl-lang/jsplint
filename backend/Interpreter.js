@@ -33,6 +33,7 @@ class Interpreter extends Emitter {
     this.stack = []
     this.stack.push(main_evaluator)
     this.running = true
+    this.current_module = null
   }
 
   get current_program() {
@@ -46,8 +47,10 @@ class Interpreter extends Emitter {
     let evaluation_report
 
     while (this.stack.length > 0 && this.running) {
-      let current_module = this.stack.pop()
-      evaluation_report = current_module.run()
+      this.current_module = this.stack.pop()
+      evaluation_report = this.current_module.run()
+      // if 'module_return' in evaluation_report.result
+      // pasar el valor al modulo que realizó la llamada
       this.running = !evaluation_report.error
     }
 
@@ -60,12 +63,16 @@ class Interpreter extends Emitter {
     this.repeat('write', evaluator)
     this.repeat('read', evaluator)
     evaluator.on('evaluation-error', this.evaluationErrorHandler)
-    evaluator.on('module_call', this.modulceCallHandler)
+    evaluator.on('module_call', this.moduleCallHandler)
   }
 
-  modulceCallHandler() {
-    // Poner el modulo que realizó la llamada en la pila
-    // Poner el nuevo modulo en la pila
+  moduleCallHandler() {
+    // Poner el modulo (A) que realizó la llamada en la pila
+    this.stack.push(this.current_module)
+    // Poner el nuevo modulo (B) en la pila
+    this.stack.push()
+    // Luego dentro del bucle de run (cuando se reanude A ) se envía el retorno
+    // de B a A
   }
 
   evaluationErrorHandler() {
