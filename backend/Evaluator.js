@@ -24,14 +24,6 @@ class Evaluator extends Emitter {
     this.running = true
   }
 
-  set local_vars(variables) {
-    this._local_vars = variables
-  }
-
-  set global_vars(variables) {
-    this._global_vars = variables
-  }
-
   writeCall(call) {
     let value_list = call.args.map((expression) => {
       return this.evaluateExp(expression, expression.expression_type)
@@ -58,18 +50,18 @@ class Evaluator extends Emitter {
   }
 
   getValue(varname) {
-    if (this._local_vars.hasOwnProperty(varname)) {
-      if (this._local_vars[varname].hasOwnProperty('value')) {
-        return this._local_vars[varname].value
+    if (this.locals.hasOwnProperty(varname)) {
+      if (this.locals[varname].hasOwnProperty('value')) {
+        return this.locals[varname].value
       }
       else {
         this.running = false
         this.emit({name:'evaluation-error', origin:'evaluator'})
       }
     }
-    else if (this._global_vars.hasOwnProperty(varname)) {
-      if (this._global_vars[varname].hasOwnProperty('value')) {
-        return this._global_vars[varname].value
+    else if (this.globals.hasOwnProperty(varname)) {
+      if (this.globals[varname].hasOwnProperty('value')) {
+        return this.globals[varname].value
       }
       else {
         this.running = false
@@ -159,11 +151,11 @@ class Evaluator extends Emitter {
   assignToVar(varname, expression) {
     let target
 
-    if (varname in this._local_vars) {
-      target = this._local_vars[varname]
+    if (varname in this.locals) {
+      target = this.locals[varname]
     }
-    else if (varname in this._global_vars) {
-      target = this._global_vars[varname]
+    else if (varname in this.globals) {
+      target = this.globals[varname]
     }
     else {
       // TODO: la variable no existe (ni en locales ni en globales)
@@ -174,8 +166,7 @@ class Evaluator extends Emitter {
     target.value = this.evaluateExp(expression)
   }
 
-  runStatements(firstNode) {
-    this.current_node = firstNode
+  run() {
 
     while (this.current_node !== null && this.running) {
 
