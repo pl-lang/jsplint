@@ -51,17 +51,28 @@ class Evaluator extends Emitter {
     this.running = false
   }
 
-  assignReadData(varname, string) {
-    // Mover el parseo de la cadena (con error handling) al compilador
-    let exp = Expression.fromString(string)
+  assignReadData(varname_list, data_list) {
+    let error = 0
+    let i = 0
+    while (i < varname_list.length && !error) {
+      // TODO: mover el parseo de la expreson al compilador
+      let exp = Expression.fromString(data_list[i])
 
-    if (exp.error) {
-      // TODO
+      if (exp.error) {
+        // TODO
+      }
+      else {
+        // NOTE: assignToVar debe chequear los tipos
+        let assignment_report = this.assignToVar(varname_list[i], exp.result)
+      }
+
+      i++
     }
-    else {
-      // NOTE: assignToVar debe chequear los tipos
-      let assignment_report = this.assignToVar(varname, exp.result)
-      return assignment_report
+
+    // Si no hubo un error durante la lectura poner running en verdadero
+    // para que el evaluador pueda ser reanudado
+    if (!error) {
+      this.running = true
     }
   }
 
