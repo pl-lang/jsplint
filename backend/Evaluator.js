@@ -29,6 +29,7 @@ class Evaluator extends Emitter {
     this.locals = locals
     this.current_node = body_root_node
     this.modules_info = modules_info
+    this.return_value = null // para mas adelante
     this.running = true
   }
 
