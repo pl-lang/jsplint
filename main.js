@@ -108,7 +108,8 @@ class InterpreterController extends Emitter {
 
     } else {
 
-      // Establecer el programa actual del interpete
+      // TODO: Mover esto al constructor cuando separe el compilador
+      // A esa altura esta clase se va a cosntruir con un programa ya compilado
       this.interpreter = new Interpreter(program.result)
       this.repeatAllPublicEvents(this.interpreter)
       this.repeat('read', this.interpreter, true)
