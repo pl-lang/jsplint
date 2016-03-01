@@ -64,7 +64,12 @@ class Interpreter extends Emitter {
       this.running = !evaluation_report.error
     }
 
-    this.emit({name:'program-finished', origin:'interpreter'})
+    if (this.paused) {
+      this.emit({name:'program-paused', origin:'interpreter'})
+    }
+    else {
+      this.emit({name:'program-finished', origin:'interpreter'})
+    }
 
     return evaluation_report
   }
@@ -99,11 +104,13 @@ class Interpreter extends Emitter {
 
   sendReadData(varname_list, data) {
     let i = 0
-    while (this._state.ready && i < data.length) {
-      this._evaluator.assignReadData(varname_list[i], data[i])
+    let error = false
+    while (!error && i < data.length) {
+      error = this.current_module.assignReadData(varname_list[i], data[i])
       i++
     }
-    this._state.waiting_data = false
+    // Si hubo un error no hay que hacer nada ya que el evento apropiado ya ha
+    // sido emitido por this.current_module
   }
 }
 
