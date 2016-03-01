@@ -11,7 +11,7 @@ class UntilNode {
 
     this.loop_body_root = null
     this.enter_loop_body = true
-    this.next_statetement_node = null
+    this.next_statement_node = null
   }
 
   /**
@@ -38,7 +38,7 @@ class UntilNode {
   }
 
   getNextStatementNode() {
-    return this.next_statetement_node
+    return this.next_statement_node
   }
 
   setNext(node) {
