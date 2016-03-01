@@ -109,13 +109,13 @@ class InterpreterController extends Emitter {
     } else {
 
       // Establecer el programa actual del interpete
-      let interpreter = new Interpreter(program.result)
-      this.repeatAllPublicEvents(interpreter)
-      this.repeat('read', interpreter, true)
-      this.repeat('write', interpreter, true)
+      this.interpreter = new Interpreter(program.result)
+      this.repeatAllPublicEvents(this.interpreter)
+      this.repeat('read', this.interpreter, true)
+      this.repeat('write', this.interpreter, true)
 
       // Hacer que el interprete ejecute dicho programa
-      let runReport = interpreter.run();
+      let runReport = this.interpreter.run();
 
       // Evaluar el reporte del interpete. Si la prop error es true entonces
       // se encontro un error de evaluacion durante la ejecucion.
