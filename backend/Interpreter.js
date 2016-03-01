@@ -76,6 +76,7 @@ class Interpreter extends Emitter {
     evaluator.on('read', () => {
       this.running = false
       this.paused = true
+      this.stack.push(this.current_module)
     })
 
     this.repeat('read', evaluator, false)
