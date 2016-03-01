@@ -61,7 +61,9 @@ class Interpreter extends Emitter {
       evaluation_report = this.current_module.run()
       // if 'module_return' in evaluation_report.result
       // pasar el valor al modulo que realizó la llamada
-      this.running = !evaluation_report.error
+      if (!this.paused) {
+        this.running = !evaluation_report.error
+      }
     }
 
     if (this.paused) {
