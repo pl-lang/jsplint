@@ -105,14 +105,7 @@ class Interpreter extends Emitter {
   }
 
   sendReadData(varname_list, data) {
-    let i = 0
-    let error = false
-    while (!error && i < data.length) {
-      error = this.current_module.assignReadData(varname_list[i], data[i])
-      i++
-    }
-    // Si hubo un error no hay que hacer nada ya que el evento apropiado ya ha
-    // sido emitido por this.current_module
+    this.current_module.assignReadData(varname_list, data)
   }
 }
 
