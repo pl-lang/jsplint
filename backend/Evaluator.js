@@ -29,6 +29,7 @@ class Evaluator extends Emitter {
     this.locals = locals
     this.current_node = body_root_node
     this.modules_info = modules_info
+    this.error = false
     this.return_value = null // para mas adelante
     this.running = true
   }
@@ -41,20 +42,26 @@ class Evaluator extends Emitter {
     this.emit({name:'write', origin:'evaluator'}, value_list)
   }
 
-  readCall(call) {
+  sendReadEvent(call) {
     let varname_list = call.args.map((expression) => {return expression.varname})
 
     this.emit({name:'read', origin:'evaluator'}, varname_list)
+
+    // pausar la ejecucion (hasta q se reciban los datos de la lectura)
+    this.running = false
   }
 
   assignReadData(varname, string) {
+    // Mover el parseo de la cadena (con error handling) al compilador
     let exp = Expression.fromString(string)
 
     if (exp.error) {
       // TODO
     }
     else {
-      this.assignToVar(varname, exp.result)
+      // NOTE: assignToVar debe chequear los tipos
+      let assignment_report = this.assignToVar(varname, exp.result)
+      return assignment_report
     }
   }
 
@@ -173,6 +180,9 @@ class Evaluator extends Emitter {
     // TODO revisar que el tipo de la carga sea compatible con la var objetivo
 
     target.value = this.evaluateExp(expression)
+
+    // Por ahora...
+    return {error:false}
   }
 
   run() {
@@ -191,7 +201,7 @@ class Evaluator extends Emitter {
           this.writeCall(statement)
         }
         else if (statement.name == 'leer') {
-          this.readCall(statement)
+          this.sendReadEvent(statement)
         }
         break
 
@@ -218,7 +228,7 @@ class Evaluator extends Emitter {
     }
 
     // TODO: hacer que esta funcion reporte error:true cuando ocurran errores de evaluacion
-    return {error:false}
+    return {error:this.error}
   }
 }
 
