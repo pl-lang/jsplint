@@ -20,7 +20,7 @@ const Emitter         = require('../auxiliary/Emitter.js')
 
 class Interpreter extends Emitter {
   constructor(main_module) {
-    super(['program-started', 'program-paused', 'program-finished'])
+    super(['program-started', 'program-resumed', 'program-paused', 'program-finished'])
     this.current_program = main_module
   }
 
@@ -33,6 +33,7 @@ class Interpreter extends Emitter {
     this.stack = []
     this.stack.push(main_evaluator)
     this.running = true
+    this.paused = false
     this.current_module = null
   }
 
@@ -42,7 +43,16 @@ class Interpreter extends Emitter {
 
   run() {
 
-    this.emit({name:'program-started', origin:'interpreter'})
+    // Esto es necesario porque el interprete se "pausa" cuando un modulo hace
+    // una llamada a leer
+    if (this.paused) {
+      this.emit({name:'program-resumed', origin:'interpreter'})
+      this.paused = false
+      this.running = true
+    }
+    else {
+      this.emit({name:'program-started', origin:'interpreter'})
+    }
 
     let evaluation_report
 
