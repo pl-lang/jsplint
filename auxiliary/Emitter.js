@@ -45,7 +45,7 @@ class Emitter {
   repeatAllPublicEvents(emitter) {
     // Esta funcion sive para emitir los eventos de otro emisor como si fueran propios.
     for (let event_name of emitter.public_events) {
-      this.repeat(event_name, emitter)
+      this.repeat(event_name, emitter, true)
     }
   }
 }
