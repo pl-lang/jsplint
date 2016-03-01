@@ -1,8 +1,8 @@
 'use strict'
 
 class Emitter {
-  constructor(event_list) {
-    this.events = new Set(event_list)
+  constructor(public_event_list) {
+    this.public_events = new Set(public_event_list)
     this.callbacks = {}
   }
 
@@ -32,17 +32,19 @@ class Emitter {
     }
   }
 
-  repeat(event_name, emitter) {
-    this.events.add(event_name)
+  repeat(event_name, emitter, make_public) {
+    if (make_public === true) {
+      this.public_events.add(event_name)
+    }
     let self = this
     emitter.on(event_name, function () {
       self.emit(...arguments)
     })
   }
 
-  repeatAllEvents(emitter) {
+  repeatAllPublicEvents(emitter) {
     // Esta funcion sive para emitir los eventos de otro emisor como si fueran propios.
-    for (let event_name of emitter.events) {
+    for (let event_name of emitter.public_events) {
       this.repeat(event_name, emitter)
     }
   }
