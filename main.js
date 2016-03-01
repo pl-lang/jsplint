@@ -110,8 +110,9 @@ class InterpreterController extends Emitter {
 
       // Establecer el programa actual del interpete
       let interpreter = new Interpreter(program.result)
-      this.repeat('read', interpreter)
-      this.repeat('write', interpreter)
+      this.repeatAllPublicEvents(interpreter)
+      this.repeat('read', interpreter, true)
+      this.repeat('write', interpreter, true)
 
       // Hacer que el interprete ejecute dicho programa
       let runReport = interpreter.run();
