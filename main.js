@@ -133,6 +133,13 @@ class InterpreterController extends Emitter {
     }
   }
 
+  resume() {
+    // workaround temporal...es probable que luego esta funcion sea reemplazada
+    // por run
+
+    this.interpreter.run()
+  }
+
   sendReadData(varname_list, data) {
     this.interpreter.sendReadData(varname_list, data)
   }
