@@ -92,92 +92,6 @@ function getOperatorInfo(operator) {
     return type_data_by_category.unary_minus;
 }
 
-// TODO: hacer que tenga en cuenta el tipo de retorno de funciones
-function getExpressionReturnType(expression) {
-  if (expression.expression_type === 'literal') {
-    let error = false
-    let result = expression.type
-    return {error, result}
-  }
-  else if (expression.expression_type === 'expression') {
-    return getExpressionReturnType(expression.expression)
-  }
-  else if (expression.expression_type === 'operation') {
-    let operator_info = getOperatorInfo(expression.op)
-
-    if (expression.op === 'unary-minus') {
-      let type_report = getExpressionReturnType(expression.operand)
-
-      if (type_report.error) {
-        return type_report
-      }
-      else {
-        let operand_type = type_report.result
-        if (operator_info.supported_types.has(operand_type)) {
-          let error = false
-          let result = operator_info.calculate_return_type(operand_type)
-          return {error, result}
-        }
-        else {
-          let error = true
-          let result = {
-            reason:'incompatible-operator-types',
-            expected:operator_info.supported_types,
-            unexpected:operand_type
-          }
-          return {error, result}
-        }
-      }
-    }
-    else {
-      let type_a_report = getExpressionReturnType(expression.operands[0])
-      let type_b_report = getExpressionReturnType(expression.operands[1])
-
-      if (type_a_report.error || type_b_report.error) {
-        // TODO: cual hay q devolver si los dos tienen errores?
-        return type_a_report.error ? type_a_report:type_b_report
-      }
-      else {
-        let op_a_type = type_a_report.result
-        let op_b_type = type_b_report.result
-
-        if (operator_info.supported_types.has(op_a_type)) {
-          if (operator_info.supported_types.has(op_b_type)) {
-            let error = false, result = null
-            let exp_type_report = operator_info.calculate_return_type(op_a_type, op_b_type)
-
-            if (exp_type_report.error) {
-              return exp_type_report
-            }
-            else {
-              result = exp_type_report.result
-            }
-            return {error, result}
-          }
-          else {
-            let error = true
-            let result = {
-              reason:'incompatible-operator-types',
-              expected:operator_info.supported_types,
-              unexpected:op_b_type
-            }
-            return {error, result}
-          }
-        }
-        else {
-          let error = true
-          let result = {
-            reason:'incompatible-operator-types',
-            expected:operator_info.supported_types,
-            unexpected:op_a_type,
-          }
-          return {error, result}
-        }
-      }
-    }
-  }
-}
-
 class TypeChecker {
   constructor(module_root, module_info, globals, locals) {
     this.module_info = module_info
@@ -250,6 +164,105 @@ class TypeChecker {
       // TODO: agregar el nombre de la variable (y el tipo que deberia tener?))
       // al error
       return {error, result}
+    }
+  }
+
+  // TODO: hacer que tenga en cuenta el tipo de retorno de funciones
+  getExpressionReturnType(expression) {
+    if (expression.expression_type === 'literal') {
+      let error = false
+      let result = expression.type
+      return {error, result}
+    }
+    else if (expression.expression_type === 'invocation') {
+      if (this.variableExists(expression.varname)) {
+        let error = false
+        let result = this.getVariable(expression.varname).type
+        return {error, result}
+      } else {
+        let error = true
+        let reason = 'undefined-variable', result = reason
+        // TODO: agregar el nombre de la variable (y el tipo que deberia tener?))
+        // al error
+        return {error, result}        
+      }
+    }
+    else if (expression.expression_type === 'expression') {
+      return this.getExpressionReturnType(expression.expression)
+    }
+    else if (expression.expression_type === 'operation') {
+      let operator_info = getOperatorInfo(expression.op)
+
+      if (expression.op === 'unary-minus') {
+        let type_report = getExpressionReturnType(expression.operand)
+
+        if (type_report.error) {
+          return type_report
+        }
+        else {
+          let operand_type = type_report.result
+          if (operator_info.supported_types.has(operand_type)) {
+            let error = false
+            let result = operator_info.calculate_return_type(operand_type)
+            return {error, result}
+          }
+          else {
+            let error = true
+            let result = {
+              reason:'incompatible-operator-types',
+              expected:operator_info.supported_types,
+              unexpected:operand_type
+            }
+            return {error, result}
+          }
+        }
+      }
+      else {
+        let type_a_report = this.getExpressionReturnType(expression.operands[0])
+        let type_b_report = this.getExpressionReturnType(expression.operands[1])
+
+        if (type_a_report.error || type_b_report.error) {
+          // TODO: cual hay q devolver si los dos tienen errores?
+          return type_a_report.error ? type_a_report:type_b_report
+        }
+        else {
+          let op_a_type = type_a_report.result
+          let op_b_type = type_b_report.result
+
+          if (operator_info.supported_types.has(op_a_type)) {
+            if (operator_info.supported_types.has(op_b_type)) {
+              let error = false, result = null
+              let exp_type_report = operator_info.calculate_return_type(op_a_type, op_b_type)
+
+              if (exp_type_report.error) {
+                return exp_type_report
+              }
+              else {
+                result = exp_type_report.result
+              }
+              return {error, result}
+            }
+            else {
+              let error = true
+              let result = {
+                reason:'incompatible-operator-types',
+                expected:operator_info.supported_types,
+                unexpected:op_b_type
+              }
+              return {error, result}
+            }
+          }
+          else {
+            let error = true
+            let result = {
+              reason:'incompatible-operator-types',
+              expected:operator_info.supported_types,
+              unexpected:op_a_type,
+            }
+            return {error, result}
+          }
+        }
+      }
     }
   }
 }
