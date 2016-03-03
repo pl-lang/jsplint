@@ -72,7 +72,6 @@ let type_data_by_category = {
   }
 }
 
-// TODO: hacer que tenga en cuenta el tipo de retorno de funciones
 function getOperatorInfo(operator) {
   if (math_operators.has(operator))
     return type_data_by_category.math_operators;
@@ -93,6 +92,7 @@ function getOperatorInfo(operator) {
     return type_data_by_category.unary_minus;
 }
 
+// TODO: hacer que tenga en cuenta el tipo de retorno de funciones
 function getExpressionReturnType(expression) {
   if (expression.expression_type === 'literal') {
     let error = false
