@@ -1,7 +1,5 @@
 'use strict'
 
-let Expression = require('../intermediate/structures/Expression')
-
 let math_operators = new Set([
     'plus'
   , 'minus'
@@ -184,7 +182,7 @@ class TypeChecker {
         let reason = 'undefined-variable', result = reason
         // TODO: agregar el nombre de la variable (y el tipo que deberia tener?))
         // al error
-        return {error, result}        
+        return {error, result}
       }
     }
     else if (expression.expression_type === 'expression') {
@@ -266,3 +264,5 @@ class TypeChecker {
     }
   }
 }
+
+module.exports = TypeChecker
