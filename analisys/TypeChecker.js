@@ -178,26 +178,78 @@ function getExpressionReturnType(expression) {
   }
 }
 
-// TODO: hacer que esta funcion pueda recorrer bluces e ifs
-function checkAssigmentNodes(module_root, globals, locals) {
-  let result = []
-  let current_node = module_root
-
-  while (current_node !== null) {
-    if (current_node.data.action === 'assigment') {
-      // verificar que la variable exista en el ambito local o global
-      // let variable_type = el tipo de la variable
-      let type_report = getExpressionReturnType(current_node.data.payload)
-      if (type_report.error) {
-        return type_report
-      } else {
-        if (variable_type !== type_report.result) {
-          // TODO: crear reporte de error y meterlo al arreglo result
-        }
-      }
-    }
-
-    current_node = current_node.getNext()
+class TypeChecker {
+  constructor(module_root, module_info, globals, locals) {
+    this.module_info = module_info
+    this.globals = globals
+    this.locals = locals
+    this.module_root = module_root
   }
 
+  variableExists(varname) {
+    let local_variable = varname in this.locals
+    let global_variable = varname in this.globals
+
+    if (local_variable === false && global_variable === false) return false;
+
+    return true
+  }
+
+  getVariable(varname) {
+    let variable
+
+    if (varname in this.locals) return this.locals[varname];
+    else return this.globals[varname];
+  }
+
+  typesAreCompatible(target_type, payload_type) {
+    if (target_type === payload_type) {
+      return true
+    } else if (payload_type === 'float' && target_type === 'integer') {
+      return true
+    } else return false;
+  }
+
+  checkAssigmentNodes(module_root) {
+    let result = []
+    let current_node = module_root
+
+    while (current_node !== null) {
+      if (current_node.data.action === 'assigment') {
+        let report = validateAssignment(current_node.data)
+        if (report.error) {
+          result.push(report.result)
+        }
+      }
+      current_node = current_node.getNext()
+    }
+  }
+
+  validateAssignment(assigment) {
+    if (this.variableExists(assigment.target)) {
+      let target_type = this.getVariable(assigment.target).type
+
+      let payload_type_report = this.getExpressionReturnType(assigment.payload)
+
+      if (payload_type_report.error) {
+        return payload_type_report
+      } else {
+
+        let payload_type = payload_type_report.result
+
+        if (!this.typesAreCompatible(target_type, payload_type)) {
+          let error = true
+          let reason = 'incompatible-types-at-assignment'
+          let result = {reason, target_type, payload_type}
+          return {error, result}
+        }
+      }
+    } else {
+      let error = true
+      let reason = 'undefined-variable', result = reason
+      // TODO: agregar el nombre de la variable (y el tipo que deberia tener?))
+      // al error
+      return {error, result}
+    }
+  }
 }
