@@ -171,4 +171,36 @@ describe('TypeChecker', () => {
       // }
     })
   })
+
+  it('checkAssigmentNodes', () => {
+    const Controller = require('../main.js')
+
+    let controller = new Controller({event_logging:false})
+
+    let code = `
+    variables
+      real a
+      entero b
+    inicio
+      a <- 2.0 + verdadero
+      b <- a
+    fin
+    `
+
+    let compilation_report = controller.compile(code)
+
+    compilation_report.error.should.equal(false)
+
+    let module_root = compilation_report.result.main.statements
+    let globals = compilation_report.result.main.variables, locals = globals
+    let module_info = {main:{return_data_type:'none'}}
+
+    let checker = new TypeChecker(module_root, module_info, globals, locals)
+
+    let error_list = checker.checkAssigmentNodes(module_root)
+
+    error_list.length.should.equal(2)
+    error_list[0].reason.should.equal('incompatible-operator-types')
+    error_list[1].reason.should.equal('incompatible-types-at-assignment')
+  })
 })
