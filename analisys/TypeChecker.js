@@ -127,14 +127,16 @@ class TypeChecker {
     let current_node = module_root
 
     while (current_node !== null) {
-      if (current_node.data.action === 'assigment') {
-        let report = validateAssignment(current_node.data)
+      if (current_node.data.action === 'assignment') {
+        let report = this.validateAssignment(current_node.data)
         if (report.error) {
           result.push(report.result)
         }
       }
       current_node = current_node.getNext()
     }
+
+    return result
   }
 
   validateAssignment(assigment) {
