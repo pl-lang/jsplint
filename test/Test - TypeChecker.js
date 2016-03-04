@@ -195,9 +195,15 @@ describe('TypeChecker', () => {
     let globals = compilation_report.result.main.variables, locals = globals
     let module_info = {main:{return_data_type:'none'}}
 
+    let error_list = []
+
     let checker = new TypeChecker(module_root, module_info, globals, locals)
 
-    let error_list = checker.checkAssigmentNodes(module_root)
+    checker.on('type-error', (ev_info, error) => {
+      error_list.push(error)
+    })
+
+    checker.checkAssigmentNodes(module_root)
 
     error_list.length.should.equal(2)
     error_list[0].reason.should.equal('incompatible-operator-types')
