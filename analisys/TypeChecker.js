@@ -1,5 +1,16 @@
 'use strict'
 
+// TODO: agregar el nombre de la variable (y el tipo que deberia tener?))
+// al error (renglon 170)
+
+// TODO: hacer que tenga en cuenta el tipo de retorno de funciones (renglon 176)
+
+// TODO: agregar el nombre de la variable (y el tipo que deberia tener?))
+// al error (renglon 192)
+
+// TODO: cual hay q devolver si los dos tienen errores? (renglon 232)
+
+
 const Emitter = require('../auxiliary/Emitter')
 
 let math_operators = new Set([
@@ -166,13 +177,10 @@ class TypeChecker extends Emitter {
     } else {
       let error = true
       let reason = 'undefined-variable', result = reason
-      // TODO: agregar el nombre de la variable (y el tipo que deberia tener?))
-      // al error
       return {error, result}
     }
   }
 
-  // TODO: hacer que tenga en cuenta el tipo de retorno de funciones
   getExpressionReturnType(expression) {
     if (expression.expression_type === 'literal') {
       let error = false
@@ -187,8 +195,6 @@ class TypeChecker extends Emitter {
       } else {
         let error = true
         let reason = 'undefined-variable', result = reason
-        // TODO: agregar el nombre de la variable (y el tipo que deberia tener?))
-        // al error
         return {error, result}
       }
     }
@@ -227,7 +233,6 @@ class TypeChecker extends Emitter {
         let type_b_report = this.getExpressionReturnType(expression.operands[1])
 
         if (type_a_report.error || type_b_report.error) {
-          // TODO: cual hay q devolver si los dos tienen errores?
           return type_a_report.error ? type_a_report:type_b_report
         }
         else {
