@@ -1,5 +1,7 @@
 'use strict'
 
+const Emitter = require('../auxiliary/Emitter')
+
 let math_operators = new Set([
     'plus'
   , 'minus'
@@ -90,8 +92,9 @@ function getOperatorInfo(operator) {
     return type_data_by_category.unary_minus;
 }
 
-class TypeChecker {
+class TypeChecker extends Emitter {
   constructor(module_root, module_info, globals, locals) {
+    super(['type-check-started', 'type-error', 'type-check-finished'])
     this.module_info = module_info
     this.globals = globals
     this.locals = locals
@@ -123,20 +126,22 @@ class TypeChecker {
   }
 
   checkAssigmentNodes(module_root) {
-    let result = []
     let current_node = module_root
+
+    this.emit({name:'type-check-started'})
 
     while (current_node !== null) {
       if (current_node.data.action === 'assignment') {
         let report = this.validateAssignment(current_node.data)
         if (report.error) {
-          result.push(report.result)
+          this.emit({name:'type-error', origin:'type-checker'}, report.result)
         }
       }
       current_node = current_node.getNext()
     }
 
-    return result
+    this.emit({name:'type-check-started'})
+
   }
 
   validateAssignment(assigment) {
