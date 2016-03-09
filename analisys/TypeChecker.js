@@ -131,7 +131,7 @@ class TypeChecker extends Emitter {
   typesAreCompatible(target_type, payload_type) {
     if (target_type === payload_type) {
       return true
-    } else if (payload_type === 'real' && target_type === 'entero') {
+    } else if (target_type === 'real' && payload_type === 'entero') {
       return true
     } else return false;
   }
