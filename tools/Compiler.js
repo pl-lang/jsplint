@@ -19,6 +19,7 @@ class Compiler extends Emitter {
    * Eventos esta clase emite
    * 	- compilation-started
    * 	- lexical-error
+   * 	- syntax-error
    * 	- compilation-finished
    * 	- type-check-started (via TypeChecker)
    * 	- type-error (via TypeChecker)
@@ -29,6 +30,7 @@ class Compiler extends Emitter {
     super([
         'compilation-started']
       , 'lexical-error'
+      , 'syntax-error'
       , 'compilation-finished'
       , 'type-check-started'
       , 'type-error'
