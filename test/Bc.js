@@ -336,7 +336,7 @@ describe('ModuleCallPattern', () => {
     let q = queueFromSource(ejemplo)
 
     let expected = {
-      args:[{expression_type:'literal', type:'integer', value:42}],
+      args:[{expression_type:'literal', type:'entero', value:42}],
       name:'escribir',
       action:'module_call',
       expression_type:'module_call'

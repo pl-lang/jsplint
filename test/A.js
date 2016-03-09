@@ -93,7 +93,7 @@ describe('NumberToken', () => {
 
     let token = new NumberToken(source)
 
-    token.kind.should.equal('integer')
+    token.kind.should.equal('entero')
     token.text.should.equal('22')
     token.value.should.equal(22)
   })
@@ -102,7 +102,7 @@ describe('NumberToken', () => {
     let source = new Source('3.1487')
     let token = new NumberToken(source)
 
-    token.kind.should.equal('float')
+    token.kind.should.equal('real')
     token.text.should.equal('3.1487')
     token.value.should.equal(3.1487)
   })
@@ -273,9 +273,9 @@ describe('Parser', () => {
     // guarda el token EOF
     tokenArray.push(t)
 
-    tokenArray[0].kind.should.equal('integer')
+    tokenArray[0].kind.should.equal('entero')
     tokenArray[1].kind.should.equal('word')
-    tokenArray[2].kind.should.equal('float')
+    tokenArray[2].kind.should.equal('real')
     tokenArray[3].kind.should.equal('eof')
   })
 
@@ -305,11 +305,11 @@ describe('Parser', () => {
     tokenArray[9].kind.should.equal('eol')
     tokenArray[10].kind.should.equal('word')
     tokenArray[11].kind.should.equal('assignment')
-    tokenArray[12].kind.should.equal('integer')
+    tokenArray[12].kind.should.equal('entero')
     tokenArray[13].kind.should.equal('eol')
     tokenArray[14].kind.should.equal('word')
     tokenArray[15].kind.should.equal('assignment')
-    tokenArray[16].kind.should.equal('integer')
+    tokenArray[16].kind.should.equal('entero')
     tokenArray[17].kind.should.equal('eol')
     tokenArray[18].kind.should.equal('si')
     tokenArray[19].kind.should.equal('left-par')

@@ -4,7 +4,7 @@ class NumberPattern {
   static capture(source) {
     let current = source.current()
 
-    if (current.kind == 'float' || current.kind == 'integer') {
+    if (current.kind == 'real' || current.kind == 'entero') {
       source.next()
       return {result:{value:current.value, type:current.kind}, error:false}
     }
@@ -12,7 +12,7 @@ class NumberPattern {
       return {
           result  : {
               unexpected  : current.kind
-            , expected    : ['integer', 'float']
+            , expected    : ['entero', 'real']
             , atColumn    : current.columnNumber
             , atLine      : current.lineNumber
           }

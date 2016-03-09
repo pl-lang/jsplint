@@ -25,7 +25,7 @@ describe('Captura de estructuras sintacticas', () => {
     node.rightBranchNode.data.should.deepEqual({
       action:'assignment',
       target:'a',
-      payload:{expression_type:'literal', type:'integer', value:32}
+      payload:{expression_type:'literal', type:'entero', value:32}
     })
   })
 
@@ -48,7 +48,7 @@ describe('Captura de estructuras sintacticas', () => {
     node.loop_body_root.data.should.deepEqual({
       action:'assignment',
       target:'a',
-      payload:{expression_type:'literal', type:'integer', value:32}
+      payload:{expression_type:'literal', type:'entero', value:32}
     })
   })
 
@@ -74,13 +74,13 @@ describe('Captura de estructuras sintacticas', () => {
     node.rightBranchNode.data.should.deepEqual({
       action:'assignment',
       target:'a',
-      payload:{expression_type:'literal', type:'integer', value:32}
+      payload:{expression_type:'literal', type:'entero', value:32}
     })
 
     node.leftBranchNode.data.should.deepEqual({
       action:'assignment',
       target:'a',
-      payload:{expression_type:'literal', type:'integer', value:48}
+      payload:{expression_type:'literal', type:'entero', value:48}
     })
   })
 
@@ -104,7 +104,7 @@ describe('Captura de estructuras sintacticas', () => {
     first_node.data.should.deepEqual({
       action:'assignment',
       target:'a',
-      payload:{expression_type:'literal', type:'integer', value:32}
+      payload:{expression_type:'literal', type:'entero', value:32}
     })
 
     first_node.getNext().should.equal(until_node)

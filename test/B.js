@@ -44,7 +44,7 @@ describe('IntegerPattern', () => {
     number.error.should.equal(true)
 
     let info = number.result
-    info.expectedToken.should.equal('integer')
+    info.expectedToken.should.equal('entero')
     info.unexpectedToken.should.equal('word')
     info.atLine.should.equal(0)
     info.atColumn.should.equal(0)
@@ -80,10 +80,10 @@ describe('IndexesPattern', () => {
     let capture = IndexesPattern.capture(q)
 
     capture.error.should.equal(true)
-    capture.result.unexpectedToken.should.equal('float')
+    capture.result.unexpectedToken.should.equal('real')
     capture.result.atLine.should.equal(0)
     capture.result.atColumn.should.equal(6)
-    q.current().kind.should.equal('float')
+    q.current().kind.should.equal('real')
   })
 })
 
@@ -108,11 +108,11 @@ describe('WordPattern', () => {
     capture.error.should.equal(true)
     capture.result.should.deepEqual({
       expectedToken : 'word',
-      unexpectedToken : 'integer',
+      unexpectedToken : 'entero',
       atColumn : 0,
       atLine : 0
     })
-    q.current().kind.should.equal('integer')
+    q.current().kind.should.equal('entero')
   })
 })
 
@@ -433,7 +433,7 @@ describe('AssignmentPattern', () => {
       {
         expression_type:'literal',
         value:48,
-        type:'integer',
+        type:'entero',
       }
     )
     capt.result.data.target.should.equal('var')
@@ -477,7 +477,7 @@ describe('New Expression', () => {
         op:'plus',
         operands:[
           {expression_type:'invocation', varname:'contador'},
-          {expression_type:'literal', type:'integer', value:1}
+          {expression_type:'literal', type:'entero', value:1}
         ]
       })
     }
@@ -517,7 +517,7 @@ describe('New Expression', () => {
       capt.error.should.equal(false)
       capt.result.should.deepEqual({
         expression_type:'literal',
-        type:'integer',
+        type:'entero',
         value:32
       })
     }
@@ -529,7 +529,7 @@ describe('New Expression', () => {
       capt.error.should.equal(false)
       capt.result.should.deepEqual({
         expression_type:'literal',
-        type:'float',
+        type:'real',
         value:2.78
       })
     }

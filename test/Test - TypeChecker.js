@@ -4,14 +4,14 @@ const Expression = require('../intermediate/structures/Expression')
 const TypeChecker = require('../analisys/TypeChecker')
 
 describe('TypeChecker', () => {
-  let checker = new TypeChecker(null, null, {a:{type:'integer'}}, {})
+  let checker = new TypeChecker(null, null, {a:{type:'entero'}}, {})
 
   describe('getExpressionReturnType', () => {
     // TODO: agregrar pruebas de errores
     it('literal', () => {
       let exp = Expression.fromString('2').result
       let type = checker.getExpressionReturnType(exp)
-      type.result.should.equal('integer')
+      type.result.should.equal('entero')
     })
 
     it('operacion', () => {
@@ -34,7 +34,7 @@ describe('TypeChecker', () => {
       {
         let exp = Expression.fromString('a').result
         let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('integer')
+        type.result.should.equal('entero')
       }
     })
 
@@ -42,25 +42,25 @@ describe('TypeChecker', () => {
       {
         let exp = Expression.fromString('2 + 2').result
         let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('integer')
+        type.result.should.equal('entero')
       }
 
       {
         let exp = Expression.fromString('2 * 2').result
         let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('integer')
+        type.result.should.equal('entero')
       }
 
       {
         let exp = Expression.fromString('2 - 2').result
         let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('integer')
+        type.result.should.equal('entero')
       }
 
       {
         let exp = Expression.fromString('2 ^ 2').result
         let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('integer')
+        type.result.should.equal('entero')
       }
     })
 
@@ -68,25 +68,25 @@ describe('TypeChecker', () => {
       {
         let exp = Expression.fromString('2 + 2.3').result
         let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('float')
+        type.result.should.equal('real')
       }
 
       {
         let exp = Expression.fromString('2 * 2.3').result
         let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('float')
+        type.result.should.equal('real')
       }
 
       {
         let exp = Expression.fromString('2 - 2.3').result
         let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('float')
+        type.result.should.equal('real')
       }
 
       {
         let exp = Expression.fromString('2 ^ 2.3').result
         let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('float')
+        type.result.should.equal('real')
       }
     })
 
@@ -132,13 +132,13 @@ describe('TypeChecker', () => {
       {
         let exp = Expression.fromString('2 div 2').result
         let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('integer')
+        type.result.should.equal('entero')
       }
 
       {
         let exp = Expression.fromString('2 mod 2').result
         let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('integer')
+        type.result.should.equal('entero')
       }
     })
 
@@ -146,7 +146,7 @@ describe('TypeChecker', () => {
       {
         let exp = Expression.fromString('2.0 / 2.0').result
         let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('float')
+        type.result.should.equal('real')
       }
     })
 

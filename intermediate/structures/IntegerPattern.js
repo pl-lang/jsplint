@@ -5,7 +5,7 @@ class IntegerPattern {
   static capture(source) {
     let current = source.current()
 
-    if (current.kind === 'integer') {
+    if (current.kind === 'entero') {
       // consumir el token actual y...
       source.next()
       // ...devolver los datos importantes o...
@@ -19,7 +19,7 @@ class IntegerPattern {
       return {
           error   :  true
         , result  : {
-            expectedToken   : 'integer'
+            expectedToken   : 'entero'
           , unexpectedToken : current.kind
           , atColumn        : current.columnNumber
           , atLine          : current.lineNumber

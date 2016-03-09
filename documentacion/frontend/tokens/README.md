@@ -30,7 +30,7 @@ columnNumber           | Entero que indica en que columna empieza el token
 que indica el valor que representan (un numero o una cadena, respectivamente).
 
 En todos los casos la propiedad `kind` puede tomar distintos valores. Por ejemplo,
-para **NumberToken** `kind` puede ser `'float'` o `'integer'` para aclarar que ese
+para **NumberToken** `kind` puede ser `'real'` o `'entero'` para aclarar que ese
 numero es un real o un entero.
 
 # Errores léxicos

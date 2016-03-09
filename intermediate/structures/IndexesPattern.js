@@ -5,7 +5,7 @@ class IndexesPattern {
   static capture(source) {
     let indexes = []
 
-    if (source.current().kind === 'integer') {
+    if (source.current().kind === 'entero') {
       indexes.push(IntegerPattern.capture(source).result)
       let current = source.current()
 

@@ -5,7 +5,7 @@ const isDigit = StringMethods.isDigit
 class NumberToken {
   constructor(source) {
     // todos los numeros son enteros hasta que se 'demuestre' lo contrario
-    this.kind = 'integer'
+    this.kind = 'entero'
     this.text = ''
     this.lineNumber = source._currentLineIndex
     this.columnNumber = source._currentCharIndex
@@ -30,7 +30,7 @@ class NumberToken {
           this.text += c
           source.nextChar()
         }
-        this.kind = 'float'
+        this.kind = 'real'
       }
       else {
         this.kind = 'LEXICAL_ERROR'
@@ -42,9 +42,9 @@ class NumberToken {
       }
     }
 
-    if (this.kind === 'integer')
+    if (this.kind === 'entero')
       this.value = parseInt(this.text)
-    else if (this.kind === 'float')
+    else if (this.kind === 'real')
       this.value = parseFloat(this.text)
   }
 }

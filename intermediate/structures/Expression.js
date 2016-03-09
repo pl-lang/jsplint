@@ -88,7 +88,7 @@ class PrimaryExpression {
       source.next()
       return {error, result}
     }
-    else if (current.kind == 'integer' || current.kind == 'float' || current.kind == 'string') {
+    else if (current.kind == 'entero' || current.kind == 'real' || current.kind == 'string') {
       let error = false
       let expression_type = 'literal'
       let value = current.value
