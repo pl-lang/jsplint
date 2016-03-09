@@ -168,20 +168,21 @@ class TypeChecker extends Emitter {
 
       if (payload_type_report.error) {
         return payload_type_report
-      } else {
-
+      }
+      else {
         let payload_type = payload_type_report.result
-
         if (!this.typesAreCompatible(target_type, payload_type)) {
           let error = true
           let reason = 'incompatible-types-at-assignment'
           let result = {reason, target_type, payload_type}
           return {error, result}
-        } else {
+        }
+        else {
           return {error:false}
         }
       }
-    } else {
+    }
+    else {
       let error = true
       let reason = 'undefined-variable', result = reason
       return {error, result}
