@@ -177,6 +177,8 @@ class TypeChecker extends Emitter {
           let reason = 'incompatible-types-at-assignment'
           let result = {reason, target_type, payload_type}
           return {error, result}
+        } else {
+          return {error:false}
         }
       }
     } else {
