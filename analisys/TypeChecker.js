@@ -139,19 +139,24 @@ class TypeChecker extends Emitter {
   checkAssigmentNodes(module_root) {
     let current_node = module_root
 
+    let error_found = false
+
     this.emit({name:'type-check-started'})
 
     while (current_node !== null) {
       if (current_node.data.action === 'assignment') {
         let report = this.validateAssignment(current_node.data)
         if (report.error) {
+          error_found = true
           this.emit({name:'type-error', origin:'type-checker'}, report.result)
         }
       }
       current_node = current_node.getNext()
     }
 
-    this.emit({name:'type-check-started'})
+    this.emit({name:'type-check-finished'})
+
+    return {errof:error_found}
 
   }
 
