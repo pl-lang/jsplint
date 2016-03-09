@@ -42,22 +42,22 @@ let logical_operators = new Set([
 
 let type_data_by_category = {
   math_operators:{
-    supported_types:new Set(['integer', 'float']),
+    supported_types:new Set(['entero', 'real']),
     calculate_return_type: (a, b) => {
-      let result = a === 'integer' && b === 'integer' ? 'integer' : 'float'
+      let result = a === 'entero' && b === 'entero' ? 'entero' : 'real'
       return {error:false, result}
     }
   },
 
   integer_operators:{
-    supported_types: new Set(['integer']),
-    calculate_return_type: () => ({erro:false, result:'integer'})
+    supported_types: new Set(['entero']),
+    calculate_return_type: () => ({erro:false, result:'entero'})
   },
 
   comparison_operators:{
-    supported_types:new Set(['integer', 'float', 'character', 'logical']),
+    supported_types:new Set(['entero', 'real', 'character', 'logical']),
     calculate_return_type: (a, b) => {
-      let comparable_types = a === 'integer' && b === 'float' || a === 'float' && b === 'integer'
+      let comparable_types = a === 'entero' && b === 'real' || a === 'real' && b === 'entero'
       let equal_types = a === b
       let result = comparable_types || equal_types ? 'logical':null
       let error = result === null ? true:false
@@ -73,13 +73,13 @@ let type_data_by_category = {
   },
 
   unary_minus:{
-    supported_types:new Set(['integer', 'float']),
+    supported_types:new Set(['entero', 'real']),
     calculate_return_type:a => ({error:false, result:a})
   },
 
   divide:{
-    supported_types:new Set(['float']),
-    calculate_return_type: () => ({error:false, result:'float'})
+    supported_types:new Set(['real']),
+    calculate_return_type: () => ({error:false, result:'real'})
   }
 }
 
@@ -131,7 +131,7 @@ class TypeChecker extends Emitter {
   typesAreCompatible(target_type, payload_type) {
     if (target_type === payload_type) {
       return true
-    } else if (payload_type === 'float' && target_type === 'integer') {
+    } else if (payload_type === 'real' && target_type === 'entero') {
       return true
     } else return false;
   }
