@@ -17,9 +17,7 @@ describe('Compiler', () => {
     let type_check_started = false, type_check_finished = false
 
     let compiler = new Compiler()
-    compiler.on('type-error', (ev_info, error_info) => {
-      console.log(error_info);
-    })
+
     compiler.on('compilation-started', () => {
       compilation_started = true
     })
@@ -34,8 +32,6 @@ describe('Compiler', () => {
     })
 
     let report = compiler.compile(code)
-
-    console.log(report)
 
     report.error.should.equal(false)
     compilation_started.should.equal(true)
