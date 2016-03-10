@@ -41,4 +41,6 @@ describe('Compiler', () => {
     type_check_started.should.equal(true)
     type_check_finished.should.equal(true)
   })
+
+  it.skip('los errores lexicos emiten eventos y detienen la compilacion', () => {})
 })
