@@ -186,7 +186,9 @@ describe('TypeChecker', () => {
     fin
     `
 
-    let compilation_report = compiler.compile(code)
+    const DO_NOT_RUN_TYPE_CHECKER = false
+
+    let compilation_report = compiler.compile(code, DO_NOT_RUN_TYPE_CHECKER)
 
     compilation_report.error.should.equal(false)
 
