@@ -5,11 +5,15 @@ const Interpreter = require('../backend/Interpreter')
 
 const Compiler = require('../tools/Compiler')
 
+const DO_NOT_RUN_TYPE_CHECKER = false
+
+// TODO: ejecutar el TypeChecker al compilar (en todas las pruebas)
+
 describe('Pruebas que verifican la correcta evaluacion de los programas', () => {
   // De momento, obtengo los resultados de las pruebas a traves de llamadas a escribir
 
   it('Estructura si...entonces', () => {
-    let compiler = new Compiler({event_logging:true})
+    let compiler = new Compiler()
 
     let programa = `
     variables
@@ -23,11 +27,11 @@ describe('Pruebas que verifican la correcta evaluacion de los programas', () => 
     fin
     `
 
-    let compiler_report = compiler.compile(programa, false)
+    let report = compiler.compile(programa, DO_NOT_RUN_TYPE_CHECKER)
 
-    compiler_report.error.should.equal(false)
+    report.error.should.equal(false)
 
-    let program_modules = compiler_report.result
+    let program_modules = report.result
 
     let interpreter = new Interpreter(program_modules)
 
@@ -44,8 +48,7 @@ describe('Pruebas que verifican la correcta evaluacion de los programas', () => 
   })
 
   it('Estructura si...entonces...sino...', () => {
-    let controller = new InterpreterController({event_logging:false});
-    let bandera = false;
+    let compiler = new Compiler()
 
     let programa = `
     variables
@@ -59,20 +62,26 @@ describe('Pruebas que verifican la correcta evaluacion de los programas', () => 
       escribir(a)
     finsi
     fin
-    `;
+    `
 
-    controller.on('write', (event_info, value_list) => {
-      if (value_list[0] == true) bandera = true;
-    });
+    let report = compiler.compile(programa, DO_NOT_RUN_TYPE_CHECKER)
 
-    controller.run(programa);
+    report.error.should.equal(false)
 
-    bandera.should.equal(true);
-  });
+    let interpreter = new Interpreter(report.result)
+
+    let bandera = false
+    interpreter.on('write', (event_info, value_list) => {
+      if (value_list[0] == true) bandera = true
+    })
+
+    interpreter.run()
+
+    bandera.should.equal(true)
+  })
 
   it('Estructura si...entonces con condicion falsa', () => {
-    let controller = new InterpreterController({event_logging:false});
-    let bandera = false;
+    let compiler = new Compiler()
 
     let programa = `
     variables
@@ -85,20 +94,26 @@ describe('Pruebas que verifican la correcta evaluacion de los programas', () => 
     a <- verdadero
     escribir(a)
     fin
-    `;
+    `
 
-    controller.on('write', (event_info, value_list) => {
+    let report = compiler.compile(programa, DO_NOT_RUN_TYPE_CHECKER)
+
+    report.error.should.equal(false)
+
+    let interpreter = new Interpreter(report.result)
+
+    let bandera = false
+    interpreter.on('write', (event_info, value_list) => {
       if (value_list[0] == true) bandera = true;
-    });
+    })
 
-    controller.run(programa);
+    interpreter.run()
 
-    bandera.should.equal(true);
+    bandera.should.equal(true)
   })
 
   it('Estructura repetir...hasta que...', () => {
-    let controller = new InterpreterController({event_logging:false});
-    let bandera = false;
+    let compiler = new Compiler()
 
     let programa = `
     variables
@@ -110,22 +125,28 @@ describe('Pruebas que verifican la correcta evaluacion de los programas', () => 
     hasta que (contador = 10)
     escribir(contador)
     fin
-    `;
+    `
 
-    controller.on('write', (event_info, value_list) => {
-      if (value_list[0] == 10) bandera = true;
-    });
+    let report = compiler.compile(programa, DO_NOT_RUN_TYPE_CHECKER)
 
-    controller.run(programa)
+    report.error.should.equal(false)
+
+    let interpreter = new Interpreter(report.result)
+
+    let bandera = false
+    interpreter.on('write', (event_info, value_list) => {
+      if (value_list[0] == 10) bandera = true
+    })
+
+    interpreter.run()
 
     bandera.should.equal(true)
-  });
+  })
 
   // TODO: Arreglar el caso de la estructura mientras vacia
 
   it('Estructura mientras...', () => {
-    let controller = new InterpreterController({event_logging:false});
-    let bandera = false;
+    let compiler = new Compiler()
 
     let programa = `
     variables
@@ -139,28 +160,27 @@ describe('Pruebas que verifican la correcta evaluacion de los programas', () => 
     fin
     `
 
-    controller.on('write', (event_info, value_list) => {
-      if (value_list[0] == 10) bandera = true
-    });
+    let report = compiler.compile(programa, DO_NOT_RUN_TYPE_CHECKER)
 
-    controller.run(programa)
+    report.error.should.equal(false)
+
+    let interpreter = new Interpreter(report.result)
+
+    let bandera = false
+    interpreter.on('write', (event_info, value_list) => {
+      if (value_list[0] == 10) bandera = true
+    })
+
+    interpreter.run()
 
     bandera.should.equal(true)
   })
 
   it.skip('Estructura para...hasta...', () => {
-    let controller = new InterpreterController({event_logging:false});
-    let bandera = false;
-
-  });
+  })
 
   it('Asignacion', () => {
-    let controller = new InterpreterController({event_logging:false})
-    let bandera = false
-
-    controller.on('write', (event_info, value_list) => {
-      if (value_list[0] === 32) bandera = true;
-    })
+    let compiler = new Compiler()
 
     let code = `
     variables
@@ -170,8 +190,20 @@ describe('Pruebas que verifican la correcta evaluacion de los programas', () => 
     escribir(a)
     fin
     `
-    controller.run(code)
+
+    let report = compiler.compile(code)
+
+    report.error.should.equal(false)
+
+    let interpreter = new Interpreter(report.result)
+
+    let bandera = false
+    interpreter.on('write', (event_info, value_list) => {
+      if (value_list[0] === 32) bandera = true;
+    })
+
+    interpreter.run()
 
     bandera.should.equal(true)
   })
-});
+})
