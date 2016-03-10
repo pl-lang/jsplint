@@ -3,6 +3,7 @@
 const Source = require('../../frontend/Source')
 const Parser = require('../../frontend/Parser')
 const TokenQueue = require('../TokenQueue')
+const VariableNamePattern = require('./VariableNamePattern')
 
 let precedence_by_op = {
   'or'          : 6  ,
@@ -67,13 +68,21 @@ class PrimaryExpression {
     let current = source.current()
     if (current.kind == 'word') {
       if (source.peek().kind != 'left-par') {
+        let report = VariableNamePattern.capture(source)
+        if (report.error === true) {
+          return report
+        }
+
+        let varname = report.result.name
+        let isArray = report.result.data.isArray
+        let dimension = 'dimension' in report.result.data ? report.result.data.dimension:null
+
         let error = false
         let expression_type = 'invocation'
-        let varname = current.text
-        let result = {expression_type, varname}
-        source.next()
+        let result = {expression_type, varname, isArray, dimension}
 
         return {error, result}
+        
       }
       else {
 
