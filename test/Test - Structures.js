@@ -24,7 +24,7 @@ describe('Captura de estructuras sintacticas', () => {
       expression_type:'invocation',
       varname:'a',
       isArray:false,
-      dimension:null
+      indexes:null
     })
 
     node.rightBranchNode.data.should.deepEqual({
@@ -52,7 +52,7 @@ describe('Captura de estructuras sintacticas', () => {
       expression_type:'invocation',
       varname:'a',
       isArray:false,
-      dimension:null
+      indexes:null
     })
 
     node.loop_body_root.data.should.deepEqual({
@@ -83,7 +83,7 @@ describe('Captura de estructuras sintacticas', () => {
       expression_type:'invocation',
       varname:'a',
       isArray:false,
-      dimension:null
+      indexes:null
     })
 
     node.rightBranchNode.data.should.deepEqual({

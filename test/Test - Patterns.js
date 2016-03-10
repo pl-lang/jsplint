@@ -466,7 +466,7 @@ describe('New Expression', () => {
         expression_type:'invocation',
         varname:'contador',
         isArray:false,
-        dimension:null
+        indexes:null
       })
     }
 
@@ -483,7 +483,7 @@ describe('New Expression', () => {
             expression_type:'invocation',
             varname:'contador',
             isArray:false,
-            dimension:null
+            indexes:null
           },
           {expression_type:'literal', type:'entero', value:1}
         ]
