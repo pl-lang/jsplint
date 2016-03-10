@@ -4,6 +4,7 @@
   "plugins":{
     "doc_comment":{
       "strong":"true"
-    }
+    },
+    "node":{}
   }
 }
