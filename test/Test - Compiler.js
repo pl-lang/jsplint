@@ -16,7 +16,7 @@ describe('Compiler', () => {
     let compilation_started = false, compilation_finished = false
     let type_check_started = false, type_check_finished = false
 
-    let compiler = new Compiler()
+    let compiler = new Compiler({event_logging:false})
 
     compiler.on('compilation-started', () => {
       compilation_started = true

@@ -55,7 +55,7 @@ class Compiler extends Emitter {
    * 	- type-check-finished (via TypeChecker)
    */
 
-  constructor(source_code_string, config) {
+  constructor(config) {
     super([
         'compilation-started']
       , 'lexical-error'
@@ -67,7 +67,7 @@ class Compiler extends Emitter {
     )
 
     if (config) {
-      let this.config = applyConfig(defaults, config)
+      this.config = applyConfig(defaults, config)
     }
 
     if (this.config.event_logging) {
