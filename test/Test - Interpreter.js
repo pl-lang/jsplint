@@ -1,19 +1,15 @@
 'use strict'
-var should = require('should');
+const should = require('should');
+
+const Interpreter = require('../backend/Interpreter')
+
+const Compiler = require('../tools/Compiler')
 
 describe('Pruebas que verifican la correcta evaluacion de los programas', () => {
   // De momento, obtengo los resultados de las pruebas a traves de llamadas a escribir
-  const InterpreterController = require('../main.js');
-
-  // TODO: hacer que un mismo controlador pueda usarse mas de una vez
 
   it('Estructura si...entonces', () => {
-    let controller = new InterpreterController({event_logging:false});
-    let bandera = false;
-
-    controller.on('write', (event_info, value_list) => {
-      if (value_list[0] == true) bandera = true;
-    });
+    let compiler = new Compiler({event_logging:true})
 
     let programa = `
     variables
@@ -25,13 +21,27 @@ describe('Pruebas que verifican la correcta evaluacion de los programas', () => 
       escribir(a)
     finsi
     fin
-    `;
+    `
 
-    controller.run(programa);
+    let compiler_report = compiler.compile(programa, false)
 
-    bandera.should.equal(true);
+    compiler_report.error.should.equal(false)
 
-  });
+    let program_modules = compiler_report.result
+
+    let interpreter = new Interpreter(program_modules)
+
+    let bandera = false
+
+    interpreter.on('write', (event_info, value_list) => {
+      if (value_list[0] == true) bandera = true;
+    })
+
+    interpreter.run()
+
+    bandera.should.equal(true)
+
+  })
 
   it('Estructura si...entonces...sino...', () => {
     let controller = new InterpreterController({event_logging:false});
