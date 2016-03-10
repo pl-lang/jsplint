@@ -19,14 +19,14 @@ const Evaluator       = require('./Evaluator.js')
 const Emitter         = require('../auxiliary/Emitter.js')
 
 class Interpreter extends Emitter {
-  constructor(main_module) {
+  constructor(program_modules) {
     super(['program-started', 'program-resumed', 'program-paused', 'program-finished'])
-    this.current_program = main_module
+    this.current_program = program_modules
   }
 
-  set current_program(program_data) {
-    this._current_program = program_data
-    let main = program_data.main
+  set current_program(program_modules) {
+    this._current_program = program_modules
+    let main = program_modules.main
     let main_evaluator = new Evaluator(main.variables, main.variables, main.statements, {})
     // NOTE: exposeChildrenEvents va a ser reemplazada mas adelante
     this.bindEvaluatorEvents(main_evaluator)
