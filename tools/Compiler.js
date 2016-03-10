@@ -80,7 +80,8 @@ class Compiler extends Emitter {
     this.parser = new Parser()
   }
 
-  compile(source_code_string) {
+  compile(source_code_string, run_type_checker) {
+
     this.emit({name:'compilation-started'})
 
     let source_wrapper = new Source(source_code_string)
@@ -107,26 +108,28 @@ class Compiler extends Emitter {
       return {error:true, result:'syntax_error'}
     }
 
-    let type_error = false
+    if (run_type_checker) {
+      let type_error = false
 
-    let modules = scan_report.result
+      let modules = scan_report.result
 
-    let main = modules.main
+      let main = modules.main
 
-    let type_checker = new TypeChecker(main.statements, {}, main.variables, main.variables)
-    // TODO: agregar a Emitter la posibilidad de tener handlers que se
-    // ejecuten solo una vez
-    type_checker.on('type-error', () => {
-      type_error = true
-    })
+      let type_checker = new TypeChecker(main.statements, {}, main.variables, main.variables)
+      // TODO: agregar a Emitter la posibilidad de tener handlers que se
+      // ejecuten solo una vez
+      type_checker.on('type-error', () => {
+        type_error = true
+      })
 
-    this.repeatAllPublicEvents(type_checker)
+      this.repeatAllPublicEvents(type_checker)
 
-    type_checker.checkAssigmentNodes(main.statements)
+      type_checker.checkAssigmentNodes(main.statements)
 
-    if (type_error) {
-      this.emit({name:'compilation-finished'}, {error:true, result:'type_error'})
-      return {error:true, result:'type_error'}
+      if (type_error) {
+        this.emit({name:'compilation-finished'}, {error:true, result:'type_error'})
+        return {error:true, result:'type_error'}
+      }
     }
 
     this.emit({name:'compilation-finished', origin:'controller'}, {error:false})
