@@ -2,6 +2,7 @@
 const should = require('should')
 const Expression = require('../intermediate/structures/Expression')
 const TypeChecker = require('../analisys/TypeChecker')
+const Compiler = require('../tools/Compiler')
 
 describe('TypeChecker', () => {
   let checker = new TypeChecker(null, null, {a:{type:'entero'}}, {})
@@ -173,9 +174,7 @@ describe('TypeChecker', () => {
   })
 
   it('checkAssigmentNodes', () => {
-    const Controller = require('../main.js')
-
-    let controller = new Controller({event_logging:false})
+    let compiler = new Compiler()
 
     let code = `
     variables
@@ -187,7 +186,7 @@ describe('TypeChecker', () => {
     fin
     `
 
-    let compilation_report = controller.compile(code)
+    let compilation_report = compiler.compile(code)
 
     compilation_report.error.should.equal(false)
 
