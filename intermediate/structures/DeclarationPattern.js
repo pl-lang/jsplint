@@ -17,9 +17,20 @@ class DeclarationPattern {
         return varList
       else {
         for (let variable of varList.result) {
+          let name = variable.name
+
           let var_object = variable.data
           var_object.type = typename.result
-          let name = variable.name
+
+          if (var_object.isArray === true) {
+            let size = var_object.dimension.reduce((acumulador, elemento) => {
+              return acumulador * elemento
+            })
+            var_object.values = new Array(size)
+          }
+          else {
+            var_object.value = null
+          }
 
           if (declarations.hasOwnProperty(name)) {
             return {
