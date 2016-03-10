@@ -8,7 +8,7 @@ const Parser = require('../frontend/Parser')
 const TypeChecker = require('../analisys/TypeChecker')
 
 const defaults = {
-  event_logging : true
+  event_logging : false
 }
 
 /**
@@ -68,6 +68,9 @@ class Compiler extends Emitter {
 
     if (config) {
       this.config = applyConfig(defaults, config)
+    }
+    else {
+      this.config = defaults
     }
 
     if (this.config.event_logging) {
