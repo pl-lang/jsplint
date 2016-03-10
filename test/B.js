@@ -224,9 +224,9 @@ describe('DeclarationPattern', () => {
 
     capt.error.should.deepEqual(false)
     capt.result.should.deepEqual({
-      a : {type:'entero', isArray:false},
-      b : {type:'entero', isArray:false},
-      c : {type:'real', isArray:false}
+      a : {type:'entero', isArray:false, value:null},
+      b : {type:'entero', isArray:false, value:null},
+      c : {type:'real', isArray:false, value:null}
     })
   })
 
@@ -237,9 +237,9 @@ describe('DeclarationPattern', () => {
 
     capt.error.should.deepEqual(false)
     capt.result.should.deepEqual({
-      a : {type:'caracter', isArray:false},
-      b : {type:'caracter', isArray:false},
-      c : {type:'logico', isArray:false}
+      a : {type:'caracter', isArray:false, value:null},
+      b : {type:'caracter', isArray:false, value:null},
+      c : {type:'logico', isArray:false, value:null}
     })
   })
 
@@ -249,10 +249,11 @@ describe('DeclarationPattern', () => {
     let capt = DeclarationPattern.capture(q)
 
     capt.error.should.deepEqual(false)
-    capt.result.should.deepEqual({
-      a : {type:'caracter', isArray:false},
-      b : {type:'caracter', isArray:true, dimension:[4, 4]}
-    })
+    capt.result.a.should.deepEqual({type:'caracter', isArray:false, value:null})
+
+    capt.result.b.type.should.equal('caracter')
+    capt.result.b.isArray.should.equal(true)
+    capt.result.b.dimension.should.deepEqual([4, 4])
   })
 })
 
