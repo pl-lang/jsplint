@@ -31,7 +31,9 @@ describe('Compiler', () => {
       type_check_finished = true
     })
 
-    let report = compiler.compile(code)
+    const RUN_TYPE_CHECKER = true
+
+    let report = compiler.compile(code, RUN_TYPE_CHECKER)
 
     report.error.should.equal(false)
     compilation_started.should.equal(true)
