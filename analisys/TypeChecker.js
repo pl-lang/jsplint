@@ -128,6 +128,13 @@ class TypeChecker extends Emitter {
     else return this.globals[varname];
   }
 
+  /**
+   * Dice si el tipo de una variable es compatible con lo que se le quiere
+   * asignar
+   * @param  {string} target_type  el tipo de la variable objetvio
+   * @param  {string} payload_type el tipo de la expresion que se quiere asignar
+   * @return {boolean}              true cuando son compatibles, si no, falso
+   */
   typesAreCompatible(target_type, payload_type) {
     if (target_type === payload_type) {
       return true
