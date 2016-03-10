@@ -464,7 +464,9 @@ describe('New Expression', () => {
       capt.error.should.equal(false)
       capt.result.should.deepEqual({
         expression_type:'invocation',
-        varname:'contador'
+        varname:'contador',
+        isArray:false,
+        dimension:null
       })
     }
 
@@ -477,7 +479,12 @@ describe('New Expression', () => {
         expression_type:'operation',
         op:'plus',
         operands:[
-          {expression_type:'invocation', varname:'contador'},
+          {
+            expression_type:'invocation',
+            varname:'contador',
+            isArray:false,
+            dimension:null
+          },
           {expression_type:'literal', type:'entero', value:1}
         ]
       })

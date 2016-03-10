@@ -20,7 +20,12 @@ describe('Captura de estructuras sintacticas', () => {
 
     let node = capture.result;
 
-    node.data.condition.should.deepEqual({expression_type:'invocation', varname:'a'});
+    node.data.condition.should.deepEqual({
+      expression_type:'invocation',
+      varname:'a',
+      isArray:false,
+      dimension:null
+    })
 
     node.rightBranchNode.data.should.deepEqual({
       action:'assignment',
@@ -43,7 +48,12 @@ describe('Captura de estructuras sintacticas', () => {
 
     let node = capture.result;
 
-    node.data.condition.should.deepEqual({expression_type:'invocation', varname:'a'});
+    node.data.condition.should.deepEqual({
+      expression_type:'invocation',
+      varname:'a',
+      isArray:false,
+      dimension:null
+    })
 
     node.loop_body_root.data.should.deepEqual({
       action:'assignment',
@@ -69,7 +79,12 @@ describe('Captura de estructuras sintacticas', () => {
 
     let node = capture.result;
 
-    node.data.condition.should.deepEqual({expression_type:'invocation', varname:'a'});
+    node.data.condition.should.deepEqual({
+      expression_type:'invocation',
+      varname:'a',
+      isArray:false,
+      dimension:null
+    })
 
     node.rightBranchNode.data.should.deepEqual({
       action:'assignment',
