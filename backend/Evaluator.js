@@ -196,6 +196,18 @@ class Evaluator extends Emitter {
     return {error:false}
   }
 
+  /**
+   * Busca y devuelve el objeto que representa a una variable especifica
+   * @param  {string} varname el nombre de la variable deseada
+   * @return {object}         el objeto que representa a la variable
+   */
+  getVariable(varname) {
+    let variable
+
+    if (varname in this.locals) return this.locals[varname];
+    else return this.globals[varname];
+  }
+
   run() {
 
     while (this.current_node !== null && this.running) {
