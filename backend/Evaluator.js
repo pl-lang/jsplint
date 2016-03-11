@@ -175,10 +175,17 @@ class Evaluator extends Emitter {
     }
   }
 
-  assignToVar(varname, expression) {
-    let target = this.getVariable(varname)
+  assignToVar(target_info, expression) {
+    let target_variable = this.getVariable(target_info.name)
 
-    target.value = this.evaluateExp(expression)
+    if (target_info.isArray === true) {
+      // TODO: agregar bound checking (cuando haga falta)
+      let index = this.calculateIndex(target_info.indexes.map(a => a - 1), target_variable.dimensions)
+      target_variable.values[index] = this.evaluateExp(expression)
+    }
+    else {
+      target_variable.value = this.evaluateExp(expression)
+    }
 
     // Por ahora...
     return {error:false}
