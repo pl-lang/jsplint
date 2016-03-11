@@ -42,8 +42,8 @@ class AssignmentPattern {
 
       let unexpectedToken = source.current().kind
       let expectedToken   = 'assignment'
-      let atColumn        = source.current().atColumn
-      let atLine          = source.current().atLine
+      let atColumn        = source.current().columnNumber
+      let atLine          = source.current().lineNumber
 
       let result = {unexpectedToken, expectedToken, atColumn, atLine}
 
