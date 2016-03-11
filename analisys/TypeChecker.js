@@ -208,9 +208,9 @@ class TypeChecker extends Emitter {
       return {error, result}
     }
     else if (expression.expression_type === 'invocation') {
-      if (this.variableExists(expression.varname)) {
+      if (this.variableExists(expression.name)) {
         let error = false
-        let result = this.getVariable(expression.varname).type
+        let result = this.getVariable(expression.name).type
         return {error, result}
       } else {
         let error = true
