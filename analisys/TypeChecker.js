@@ -121,6 +121,11 @@ class TypeChecker extends Emitter {
     return true
   }
 
+  /**
+   * Busca y devuelve el objeto que representa a una variable especifica
+   * @param  {string} varname el nombre de la variable deseada
+   * @return {object}         el objeto que representa a la variable
+   */
   getVariable(varname) {
     let variable
 
