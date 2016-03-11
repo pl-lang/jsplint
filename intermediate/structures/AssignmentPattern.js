@@ -1,56 +1,52 @@
 'use strict'
 
 const Node = require('../../auxiliary/Node')
+
 const Expression = require('./Expression')
+const VariableNamePattern = require('./VariableNamePattern')
 
 class AssignmentPattern {
   static capture(source) {
+
+    let report = VariableNamePattern.capture(source)
+
+    if (report.error === true) {
+      return report
+    }
+
+    let target = report.result.name
+    let isArray = report.result.data.isArray
+    let indexes = isArray === true ? report.result.data.dimension:null
+
     let current = source.current()
 
-    if (current.kind == 'word') {
-      let target = current.text
-      current = source.next()
+    if (current.kind === 'assignment') {
+      source.next()
 
-      if (current.kind == 'assignment') {
-        current = source.next()
-        // Por ahora, las asignaciones solo funcionarian con enteros...
-        let payload = Expression.fromQueue(source)
-        if (payload.error) {
-          return payload
-        }
-        else {
-          let error = false
-          let data = {
-              payload : payload.result
-            , target  : target
-            , action  : 'assignment'
-          }
-          let result = new Node(data)
-          return {error, result}
-        }
+      let payload_report = Expression.fromQueue(source)
+
+      if (payload_report.error === true) {
+        return payload
       }
       else {
-        return {
-            result  : {
-                unexpectedToken : current.kind
-              , expectedToken   : 'assignment'
-              , atColumn        : current.columnNumber
-              , atLine          : current.lineNumber
-            }
-          , error   : true
-        }
+        let error = false
+        let payload = payload_report.result
+        let data = {action:'assignment', target, isArray, indexes, payload}
+        let result = new Node(data)
+        return {error, result}
       }
     }
     else {
-      return {
-          result  : {
-              unexpectedToken : current.kind
-            , expectedToken   : 'word'
-            , atColumn        : current.columnNumber
-            , atLine          : current.lineNumber
-          }
-        , error   : true
-      }
+      let error = true
+
+      let unexpectedToken = source.current().kind
+      let expectedToken   = 'assignment'
+      let atColumn        = source.current().atColumn
+      let atLine          = source.current().atLine
+
+      let result = {unexpectedToken, expectedToken, atColumn, atLine}
+
+      return {error, result}
     }
   }
 }
