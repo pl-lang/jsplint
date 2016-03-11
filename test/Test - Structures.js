@@ -22,7 +22,7 @@ describe('Captura de estructuras sintacticas', () => {
 
     node.data.condition.should.deepEqual({
       expression_type:'invocation',
-      varname:'a',
+      name:'a',
       isArray:false,
       indexes:null
     })
@@ -54,7 +54,7 @@ describe('Captura de estructuras sintacticas', () => {
 
     node.data.condition.should.deepEqual({
       expression_type:'invocation',
-      varname:'a',
+      name:'a',
       isArray:false,
       indexes:null
     })
@@ -89,7 +89,7 @@ describe('Captura de estructuras sintacticas', () => {
 
     node.data.condition.should.deepEqual({
       expression_type:'invocation',
-      varname:'a',
+      name:'a',
       isArray:false,
       indexes:null
     })

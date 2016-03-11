@@ -177,7 +177,7 @@ class Evaluator extends Emitter {
   evaluateExp(exp) {
     switch (exp.expression_type) {
       case 'invocation':
-        return this.getValue(exp.varname, exp.indexes)
+        return this.getValue(exp.name, exp.indexes)
       case  'literal':
         return exp.value
       case  'operation':
