@@ -76,23 +76,38 @@ class Evaluator extends Emitter {
     }
   }
 
-  getValue(varname) {
-    if (this.locals.hasOwnProperty(varname)) {
-      if (this.locals[varname].hasOwnProperty('value')) {
-        return this.locals[varname].value
-      }
-      else {
+  /**
+   * Obtiene y devuelve el valor de una variable
+   * @param  {string}  varname el nombre de la variable
+   * @param  {[int]}  indexes indice del elemento que se requiere
+   * @return {number|string|boolean}          valor de la variable
+   */
+  getValue(varname, indexes) {
+    let variable = this.getVariable(varname)
+
+    // NOTE: No se chequea que indexes exista porque si no existiera (si el usuario
+    // no lo hubiera escrito) no se hubiera llegado a este punto ya que el
+    // TypeChecker se hubiera dado cuenta.
+
+    if (variable.isArray) {
+      let index = this.calculateIndex(indexes.map(a => a - 1), variable.dimensions)
+      // TODO: bound check si hace falta
+      if (variable.values[index] === undefined) {
         this.running = false
         this.emit({name:'evaluation-error', origin:'evaluator'})
+      }
+      else {
+        console.log("elemento obtenido:", variable.values[index])
+        return variable.values[index]
       }
     }
-    else if (this.globals.hasOwnProperty(varname)) {
-      if (this.globals[varname].hasOwnProperty('value')) {
-        return this.globals[varname].value
-      }
-      else {
+    else {
+      if (variable.value === null) {
         this.running = false
         this.emit({name:'evaluation-error', origin:'evaluator'})
+      }
+      else {
+        return variable.value
       }
     }
   }
