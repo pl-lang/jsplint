@@ -97,7 +97,6 @@ class Evaluator extends Emitter {
         this.emit({name:'evaluation-error', origin:'evaluator'})
       }
       else {
-        console.log("elemento obtenido:", variable.values[index])
         return variable.values[index]
       }
     }
