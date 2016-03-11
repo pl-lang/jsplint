@@ -173,8 +173,8 @@ class TypeChecker extends Emitter {
   }
 
   validateAssignment(assigment) {
-    if (this.variableExists(assigment.target)) {
-      let target_type = this.getVariable(assigment.target).type
+    if (this.variableExists(assigment.target.name)) {
+      let target_type = this.getVariable(assigment.target.name).type
 
       let payload_type_report = this.getExpressionReturnType(assigment.payload)
 
