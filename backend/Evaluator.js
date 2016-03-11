@@ -43,7 +43,7 @@ class Evaluator extends Emitter {
   }
 
   sendReadEvent(call) {
-    let varname_list = call.args.map((expression) => {return expression.varname})
+    let varname_list = call.args
 
     this.emit({name:'read', origin:'evaluator'}, varname_list)
 
