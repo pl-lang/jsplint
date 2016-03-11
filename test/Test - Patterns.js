@@ -437,7 +437,7 @@ describe('AssignmentPattern', () => {
         type:'entero',
       }
     )
-    capt.result.data.target.should.equal('var')
+    capt.result.data.target.name.should.equal('var')
   })
 })
 
