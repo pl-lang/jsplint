@@ -73,13 +73,13 @@ class PrimaryExpression {
           return report
         }
 
-        let varname = report.result.name
+        let name    = report.result.name
         let isArray = report.result.data.isArray
         let indexes = 'dimension' in report.result.data ? report.result.data.dimension:null
 
         let error = false
         let expression_type = 'invocation'
-        let result = {expression_type, varname, isArray, indexes}
+        let result = {expression_type, name, isArray, indexes}
 
         return {error, result}
 
