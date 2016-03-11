@@ -29,9 +29,11 @@ describe('Captura de estructuras sintacticas', () => {
 
     node.rightBranchNode.data.should.deepEqual({
       action:'assignment',
-      target:'a',
-      isArray:false,
-      indexes:null,
+      target:{
+        name:'a',
+        isArray:false,
+        indexes:null,
+      },
       payload:{expression_type:'literal', type:'entero', value:32}
     })
   })
@@ -59,9 +61,11 @@ describe('Captura de estructuras sintacticas', () => {
 
     node.loop_body_root.data.should.deepEqual({
       action:'assignment',
-      target:'a',
-      isArray:false,
-      indexes:null,
+      target:{
+        name:'a',
+        isArray:false,
+        indexes:null
+      },
       payload:{expression_type:'literal', type:'entero', value:32}
     })
   })
@@ -92,17 +96,21 @@ describe('Captura de estructuras sintacticas', () => {
 
     node.rightBranchNode.data.should.deepEqual({
       action:'assignment',
-      target:'a',
-      isArray:false,
-      indexes:null,
+      target:{
+        name:'a',
+        isArray:false,
+        indexes:null
+      },
       payload:{expression_type:'literal', type:'entero', value:32}
     })
 
     node.leftBranchNode.data.should.deepEqual({
       action:'assignment',
-      target:'a',
-      isArray:false,
-      indexes:null,
+      target:{
+        name:'a',
+        isArray:false,
+        indexes:null
+      },
       payload:{expression_type:'literal', type:'entero', value:48}
     })
   })
@@ -126,9 +134,11 @@ describe('Captura de estructuras sintacticas', () => {
 
     first_node.data.should.deepEqual({
       action:'assignment',
-      target:'a',
-      isArray:false,
-      indexes:null,
+      target:{
+        name:'a',
+        isArray:false,
+        indexes:null
+      },
       payload:{expression_type:'literal', type:'entero', value:32}
     })
 
