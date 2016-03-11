@@ -14,9 +14,10 @@ class AssignmentPattern {
       return report
     }
 
-    let target = report.result.name
+    let name = report.result.name
     let isArray = report.result.data.isArray
     let indexes = isArray === true ? report.result.data.dimension:null
+    let target = {name, isArray, indexes}
 
     let current = source.current()
 
@@ -31,7 +32,7 @@ class AssignmentPattern {
       else {
         let error = false
         let payload = payload_report.result
-        let data = {action:'assignment', target, isArray, indexes, payload}
+        let data = {action:'assignment', target, payload}
         let result = new Node(data)
         return {error, result}
       }
