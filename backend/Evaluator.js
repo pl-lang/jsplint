@@ -176,19 +176,7 @@ class Evaluator extends Emitter {
   }
 
   assignToVar(varname, expression) {
-    let target
-
-    if (varname in this.locals) {
-      target = this.locals[varname]
-    }
-    else if (varname in this.globals) {
-      target = this.globals[varname]
-    }
-    else {
-      // TODO: la variable no existe (ni en locales ni en globales)
-    }
-
-    // TODO revisar que el tipo de la carga sea compatible con la var objetivo
+    let target = this.getVariable(varname)
 
     target.value = this.evaluateExp(expression)
 
