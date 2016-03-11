@@ -196,6 +196,32 @@ class Evaluator extends Emitter {
     else return this.globals[varname];
   }
 
+  /**
+   * Calcula el indice en un vector que representa a un arreglo multi-dimensional
+   * @param  {int[]} index_array indice del elemento en el arreglo
+   * @param  {int[]} dimensions  tamaño de las dimensiones del arreglo
+   * @return {int}             indice del elemento del arreglo en el vector
+   */
+  calculateIndex(index_array, dimensions) {
+    let result = 0
+    let index_amount = index_array.length
+    let i = 0
+
+    while (i < index_amount) {
+      let term = 1
+      let j = i + 1
+      while (j < index_amount) {
+        term *= dimensions[j]
+        j++
+      }
+      term *= index_array[i]
+      result += term
+      i++
+    }
+
+    return result
+  }
+
   run() {
 
     while (this.current_node !== null && this.running) {
