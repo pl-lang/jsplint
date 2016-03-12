@@ -1,4 +1,7 @@
 'use strict'
+
+// TODO: hace falta reescribir esto?
+
 let IntegerPattern = require('./IntegerPattern.js')
 
 class IntegerIndexesPattern {
@@ -32,7 +35,7 @@ class IntegerIndexesPattern {
     else {
       return {
           error  : true
-        , result : IntegerPattern.capture(source).result
+        , result : IntegerPattern.capture(source).result // Esto va a tirar informacion incorrecta sobre el error (xq source fue avanzada en el primer llamado, más arriba)
       }
     }
   }
