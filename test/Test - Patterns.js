@@ -746,3 +746,33 @@ describe('New Expression', () => {
     }
   })
 })
+
+
+describe('VariablePattern', () => {
+  const VariablePattern = require('../intermediate/structures/VariablePattern')
+  it('captura la variable en una asignacion', () => {
+    let dato = 'mi_variable <- 2'
+    let q = queueFromSource(dato)
+    let report = VariablePattern.capture(q)
+
+    report.error.should.equal(false)
+    report.result.should.deepEqual({
+      name:'mi_variable',
+      isArray:false,
+      indexes:null
+    })
+  })
+
+  it('captura la variable (un arreglo) en una asignacion', () => {
+    let dato = 'mi_vector[2] <- 2'
+    let q = queueFromSource(dato)
+    let report = VariablePattern.capture(q)
+
+    report.error.should.equal(false)
+    report.result.should.deepEqual({
+      name:'mi_vector',
+      isArray:true,
+      indexes:[2]
+    })
+  })
+})
