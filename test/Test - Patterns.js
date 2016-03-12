@@ -772,7 +772,28 @@ describe('VariablePattern', () => {
     report.result.should.deepEqual({
       name:'mi_vector',
       isArray:true,
-      indexes:[2]
+      indexes:[{
+        expression_type:'literal',
+        type:'entero',
+        value:2
+      }]
     })
   })
+
+  it('captura la variable (una matriz) en una asignacion', () => {
+    let dato = 'mi_matriz[i, j] <- 2'
+    let q = queueFromSource(dato)
+    let report = VariablePattern.capture(q)
+
+    report.error.should.equal(false)
+    report.result.should.deepEqual({
+      name:'mi_matriz',
+      isArray:true,
+      indexes:[
+        {expression_type:'invocation', name:'i', isArray:false, indexes:null},
+        {expression_type:'invocation', name:'j', isArray:false, indexes:null}
+      ]
+    })
+  })
+
 })

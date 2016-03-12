@@ -1,7 +1,7 @@
 'use strict'
 
 const WordPattern = require('./WordPattern')
-const IntegerIndexesPattern = require('./IntegerIndexesPattern') // por ahora
+const ExpressionIndexPattern = require('./ExpressionIndexPattern')
 
 class Report {
   /**
@@ -31,7 +31,7 @@ class VariablePattern {
       if (source.current().kind === 'left-bracket') {
         source.next()
 
-        let index_expressions_report = IntegerIndexesPattern.capture(source)
+        let index_expressions_report = ExpressionIndexPattern.capture(source)
 
         if (index_expressions_report.error === true) {
           return index_expressions_report
