@@ -489,6 +489,27 @@ describe('New Expression', () => {
         ]
       })
     }
+
+    {
+      let nombre = 'vector[2] + 1'
+      let q = queueFromSource(nombre)
+      let capt = Expression.fromQueue(q)
+      capt.error.should.equal(false)
+      capt.result.should.deepEqual({
+        expression_type:'operation',
+        op:'plus',
+        operands:[
+          {
+            expression_type:'invocation',
+            name:'vector',
+            isArray:true,
+            indexes:[{expression_type:'literal', type:'entero', value:2}]
+          },
+          {expression_type:'literal', type:'entero', value:1}
+        ]
+      })
+    }
+
   })
 
   it('captura factores logicos', () => {
