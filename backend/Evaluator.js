@@ -90,7 +90,7 @@ class Evaluator extends Emitter {
     // TypeChecker se hubiera dado cuenta.
 
     if (variable.isArray) {
-      let index = this.calculateIndex(indexes.map(a => a - 1), variable.dimensions)
+      let index = this.calculateIndex(indexes.map(a => this.evaluateExp(a) - 1), variable.dimensions)
       // TODO: bound check si hace falta
       if (variable.values[index] === undefined) {
         this.running = false
@@ -194,7 +194,9 @@ class Evaluator extends Emitter {
 
     if (target_info.isArray === true) {
       // TODO: agregar bound checking (cuando haga falta)
-      let index = this.calculateIndex(target_info.indexes.map(a => a - 1), target_variable.dimensions)
+      // NOTE: Por ahora, no se revisa si hay un error al evaluar un indice
+
+      let index = this.calculateIndex(target_info.indexes.map(a => this.evaluateExp(a) - 1), target_variable.dimensions)
       target_variable.values[index] = this.evaluateExp(expression)
     }
     else {
