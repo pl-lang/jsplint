@@ -10,18 +10,18 @@
       <h5 id="ModuloPrincipal">modulo_principal</h5>
       <ul>
         <li>'variables' '\n' 'inicio' '\n' 'fin'</li>
-        <li>'variables' '\n' <a href="#declaracion">declaracion_de_identificadores</a> 'inicio' '\n' <a href="#lista_de_enunciados">lista_de_enunciados</a> 'fin'</li>
+        <li>'variables' '\n' <a href="#declaracion">declaracion_de_variables</a> 'inicio' '\n' <a href="#lista_de_enunciados">lista_de_enunciados</a> 'fin'</li>
         <li>'variables' '\n' 'inicio' '\n' <a href="#lista_de_enunciados">lista_de_enunciados</a> 'fin'</li>
-        <li>'variables' '\n' <a href="#declaracion">declaracion_de_identificadores</a> 'inicio' '\n' 'fin'</li>
+        <li>'variables' '\n' <a href="#declaracion">declaracion_de_variables</a> 'inicio' '\n' 'fin'</li>
       </ul>
     </div>
 
     <div class="sheet">
-      <h5 id="declaracion">declaracion_de_identificadores</h5>
+      <h5 id="declaracion">declaracion_de_variables</h5>
       <ul>
-        <li><a href="#tipo">tipo</a> <a href="#lista_de_identificadores">lista_de_identificadores</a> '\n'</li>
-        <li><a href="#tipo">tipo</a> <a href="#lista_de_identificadores">lista_de_identificadores</a> '\n' <a href="#declaracion">declaracion_de_identificadores</a></li>
-        <li><a href="#tipo">tipo</a> <a href="#lista_de_identificadores">lista_de_identificadores</a> ',' <a href="#declaracion">declaracion_de_identificadores</a></li>
+        <li><a href="#tipo">tipo</a> <a href="#lista_de_nombres">lista_de_nombres</a> '\n'</li>
+        <li><a href="#tipo">tipo</a> <a href="#lista_de_nombres">lista_de_nombres</a> '\n' <a href="#declaracion">declaracion_de_variables</a></li>
+        <li><a href="#tipo">tipo</a> <a href="#lista_de_nombres">lista_de_nombres</a> ',' <a href="#declaracion">declaracion_de_variables</a></li>
       </ul>
     </div>
 
@@ -36,15 +36,15 @@
     </div>
 
     <div class="sheet">
-      <h5 id="lista_de_identificadores">lista_de_identificadores</h5>
+      <h5 id="lista_de_nombres">lista_de_nombres</h5>
       <ul>
-        <li><a href="#identificador">identificador</a></li>
-        <li><a href="#identificador">identificador</a> ',' <a href="#lista_de_identificadores">lista_de_identificadores</a></li>
+        <li><a href="#nombre">nombre</a></li>
+        <li><a href="#nombre">nombre</a> ',' <a href="#lista_de_nombres">lista_de_nombres</a></li>
       </ul>
     </div>
 
     <div class="sheet">
-      <h5 id="identificador">identificador</h5>
+      <h5 id="nombre">nombre</h5>
       <ul>
         <li><a href="#palabra">palabra</a></li>
         <li><a href="#palabra">palabra</a> '[' <a href="#dimension">dimension</a> ']'
@@ -90,7 +90,23 @@
     <div class="sheet">
       <h5 id="asignacion">asignacion</h5>
       <ul>
-        <li><a href="#identificador">identificador</a> '&lt;-' <a href="#expresion">expresion</a></li>
+        <li><a href="#variable">variable</a> '&lt;-' <a href="#expresion">expresion</a></li>
+      </ul>
+    </div>
+
+    <div class="sheet">
+      <h5 id="variable">variable</h5>
+      <ul>
+        <li><a href="#palabra">palabra</a></li>
+        <li><a href="#palabra">palabra</a>'['<a href="#indice">indice</a>']'</li>
+      </ul>
+    </div>
+
+    <div class="sheet">
+      <h5 id="indice">indice</h5>
+      <ul>
+        <li><a href="#expresion">expresion</a></li>
+        <li><a href="#expresion">expresion</a> ',' <a href="#indice">indice</a></li>
       </ul>
     </div>
 
@@ -144,9 +160,9 @@
     </div>
 
     <div class="sheet">
-      <h5>invocacion</h5>
+      <h5 id="invocacion">invocacion</h5>
       <ul>
-        <li><a href="#identificador">identificador</a></li>
+        <li><a href="#variable">variable</a></li>
         <li><a href="#llamada_a_modulo">llamada_a_modulo</a></li>
       </ul>
     </div>
@@ -201,7 +217,7 @@
     <div class="sheet">
       <h5 id="estructura_para">estructura_para</h5>
       <ul>
-        <li>'para' <a href="#identificador">identificador</a> '&lt;-' <a href="#expresion">expresion</a>  'hasta' <a href="#expresion">expresion</a> 'hacer' '\n' <a href="#lista_de_enunciados">lista_de_enunciados</a> 'finpara' '\n'</li>
+        <li>'para' <a href="#nombre">nombre</a> '&lt;-' <a href="#expresion">expresion</a>  'hasta' <a href="#expresion">expresion</a> 'hacer' '\n' <a href="#lista_de_enunciados">lista_de_enunciados</a> 'finpara' '\n'</li>
       </ul>
     </div>
 
@@ -224,9 +240,9 @@
     <h5 id="modulo_procedimiento">modulo_procedimiento</h5>
     <ul>
       <li><a href="#encabezado_procedimiento">encabezado_procedimiento</a> '\n' 'inicio' 'finprocedimiento' '\n'</li>
-      <li><a href="#encabezado_procedimiento">encabezado_procedimiento</a> '\n' <a href="#declaracion">declaracion_de_identificadores</a> 'inicio' '\n' <a href="#lista_de_enunciados">lista_de_enunciados</a> 'finprocedimiento'</li></li>
+      <li><a href="#encabezado_procedimiento">encabezado_procedimiento</a> '\n' <a href="#declaracion">declaracion_de_variables</a> 'inicio' '\n' <a href="#lista_de_enunciados">lista_de_enunciados</a> 'finprocedimiento'</li></li>
       <li><a href="#encabezado_procedimiento">encabezado_procedimiento</a> '\n' 'inicio' '\n' <a href="#lista_de_enunciados">lista_de_enunciados</a> 'finprocedimiento'</li></li>
-      <li><a href="#encabezado_procedimiento">encabezado_procedimiento</a> '\n' <a href="#declaracion">declaracion_de_identificadores</a> 'inicio' '\n' 'finprocedimiento'</li></li>
+      <li><a href="#encabezado_procedimiento">encabezado_procedimiento</a> '\n' <a href="#declaracion">declaracion_de_variables</a> 'inicio' '\n' 'finprocedimiento'</li></li>
     </ul>
   </div>
 
@@ -234,9 +250,9 @@
     <h5 id="modulo_funcion">modulo_funcion</h5>
     <ul>
       <li><a href="#encabezado_funcion">encabezado_funcion</a> '\n' 'inicio' 'finfuncion' '\n'</li>
-      <li><a href="#encabezado_funcion">encabezado_funcion</a> '\n' <a href="#declaracion">declaracion_de_identificadores</a> 'inicio' '\n' <a href="#lista_de_enunciados">lista_de_enunciados</a> 'finfuncion'</li></li>
+      <li><a href="#encabezado_funcion">encabezado_funcion</a> '\n' <a href="#declaracion">declaracion_de_variables</a> 'inicio' '\n' <a href="#lista_de_enunciados">lista_de_enunciados</a> 'finfuncion'</li></li>
       <li><a href="#encabezado_funcion">encabezado_funcion</a> '\n' 'inicio' '\n' <a href="#lista_de_enunciados">lista_de_enunciados</a> 'finfuncion'</li></li>
-      <li><a href="#encabezado_funcion">encabezado_funcion</a> '\n' <a href="#declaracion">declaracion_de_identificadores</a> 'inicio' '\n' 'finfuncion'</li></li>
+      <li><a href="#encabezado_funcion">encabezado_funcion</a> '\n' <a href="#declaracion">declaracion_de_variables</a> 'inicio' '\n' 'finfuncion'</li></li>
     </ul>
   </div>
 
