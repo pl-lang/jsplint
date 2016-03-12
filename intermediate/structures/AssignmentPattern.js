@@ -3,20 +3,20 @@
 const Node = require('../../auxiliary/Node')
 
 const Expression = require('./Expression')
-const VariableNamePattern = require('./VariableNamePattern')
+const VariablePattern = require('./VariablePattern')
 
 class AssignmentPattern {
   static capture(source) {
 
-    let report = VariableNamePattern.capture(source)
+    let report = VariablePattern.capture(source)
 
     if (report.error === true) {
       return report
     }
 
     let name = report.result.name
-    let isArray = report.result.data.isArray
-    let indexes = isArray === true ? report.result.data.dimension:null
+    let isArray = report.result.isArray
+    let indexes = report.result.indexes
     let target = {name, isArray, indexes}
 
     let current = source.current()
