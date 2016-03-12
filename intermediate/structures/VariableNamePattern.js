@@ -1,6 +1,6 @@
 'use strict'
 let WordPattern = require('./WordPattern.js')
-let IndexesPattern = require('./IndexesPattern.js')
+let IntegerIndexesPattern = require('./IntegerIndexesPattern.js')
 
 class VariableNamePattern {
   static capture(source) {
@@ -18,7 +18,7 @@ class VariableNamePattern {
 
       if (source.current().kind === 'left-bracket') {
         source.next()
-        let dimension = IndexesPattern.capture(source)
+        let dimension = IntegerIndexesPattern.capture(source)
         if (dimension.error)
           return dimension
         else {

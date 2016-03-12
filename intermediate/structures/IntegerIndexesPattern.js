@@ -1,7 +1,7 @@
 'use strict'
 let IntegerPattern = require('./IntegerPattern.js')
 
-class IndexesPattern {
+class IntegerIndexesPattern {
   static capture(source) {
     let indexes = []
 
@@ -38,4 +38,4 @@ class IndexesPattern {
   }
 }
 
-module.exports = IndexesPattern
+module.exports = IntegerIndexesPattern

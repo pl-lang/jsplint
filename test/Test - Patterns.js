@@ -52,13 +52,13 @@ describe('IntegerPattern', () => {
   })
 })
 
-describe('IndexesPattern', () => {
-  let IndexesPattern = require('../intermediate\/structures\/IndexesPattern.js')
+describe('IntegerIndexesPattern', () => {
+  let IntegerIndexesPattern = require('../intermediate\/structures\/IntegerIndexesPattern.js')
 
   it('captura el indice de un vector', () => {
     let q = queueFromSource('3')
 
-    let capture = IndexesPattern.capture(q)
+    let capture = IntegerIndexesPattern.capture(q)
 
     capture.error.should.equal(false)
     capture.result.should.deepEqual([3])
@@ -68,7 +68,7 @@ describe('IndexesPattern', () => {
   it('captura los indices de una matriz', () => {
     let q = queueFromSource('3, 7')
 
-    let capture = IndexesPattern.capture(q)
+    let capture = IntegerIndexesPattern.capture(q)
 
     capture.error.should.equal(false)
     capture.result.should.deepEqual([3, 7])
@@ -77,7 +77,7 @@ describe('IndexesPattern', () => {
 
   it('devuelve un error al encontrar un token inesperado', () => {
     let q = queueFromSource('3, 7, 2.78')
-    let capture = IndexesPattern.capture(q)
+    let capture = IntegerIndexesPattern.capture(q)
 
     capture.error.should.equal(true)
     capture.result.unexpectedToken.should.equal('real')
