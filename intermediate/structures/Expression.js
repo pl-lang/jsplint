@@ -3,7 +3,6 @@
 const Source = require('../../frontend/Source')
 const Parser = require('../../frontend/Parser')
 const TokenQueue = require('../TokenQueue')
-const VariableNamePattern = require('./VariableNamePattern')
 
 let precedence_by_op = {
   'or'          : 6  ,
@@ -68,14 +67,30 @@ class PrimaryExpression {
     let current = source.current()
     if (current.kind == 'word') {
       if (source.peek().kind != 'left-par') {
-        let report = VariableNamePattern.capture(source)
+
+        // NOTE: Es necesario requerir VariablePattern acá para evitar que
+        // Expression exporte un objeto vacio ( {} )
+        //
+        // El problema con esto es que se hace una llamada a require cada vez
+        // que se usa esta funcion. Esta funcion (PrimaryExpression.capture) se
+        // usa cada vez q se debe leer una expresion (al compilar y al ejecutar)
+        //
+        // No se que impacto tendrá esto en el desempeño.
+        //
+        // Otra solución es meter los contendiso de VariablePattern en este
+        // archivo
+
+        const VariablePattern = require('./VariablePattern')
+
+        let report = VariablePattern.capture(source)
+
         if (report.error === true) {
           return report
         }
 
         let name    = report.result.name
-        let isArray = report.result.data.isArray
-        let indexes = 'dimension' in report.result.data ? report.result.data.dimension:null
+        let isArray = report.result.isArray
+        let indexes = report.result.indexes
 
         let error = false
         let expression_type = 'invocation'
