@@ -174,7 +174,9 @@ class TypeChecker extends Emitter {
 
   validateAssignment(assigment) {
     if (this.variableExists(assigment.target.name)) {
-      let target_type = this.getVariable(assigment.target.name).type
+      let target = this.getVariable(assigment.target.name)
+
+      let target_type = target.type
 
       let payload_type_report = this.getExpressionReturnType(assigment.payload)
 
@@ -199,6 +201,26 @@ class TypeChecker extends Emitter {
       let reason = 'undefined-variable', result = reason
       return {error, result}
     }
+  }
+
+  /**
+   * Dado un arreglo de indices para un arreglo, revisa si se puede garantizar
+   * (antes de ejecutar el programa) que dichos indices estén dentro del rango
+   * dado por las dimensiones del arreglo.
+   * @param  {[expression]} index_array indices que se usan para acceder al arreglo
+   * @return {bool}             true si se puede garantizar, falso si no.
+   */
+  canCheckBounds(index_array) {
+    // La condicion para devolver true es que todas las expresiones dentro del
+    // arreglo sean de tipo 'literal'
+
+    for (let exp of index_array) {
+      if (exp.expression_type !== 'literal') {
+        return false
+      }
+    }
+
+    return true
   }
 
   getExpressionReturnType(expression) {
