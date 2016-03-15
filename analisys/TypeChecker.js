@@ -235,6 +235,25 @@ class TypeChecker extends Emitter {
 
   }
 
+  /**
+   * Revisa que la expresion de la condicion de una estructura de control sea
+   * correcta
+   * @param  {expression} condition la condicion de la estructura
+   * @return {void}
+   */
+  checkCondition(condition) {
+    let contidion_type = this.getExpressionReturnType(condition)
+
+    if (contidion_type.error) {
+      this.emit({name:'type-error'}, contidion_type.result)
+    }
+    else {
+      if (contidion_type.result !== 'logical') {
+        this.emit({name:'type-error'}, 'incorrect-type-at-condition')
+      }
+    }
+  }
+
   checkAssigmentNodes(module_root) {
     let current_node = module_root
 
