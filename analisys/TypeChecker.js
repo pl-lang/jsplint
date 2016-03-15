@@ -51,7 +51,7 @@ let type_data_by_category = {
 
   integer_operators:{
     supported_types: new Set(['entero']),
-    calculate_return_type: () => ({erro:false, result:'entero'})
+    calculate_return_type: () => ({error:false, result:'entero'})
   },
 
   comparison_operators:{
