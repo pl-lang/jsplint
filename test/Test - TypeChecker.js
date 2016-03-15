@@ -210,4 +210,35 @@ describe('TypeChecker', () => {
     error_list[0].reason.should.equal('incompatible-operator-types')
     error_list[1].reason.should.equal('incompatible-types-at-assignment')
   })
+
+  it('lookForErrors', () => {
+    let compiler = new Compiler()
+
+    let condition_error = false
+
+    compiler.on('type-error', (ev, reason) => {
+      console.log(reason)
+      if (reason === 'incorrect-type-at-condition') condition_error = true;
+    })
+
+    let code = `
+    variables
+    inicio
+      si (verdadero) entonces
+        escribir("hola")
+      sino
+        escribir("error")
+      finsi
+      escribir("chau")
+    fin
+    `
+
+    const RUN_TYPE_CHECKER = true
+
+    let compilation_report = compiler.compile(code, RUN_TYPE_CHECKER)
+
+    compilation_report.error.should.equal(false)
+
+    condition_error.should.equal(false)
+  })
 })
