@@ -178,14 +178,14 @@ class TypeChecker extends Emitter {
    * @return {void}
    */
   checkNode(node) {
-    if (current_node instanceof IfNode) {
-      this.checkIfNode(current_node)
+    if (node instanceof IfNode) {
+      this.checkIfNode(node)
     }
-    else if (current_node instanceof WhileNode) {
-      this.checkWhileNode(current_node)
+    else if (node instanceof WhileNode) {
+      this.checkWhileNode(node)
     }
-    else if (current_node instanceof UntilNode) {
-      this.checkUntilNode(current_node)
+    else if (node instanceof UntilNode) {
+      this.checkUntilNode(node)
     }
     else {
       // checkAssigmentNode(current_node)
