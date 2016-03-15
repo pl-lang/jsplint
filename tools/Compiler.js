@@ -124,7 +124,7 @@ class Compiler extends Emitter {
 
       this.repeatAllPublicEvents(type_checker)
 
-      type_checker.checkAssigmentNodes(main.statements)
+      type_checker.lookForErrors()
 
       if (type_error) {
         this.emit({name:'compilation-finished'}, {error:true, result:'type_error'})
