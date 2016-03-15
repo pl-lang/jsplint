@@ -154,17 +154,21 @@ class TypeChecker extends Emitter {
   /**
    * Revisa todos los nodos de un programa en busca de errores
    * @emits TypeChecker#type-error
+   * @emits TypeChecker#type-check-started
+   * @emits TypeChecker#type-check-finished
    * @return {Report} Si se encontró algun error la propiedad "error" será true
    */
   lookForErrors() {
     let current_node = this.module_root
+
+    this.emit({name:'type-check-started'})
 
     while (current_node !== null) {
       this.checkNode(current_node)
       current_node = current_node.getNext()
     }
 
-    current_node = current_node.getNext()
+    this.emit({name:'type-check-finished'})
   }
 
   /**
