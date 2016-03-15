@@ -200,18 +200,17 @@ class TypeChecker extends Emitter {
    */
   checkIfNode (node) {
     this.checkCondition(node.data.condition)
-    node.data.leftBranchNode
 
-    let current_node = node.data.rightBranchNode
+    let current_node = node.rightBranchNode
 
-    let next_statement = node.data.getNextStatementNode()
+    let next_statement = node.getNextStatementNode()
 
     while (current_node !== next_statement) {
       this.checkNode(current_node)
       current_node = current_node.getNext()
     }
 
-    current_node = node.data.leftBranchNode
+    current_node = node.leftBranchNode
     if (current_node !== null) {
       while (current_node !== next_statement) {
         this.checkNode(current_node)
