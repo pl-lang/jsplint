@@ -153,25 +153,36 @@ class TypeChecker extends Emitter {
    * @emits TypeChecker#type-error
    * @return {Report} Si se encontró algun error la propiedad "error" será true
    */
-  checkNodes() {
+  lookForErrors() {
     let current_node = this.module_root
 
     while (current_node !== null) {
-      if (current_node instanceof IfNode) {
-        this.checkIfNode(current_node)
-      }
-      else if (current_node instanceof WhileNode) {
-        this.checkWhileNode(current_node)
-      }
-      else if (current_node instanceof UntilNode) {
-        this.checkUntilNode(current_node)
-      }
-      else {
-        // checkAssigmentNode(current_node)
-      }
+      this.checkNode(current_node)
+      current_node = current_node.getNext()
     }
 
     current_node = current_node.getNext()
+  }
+
+  /**
+   * Revisa un nodo en busca de errores
+   * @param  {Node|IfNode|WhileNode|UntilNode} node nodo de un programa
+   * @emits TypeChecker#type-error
+   * @return {void}
+   */
+  checkNode(node) {
+    if (current_node instanceof IfNode) {
+      this.checkIfNode(current_node)
+    }
+    else if (current_node instanceof WhileNode) {
+      this.checkWhileNode(current_node)
+    }
+    else if (current_node instanceof UntilNode) {
+      this.checkUntilNode(current_node)
+    }
+    else {
+      // checkAssigmentNode(current_node)
+    }
   }
 
   /**
@@ -181,7 +192,27 @@ class TypeChecker extends Emitter {
    * @return {Report} Si se encontró algun error la propiedad "error" será true
    */
   checkIfNode (node) {
+    this.checkCondition(node.data.condition)
+    node.data.leftBranchNode
 
+    let current_node = node.data.rightBranchNode
+
+    let next_statement = node.data.getNextStatementNode()
+
+    while (current_node !== next_statement) {
+      this.checkNode(current_node)
+      current_node = current_node.getNext()
+    }
+
+    current_node = node.data.leftBranchNode
+    if (current_node !== null) {
+      while (current_node !== next_statement) {
+        this.checkNode(current_node)
+        current_node = current_node.getNext()
+      }
+    }
+
+    node.setCurrentBranchTo('next_statement')
   }
 
   /**
