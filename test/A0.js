@@ -138,11 +138,13 @@ describe('IfNode', () => {
   it('setCurrentBranchTo cambia el nodo que getNext devuelve', () => {
     let rightNode = new Node('right')
     let leftNode = new Node('left')
+    let next = new Node('next')
 
     let ifNode = new IfNode()
 
     ifNode.rightBranchNode = rightNode
     ifNode.leftBranchNode = leftNode
+    ifNode.setNext(next)
 
     ifNode.setCurrentBranchTo('false_branch')
 
@@ -151,6 +153,10 @@ describe('IfNode', () => {
     ifNode.setCurrentBranchTo('true_branch')
 
     ifNode.getNext().should.equal(rightNode)
+
+    ifNode.setCurrentBranchTo('next_statement')
+
+    ifNode.getNext().should.equal(next)
   })
 })
 

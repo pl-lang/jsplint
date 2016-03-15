@@ -59,6 +59,9 @@ class IfNode {
     else if (branch_name === 'false_branch') {
       this.returnedNode = this.leftBranchNode
     }
+    else if (branch_name === 'next_statement') {
+      this.returnedNode = this.next_statement_node
+    }
   }
 
   getNext() {
