@@ -148,6 +148,62 @@ class TypeChecker extends Emitter {
     } else return false;
   }
 
+  /**
+   * Revisa todos los nodos de un programa en busca de errores
+   * @emits TypeChecker#type-error
+   * @return {Report} Si se encontró algun error la propiedad "error" será true
+   */
+  checkNodes() {
+    let current_node = this.module_root
+
+    while (current_node !== null) {
+      if (current_node instanceof IfNode) {
+        this.checkIfNode(current_node)
+      }
+      else if (current_node instanceof WhileNode) {
+        this.checkWhileNode(current_node)
+      }
+      else if (current_node instanceof UntilNode) {
+        this.checkUntilNode(current_node)
+      }
+      else {
+        // checkAssigmentNode(current_node)
+      }
+    }
+
+    current_node = current_node.getNext()
+  }
+
+  /**
+   * Revisa un IfNode en busca de errores
+   * @emits TypeChecker#type-error
+   * @param {IfNode} node El nodo en cuestion
+   * @return {Report} Si se encontró algun error la propiedad "error" será true
+   */
+  checkIfNode (node) {
+
+  }
+
+  /**
+   * Revisa un WhileNode en busca de errores
+   * @emits TypeChecker#type-error
+   * @param {WhileNode} node El nodo en cuestion
+   * @return {Report} Si se encontró algun error la propiedad "error" será true
+   */
+  checkWhileNode (node) {
+
+  }
+
+  /**
+   * Revisa un UntilNode en busca de errores
+   * @emits TypeChecker#type-error
+   * @param {UntilNode} node El nodo en cuestion
+   * @return {Report} Si se encontró algun error la propiedad "error" será true
+   */
+  checkUntilNode (node) {
+
+  }
+
   checkAssigmentNodes(module_root) {
     let current_node = module_root
 
