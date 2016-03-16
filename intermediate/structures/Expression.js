@@ -5,21 +5,21 @@ const Parser = require('../../frontend/Parser')
 const TokenQueue = require('../TokenQueue')
 
 let precedence_by_op = {
-  'or'          : 6  ,
-  'and'         : 5  ,
-  'equal'       : 4  ,
-  'diff-than'   : 4  ,
-  'minor-than'  : 3  ,
-  'minor-equal' : 3  ,
-  'major-than'  : 3  ,
-  'major-equal' : 3  ,
-  'power'       : 2  ,
-  'div'         : 1  ,
-  'mod'         : 1  ,
-  'times'       : 1  ,
-  'divide'      : 1  ,
-  'minus'       : 0  ,
-  'plus'        : 0
+  'power'       : 6 ,
+  'div'         : 5 ,
+  'mod'         : 5 ,
+  'times'       : 5 ,
+  'divide'      : 5 ,
+  'minus'       : 4 ,
+  'plus'        : 4 ,
+  'minor-than'  : 3 ,
+  'minor-equal' : 3 ,
+  'major-than'  : 3 ,
+  'major-equal' : 3 ,
+  'equal'       : 2 ,
+  'diff-than'   : 2 ,
+  'and'         : 1 ,
+  'or'          : 0
 }
 
 let operator_names = new Set(Object.getOwnPropertyNames(precedence_by_op))
