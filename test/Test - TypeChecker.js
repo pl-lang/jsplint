@@ -232,10 +232,7 @@ describe('TypeChecker', () => {
     let code = `
     variables
     inicio
-      // si en la condicion pongo 2 + 2 = 4 el TypeChecker tira  error
-      // "esperaba entero o real pero recibi logico, operador +"
-      // ???????
-      si (verdadero) entonces
+      si (2 + 2 = 4) entonces
         escribir("hola")
       sino
         escribir("error")
