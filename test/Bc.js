@@ -306,6 +306,15 @@ describe('Evaluator', () => {
     }
   })
 
+  it.skip('prueba que no deberia fallar', () => {
+    let a = '2 + 2 = 4'
+    let q = queueFromSource(a)
+    let exp = Expression.fromQueue(q)
+    exp.error.should.equal(false)
+    let resultado = evaluator.evaluateExp(exp.result)
+    resultado.should.equal(true)
+  })
+
   it('cadenas', () => {
     {
       let a = '"hola"'
