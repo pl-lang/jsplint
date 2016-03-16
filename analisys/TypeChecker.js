@@ -250,7 +250,9 @@ class TypeChecker extends Emitter {
    * @return {Report} Si se encontró algun error la propiedad "error" será true
    */
   checkUntilNode (node) {
+    this.checkCondition(node.data.condition)
 
+    node.setCurrentBranchTo('program_body')
   }
 
   /**
