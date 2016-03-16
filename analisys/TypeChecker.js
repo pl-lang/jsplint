@@ -228,6 +228,18 @@ class TypeChecker extends Emitter {
    * @return {Report} Si se encontró algun error la propiedad "error" será true
    */
   checkWhileNode (node) {
+    this.checkCondition(node.data.condition)
+
+    let current_node = node.loop_body_root
+
+    let next_statement = node.getNextStatementNode()
+
+    while (current_node !== next_statement && current_node !== node) {
+      this.checkNode(current_node)
+      current_node = current_node.getNext()
+    }
+
+    node.setCurrentBranchTo('program_body')
 
   }
 
