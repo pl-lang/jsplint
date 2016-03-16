@@ -268,10 +268,32 @@ class TypeChecker extends Emitter {
       this.emit({name:'type-error'}, contidion_type.result)
     }
     else {
-      if (contidion_type.result !== 'logical') {
-        this.emit({name:'type-error'}, 'incorrect-type-at-condition')
+      if (contidion_type.result !== 'logico') {
+        let reason = 'incorrect-type-at-condition'
+        let expected = 'logico'
+        let unexpected = contidion_type.result
+        this.emit({name:'type-error'}, {reason, expected, unexpected})
       }
     }
+  }
+
+  /**
+   * Revisa que no haya errores en un enunciado de asignacion dado
+   * @param  {object} assigment_data propiedad data de un nodo de asignacion
+   * @return {void}
+   */
+  checkAssignment(assigment_data) {
+    /**
+     * buscar errores en el lado izquierdo
+     * 	- arreglos:
+     * 		-  que se intente asignar sin usar indices
+     * 		-  que se usen menos indices de los necesarios
+     *
+     * buscar errores en el lado derecho
+     *
+     * verificar que el tipo de la variable del lado izquierdo sea comptabile
+     * con el tipo del valor que retorna la expresion del lado derecho
+     */
   }
 
   checkAssigmentNodes(module_root) {
