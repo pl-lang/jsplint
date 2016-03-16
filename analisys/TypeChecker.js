@@ -376,7 +376,8 @@ class TypeChecker extends Emitter {
             let result = {
               reason:'incompatible-operator-types',
               expected:operator_info.supported_types,
-              unexpected:operand_type
+              unexpected:operand_type,
+              operator:expression.op
             }
             return {error, result}
           }
@@ -411,7 +412,8 @@ class TypeChecker extends Emitter {
               let result = {
                 reason:'incompatible-operator-types',
                 expected:operator_info.supported_types,
-                unexpected:op_b_type
+                unexpected:op_b_type,
+                operator:expression.op
               }
               return {error, result}
             }
@@ -422,6 +424,7 @@ class TypeChecker extends Emitter {
               reason:'incompatible-operator-types',
               expected:operator_info.supported_types,
               unexpected:op_a_type,
+              operator:expression.op
             }
             return {error, result}
           }
