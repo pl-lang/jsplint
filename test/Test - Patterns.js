@@ -520,7 +520,7 @@ describe('New Expression', () => {
       capt.error.should.equal(false)
       capt.result.should.deepEqual({
         expression_type:'literal',
-        type:'logical',
+        type:'logico',
         value:true
       })
     }
@@ -532,7 +532,7 @@ describe('New Expression', () => {
       capt.error.should.equal(false)
       capt.result.should.deepEqual({
         expression_type:'literal',
-        type:'logical',
+        type:'logico',
         value:false
       })
     }
@@ -763,7 +763,7 @@ describe('New Expression', () => {
       let capt = Expression.fromQueue(q)
       capt.error.should.equal(false)
       capt.result.expression_type.should.equal('expression')
-      capt.result.expression.should.deepEqual({expression_type:'unary-operation', op:'not', operand:{expression_type:'literal', type:'logical', value:true}})
+      capt.result.expression.should.deepEqual({expression_type:'unary-operation', op:'not', operand:{expression_type:'literal', type:'logico', value:true}})
     }
   })
 })

@@ -19,7 +19,7 @@ describe('TypeChecker', () => {
       {
         let exp = Expression.fromString('verdadero AND falso').result
         let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('logical')
+        type.result.should.equal('logico')
       }
     })
 
@@ -27,7 +27,7 @@ describe('TypeChecker', () => {
       {
         let exp = Expression.fromString('(verdadero AND falso)').result
         let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('logical')
+        type.result.should.equal('logico')
       }
     })
 
@@ -95,7 +95,7 @@ describe('TypeChecker', () => {
       {
         let exp = Expression.fromString('2 = 2.3').result
         let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('logical')
+        type.result.should.equal('logico')
       }
 
       {
@@ -103,37 +103,37 @@ describe('TypeChecker', () => {
 
         // let exp = Expression.fromString('2 + 2 = 4').result
         // let type = checker.getExpressionReturnType(exp)
-        // type.result.should.equal('logical')
+        // type.result.should.equal('logico')
       }
 
       {
         let exp = Expression.fromString('2 <> 2.3').result
         let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('logical')
+        type.result.should.equal('logico')
       }
 
       {
         let exp = Expression.fromString('2 < 2.3').result
         let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('logical')
+        type.result.should.equal('logico')
       }
 
       {
         let exp = Expression.fromString('2 > 2.3').result
         let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('logical')
+        type.result.should.equal('logico')
       }
 
       {
         let exp = Expression.fromString('2 <= 2.3').result
         let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('logical')
+        type.result.should.equal('logico')
       }
 
       {
         let exp = Expression.fromString('2 >= 2.3').result
         let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('logical')
+        type.result.should.equal('logico')
       }
     })
 
@@ -163,20 +163,20 @@ describe('TypeChecker', () => {
       {
         let exp = Expression.fromString('verdadero AND falso').result
         let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('logical')
+        type.result.should.equal('logico')
       }
 
       {
         let exp = Expression.fromString('verdadero OR falso').result
         let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('logical')
+        type.result.should.equal('logico')
       }
 
       // TODO: ver por que esta expresion devuelve undefined
       // {
       //   let exp = Expression.fromString('NOT verdadero').result
       //   let type = checker.getExpressionReturnType(exp)
-      //   type.result.should.equal('logical')
+      //   type.result.should.equal('logico')
       // }
     })
   })

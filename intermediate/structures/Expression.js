@@ -107,7 +107,7 @@ class PrimaryExpression {
       let error = false
       let expression_type = 'literal'
       let value = current.kind == 'verdadero'
-      let type = 'logical'
+      let type = 'logico'
       let result = {expression_type, value, type}
       source.next()
       return {error, result}

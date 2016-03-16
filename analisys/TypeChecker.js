@@ -37,7 +37,7 @@ let comparison_operators = new Set([
   , 'minor-equal'
 ])
 
-let logical_operators = new Set([
+let logico_operators = new Set([
     'and'
   , 'or'
   , 'not'
@@ -58,20 +58,20 @@ let type_data_by_category = {
   },
 
   comparison_operators:{
-    supported_types:new Set(['entero', 'real', 'character', 'logical']),
+    supported_types:new Set(['entero', 'real', 'character', 'logico']),
     calculate_return_type: (a, b) => {
       let comparable_types = a === 'entero' && b === 'real' || a === 'real' && b === 'entero'
       let equal_types = a === b
-      let result = comparable_types || equal_types ? 'logical':null
+      let result = comparable_types || equal_types ? 'logico':null
       let error = result === null ? true:false
       return {error, result}
     }
   },
 
-  logical_operators:{
-    supported_types: new Set(['logical']),
+  logico_operators:{
+    supported_types: new Set(['logico']),
     calculate_return_type: () => {
-      return {error:false, result:'logical'}
+      return {error:false, result:'logico'}
     }
   },
 
@@ -96,8 +96,8 @@ function getOperatorInfo(operator) {
   else if (comparison_operators.has(operator))
     return type_data_by_category.comparison_operators;
 
-  else if (logical_operators.has(operator))
-    return type_data_by_category.logical_operators;
+  else if (logico_operators.has(operator))
+    return type_data_by_category.logico_operators;
 
   else if (operator === 'divide')
     return type_data_by_category.divide;

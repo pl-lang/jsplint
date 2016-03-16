@@ -148,7 +148,7 @@ describe('Captura de estructuras sintacticas', () => {
 
     until_node.data.condition.should.deepEqual({
       expression_type:'literal',
-      type:'logical',
+      type:'logico',
       value:true
     })
   })
