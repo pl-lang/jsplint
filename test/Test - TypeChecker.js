@@ -99,6 +99,14 @@ describe('TypeChecker', () => {
       }
 
       {
+        // TODO: averiguar por qué está fallando esto...
+
+        // let exp = Expression.fromString('2 + 2 = 4').result
+        // let type = checker.getExpressionReturnType(exp)
+        // type.result.should.equal('logical')
+      }
+
+      {
         let exp = Expression.fromString('2 <> 2.3').result
         let type = checker.getExpressionReturnType(exp)
         type.result.should.equal('logical')
@@ -224,6 +232,9 @@ describe('TypeChecker', () => {
     let code = `
     variables
     inicio
+      // si en la condicion pongo 2 + 2 = 4 el TypeChecker tira  error
+      // "esperaba entero o real pero recibi logico, operador +"
+      // ???????
       si (verdadero) entonces
         escribir("hola")
       sino
