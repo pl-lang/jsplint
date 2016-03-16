@@ -284,4 +284,36 @@ describe('TypeChecker', () => {
 
     condition_error.should.equal(false)
   })
+
+  it('verificar que no haya errores en un bucle repetir', () => {
+    let compiler = new Compiler()
+
+    let condition_error = false
+
+    compiler.on('type-error', (ev, reason) => {
+      console.log(reason)
+      if (reason === 'incorrect-type-at-condition') condition_error = true;
+    })
+
+    let code = `
+    variables
+      logico a
+    inicio
+      a <- verdadero
+      repetir
+        escribir("dentro del bucle")
+        a <- falso
+      hasta que (a = falso)
+      escribir("fuera del bucle")
+    fin
+    `
+
+    const RUN_TYPE_CHECKER = true
+
+    let compilation_report = compiler.compile(code, RUN_TYPE_CHECKER)
+
+    compilation_report.error.should.equal(false)
+
+    condition_error.should.equal(false)
+  })
 })
