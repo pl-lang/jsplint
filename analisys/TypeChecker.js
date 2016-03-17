@@ -287,7 +287,11 @@ class TypeChecker extends Emitter {
       let target = this.getVariable(assigment_data.target.name)
 
       if (target.isArray === true || assigment_data.target.isArray === true) {
-        this.checkArrayInvocation(target, assigment_data.target)
+        let report = this.checkArrayInvocation(target, assigment_data.target)
+
+        if (report.error === true) {
+          this.emit({name:'type-error'}, report.result)
+        }
       }
 
       let expression_type_report = this.getExpressionReturnType(assigment_data.payload)
@@ -316,10 +320,9 @@ class TypeChecker extends Emitter {
 
   /**
    * Revisa que no haya errores en una invocacion a un arreglo
-   * @emits  TypeChecker#type-error
    * @param  {object} variable        la variable  que se quiere invocar como arreglo
    * @param  {object} invocation_info datos para la invocacion (indices y demas)
-   * @return {void}
+   * @return {Report}                 si la propiedad error es true entonces result contiene info sobre el error
    */
   checkArrayInvocation(variable, invocation_info) {
     if (variable.isArray === true && invocation_info.isArray === true) {
@@ -332,32 +335,38 @@ class TypeChecker extends Emitter {
           if (indexes_types[i] !== 'entero') {
             invalid_type_found = true
           }
-          i++
+          else {
+            i++
+          }
         }
 
         if (invalid_type_found === true) {
-          let info = {
-            reason:'non-integer-index',
-            bad_index:i
-          }
-          this.emit({name:'type-error'}, info)
+          let reason = 'non-integer-index', bad_index = i
+          return {error:true, result:{reason, bad_index}}
+        }
+        else {
+          return {error:false}
         }
       }
       else {
-        let info = {
-          reason:'dimension-length-diff-than-indexes-length',
-          dimensions:variable.dimension.length,
-          indexes:invocation_info.indexes.length
-        }
-        this.emit({name:'type-error'}, info)
+        let reason = 'dimension-length-diff-than-indexes-length'
+        let dimensions = variable.dimension.length
+        let indexes = invocation_info.indexes.length
+
+        return {error:true, result:{reason, dimensions, indexes}}
       }
     }
     else {
+      let name = invocation_info.name
       if (variable.isArray === true) {
-        this.emit({name:'type-error'}, {reason:'array-var-without-index', name:invocation_info.name})
+        let reason = 'missing-index'
+
+        return {error:true, result:{reason, name}}
       }
       else {
-        this.emit({name:'type-error'}, {reason:'var-isnt-array', name:invocation_info.name})
+        let reason = 'var-isnt-array'
+
+        return {error:true, result:{reason, name}}
       }
     }
   }
