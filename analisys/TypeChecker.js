@@ -283,17 +283,83 @@ class TypeChecker extends Emitter {
    * @return {void}
    */
   checkAssignment(assigment_data) {
-    /**
-     * buscar errores en el lado izquierdo
-     * 	- arreglos:
-     * 		-  que se intente asignar sin usar indices
-     * 		-  que se usen menos indices de los necesarios
-     *
-     * buscar errores en el lado derecho
-     *
-     * verificar que el tipo de la variable del lado izquierdo sea comptabile
-     * con el tipo del valor que retorna la expresion del lado derecho
-     */
+    if (this.variableExists(assigment_data.target.name) === true) {
+      let target = this.getVariable(assigment_data.target.name)
+
+      if (target.isArray === true || assigment_data.target.isArray === true) {
+        this.checkArrayInvocation(target, assigment_data.target)
+      }
+
+      let expression_type_report = this.getExpressionReturnType(assigment_data.payload)
+
+      if (expression_type_report.error === true) {
+        this.emit({name:'type-error'}, expression_type_report.result)
+      }
+      else {
+        let payload_data_type = expression_type_report.result
+
+        if (this.typesAreCompatible(target.type, payload_data_type) === false) {
+          let reason = 'incompatible-types-at-assignment'
+          let error_info = {reason, target_type, payload_type}
+          this.emit({name:'type-error'}, error_info)
+        }
+      }
+
+    }
+    else {
+      this.emit({name:'type-error'}, {
+        reason:'undeclared-variable',
+        name:assigment_data.target.name
+      })
+    }
+  }
+
+  /**
+   * Revisa que no haya errores en una invocacion a un arreglo
+   * @emits  TypeChecker#type-error
+   * @param  {object} variable        la variable  que se quiere invocar como arreglo
+   * @param  {object} invocation_info datos para la invocacion (indices y demas)
+   * @return {void}
+   */
+  checkArrayInvocation(variable, invocation_info) {
+    if (variable.isArray === true && invocation_info.isArray === true) {
+      if (variable.dimension.length === invocation_info.indexes.length) {
+        let indexes_types = invocation_info.indexes.map(this.getExpressionReturnType).map(report => report.result)
+
+        let invalid_type_found = false, i = 0
+
+        while (!invalid_type_found && i < indexes_types.length) {
+          if (indexes_types[i] !== 'entero') {
+            invalid_type_found = true
+          }
+          i++
+        }
+
+        if (invalid_type_found === true) {
+          let info = {
+            reason:'non-integer-index',
+            bad_index:i
+          }
+          this.emit({name:'type-error'}, info)
+        }
+      }
+      else {
+        let info = {
+          reason:'dimension-length-diff-than-indexes-length',
+          dimensions:variable.dimension.length,
+          indexes:invocation_info.indexes.length
+        }
+        this.emit({name:'type-error'}, info)
+      }
+    }
+    else {
+      if (variable.isArray === true) {
+        this.emit({name:'type-error'}, {reason:'array-var-without-index', name:invocation_info.name})
+      }
+      else {
+        this.emit({name:'type-error'}, {reason:'var-isnt-array', name:invocation_info.name})
+      }
+    }
   }
 
   checkAssigmentNodes(module_root) {
