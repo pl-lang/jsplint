@@ -8,7 +8,19 @@ const RUN_TYPE_CHECKER = true
 const DO_NOT_RUN_TYPE_CHECKER = false
 
 describe('TypeChecker', () => {
-  let checker = new TypeChecker(null, null, {a:{type:'entero'}}, {})
+  let globals = {
+    a:{
+      type:'entero',
+      isArray:false,
+      dimension:null
+    },
+    b:{
+      type:'entero',
+      isArray:true,
+      dimension:[3, 4]
+    }
+  }
+  let checker = new TypeChecker(null, null, globals, {})
 
   describe('getExpressionReturnType', () => {
     // TODO: agregrar pruebas de errores
@@ -307,5 +319,102 @@ describe('TypeChecker', () => {
     compilation_report.error.should.equal(false)
 
     condition_error.should.equal(false)
+  })
+
+  it('checkArrayInvocation', () => {
+    {
+      // invalid index
+
+      let target = globals.b
+      let invocation = {
+        name:'b',
+        isArray:true,
+        indexes:[{expression_type:'literal', type:'entero', value:2}, {expression_type:'literal', type:'logico', value:true}]
+      }
+
+      let report = checker.checkArrayInvocation(target, invocation)
+
+      report.error.should.equal(true)
+      report.result.reason.should.equal('non-integer-index')
+      report.result.bad_index.should.equal(1)
+    }
+
+    {
+      // not enough indexes
+
+      let target = globals.b
+      let invocation = {
+        name:'b',
+        isArray:true,
+        indexes:[{expression_type:'literal', type:'entero', value:2}]
+      }
+
+      let report = checker.checkArrayInvocation(target, invocation)
+
+      report.error.should.equal(true)
+      report.result.reason.should.equal('dimension-length-diff-than-indexes-length')
+      report.result.dimensions.should.equal(2)
+      report.result.indexes.should.equal(1)
+    }
+
+    {
+      // too many indexes
+
+      let target = globals.b
+      let invocation = {
+        name:'b',
+        isArray:true,
+        indexes:[
+          {expression_type:'literal', type:'entero', value:1},
+          {expression_type:'literal', type:'entero', value:2},
+          {expression_type:'literal', type:'entero', value:3}
+        ]
+      }
+
+      let report = checker.checkArrayInvocation(target, invocation)
+
+      report.error.should.equal(true)
+      report.result.reason.should.equal('dimension-length-diff-than-indexes-length')
+      report.result.dimensions.should.equal(2)
+      report.result.indexes.should.equal(3)
+    }
+
+    {
+      // not an array
+
+      let target = globals.a
+      let invocation = {
+        name:'a',
+        isArray:true,
+        indexes:[
+          {expression_type:'literal', type:'entero', value:1},
+          {expression_type:'literal', type:'entero', value:2},
+          {expression_type:'literal', type:'entero', value:3}
+        ]
+      }
+
+      let report = checker.checkArrayInvocation(target, invocation)
+
+      report.error.should.equal(true)
+      report.result.reason.should.equal('var-isnt-array')
+      report.result.name.should.equal('a')
+    }
+
+    {
+      // missing index
+
+      let target = globals.b
+      let invocation = {
+        name:'b',
+        isArray:false,
+        indexes:null
+      }
+
+      let report = checker.checkArrayInvocation(target, invocation)
+
+      report.error.should.equal(true)
+      report.result.reason.should.equal('missing-index')
+      report.result.name.should.equal('b')
+    }
   })
 })
