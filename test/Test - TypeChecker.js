@@ -4,6 +4,9 @@ const Expression = require('../intermediate/structures/Expression')
 const TypeChecker = require('../analisys/TypeChecker')
 const Compiler = require('../tools/Compiler')
 
+const RUN_TYPE_CHECKER = true
+const DO_NOT_RUN_TYPE_CHECKER = false
+
 describe('TypeChecker', () => {
   let checker = new TypeChecker(null, null, {a:{type:'entero'}}, {})
 
@@ -194,8 +197,6 @@ describe('TypeChecker', () => {
     fin
     `
 
-    const DO_NOT_RUN_TYPE_CHECKER = false
-
     let compilation_report = compiler.compile(code, DO_NOT_RUN_TYPE_CHECKER)
 
     compilation_report.error.should.equal(false)
@@ -241,8 +242,6 @@ describe('TypeChecker', () => {
     fin
     `
 
-    const RUN_TYPE_CHECKER = true
-
     let compilation_report = compiler.compile(code, RUN_TYPE_CHECKER)
 
     compilation_report.error.should.equal(false)
@@ -273,8 +272,6 @@ describe('TypeChecker', () => {
     fin
     `
 
-    const RUN_TYPE_CHECKER = true
-
     let compilation_report = compiler.compile(code, RUN_TYPE_CHECKER)
 
     compilation_report.error.should.equal(false)
@@ -304,8 +301,6 @@ describe('TypeChecker', () => {
       escribir("fuera del bucle")
     fin
     `
-
-    const RUN_TYPE_CHECKER = true
 
     let compilation_report = compiler.compile(code, RUN_TYPE_CHECKER)
 
