@@ -188,7 +188,7 @@ class TypeChecker extends Emitter {
       this.checkUntilNode(node)
     }
     else {
-      // checkAssigmentNode(current_node)
+      this.checkAssignment(node.data)
     }
   }
 
@@ -271,7 +271,7 @@ class TypeChecker extends Emitter {
    * Revisa que la expresion de la condicion de una estructura de control sea
    * correcta
    * @param  {expression} condition la condicion de la estructura
-   * @return {void}
+   * @return {Report}
    */
   checkCondition(condition) {
     let condition_type = this.getExpressionReturnType(condition)
