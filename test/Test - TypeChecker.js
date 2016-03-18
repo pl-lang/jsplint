@@ -321,6 +321,28 @@ describe('TypeChecker', () => {
     condition_error.should.equal(false)
   })
 
+  it('checkCondition', () => {
+    {
+      let exp = Expression.fromString('2 + verdadero').result
+
+      let condition_check = checker.checkCondition(exp)
+
+      condition_check.error.should.equal(true)
+      condition_check.result.reason.should.equal('incompatible-operator-types')
+    }
+
+    {
+      let exp = Expression.fromString('4.78').result
+
+      let condition_check = checker.checkCondition(exp)
+
+      condition_check.error.should.equal(true)
+      condition_check.result.reason.should.equal('invalid-type-at-condition')
+      condition_check.result.expected.should.equal('logico')
+      condition_check.result.unexpected.should.equal('real')
+    }
+  })
+
   it('checkArrayInvocation', () => {
     {
       // invalid index
