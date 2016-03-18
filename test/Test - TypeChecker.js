@@ -438,5 +438,67 @@ describe('TypeChecker', () => {
       report.result.reason.should.equal('missing-index')
       report.result.name.should.equal('b')
     }
+
+    {
+      // out of bounds index/es
+
+      let target = globals.b
+      let invocation = {
+        name:'b',
+        isArray:true,
+        indexes:[
+          {expression_type:'literal', type:'entero', value:2},
+          {expression_type:'literal', type:'entero', value:7}
+        ]
+      }
+
+      let report = checker.checkArrayInvocation(target, invocation)
+
+      report.error.should.equal(true)
+      report.result.reason.should.equal('index-out-of-bounds')
+      report.result.bad_index.should.equal(1)
+      report.result.expected.should.equal(4)
+    }
+
+    {
+      // index < 1
+
+      let target = globals.b
+      let invocation = {
+        name:'b',
+        isArray:true,
+        indexes:[
+          {expression_type:'literal', type:'entero', value:0},
+          {expression_type:'literal', type:'entero', value:3}
+        ]
+      }
+
+      let report = checker.checkArrayInvocation(target, invocation)
+
+      report.error.should.equal(true)
+      report.result.reason.should.equal('index-less-than-one')
+      report.result.bad_index.should.equal(0)
+    }
+
+    {
+      // can't check bounds at compile time
+
+      let target = globals.b
+      let sum = Expression.fromString('2 + 3').result
+      let invocation = {
+        name:'b',
+        isArray:true,
+        indexes:[
+          sum,
+          {expression_type:'literal', type:'entero', value:3}
+        ]
+      }
+
+      let report = checker.checkArrayInvocation(target, invocation)
+
+      report.error.should.equal(false)
+
+      invocation.bounds_checked.should.equal(false)
+    }
   })
 })
