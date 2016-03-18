@@ -344,7 +344,7 @@ class TypeChecker extends Emitter {
   checkArrayInvocation(variable, invocation_info) {
     if (variable.isArray === true && invocation_info.isArray === true) {
       if (variable.dimension.length === invocation_info.indexes.length) {
-        let indexes_types = invocation_info.indexes.map(this.getExpressionReturnType).map(report => report.result)
+        let indexes_types = invocation_info.indexes.map(exp => this.getExpressionReturnType(exp)).map(report => report.result)
 
         let invalid_type_found = false, i = 0
 
