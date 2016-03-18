@@ -320,6 +320,7 @@ class TypeChecker extends Emitter {
 
         if (this.typesAreCompatible(target.type, payload_data_type) === false) {
           let reason = 'incompatible-types-at-assignment'
+          let target_type = target.type, payload_type = payload_data_type
           let error_info = {reason, target_type, payload_type}
           this.emit({name:'type-error'}, error_info)
         }
