@@ -341,7 +341,7 @@ describe('TypeChecker', () => {
     }
   })
 
-  it.skip('checkArrayInvocation', () => {
+  it('checkArrayInvocation', () => {
     {
       // invalid index
 
@@ -482,12 +482,11 @@ describe('TypeChecker', () => {
       // can't check bounds at compile time
 
       let target = globals.b
-      let sum = Expression.fromString('2 + 3').result
       let invocation = {
         name:'b',
         isArray:true,
         indexes:[
-          sum,
+          Expression.fromString('2 + 3').result,
           {expression_type:'literal', type:'entero', value:3}
         ]
       }
