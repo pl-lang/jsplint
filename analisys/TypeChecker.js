@@ -362,6 +362,30 @@ class TypeChecker extends Emitter {
           return {error:true, result:{reason, bad_index}}
         }
         else {
+          if (this.canCheckBounds(invocation_info.indexes) === true) {
+            let index_values = invocation_info.indexes.map(index => index.value)
+            let i = 0, out_of_bounds_index = false
+
+            while (i < index_values.length && !out_of_bounds_index) {
+              if (index_values[i] < 1) {
+                let reason = 'index-less-than-one'
+                let bad_index = i
+                return {error:true, result:{reason, bad_index}}
+              }
+              else if (index_values[i] > variable.dimension[i]) {
+                let reason = 'index-out-of-bounds'
+                let bad_index = i
+                let expected = variable.dimension[i]
+                return {error:true, result:{reason, bad_index, expected}}
+              }
+              i++
+            }
+            invocation_info.bounds_checked = true
+          }
+          else {
+            invocation_info.bounds_checked = false
+          }
+
           return {error:false}
         }
       }
