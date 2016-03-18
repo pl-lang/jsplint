@@ -199,7 +199,11 @@ class TypeChecker extends Emitter {
    * @return {Report} Si se encontró algun error la propiedad "error" será true
    */
   checkIfNode (node) {
-    this.checkCondition(node.data.condition)
+    let condition_report = this.checkCondition(node.data.condition)
+
+    if (condition_report.error === true) {
+      this.emit({name:'type-error'}, condition_report.result)
+    }
 
     let current_node = node.rightBranchNode
 
@@ -228,7 +232,11 @@ class TypeChecker extends Emitter {
    * @return {Report} Si se encontró algun error la propiedad "error" será true
    */
   checkWhileNode (node) {
-    this.checkCondition(node.data.condition)
+    let condition_report = this.checkCondition(node.data.condition)
+
+    if (condition_report.error === true) {
+      this.emit({name:'type-error'}, condition_report.result)
+    }
 
     let current_node = node.loop_body_root
 
@@ -250,7 +258,11 @@ class TypeChecker extends Emitter {
    * @return {Report} Si se encontró algun error la propiedad "error" será true
    */
   checkUntilNode (node) {
-    this.checkCondition(node.data.condition)
+    let condition_report = this.checkCondition(node.data.condition)
+
+    if (condition_report.error === true) {
+      this.emit({name:'type-error'}, condition_report.result)
+    }
 
     node.setCurrentBranchTo('program_body')
   }
@@ -262,17 +274,21 @@ class TypeChecker extends Emitter {
    * @return {void}
    */
   checkCondition(condition) {
-    let contidion_type = this.getExpressionReturnType(condition)
+    let condition_type = this.getExpressionReturnType(condition)
 
-    if (contidion_type.error) {
-      this.emit({name:'type-error'}, contidion_type.result)
+    if (condition_type.error) {
+      return {error:true, result:condition_type.result}
     }
     else {
-      if (contidion_type.result !== 'logico') {
-        let reason = 'incorrect-type-at-condition'
+      if (condition_type.result !== 'logico') {
+        let reason = 'invalid-type-at-condition'
         let expected = 'logico'
-        let unexpected = contidion_type.result
-        this.emit({name:'type-error'}, {reason, expected, unexpected})
+        let unexpected = condition_type.result
+
+        return {error:true, result:{reason, expected, unexpected}}
+      }
+      else {
+        return {error:false}
       }
     }
   }
