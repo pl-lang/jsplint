@@ -187,7 +187,7 @@ class TypeChecker extends Emitter {
     else if (node instanceof UntilNode) {
       this.checkUntilNode(node)
     }
-    else {
+    else if (node.data.action === 'assigment') {
       this.checkAssignment(node.data)
     }
   }
