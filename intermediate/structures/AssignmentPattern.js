@@ -17,7 +17,8 @@ class AssignmentPattern {
     let name = report.result.name
     let isArray = report.result.isArray
     let indexes = report.result.indexes
-    let target = {name, isArray, indexes}
+    let bounds_checked = false
+    let target = {name, isArray, indexes, bounds_checked}
 
     let current = source.current()
 

@@ -33,6 +33,7 @@ describe('Captura de estructuras sintacticas', () => {
         name:'a',
         isArray:false,
         indexes:null,
+        bounds_checked:false
       },
       payload:{expression_type:'literal', type:'entero', value:32}
     })
@@ -64,7 +65,8 @@ describe('Captura de estructuras sintacticas', () => {
       target:{
         name:'a',
         isArray:false,
-        indexes:null
+        indexes:null,
+        bounds_checked:false
       },
       payload:{expression_type:'literal', type:'entero', value:32}
     })
@@ -99,7 +101,8 @@ describe('Captura de estructuras sintacticas', () => {
       target:{
         name:'a',
         isArray:false,
-        indexes:null
+        indexes:null,
+        bounds_checked:false
       },
       payload:{expression_type:'literal', type:'entero', value:32}
     })
@@ -109,7 +112,8 @@ describe('Captura de estructuras sintacticas', () => {
       target:{
         name:'a',
         isArray:false,
-        indexes:null
+        indexes:null,
+        bounds_checked:false
       },
       payload:{expression_type:'literal', type:'entero', value:48}
     })
@@ -137,7 +141,8 @@ describe('Captura de estructuras sintacticas', () => {
       target:{
         name:'a',
         isArray:false,
-        indexes:null
+        indexes:null,
+        bounds_checked:false
       },
       payload:{expression_type:'literal', type:'entero', value:32}
     })
