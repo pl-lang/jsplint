@@ -34,6 +34,56 @@ class Evaluator extends Emitter {
     this.running = true
   }
 
+  /**
+   * Funcion que ejecuta un programa
+   * @return {[type]} [description]
+   */
+  run() {
+
+    while (this.current_node !== null && this.running) {
+
+      let statement = this.current_node.data
+
+      switch (statement.action) {
+        case  'assignment':
+        this.assignToVar(statement.target, statement.payload)
+        break
+
+        case  'module_call':
+        if (statement.name == 'escribir') {
+          this.writeCall(statement)
+        }
+        else if (statement.name == 'leer') {
+          this.sendReadEvent(statement)
+        }
+        break
+
+        case 'if':{
+          let branch_name = this.evaluateExp(statement.condition) ? 'true_branch':'false_branch'
+          this.current_node.setCurrentBranchTo(branch_name)
+        }
+        break
+
+        case 'repeat': {
+          let branch_name = !this.evaluateExp(statement.condition) ? 'loop_body':'program_body'
+          this.current_node.setCurrentBranchTo(branch_name)
+        }
+        break
+
+        case 'while': {
+          let branch_name = this.evaluateExp(statement.condition) ? 'loop_body':'program_body'
+          this.current_node.setCurrentBranchTo(branch_name)
+        }
+        break
+      }
+
+      this.current_node = this.current_node.getNext()
+    }
+
+    // TODO: hacer que esta funcion reporte error:true cuando ocurran errores de evaluacion
+    return {error:this.error}
+  }
+
   writeCall(call) {
     let value_list = call.args.map((expression) => {
       return this.evaluateExp(expression, expression.expression_type)
@@ -51,6 +101,47 @@ class Evaluator extends Emitter {
     this.running = false
   }
 
+  /**
+   * Asigna el resultado de una expresión a una variable o a un elemento de un
+   * arreglo.
+   * @param  {[type]} target_info [description]
+   * @param  {[type]} expression  [description]
+   * @return {[type]}             [description]
+   */
+  assignToVar(target_info, expression) {
+    let target_variable = this.getVariable(target_info.name)
+
+    if (target_info.isArray === true) {
+      let index_list = target_info.indexes.map(expression => this.evaluateExp(expression) - 1)
+
+      if (target_info.bounds_checked === false)  {
+        let bound_check = this.indexWithinBounds(index_list, target_variable.dimensions)
+        if (bound_check.error === true) {
+          this.running = false
+          this.emit({name:'evaluation-error'}, bound_check.result)
+          return
+        }
+      }
+      // NOTE: Por ahora, no se revisa si hay un error al evaluar un indice
+
+      let index = this.calculateIndex(target_info.indexes.map(a => this.evaluateExp(a) - 1), target_variable.dimensions)
+      target_variable.values[index] = this.evaluateExp(expression)
+    }
+    else {
+      target_variable.value = this.evaluateExp(expression)
+    }
+
+    // Por ahora...
+    return {error:false}
+  }
+
+  /**
+   * Crea expresiones con los resultados de una lectura, las evalua, y las asigna
+   * a la variable/elemento de arreglo correspondiente.
+   * @param  {[type]} varname_list [description]
+   * @param  {[type]} data_list    [description]
+   * @return {[type]}              [description]
+   */
   assignReadData(varname_list, data_list) {
     let error = 0
     let i = 0
@@ -73,6 +164,29 @@ class Evaluator extends Emitter {
     // para que el evaluador pueda ser reanudado
     if (!error) {
       this.running = true
+    }
+  }
+
+  /**
+   * Delega la evaluación de una expresión a la función apropiada según el tipo
+   * de dicha expresión
+   * @param  {object} exp una expresión
+   * @return {bool|number|string}     el resultado de la evaluación de la expresión
+   */
+  evaluateExp(exp) {
+    switch (exp.expression_type) {
+      case 'invocation':{
+        let invocation = exp
+        return this.getValue(invocation)
+      }
+      case  'literal':
+        return exp.value
+      case  'operation':
+        return this.evaluateOperation(exp)
+      case  'unary-operation':
+        return this.evaluateUnaryOperation(exp)
+      case  'expression':
+        return this.evaluateExp(exp.expression)
     }
   }
 
@@ -120,6 +234,11 @@ class Evaluator extends Emitter {
     }
   }
 
+  /**
+   * Evalua operaciones binarias
+   * @param  {object} exp una expresión de tipo 'operation'
+   * @return {number|bool|string}     el resultado de la evaluación de la expresión
+   */
   evaluateOperation(exp) {
     let operand_a = this.evaluateExp(exp.operands[0])
     let operand_b = this.evaluateExp(exp.operands[1])
@@ -171,6 +290,11 @@ class Evaluator extends Emitter {
     }
   }
 
+  /**
+   * Evalúa una expresión unaria
+   * @param  {object} exp una expresión de tipo 'unary-operation'
+   * @return {number|bool}     El resultado de la evaluación de la expresión
+   */
   evaluateUnaryOperation(exp) {
     let operand = this.evaluateExp(exp.operand)
 
@@ -180,33 +304,6 @@ class Evaluator extends Emitter {
 
       case 'not':
       return !operand
-    }
-  }
-
-  /**
-   * Delega la evaluación de una expresión a la función apropiada según el tipo
-   * de dicha expresión
-   * @param  {object} exp una expresión
-   * @return {bool|number|string}     el resultado de la evaluación de la expresión
-   */
-  evaluateExp(exp) {
-    switch (exp.expression_type) {
-      case 'invocation':{
-        /**
-         * Una expresion de invocación
-         * @type {invocation}
-         */
-        let invocation = exp
-        return this.getValue(invocation)
-      }
-      case  'literal':
-        return exp.value
-      case  'operation':
-        return this.evaluateOperation(exp)
-      case  'unary-operation':
-        return this.evaluateUnaryOperation(exp)
-      case  'expression':
-        return this.evaluateExp(exp.expression)
     }
   }
 
@@ -238,33 +335,6 @@ class Evaluator extends Emitter {
       }
     }
 
-    return {error:false}
-  }
-
-  assignToVar(target_info, expression) {
-    let target_variable = this.getVariable(target_info.name)
-
-    if (target_info.isArray === true) {
-      let index_list = target_info.indexes.map(expression => this.evaluateExp(expression) - 1)
-
-      if (target_info.bounds_checked === false)  {
-        let bound_check = this.indexWithinBounds(index_list, target_variable.dimensions)
-        if (bound_check.error === true) {
-          this.running = false
-          this.emit({name:'evaluation-error'}, bound_check.result)
-          return
-        }
-      }
-      // NOTE: Por ahora, no se revisa si hay un error al evaluar un indice
-
-      let index = this.calculateIndex(target_info.indexes.map(a => this.evaluateExp(a) - 1), target_variable.dimensions)
-      target_variable.values[index] = this.evaluateExp(expression)
-    }
-    else {
-      target_variable.value = this.evaluateExp(expression)
-    }
-
-    // Por ahora...
     return {error:false}
   }
 
@@ -304,52 +374,6 @@ class Evaluator extends Emitter {
     }
 
     return result
-  }
-
-  run() {
-
-    while (this.current_node !== null && this.running) {
-
-      let statement = this.current_node.data
-
-      switch (statement.action) {
-        case  'assignment':
-        this.assignToVar(statement.target, statement.payload)
-        break
-
-        case  'module_call':
-        if (statement.name == 'escribir') {
-          this.writeCall(statement)
-        }
-        else if (statement.name == 'leer') {
-          this.sendReadEvent(statement)
-        }
-        break
-
-        case 'if':{
-          let branch_name = this.evaluateExp(statement.condition) ? 'true_branch':'false_branch'
-          this.current_node.setCurrentBranchTo(branch_name)
-        }
-        break
-
-        case 'repeat': {
-          let branch_name = !this.evaluateExp(statement.condition) ? 'loop_body':'program_body'
-          this.current_node.setCurrentBranchTo(branch_name)
-        }
-        break
-
-        case 'while': {
-          let branch_name = this.evaluateExp(statement.condition) ? 'loop_body':'program_body'
-          this.current_node.setCurrentBranchTo(branch_name)
-        }
-        break
-      }
-
-      this.current_node = this.current_node.getNext()
-    }
-
-    // TODO: hacer que esta funcion reporte error:true cuando ocurran errores de evaluacion
-    return {error:this.error}
   }
 }
 
