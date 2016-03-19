@@ -78,20 +78,29 @@ class Evaluator extends Emitter {
 
   /**
    * Obtiene y devuelve el valor de una variable
-   * @param  {string}  varname el nombre de la variable
-   * @param  {[int]}  indexes indice del elemento que se requiere
+   * @param  {invocation}  info una expresión de invocación con los datos necesarios para acceder a la variable
    * @return {number|string|boolean}          valor de la variable
    */
-  getValue(varname, indexes) {
-    let variable = this.getVariable(varname)
+  getValue(info) {
+    let variable = this.getVariable(info.name)
 
     // NOTE: No se chequea que indexes exista porque si no existiera (si el usuario
     // no lo hubiera escrito) no se hubiera llegado a este punto ya que el
     // TypeChecker se hubiera dado cuenta.
 
     if (variable.isArray) {
-      let index = this.calculateIndex(indexes.map(a => this.evaluateExp(a) - 1), variable.dimensions)
-      // TODO: bound check si hace falta
+      let index_values = info.indexes.map(expression => this.evaluateExp(expression) - 1)
+
+      if (info.bounds_checked === false) {
+        let bound_check = this.indexWithinBounds(index_values, variable.dimension)
+
+        if (bound_check.error === true) {
+          this.running = false
+          this.emit({name:'evaluation-error'}, bound_check.result)
+        }
+      }
+
+      let index = this.calculateIndex(index_values, variable.dimensions)
       if (variable.values[index] === undefined) {
         this.running = false
         this.emit({name:'evaluation-error', origin:'evaluator'})
@@ -174,10 +183,22 @@ class Evaluator extends Emitter {
     }
   }
 
+  /**
+   * Delega la evaluación de una expresión a la función apropiada según el tipo
+   * de dicha expresión
+   * @param  {object} exp una expresión
+   * @return {bool|number|string}     el resultado de la evaluación de la expresión
+   */
   evaluateExp(exp) {
     switch (exp.expression_type) {
-      case 'invocation':
-        return this.getValue(exp.name, exp.indexes)
+      case 'invocation':{
+        /**
+         * Una expresion de invocación
+         * @type {invocation}
+         */
+        let invocation = exp
+        return this.getValue(invocation)
+      }
       case  'literal':
         return exp.value
       case  'operation':
@@ -189,11 +210,51 @@ class Evaluator extends Emitter {
     }
   }
 
+  /**
+   * Dice si un juego de indices dados se encuentra dentro de los límites de un arreglo
+   * @param  {[int]} index_values       indices para acceder al arreglo
+   * @param  {[int]} dimensions_lengths longitud de cada dimensión del arreglo
+   * @return {bool}                    true si ningún índice está fuera de límite, si no falso
+   */
+  indexWithinBounds(index_values, dimensions_lengths) {
+    let i = 0
+
+    while (i < index_values.length) {
+      if (i < 1) {
+        this.running = false
+        let reason = 'index-less-than-one'
+        let bad_index = i
+        return {error:true, result:{reason, bad_index}}
+      }
+      else if (i > variable.dimension[i]) {
+        out_of_bounds_index = true
+        let reason = 'index-out-of-bounds'
+        let bad_index = i
+        let expected = variable.dimension[i]
+        return {error:true, result:{reason, bad_index, expected}}
+      }
+      else {
+        i++
+      }
+    }
+
+    return {error:false}
+  }
+
   assignToVar(target_info, expression) {
     let target_variable = this.getVariable(target_info.name)
 
     if (target_info.isArray === true) {
-      // TODO: agregar bound checking (cuando haga falta)
+      let index_list = target_info.indexes.map(expression => this.evaluateExp(expression) - 1)
+
+      if (target_info.bounds_checked === false)  {
+        let bound_check = this.indexWithinBounds(index_list, target_variable.dimensions)
+        if (bound_check.error === true) {
+          this.running = false
+          this.emit({name:'evaluation-error'}, bound_check.result)
+          return
+        }
+      }
       // NOTE: Por ahora, no se revisa si hay un error al evaluar un indice
 
       let index = this.calculateIndex(target_info.indexes.map(a => this.evaluateExp(a) - 1), target_variable.dimensions)
