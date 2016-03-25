@@ -5,11 +5,11 @@
 'use strict'
 
 const should = require('should');
-const BranchingNode = require('../auxiliary/BranchingNode')
-const LinkedList = require('../auxiliary/List').LinkedList
-const getChainLenght = require('../auxiliary/List').getChainLenght
-const getLastNode = require('../auxiliary/List').getLastNode
-const Node = require('../auxiliary/Node')
+const BranchingNode = require('../misc/BranchingNode')
+const LinkedList = require('../misc/List').LinkedList
+const getChainLenght = require('../misc/List').getChainLenght
+const getLastNode = require('../misc/List').getLastNode
+const Node = require('../misc/Node')
 
 describe("Metodos auxiliares de listas", () => {
   it('getChainLenght funciona bien', () => {
@@ -103,7 +103,7 @@ describe('BranchingNode', () => {
 })
 
 describe('IfNode', () => {
-  const IfNode = require('../auxiliary/IfNode')
+  const IfNode = require('../misc/IfNode')
   it('Ambas raman "convergen" en el mismo nodo', () => {
     let leftNode = new Node('left')
     let rightNode = new Node('right')
@@ -161,7 +161,7 @@ describe('IfNode', () => {
 })
 
 describe('WhileNode', () => {
-  const WhileNode = require('../auxiliary/WhileNode')
+  const WhileNode = require('../misc/WhileNode')
 
   it('Al llamar a getNext (por defecto) se entra al bucle', () => {
     let while_node = new WhileNode()

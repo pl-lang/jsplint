@@ -1,6 +1,6 @@
 'use strict'
 
-const Node = require('../../auxiliary/Node')
+const Node = require('../../misc/Node')
 
 const Expression = require('./Expression')
 const VariablePattern = require('./VariablePattern')

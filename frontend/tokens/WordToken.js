@@ -1,5 +1,5 @@
 'use strict'
-let StringMethods = require('../../auxiliary/StringMethods.js')
+let StringMethods = require('../../misc/StringMethods.js')
 
 var list = [
   'variables'         ,

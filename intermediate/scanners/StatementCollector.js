@@ -4,13 +4,13 @@ const AssignmentPattern = require('../structures/AssignmentPattern')
 const ModuleCallPattern = require('../structures/ModuleCallPattern')
 const Expression = require('../structures/Expression.js')
 const TokenQueue = require('../TokenQueue')
-const BranchingNode = require('../../auxiliary/BranchingNode')
-const IfNode = require('../../auxiliary/IfNode')
-const WhileNode = require('../../auxiliary/WhileNode')
-const UntilNode = require('../../auxiliary/UntilNode')
-const LinkedList = require('../../auxiliary/List').LinkedList
-const getChainLength = require('../../auxiliary/List').getChainLength
-const getLastNode = require('../../auxiliary/List').getLastNode
+const BranchingNode = require('../../misc/BranchingNode')
+const IfNode = require('../../misc/IfNode')
+const WhileNode = require('../../misc/WhileNode')
+const UntilNode = require('../../misc/UntilNode')
+const LinkedList = require('../../misc/List').LinkedList
+const getChainLength = require('../../misc/List').getChainLength
+const getLastNode = require('../../misc/List').getLastNode
 
 function skipWhiteSpace(source) {
   let current = source.current()

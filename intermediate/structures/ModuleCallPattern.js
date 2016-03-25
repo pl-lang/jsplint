@@ -2,7 +2,7 @@
 
 const WordPattern = require('./WordPattern')
 const ArgumentListPattern = require('./ArgumentListPattern')
-const Node = require('../../auxiliary/Node')
+const Node = require('../../misc/Node')
 
 class ModuleCallPattern {
   static capture(source) {

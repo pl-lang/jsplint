@@ -1,7 +1,7 @@
 'use strict'
 const should = require('should');
 const fs = require('fs');
-const queueFromString = require('../auxiliary/queueFromString')
+const queueFromString = require('../misc/queueFromString')
 
 describe('Captura de estructuras sintacticas', () => {
   const StatementCollector = require('../intermediate/scanners/StatementCollector');
@@ -120,7 +120,7 @@ describe('Captura de estructuras sintacticas', () => {
   })
 
   it('Estructura repetir', () => {
-    const getLastNode = require('../auxiliary/List').getLastNode
+    const getLastNode = require('../misc/List').getLastNode
 
     let code = `repetir
     a <- 32

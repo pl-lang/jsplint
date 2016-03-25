@@ -1,6 +1,6 @@
 'use strict'
 
-const Emitter = require('../auxiliary/Emitter')
+const Emitter = require('../misc/Emitter')
 const Scanner = require('../intermediate/Scanner')
 const TokenQueue = require('../intermediate/TokenQueue')
 const Source = require('../frontend/Source')

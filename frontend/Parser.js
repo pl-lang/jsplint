@@ -1,6 +1,6 @@
 'use strict'
 const SpecialSymbolToken = require('./tokens/SpecialSymbolToken.js')
-const StringMethods = require('../auxiliary/StringMethods.js')
+const StringMethods = require('../misc/StringMethods.js')
 const UnknownToken = require('./tokens/UnknownToken.js')
 const NumberToken = require('./tokens/NumberToken.js')
 const StringToken = require('./tokens/StringToken.js')

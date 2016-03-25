@@ -1,7 +1,7 @@
 'use strict'
 
 const Expression = require('../intermediate/structures/Expression')
-const Emitter = require('../auxiliary/Emitter.js')
+const Emitter = require('../misc/Emitter.js')
 
 /*
   Un evaluador sirve para ejecutar las acciones/enunciados de un modulo.

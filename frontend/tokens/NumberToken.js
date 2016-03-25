@@ -1,5 +1,5 @@
 'use strict'
-const StringMethods = require('../../auxiliary/StringMethods.js')
+const StringMethods = require('../../misc/StringMethods.js')
 const isDigit = StringMethods.isDigit
 
 class NumberToken {

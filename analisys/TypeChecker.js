@@ -11,10 +11,10 @@
 // TODO: cual hay q devolver si los dos tienen errores? (renglon 232)
 
 
-const WhileNode = require('../auxiliary/WhileNode')
-const UntilNode = require('../auxiliary/UntilNode')
-const IfNode    = require('../auxiliary/IfNode')
-const Emitter   = require('../auxiliary/Emitter')
+const WhileNode = require('../misc/WhileNode')
+const UntilNode = require('../misc/UntilNode')
+const IfNode    = require('../misc/IfNode')
+const Emitter   = require('../misc/Emitter')
 
 let math_operators = new Set([
     'plus'

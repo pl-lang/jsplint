@@ -16,7 +16,7 @@
  */
 
 const Evaluator       = require('./Evaluator.js')
-const Emitter         = require('../auxiliary/Emitter.js')
+const Emitter         = require('../misc/Emitter.js')
 
 class Interpreter extends Emitter {
   constructor(program_modules) {
