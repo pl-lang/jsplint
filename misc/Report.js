@@ -18,4 +18,4 @@ class Report {
   }
 }
 
-exports = Report
+module.exports = Report
