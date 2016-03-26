@@ -50,6 +50,36 @@ function Integer(source) {
   }
 }
 
+function ArrayDimension(source) {
+  let indexes = []
+
+  let index_report = Integer(source)
+
+  if (index_report.error) {
+    return index_report
+  }
+  else {
+    indexes.push(index_report.result)
+  }
+
+  if (source.current().kind === 'comma') {
+    source.next()
+
+    let following_indexes = ArrayDimension(source)
+
+    if (following_indexes.error) {
+      return following_indexes
+    }
+    else {
+      indexes = indexes.concat(following_indexes.result)
+      return new Report(false, indexes)
+    }
+  }
+  else {
+    return new Report(false, indexes)
+  }
+}
+
 /**
  * Funcion que, dada una funcion de captura y una fuente devuelve un reporte
  * @param {Function} pattern_matcher Funcion que captura tokens
@@ -63,6 +93,7 @@ function match(pattern_matcher) {
 }
 
 module.exports = {
-  match   : match,
-  Integer : Integer
+  match           : match,
+  Integer         : Integer,
+  ArrayDimension  : ArrayDimension
 }
