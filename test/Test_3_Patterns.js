@@ -121,7 +121,7 @@ describe('VariableNamePattern', () => {
   it('captura el nombre de una variable', () => {
     let q = queueFromSource('sueldo')
 
-    let capture = match(Patterns.VariableName).from(q)
+    let capture = match(Patterns.VariableDeclaration).from(q)
 
     capture.error.should.equal(false)
     capture.result.should.deepEqual({
@@ -133,7 +133,7 @@ describe('VariableNamePattern', () => {
   it('captura el nombre de una matriz y sus dimensiones', () => {
     let q = queueFromSource('vuelos[3, 12]')
 
-    let capture = match(Patterns.VariableName).from(q)
+    let capture = match(Patterns.VariableDeclaration).from(q)
 
     capture.error.should.equal(false)
     capture.result.should.deepEqual({

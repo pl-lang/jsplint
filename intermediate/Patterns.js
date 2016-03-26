@@ -97,7 +97,7 @@ function Word(source) {
   }
 }
 
-function VariableName(source) {
+function VariableDeclaration(source) {
   let variable = {
       data    : {isArray : false, type:'unknown'}
     , name    : ''
@@ -154,9 +154,9 @@ function match(pattern_matcher) {
 }
 
 module.exports = {
-  match           : match,
-  Integer         : Integer,
-  ArrayDimension  : ArrayDimension,
-  Word            : Word,
-  VariableName    : VariableName
+  match                   : match,
+  Integer                 : Integer,
+  ArrayDimension          : ArrayDimension,
+  Word                    : Word,
+  VariableDeclaration     : VariableDeclaration
 }
