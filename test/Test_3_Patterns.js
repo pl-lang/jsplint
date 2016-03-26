@@ -6,6 +6,9 @@ var Source = require('../frontend/Source.js')
 let Parser = require('../frontend/Parser.js')
 let TokenQueue = require('../intermediate/TokenQueue')
 
+const Patterns = require('../intermediate/Patterns')
+const match = Patterns.match
+
 function queueFromSource(string) {
   let source = new Source(string)
   let tokenizer = new Parser(source)
@@ -25,11 +28,10 @@ function queueFromSource(string) {
 }
 
 describe('IntegerPattern', () => {
-  let IntegerPattern = require('../intermediate\/structures\/IntegerPattern.js')
   it('captura token entero', () => {
     let q = queueFromSource('36 a')
 
-    let number = IntegerPattern.capture(q)
+    let number = match(Patterns.Integer).from(q)
 
     number.error.should.equal(false)
     number.result.should.equal(36)
@@ -39,7 +41,7 @@ describe('IntegerPattern', () => {
   it('devuelve un error cuando el primer token en la cola no coincide', () => {
     let q = queueFromSource('papa 389'
   )
-    let number = IntegerPattern.capture(q)
+    let number = match(Patterns.Integer).from(q)
 
     number.error.should.equal(true)
 
