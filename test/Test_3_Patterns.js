@@ -116,7 +116,7 @@ describe('WordPattern', () => {
   })
 })
 
-describe('VariableNamePattern', () => {
+describe('VariableDeclaration', () => {
 
   it('captura el nombre de una variable', () => {
     let q = queueFromSource('sueldo')
@@ -143,12 +143,12 @@ describe('VariableNamePattern', () => {
   })
 })
 
-describe('VariableListPattern', () => {
-  let VariableListPattern = require('../intermediate\/structures\/VariableListPattern.js')
+describe('VariableList', () => {
+
   it('lee las variables de una lista', () => {
     let q = queueFromSource('a, b, matriz[3, 3], v[8]')
 
-    let capture = VariableListPattern.capture(q)
+    let capture = match(Patterns.VariableList).from(q)
 
     capture.error.should.equal(false)
     capture.result[0].should.deepEqual({name:'a', data : {isArray:false, type:'unknown'}})

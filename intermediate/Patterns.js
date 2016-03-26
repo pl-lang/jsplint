@@ -141,6 +141,35 @@ function VariableDeclaration(source) {
   }
 }
 
+function VariableList(source) {
+  let variables = []
+  let partial_match = false
+
+  let name_report = VariableDeclaration(source)
+
+  if (name_report.error) {
+    return name_report
+  }
+  else {
+    variables.push(name_report.result)
+
+    if (source.current().kind === 'comma') {
+      source.next()
+      let varList = VariableList(source)
+
+      if (varList.error) {
+        return new Report(false, variables)
+      }
+      else {
+        return new Report(false, variables.concat(varList.result))
+      }
+    }
+    else {
+      return new Report(false, variables)
+    }
+  }
+}
+
 /**
  * Funcion que, dada una funcion de captura y una fuente devuelve un reporte
  * @param {Function} pattern_matcher Funcion que captura tokens
@@ -158,5 +187,6 @@ module.exports = {
   Integer                 : Integer,
   ArrayDimension          : ArrayDimension,
   Word                    : Word,
-  VariableDeclaration     : VariableDeclaration
+  VariableDeclaration     : VariableDeclaration,
+  VariableList            : VariableList
 }
