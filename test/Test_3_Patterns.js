@@ -89,12 +89,11 @@ describe('ArrayDimension', () => {
 })
 
 describe('WordPattern', () => {
-  let WordPattern = require('../intermediate\/structures\/WordPattern.js')
 
   it('captura una palabra', () => {
     let q = queueFromSource('rodrigo')
 
-    let capture = WordPattern.capture(q)
+    let capture = match(Patterns.Word).from(q)
 
     capture.error.should.equal(false)
     capture.result.should.equal('rodrigo')
@@ -104,7 +103,7 @@ describe('WordPattern', () => {
   it('devuelve un error cuando el patron no coincide', () => {
     let q = queueFromSource('32')
 
-    let capture = WordPattern.capture(q)
+    let capture = match(Patterns.Word).from(q)
 
     capture.error.should.equal(true)
     capture.result.should.deepEqual({

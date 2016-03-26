@@ -80,6 +80,23 @@ function ArrayDimension(source) {
   }
 }
 
+function Word(source) {
+  let current = source.current()
+
+  if (current.kind === 'word') {
+    source.next()
+    return new Report(false, current.text)
+  }
+  else {
+    let unexpectedToken = current.kind
+    let expectedToken = 'word'
+    let atColumn = current.columnNumber
+    let atLine = current.lineNumber
+
+    return new Report(true, {unexpectedToken, expectedToken, atColumn, atLine})
+  }
+}
+
 /**
  * Funcion que, dada una funcion de captura y una fuente devuelve un reporte
  * @param {Function} pattern_matcher Funcion que captura tokens
@@ -95,5 +112,6 @@ function match(pattern_matcher) {
 module.exports = {
   match           : match,
   Integer         : Integer,
-  ArrayDimension  : ArrayDimension
+  ArrayDimension  : ArrayDimension,
+  Word            : Word
 }
