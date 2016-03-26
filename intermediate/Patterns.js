@@ -41,12 +41,12 @@ function Integer(source) {
   }
   else {
     // ...devolver informacion sobre el error
-    let unexpectedToken = current.kind
-    let expectedToken = 'entero'
+    let unexpected = current.kind
+    let expected = 'entero'
     let atColumn = current.columnNumber
     let atLine = current.lineNumber
 
-    return new Report(true, {unexpectedToken, expectedToken, atColumn, atLine})
+    return new Report(true, {unexpected, expected, atColumn, atLine})
   }
 }
 
@@ -88,12 +88,12 @@ function Word(source) {
     return new Report(false, current.text)
   }
   else {
-    let unexpectedToken = current.kind
-    let expectedToken = 'word'
+    let unexpected = current.kind
+    let expected = 'word'
     let atColumn = current.columnNumber
     let atLine = current.lineNumber
 
-    return new Report(true, {unexpectedToken, expectedToken, atColumn, atLine})
+    return new Report(true, {unexpected, expected, atColumn, atLine})
   }
 }
 
@@ -126,12 +126,12 @@ function VariableDeclaration(source) {
         else {
           let current = source.current()
 
-          let unexpectedToken = current.kind
-          let expectedToken   = 'right-bracket'
+          let unexpected = current.kind
+          let expected   = 'right-bracket'
           let atColumn        = current.columnNumber
           let atLine          = current.lineNumber
 
-          return new Report(true, {unexpectedToken, expectedToken, atColumn, atLine})
+          return new Report(true, {unexpected, expected, atColumn, atLine})
         }
       }
     }
@@ -180,13 +180,13 @@ function TypeName(source) {
     return new Report(false, current.kind)
   }
   else {
-    let unexpectedToken = current.kind
-    let expectedToken  = ['entero', 'real', 'logico', 'caracter']
+    let unexpected = current.kind
+    let expected  = ['entero', 'real', 'logico', 'caracter']
     let atColumn        = current.columnNumber
     let atLine          = current.lineNumber
     let reason          = 'nonexistent-type'
 
-    return new Report(true, {unexpectedToken, expectedToken, atColumn, atLine, reason})
+    return new Report(true, {unexpected, expected, atColumn, atLine, reason})
   }
 }
 
