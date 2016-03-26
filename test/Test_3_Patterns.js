@@ -159,13 +159,12 @@ describe('VariableList', () => {
   })
 })
 
-describe('TypePattern', () => {
-  let TypePattern = require('../intermediate\/structures\/TypePattern.js')
+describe('TypeName', () => {
 
   it('extrae un token de tipo', () => {
     let q = queueFromSource('entero, real')
 
-    let capture = TypePattern.capture(q)
+    let capture = match(Patterns.TypeName).from(q)
 
     capture.error.should.equal(false)
     capture.result.should.equal('entero')
@@ -175,12 +174,12 @@ describe('TypePattern', () => {
   it('extrae un token de tipo', () => {
     let q = queueFromSource('gatp, real')
 
-    let capture = TypePattern.capture(q)
+    let capture = match(Patterns.TypeName).from(q)
 
     capture.error.should.equal(true)
     capture.result.should.deepEqual({
         unexpectedToken : 'word'
-      , expectedTokens  : ['entero', 'real', 'logico', 'caracter']
+      , expectedToken  : ['entero', 'real', 'logico', 'caracter']
       , atColumn        : 0
       , atLine          : 0
       , reason          : 'nonexistent-type'

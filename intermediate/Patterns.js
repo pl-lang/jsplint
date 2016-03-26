@@ -170,6 +170,26 @@ function VariableList(source) {
   }
 }
 
+let isType = string => {return /entero|real|logico|caracter/.test(string)}
+
+function TypeName(source) {
+  let current = source.current()
+
+  if ( isType(current.kind) ) {
+    source.next()
+    return new Report(false, current.kind)
+  }
+  else {
+    let unexpectedToken = current.kind
+    let expectedToken  = ['entero', 'real', 'logico', 'caracter']
+    let atColumn        = current.columnNumber
+    let atLine          = current.lineNumber
+    let reason          = 'nonexistent-type'
+
+    return new Report(true, {unexpectedToken, expectedToken, atColumn, atLine, reason})
+  }
+}
+
 /**
  * Funcion que, dada una funcion de captura y una fuente devuelve un reporte
  * @param {Function} pattern_matcher Funcion que captura tokens
@@ -188,5 +208,6 @@ module.exports = {
   ArrayDimension          : ArrayDimension,
   Word                    : Word,
   VariableDeclaration     : VariableDeclaration,
-  VariableList            : VariableList
+  VariableList            : VariableList,
+  TypeName                : TypeName
 }
