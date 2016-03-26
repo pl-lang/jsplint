@@ -155,13 +155,13 @@ function VariableList(source) {
 
     if (source.current().kind === 'comma') {
       source.next()
-      let varList = VariableList(source)
+      let var_list_match = VariableList(source)
 
-      if (varList.error) {
+      if (var_list_match.error) {
         return new Report(false, variables)
       }
       else {
-        return new Report(false, variables.concat(varList.result))
+        return new Report(false, variables.concat(var_list_match.result))
       }
     }
     else {
@@ -190,6 +190,74 @@ function TypeName(source) {
   }
 }
 
+function Declaration(source) {
+  let declarations = {}
+
+  let typename = TypeName(source)
+
+  if (typename.error)
+    return typename
+  else {
+    let var_list_match = VariableList(source)
+
+    if (var_list_match.error) {
+      return var_list_match
+    }
+
+    for (let variable of var_list_match.result) {
+      let name = variable.name
+
+      if (declarations.hasOwnProperty(name)) {
+        return new Report(true, {reason:'repeatead-var-name', name})
+      }
+
+      let var_object = variable.data
+      var_object.type = typename.result
+
+      if (var_object.isArray === true) {
+        let size = var_object.dimension.reduce((acumulador, elemento) => {
+          return acumulador * elemento
+        })
+        var_object.values = new Array(size)
+      }
+      else {
+        var_object.value = null
+      }
+
+      declarations[name] = var_object
+
+    }
+    let comma_found = false
+    let eol_found = false
+
+    if (source.current().kind === 'comma') {
+      source.next()
+      comma_found = true
+    }
+    else if (source.current().kind == 'eol') {
+      source.next()
+      eol_found = true
+    }
+
+    let nextDeclaration = Declaration(source)
+
+    if ((comma_found || eol_found) && nextDeclaration.error && source.current().kind != 'inicio') {
+      return nextDeclaration
+    }
+    else if (nextDeclaration.error === false) {
+      for (let name in nextDeclaration.result) {
+        if (declarations.hasOwnProperty(name)) {
+          return new Report(true, {reason:'repeatead-var-name', name})
+        }
+        else {
+          declarations[name] = nextDeclaration.result[name]
+        }
+      }
+    }
+    return new Report(false, declarations)
+  }
+}
+
 /**
  * Funcion que, dada una funcion de captura y una fuente devuelve un reporte
  * @param {Function} pattern_matcher Funcion que captura tokens
@@ -209,5 +277,6 @@ module.exports = {
   Word                    : Word,
   VariableDeclaration     : VariableDeclaration,
   VariableList            : VariableList,
-  TypeName                : TypeName
+  TypeName                : TypeName,
+  Declaration             : Declaration
 }

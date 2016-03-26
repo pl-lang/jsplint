@@ -189,12 +189,11 @@ describe('TypeName', () => {
   })
 })
 
-describe('DeclarationPattern', () => {
-  let DeclarationPattern = require('../intermediate\/structures\/DeclarationPattern.js')
+describe('Declaration', () => {
   it('captura dos variables de tipo entero y una real declaradas en un renglon', () => {
     let q = queueFromSource('entero a, b, real c')
 
-    let capt = DeclarationPattern.capture(q)
+    let capt = match(Patterns.Declaration).from(q)
 
     capt.error.should.deepEqual(false)
     capt.result.should.deepEqual({
@@ -207,7 +206,7 @@ describe('DeclarationPattern', () => {
   it('captura variables de distintos tipos declaradas dos renglones distintos', () => {
     let q = queueFromSource('caracter a, b\nlogico c')
 
-    let capt = DeclarationPattern.capture(q)
+    let capt = match(Patterns.Declaration).from(q)
 
     capt.error.should.deepEqual(false)
     capt.result.should.deepEqual({
@@ -220,7 +219,7 @@ describe('DeclarationPattern', () => {
   it('captura variables de un solo tipo', () => {
     let q = queueFromSource('caracter a, b[4, 4]')
 
-    let capt = DeclarationPattern.capture(q)
+    let capt = match(Patterns.Declaration).from(q)
 
     capt.error.should.deepEqual(false)
     capt.result.a.should.deepEqual({type:'caracter', isArray:false, value:null})
