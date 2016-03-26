@@ -117,11 +117,11 @@ describe('WordPattern', () => {
 })
 
 describe('VariableNamePattern', () => {
-  let VariableNamePattern = require('../intermediate\/structures\/VariableNamePattern.js')
+
   it('captura el nombre de una variable', () => {
     let q = queueFromSource('sueldo')
 
-    let capture = VariableNamePattern.capture(q)
+    let capture = match(Patterns.VariableName).from(q)
 
     capture.error.should.equal(false)
     capture.result.should.deepEqual({
@@ -133,7 +133,7 @@ describe('VariableNamePattern', () => {
   it('captura el nombre de una matriz y sus dimensiones', () => {
     let q = queueFromSource('vuelos[3, 12]')
 
-    let capture = VariableNamePattern.capture(q)
+    let capture = match(Patterns.VariableName).from(q)
 
     capture.error.should.equal(false)
     capture.result.should.deepEqual({

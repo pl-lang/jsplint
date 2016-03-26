@@ -97,6 +97,50 @@ function Word(source) {
   }
 }
 
+function VariableName(source) {
+  let variable = {
+      data    : {isArray : false, type:'unknown'}
+    , name    : ''
+  }
+
+  let text = Word(source)
+
+  if (text.error) {
+    return text
+  }
+  else {
+    variable.name = text.result
+    if (source.current().kind === 'left-bracket') {
+      source.next()
+      let dimension = ArrayDimension(source)
+      if (dimension.error) {
+        return dimension
+      }
+      else {
+        variable.data.isArray = true
+        variable.data.dimension = dimension.result
+        if (source.current().kind === 'right-bracket') {
+          source.next()
+          return new Report(false, variable)
+        }
+        else {
+          let current = source.current()
+
+          let unexpectedToken = current.kind
+          let expectedToken   = 'right-bracket'
+          let atColumn        = current.columnNumber
+          let atLine          = current.lineNumber
+
+          return new Report(true, {unexpectedToken, expectedToken, atColumn, atLine})
+        }
+      }
+    }
+    else {
+      return new Report(false, variable)
+    }
+  }
+}
+
 /**
  * Funcion que, dada una funcion de captura y una fuente devuelve un reporte
  * @param {Function} pattern_matcher Funcion que captura tokens
@@ -113,5 +157,6 @@ module.exports = {
   match           : match,
   Integer         : Integer,
   ArrayDimension  : ArrayDimension,
-  Word            : Word
+  Word            : Word,
+  VariableName    : VariableName
 }
