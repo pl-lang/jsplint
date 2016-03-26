@@ -230,168 +230,18 @@ describe('Declaration', () => {
   })
 })
 
-describe('BinaryOpPattern', () => {
-  let BinaryOpPattern = require('../intermediate\/structures\/BinaryOpPattern.js')
-  it('captura todos los operadores', () => {
-    {
-      let q = queueFromSource('and')
-      let capt = BinaryOpPattern.capture(q)
-      capt.error.should.equal(false)
-      capt.result.should.equal('and')
-    }
-
-    {
-      let q = queueFromSource('or')
-      let capt = BinaryOpPattern.capture(q)
-      capt.error.should.equal(false)
-      capt.result.should.equal('or')
-    }
-
-    {
-      let q = queueFromSource('mod')
-      let capt = BinaryOpPattern.capture(q)
-      capt.error.should.equal(false)
-      capt.result.should.equal('mod')
-    }
-
-    {
-      let q = queueFromSource('div')
-      let capt = BinaryOpPattern.capture(q)
-      capt.error.should.equal(false)
-      capt.result.should.equal('div')
-    }
-
-    {
-      let q = queueFromSource('*')
-      let capt = BinaryOpPattern.capture(q)
-      capt.error.should.equal(false)
-      capt.result.should.equal('times')
-    }
-
-    {
-      let q = queueFromSource('^')
-      let capt = BinaryOpPattern.capture(q)
-      capt.error.should.equal(false)
-      capt.result.should.equal('power')
-    }
-
-    {
-      let q = queueFromSource('/')
-      let capt = BinaryOpPattern.capture(q)
-      capt.error.should.equal(false)
-      capt.result.should.equal('divide')
-    }
-
-  })
-})
-
 describe.skip('MainModulePattern', () => {
-  let MainModulePattern = require('../intermediate\/structures\/MainModulePattern.js')
-  it('funciona correctamente en un programa con "inicio" y variables declaradas', () => {
+  it('funciona correctamente en un programa con "inicio" y variables declaradas')
 
-    let programa = '\nvariables\n  entero a, b, c\ninicio\nfin\n'
-    let q = queueFromSource(programa)
+  it('funciona correctamente para un programa sin variables declaradas')
 
-    let capt = MainModulePattern.capture(q)
+  it('programa sin encabezado ("variables") para el modulo principal')
 
-    capt.error.should.equal(false)
-    capt.result.should.deepEqual({
-        localVariables  : {
-            caracter  : []
-          , logico    : []
-          , entero    : [{text:'a', isArray:false}, {text:'b', isArray:false}, {text:'c', isArray:false}]
-          , real      : []
-        }
-      , name            : 'main'
-      , atColumn        : 0
-      , atLine          : 0
-    })
-    // TODO: Cambiar 'text' por 'name' en el resultado de VariableNamePattern
-  })
+  it('programa sin "inicio" pero con varibles declaradas')
 
-  it('funciona correctamente para un programa sin variables declaradas', () => {
-    let programa = 'variables\ninicio\nfin'
+  it('programa sin "inicio" sin varibles declaradas')
 
-    let q = queueFromSource(programa)
-    let capt = MainModulePattern.capture(q)
-
-    capt.error.should.equal(false)
-    capt.result.should.deepEqual({
-        localVariables  : {
-            caracter  : []
-          , logico    : []
-          , entero    : []
-          , real      : []
-        }
-      , name            : 'main'
-      , atColumn        : 0
-      , atLine          : 0
-    })
-  })
-
-  it('programa sin encabezado ("variables") para el modulo principal', () => {
-    let programa = 'entero a, b, c\ninicio\nfin'
-
-    let q = queueFromSource(programa)
-    let capt = MainModulePattern.capture(q)
-
-    capt.error.should.equal(true)
-    capt.result.should.deepEqual({
-        unexpected  : 'entero'
-      , expected    : 'variables'
-      , atColumn    : 0
-      , atLine      : 0
-      , reason      : 'missing-var-declaration'
-    })
-  })
-
-  it('programa sin "inicio" pero con varibles declaradas', () => {
-    let programa = 'variables\n entero a, b, c\nfin'
-
-    let q = queueFromSource(programa)
-    let capt = MainModulePattern.capture(q)
-
-    capt.error.should.equal(true)
-    capt.result.should.deepEqual({
-        unexpected  : 'fin'
-      , expected    : 'inicio'
-      , atColumn    : 0
-      , atLine      : 2
-      , reason      : 'missing-inicio'
-    })
-  })
-
-  it('programa sin "inicio" sin varibles declaradas', () => {
-    let programa = 'variables\nfin'
-
-    let q = queueFromSource(programa)
-    let capt = MainModulePattern.capture(q)
-
-    capt.error.should.equal(true)
-    capt.result.should.deepEqual({
-        unexpected  : 'fin'
-      , expected    : 'inicio'
-      , atColumn    : 0
-      , atLine      : 1
-      , reason      : 'missing-inicio'
-    })
-  })
-
-  it('programa sin "fin"', () => {
-    let programa = 'variables\n entero a, b, c\ninicio\nfi'
-
-    let q = queueFromSource(programa)
-    let capt = MainModulePattern.capture(q)
-
-    capt.error.should.equal(true)
-    capt.result.should.deepEqual({
-        unexpected  : 'word'
-      , expected    : 'fin'
-      , atColumn    : 0
-      , atLine      : 3
-      , reason      : 'missing-fin'
-    })
-  })
+  it('programa sin "fin"')
 })
 
 describe('AssignmentPattern', () => {
