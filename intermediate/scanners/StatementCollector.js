@@ -1,10 +1,13 @@
 'use strict'
 
-const AssignmentPattern = require('../structures/AssignmentPattern')
-const ModuleCallPattern = require('../structures/ModuleCallPattern')
-const Expression = require('../structures/Expression.js')
+const Patterns = require('../Patterns')
+const match = Patterns.match
+
 const TokenQueue = require('../TokenQueue')
-const BranchingNode = require('../../misc/BranchingNode')
+
+const Report = require('../../misc/Report')
+
+const Node = require('../../misc/Node')
 const IfNode = require('../../misc/IfNode')
 const WhileNode = require('../../misc/WhileNode')
 const UntilNode = require('../../misc/UntilNode')
@@ -14,7 +17,7 @@ const getLastNode = require('../../misc/List').getLastNode
 
 function skipWhiteSpace(source) {
   let current = source.current()
-  while (current.kind == 'eol') {
+  while (current.kind === 'eol') {
     current = source.next()
   }
 }
@@ -27,21 +30,19 @@ class WhileScanner {
 
     source.next() // consume 'mientras'
 
-    if (source.current().kind == 'eol')
+    if (source.current().kind === 'eol')
       skipWhiteSpace(source)
 
-    if (source.current().kind == 'left-par') {
+    if (source.current().kind === 'left-par') {
       source.next()
     }
     else {
-      let error = true
       let current = source.current()
       let unexpected = current.kind
       let expected = 'left-par'
       let atColumn = current.columnNumber
       let atLine = current.lineNumber
-      let result = {unexpected, expected, atColumn, atLine}
-      return {error, result}
+      return new Report(true, {unexpected, expected, atColumn, atLine})
     }
 
     // Esto arma un TokenQueue con los tokens de la condicion del bucle
@@ -54,23 +55,21 @@ class WhileScanner {
       current_token = source.next()
     }
 
-    if (source.current().kind == 'right-par') {
+    if (source.current().kind === 'right-par') {
       source.next()
     }
     else {
-      let error = true
       let current = source.current()
       let unexpected = current.kind
       let expected = 'right-par'
       let atColumn = current.columnNumber
       let atLine = current.lineNumber
-      let result = {unexpected, expected, atColumn, atLine}
-      return {error, result}
+      return new Report(true, {unexpected, expected, atColumn, atLine})
     }
 
     let expression_q = new TokenQueue(token_array)
 
-    let condition_exp = Expression.fromQueue(expression_q)
+    let condition_exp = match(Patterns.Expression).from(expression_q)
 
     if (condition_exp.error) {
       return condition_exp
@@ -79,7 +78,7 @@ class WhileScanner {
       condition = condition_exp.result
     }
 
-    if (source.current().kind == 'eol')
+    if (source.current().kind === 'eol')
       skipWhiteSpace(source)
 
     let statements = StatementCollector.capture(source)
@@ -91,34 +90,30 @@ class WhileScanner {
       body = statements.result
     }
 
-    if (source.current().kind == 'eol')
+    if (source.current().kind === 'eol')
       skipWhiteSpace(source)
 
-    if (source.current().kind == 'finmientras') {
+    if (source.current().kind === 'finmientras') {
       source.next()
     }
     else {
-      let error = true
       let current = source.current()
       let unexpected = current.kind
       let expected = 'finmientras'
       let atColumn = current.columnNumber
       let atLine = current.lineNumber
-      let result = {unexpected, expected, atColumn, atLine}
-      return {error, result}
+      return new Report(true, {unexpected, expected, atColumn, atLine})
     }
 
-    if (source.current().kind == 'eol')
+    if (source.current().kind === 'eol')
       skipWhiteSpace(source)
 
     let action = 'while'
-    let error = false
 
     node.data = {action, condition}
     node.loop_body_root = body
-    let result = node
 
-    return {error, result}
+    return new Report(false, node)
   }
 }
 
@@ -129,7 +124,7 @@ class RepeatScanner {
 
     source.next()
 
-    if (source.current().kind == 'eol')
+    if (source.current().kind === 'eol')
       skipWhiteSpace(source)
 
 
@@ -142,52 +137,46 @@ class RepeatScanner {
       body_root_node = statements.result
     }
 
-    if (source.current().kind == 'eol')
+    if (source.current().kind === 'eol')
       skipWhiteSpace(source)
 
-    if (source.current().kind == 'hasta') {
+    if (source.current().kind === 'hasta') {
       source.next()
     }
     else {
-      return {
-          error   : true
-        , result  : {
-            unexpected  : source.current().kind
-          , expected    : 'hasta'
-          , atColumn    : source.current().columnNumber
-          , atLine      : source.current().lineNumber
-        }
-      }
+      let current = source.current()
+      let unexpected  = current.kind
+      let expected    = 'hasta'
+      let atColumn    = current.columnNumber
+      let atLine      = current.lineNumber
+
+      return new Report(true, {unexpected, expected, atColumn, atLine})
     }
 
-    if (source.current().kind == 'que') {
+    if (source.current().kind === 'que') {
       source.next()
     }
     else {
-      return {
-          error   : true
-        , result  : {
-            unexpected  : source.current().kind
-          , expected    : 'que'
-          , atColumn    : source.current().columnNumber
-          , atLine      : source.current().lineNumber
-        }
-      }
+      let current = source.current()
+      let unexpected  = current.kind
+      let expected    = 'que'
+      let atColumn    = current.columnNumber
+      let atLine      = current.lineNumber
+
+      return new Report(true, {unexpected, expected, atColumn, atLine})
     }
 
-    if (source.current().kind == 'left-par') {
+    if (source.current().kind === 'left-par') {
       source.next()
     }
     else {
-      return {
-          error   : true
-        , result  : {
-            unexpected  : source.current().kind
-          , expected    : 'left-par'
-          , atColumn    : source.current().columnNumber
-          , atLine      : source.current().lineNumber
-        }
-      }
+      let current = source.current()
+      let unexpected  = current.kind
+      let expected    = 'letf-par'
+      let atColumn    = current.columnNumber
+      let atLine      = current.lineNumber
+
+      return new Report(true, {unexpected, expected, atColumn, atLine})
     }
 
     let token_array = []
@@ -198,24 +187,22 @@ class RepeatScanner {
       current_token = source.next()
     }
 
-    if (current_token.kind == 'right-par') {
+    if (current_token.kind === 'right-par') {
       source.next()
     }
     else {
-      return {
-          error   : true
-        , result  : {
-            unexpected  : source.current().kind
-          , expected    : 'right-par'
-          , atColumn    : source.current().columnNumber
-          , atLine      : source.current().lineNumber
-        }
-      }
+      let current = source.current()
+      let unexpected  = current.kind
+      let expected    = 'right-par'
+      let atColumn    = current.columnNumber
+      let atLine      = current.lineNumber
+
+      return new Report(true, {unexpected, expected, atColumn, atLine})
     }
 
     let expression_q = new TokenQueue(token_array)
 
-    let condition_exp = Expression.fromQueue(expression_q)
+    let condition_exp = match(Patterns.Expression).from(expression_q)
 
     if (condition_exp.error) {
       return condition_exp
@@ -224,7 +211,7 @@ class RepeatScanner {
       condition = condition_exp.result
     }
 
-    if (source.current().kind == 'eol')
+    if (source.current().kind === 'eol')
       skipWhiteSpace(source)
 
     let action = 'repeat'
@@ -236,10 +223,7 @@ class RepeatScanner {
     let last_body_node = getLastNode(body_root_node)
     last_body_node.setNext(until_node)
 
-    let error = false
-    let result = body_root_node
-
-    return {error, result}
+    return new Report(false, body_root_node)
   }
 }
 
@@ -252,45 +236,43 @@ class IfScanner {
 
     source.next() // consumir el 'si'
 
-    if (source.current().kind == 'left-par') {
+    if (source.current().kind === 'left-par') {
       source.next()
     } else {
-      let error = true
-      let result = {
-          unexpected  : source.current().kind
-        , expected    : 'left-par'
-        , atColumn    : source.current().columnNumber
-        , atLine      : source.current().lineNumber
-        , reason      : 'missing-par-at-if'
-      }
-      return {error, result}
+      let current = source.current()
+      let unexpected  = source.current().kind
+      let expected    = 'left-par'
+      let atColumn    = source.current().columnNumber
+      let atLine      = source.current().lineNumber
+      let reason      = 'missing-par-at-if'
+
+      return new Report(true, {unexpected, expected, atColumn, atLine, reason})
     }
 
     let token_array = []
     let current_token = source.current()
 
-    while (current_token.kind != 'right-par' && current_token.kind != 'eof') {
+    while (current_token.kind !== 'right-par' && current_token.kind !== 'eof') {
       token_array.push(current_token)
       current_token = source.next()
     }
 
-    if (current_token.kind == 'right-par') {
+    if (current_token.kind ==='right-par') {
       source.next()
     } else {
-      let error = true
-      let result = {
-          unexpected  : source.current().kind
-        , expected    : 'right-par'
-        , atColumn    : source.current().columnNumber
-        , atLine      : source.current().lineNumber
-        , reason      : 'missing-par-at-if'
-      }
-      return {error, result}
+      let current = source.current()
+      let unexpected  = source.current().kind
+      let expected    = 'right-par'
+      let atColumn    = source.current().columnNumber
+      let atLine      = source.current().lineNumber
+      let reason      = 'missing-par-at-if'
+
+      return new Report(true, {unexpected, expected, atColumn, atLine, reason})
     }
 
     let expression_q = new TokenQueue(token_array)
 
-    let condition_exp = Expression.fromQueue(expression_q)
+    let condition_exp = match(Patterns.Expression).from(expression_q)
 
     if (condition_exp.error) {
       return condition_exp
@@ -299,21 +281,20 @@ class IfScanner {
       condition = condition_exp.result
     }
 
-    if (source.current().kind == 'entonces') {
+    if (source.current().kind === 'entonces') {
       source.next() // consumir el token
     } else {
-      let error = false
-      let result = {
-          unexpected  : source.current().kind
-        , expected    : 'entonces'
-        , atColumn    : source.current().columnNumber
-        , atLine      : source.current().lineNumber
-        , reason      : 'missing-entonces-at-if'
-      }
-      return {error, result}
+      let current = source.current()
+      let unexpected  = source.current().kind
+      let expected    = 'entonces'
+      let atColumn    = source.current().columnNumber
+      let atLine      = source.current().lineNumber
+      let reason      = 'missing-entonces-at-if'
+
+      return new Report(true, {unexpected, expected, atColumn, atLine, reason})
     }
 
-    if (source.current().kind == 'eol')
+    if (source.current().kind === 'eol')
       skipWhiteSpace(source)
 
     let statements = StatementCollector.capture(source)
@@ -325,13 +306,13 @@ class IfScanner {
       true_branch = statements.result
     }
 
-    if (source.current().kind == 'eol')
+    if (source.current().kind === 'eol')
       skipWhiteSpace(source)
 
-    if (source.current().kind == 'sino') {
+    if (source.current().kind === 'sino') {
       source.next() // consumir sino
 
-      if (source.current().kind == 'eol')
+      if (source.current().kind === 'eol')
         skipWhiteSpace(source)
 
       let statements = StatementCollector.capture(source)
@@ -344,13 +325,13 @@ class IfScanner {
       }
     }
 
-    if (source.current().kind == 'eol')
+    if (source.current().kind === 'eol')
       skipWhiteSpace(source)
 
-    if (source.current().kind == 'finsi') {
+    if (source.current().kind === 'finsi') {
       source.next() // consumir finsi
 
-      if (source.current().kind == 'eol')
+      if (source.current().kind === 'eol')
         skipWhiteSpace(source)
 
       if (false_branch !== null) {
@@ -364,20 +345,16 @@ class IfScanner {
       let data = {condition, action:'if'}
       node.data = data
 
-      let error = false
-      let result = node
-
-      return {error, result}
+      return new Report(false, node)
     } else {
-      let error = true
-      let result = {
-          unexpected  : source.current().kind
-        , expected    : ['finsi', 'sino']
-        , atColumn    : source.current().columnNumber
-        , atLine      : source.current().lineNumber
-        , reason      : 'missing-sino-finsi-at-if'
-      }
-      return {error, result}
+      let current = source.current()
+      let unexpected  = source.current().kind
+      let expected    = ['finsi', 'sino']
+      let atColumn    = source.current().columnNumber
+      let atLine      = source.current().lineNumber
+      let reason      = 'missing-sino-finsi-at-if'
+
+      return new Report(true, {unexpected, expected, atColumn, atLine, reason})
     }
   }
 }
@@ -400,30 +377,30 @@ class StatementCollector {
     let current = source.current()
 
     let done = false
-    let eof_reached = current.kind == 'eof'
+    let eof_reached = current.kind === 'eof'
 
     while ( !eof_reached && !done) {
       current = source.current()
 
-      if (current.kind == 'word' && source.peek().kind == 'left-par') {
-        let call = ModuleCallPattern.capture(source)
+      if (current.kind === 'word' && source.peek().kind === 'left-par') {
+        let call = match(Patterns.ModuleCall).from(source)
         if (call.error) {
           return call
         }
         else {
-          list.addNode(call.result)
+          list.addNode(new Node(call.result))
         }
       }
-      else if (current.kind == 'word') {
-        let assignment = AssignmentPattern.capture(source)
+      else if (current.kind === 'word') {
+        let assignment = match(Patterns.Assignment).from(source)
         if (assignment.error) {
           return assignment
         }
         else {
-          list.addNode(assignment.result)
+          list.addNode(new Node(assignment.result))
         }
       }
-      else if (current.kind == 'si') {
+      else if (current.kind === 'si') {
         let if_block = IfScanner.capture(source)
 
         if (if_block.error) {
@@ -457,7 +434,7 @@ class StatementCollector {
         done = true
       }
       current = source.current()
-      if (current.kind == 'eol') {
+      if (current.kind === 'eol') {
         skipWhiteSpace(source)
       }
     }
