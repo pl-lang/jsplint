@@ -5,7 +5,7 @@ const StatementCollector = require('./StatementCollector')
 
 function skipWhiteSpace(source) {
   let current = source.current()
-  while (current.kind == 'eol') {
+  while (current.kind === 'eol') {
     current = source.next()
   }
 }
@@ -23,10 +23,10 @@ class MainModuleScanner {
 
     let current = source.current()
 
-    if (current.kind == 'eol')
+    if (current.kind === 'eol')
       skipWhiteSpace(source)
 
-    if (current.kind != 'variables') {
+    if (current.kind !== 'variables') {
       return {
           error   : true
         , result  : {
@@ -42,12 +42,12 @@ class MainModuleScanner {
       current = source.next()
     }
 
-    if (current.kind == 'eol')
+    if (current.kind === 'eol')
       skipWhiteSpace(source)
 
     let varDeclaration = DeclarationPattern.capture(source)
 
-    if (varDeclaration.error && !(varDeclaration.result.reason == 'nonexistent-type' && varDeclaration.result.unexpectedToken == 'inicio')) {
+    if (varDeclaration.error && !(varDeclaration.result.reason === 'nonexistent-type' && varDeclaration.result.unexpectedToken === 'inicio')) {
       return varDeclaration
     }
     else {
@@ -55,11 +55,11 @@ class MainModuleScanner {
     }
     current = source.current()
 
-    if (current.kind == 'eol')
+    if (current.kind === 'eol')
       skipWhiteSpace(source)
 
     current = source.current()
-    if (current.kind != 'inicio') {
+    if (current.kind !== 'inicio') {
       return {
           error   : true
         , result  : {
@@ -75,7 +75,7 @@ class MainModuleScanner {
       current = source.next()
     }
 
-    if (current.kind == 'eol')
+    if (current.kind === 'eol')
       skipWhiteSpace(source)
 
     let statements = StatementCollector.capture(source)
@@ -87,12 +87,12 @@ class MainModuleScanner {
       moduleData.statements = statements.result
     }
 
-    if (source.current().kind == 'eol')
+    if (source.current().kind === 'eol')
       skipWhiteSpace(source)
 
     current = source.current()
 
-    if (current.kind != 'fin') {
+    if (current.kind !== 'fin') {
       return {
           error   : true
         , result  : {
@@ -108,7 +108,7 @@ class MainModuleScanner {
       source.next()
     }
 
-    if (source.current().kind == 'eol')
+    if (source.current().kind === 'eol')
       skipWhiteSpace(source)
 
     return {error:false, result:moduleData}
