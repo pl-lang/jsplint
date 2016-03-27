@@ -327,36 +327,6 @@ describe('Evaluator', () => {
   })
 })
 
-describe('ArgumentListPattern', () => {
-  let ArgumentListPattern = require('../intermediate\/structures\/ArgumentListPattern.js')
-  it('extrae una lista de expresiones', () => {
-    let ejemplo = '2, 3, 4'
-    let q = queueFromSource(ejemplo)
-
-    let args = ArgumentListPattern.capture(q)
-    args.error.should.equal(false)
-  })
-})
-
-describe('ModuleCallPattern', () => {
-  let ModuleCallPattern = require('../intermediate\/structures\/ModuleCallPattern.js')
-  it('extrae una llamada a un modulo', () => {
-    let ejemplo = 'escribir(42)'
-    let q = queueFromSource(ejemplo)
-
-    let expected = {
-      args:[{expression_type:'literal', type:'entero', value:42}],
-      name:'escribir',
-      action:'module_call',
-      expression_type:'module_call'
-    }
-
-    let call = ModuleCallPattern.capture(q)
-    call.error.should.equal(false)
-    call.result.data.should.deepEqual(expected)
-  })
-})
-
 describe('StatementCollector', () => {
   let StatementCollector = require('../intermediate/scanners/StatementCollector')
   it('si-entonces', () => {
