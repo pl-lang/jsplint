@@ -244,23 +244,22 @@ describe.skip('MainModulePattern', () => {
   it('programa sin "fin"')
 })
 
-describe('AssignmentPattern', () => {
-  let AssignmentPattern = require('../intermediate\/structures\/AssignmentPattern.js')
+describe('Assignment pattern', () => {
   it('captura un enunciado de asignacion', () => {
     let asignacion = 'var <- 48'
 
     let q = queueFromSource(asignacion)
-    let capt = AssignmentPattern.capture(q)
+    let assignment_match = match(Patterns.Assignment).from(q)
 
-    capt.error.should.equal(false)
-    capt.result.data.payload.should.deepEqual(
+    assignment_match.error.should.equal(false)
+    assignment_match.result.payload.should.deepEqual(
       {
         expression_type:'literal',
         value:48,
         type:'entero',
       }
     )
-    capt.result.data.target.name.should.equal('var')
+    assignment_match.result.target.name.should.equal('var')
   })
 })
 

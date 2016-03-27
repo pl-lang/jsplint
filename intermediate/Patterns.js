@@ -536,6 +536,48 @@ function Expression(source) {
   }
 }
 
+function Assignment(source) {
+
+  let variable_match = Variable(source)
+
+  if (variable_match.error === true) {
+    return variable_match
+  }
+
+  let name = variable_match.result.name
+  let isArray = variable_match.result.isArray
+  let indexes = variable_match.result.indexes
+  let bounds_checked = false
+  let target = {name, isArray, indexes, bounds_checked}
+
+  let current = source.current()
+
+  if (current.kind === 'assignment') {
+    source.next()
+
+    let payload_variable_match = Expression(source)
+
+    if (payload_variable_match.error === true) {
+      return payload
+    }
+    else {
+      let payload = payload_variable_match.result
+      let data = {action:'assignment', target, payload}
+      return new Report(false, data)
+    }
+  }
+  else {
+    let unexpectedToken = source.current().kind
+    let expectedToken   = 'assignment'
+    let atColumn        = source.current().columnNumber
+    let atLine          = source.current().lineNumber
+
+    let result = {unexpectedToken, expectedToken, atColumn, atLine}
+
+    return new Report(true, result)
+  }
+}
+
 /**
  * Funcion que, dada una funcion de captura y una fuente devuelve un reporte
  * @param {Function} pattern_matcher Funcion que captura tokens
@@ -559,5 +601,6 @@ module.exports = {
   Declaration             : Declaration,
   IndexExpression         : IndexExpression,
   Variable                : Variable,
-  Expression              : Expression
+  Expression              : Expression,
+  Assignment              : Assignment
 }
