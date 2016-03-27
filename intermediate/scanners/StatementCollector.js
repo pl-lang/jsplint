@@ -372,7 +372,6 @@ class IfScanner {
 class StatementCollector {
   static capture(source) {
     let list  = new LinkedList()
-    let error   = false
 
     let current = source.current()
 
@@ -439,9 +438,7 @@ class StatementCollector {
       }
     }
 
-    let result = list.firstNode
-
-    return {error, result}
+    return new  Report(false, list.firstNode)
   }
 }
 
