@@ -263,6 +263,22 @@ describe('Assignment pattern', () => {
   })
 })
 
+describe('Argument list pattern', () => {
+  it('captura dos expresiones', () => {
+    let test_string = '2, verdadero'
+
+    let q = queueFromSource(test_string)
+
+    let argument_match = match(Patterns.ArgumentList).from(q)
+
+    argument_match.error.should.equal(false)
+    argument_match.result.should.deepEqual([
+      {expression_type:'literal', type:'entero', value:2},
+      {expression_type:'literal', type:'logico', value:true}
+    ])
+  })
+})
+
 describe.skip('ModuleCallPattern', () => {
   let ModuleCallPattern = require('../intermediate\/structures\/ModuleCallPattern.js')
   it('captura la llamada a un modulo', () => {

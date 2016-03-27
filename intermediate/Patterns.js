@@ -578,6 +578,33 @@ function Assignment(source) {
   }
 }
 
+function ArgumentList(source) {
+  let args = []
+  let exp = Expression(source)
+
+  if (exp.error) {
+    return exp
+  }
+  else {
+    args.push(exp.result)
+
+    if (source.current().kind == 'comma') {
+      source.next()
+      let next_args = ArgumentList(source)
+      if (next_args.error) {
+        return next_args
+      }
+      else {
+        args = args.concat(next_args.result)
+        return new Report(false, args)
+      }
+    }
+    else {
+      return new Report(false, args)
+    }
+  }
+}
+
 /**
  * Funcion que, dada una funcion de captura y una fuente devuelve un reporte
  * @param {Function} pattern_matcher Funcion que captura tokens
@@ -602,5 +629,6 @@ module.exports = {
   IndexExpression         : IndexExpression,
   Variable                : Variable,
   Expression              : Expression,
-  Assignment              : Assignment
+  Assignment              : Assignment,
+  ArgumentList            : ArgumentList
 }
