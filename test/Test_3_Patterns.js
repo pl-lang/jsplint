@@ -279,16 +279,18 @@ describe('Argument list pattern', () => {
   })
 })
 
-describe.skip('ModuleCallPattern', () => {
-  let ModuleCallPattern = require('../intermediate\/structures\/ModuleCallPattern.js')
+describe('ModuleCall pattern', () => {
   it('captura la llamada a un modulo', () => {
     let asignacion = 'escribir(42)'
 
     let q = queueFromSource(asignacion)
-    let capt = AssignmentPattern.capture(q)
+    let capt = match(Patterns.ModuleCall).from(q)
 
     capt.error.should.equal(false)
     capt.result.name.should.equal('escribir')
+    capt.result.args.should.deepEqual([
+      {expression_type:'literal', type:'entero', value:42},
+    ])
   })
 })
 

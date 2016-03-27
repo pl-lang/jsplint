@@ -605,6 +605,63 @@ function ArgumentList(source) {
   }
 }
 
+function ModuleCall(source) {
+  let name = Word(source)
+
+  if (source.current().kind != 'left-par') {
+    let current = source.current()
+    let unexpected  = current.kind
+    let expected    = 'right-par'
+    let atColumn    = current.columnNumber
+    let atLine      = current.lineNumber
+
+    return new Report(true, {unexpected, expected, atColumn, atLine})
+  }
+  else {
+    source.next()
+  }
+
+  if (source.current().kind != 'right-par') {
+
+    let args = ArgumentList(source)
+
+    if (args.error) {
+      return arguments
+    }
+    else {
+      if (source.current().kind == 'right-par') {
+        source.next()
+        let data = {
+          args:args.result,
+          name:name.result,
+          action:'module_call',
+          expression_type:'module_call'
+        }
+        return new Report(false, data)
+      }
+      else {
+        let current = source.current()
+        let unexpected  = current.kind
+        let expected    = 'right-par'
+        let atColumn    = current.columnNumber
+        let atLine      = current.lineNumber
+
+        return new Report(true, {unexpected, expected, atColumn, atLine})
+      }
+    }
+  }
+  else {
+    source.next()
+    let data = {
+      args:[],
+      name:name.result,
+      action:'module_call',
+      expression_type:'module_call'
+    }
+    return new Report(false, data)
+  }
+}
+
 /**
  * Funcion que, dada una funcion de captura y una fuente devuelve un reporte
  * @param {Function} pattern_matcher Funcion que captura tokens
@@ -630,5 +687,6 @@ module.exports = {
   Variable                : Variable,
   Expression              : Expression,
   Assignment              : Assignment,
-  ArgumentList            : ArgumentList
+  ArgumentList            : ArgumentList,
+  ModuleCall              : ModuleCall
 }
