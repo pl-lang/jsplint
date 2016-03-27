@@ -278,12 +278,11 @@ describe.skip('ModuleCallPattern', () => {
 })
 
 describe('New Expression', () => {
-  let Expression = require('../intermediate\/structures\/Expression.js')
   it ('captura la invocacion de una variable', () => {
     {
       let nombre = 'contador'
       let q = queueFromSource(nombre)
-      let capt = Expression.fromQueue(q)
+      let capt = match(Patterns.Expression).from(q)
       capt.error.should.equal(false)
       capt.result.should.deepEqual({
         expression_type:'invocation',
@@ -296,7 +295,7 @@ describe('New Expression', () => {
     {
       let nombre = 'contador + 1'
       let q = queueFromSource(nombre)
-      let capt = Expression.fromQueue(q)
+      let capt = match(Patterns.Expression).from(q)
       capt.error.should.equal(false)
       capt.result.should.deepEqual({
         expression_type:'operation',
@@ -316,7 +315,7 @@ describe('New Expression', () => {
     {
       let nombre = 'vector[2] + 1'
       let q = queueFromSource(nombre)
-      let capt = Expression.fromQueue(q)
+      let capt = match(Patterns.Expression).from(q)
       capt.error.should.equal(false)
       capt.result.should.deepEqual({
         expression_type:'operation',
@@ -339,7 +338,7 @@ describe('New Expression', () => {
     {
       let logico = 'verdadero'
       let q = queueFromSource(logico)
-      let capt = Expression.fromQueue(q)
+      let capt = match(Patterns.Expression).from(q)
       capt.error.should.equal(false)
       capt.result.should.deepEqual({
         expression_type:'literal',
@@ -351,7 +350,7 @@ describe('New Expression', () => {
     {
       let logico = 'falso'
       let q = queueFromSource(logico)
-      let capt = Expression.fromQueue(q)
+      let capt = match(Patterns.Expression).from(q)
       capt.error.should.equal(false)
       capt.result.should.deepEqual({
         expression_type:'literal',
@@ -365,7 +364,7 @@ describe('New Expression', () => {
     {
       let dato = '32'
       let q = queueFromSource(dato)
-      let capt = Expression.fromQueue(q)
+      let capt = match(Patterns.Expression).from(q)
       capt.error.should.equal(false)
       capt.result.should.deepEqual({
         expression_type:'literal',
@@ -377,7 +376,7 @@ describe('New Expression', () => {
     {
       let dato = '2.78'
       let q = queueFromSource(dato)
-      let capt = Expression.fromQueue(q)
+      let capt = match(Patterns.Expression).from(q)
       capt.error.should.equal(false)
       capt.result.should.deepEqual({
         expression_type:'literal',
@@ -391,7 +390,7 @@ describe('New Expression', () => {
     {
       let dato = '"hola mundo"'
       let q = queueFromSource(dato)
-      let capt = Expression.fromQueue(q)
+      let capt = match(Patterns.Expression).from(q)
       capt.error.should.equal(false)
       capt.result.should.deepEqual({
         expression_type:'literal',
@@ -406,7 +405,7 @@ describe('New Expression', () => {
     {
       let dato = 'verdadero OR falso'
       let q = queueFromSource(dato)
-      let capt = Expression.fromQueue(q)
+      let capt = match(Patterns.Expression).from(q)
       capt.error.should.equal(false)
       capt.result.expression_type.should.equal('operation')
       capt.result.op.should.equal('or')
@@ -417,7 +416,7 @@ describe('New Expression', () => {
     {
       let dato = 'verdadero AND falso'
       let q = queueFromSource(dato)
-      let capt = Expression.fromQueue(q)
+      let capt = match(Patterns.Expression).from(q)
       capt.error.should.equal(false)
       capt.result.expression_type.should.equal('operation')
       capt.result.op.should.equal('and')
@@ -428,7 +427,7 @@ describe('New Expression', () => {
     {
       let dato = 'verdadero = falso'
       let q = queueFromSource(dato)
-      let capt = Expression.fromQueue(q)
+      let capt = match(Patterns.Expression).from(q)
       capt.error.should.equal(false)
       capt.result.expression_type.should.equal('operation')
       capt.result.op.should.equal('equal')
@@ -439,7 +438,7 @@ describe('New Expression', () => {
     {
       let dato = 'verdadero <> falso'
       let q = queueFromSource(dato)
-      let capt = Expression.fromQueue(q)
+      let capt = match(Patterns.Expression).from(q)
       capt.error.should.equal(false)
       capt.result.expression_type.should.equal('operation')
       capt.result.op.should.equal('diff-than')
@@ -450,7 +449,7 @@ describe('New Expression', () => {
     {
       let dato = '3 > 2'
       let q = queueFromSource(dato)
-      let capt = Expression.fromQueue(q)
+      let capt = match(Patterns.Expression).from(q)
       capt.error.should.equal(false)
       capt.result.expression_type.should.equal('operation')
       capt.result.op.should.equal('major-than')
@@ -459,7 +458,7 @@ describe('New Expression', () => {
     {
       let dato = '3 >= 2'
       let q = queueFromSource(dato)
-      let capt = Expression.fromQueue(q)
+      let capt = match(Patterns.Expression).from(q)
       capt.error.should.equal(false)
       capt.result.expression_type.should.equal('operation')
       capt.result.op.should.equal('major-equal')
@@ -468,7 +467,7 @@ describe('New Expression', () => {
     {
       let dato = '2 < 7'
       let q = queueFromSource(dato)
-      let capt = Expression.fromQueue(q)
+      let capt = match(Patterns.Expression).from(q)
       capt.error.should.equal(false)
       capt.result.expression_type.should.equal('operation')
       capt.result.op.should.equal('minor-than')
@@ -477,7 +476,7 @@ describe('New Expression', () => {
     {
       let dato = '2 <= 4'
       let q = queueFromSource(dato)
-      let capt = Expression.fromQueue(q)
+      let capt = match(Patterns.Expression).from(q)
       capt.error.should.equal(false)
       capt.result.expression_type.should.equal('operation')
       capt.result.op.should.equal('minor-equal')
@@ -488,7 +487,7 @@ describe('New Expression', () => {
     {
       let dato = '3 - 2'
       let q = queueFromSource(dato)
-      let capt = Expression.fromQueue(q)
+      let capt = match(Patterns.Expression).from(q)
       capt.error.should.equal(false)
       capt.result.expression_type.should.equal('operation')
       capt.result.op.should.equal('minus')
@@ -497,7 +496,7 @@ describe('New Expression', () => {
     {
       let dato = '3 + 2'
       let q = queueFromSource(dato)
-      let capt = Expression.fromQueue(q)
+      let capt = match(Patterns.Expression).from(q)
       capt.error.should.equal(false)
       capt.result.expression_type.should.equal('operation')
       capt.result.op.should.equal('plus')
@@ -508,7 +507,7 @@ describe('New Expression', () => {
     {
       let dato = '3 mod 2'
       let q = queueFromSource(dato)
-      let capt = Expression.fromQueue(q)
+      let capt = match(Patterns.Expression).from(q)
       capt.error.should.equal(false)
       capt.result.expression_type.should.equal('operation')
       capt.result.op.should.equal('mod')
@@ -517,7 +516,7 @@ describe('New Expression', () => {
     {
       let dato = '3 / 2'
       let q = queueFromSource(dato)
-      let capt = Expression.fromQueue(q)
+      let capt = match(Patterns.Expression).from(q)
       capt.error.should.equal(false)
       capt.result.expression_type.should.equal('operation')
       capt.result.op.should.equal('divide')
@@ -526,7 +525,7 @@ describe('New Expression', () => {
     {
       let dato = '3 div 2'
       let q = queueFromSource(dato)
-      let capt = Expression.fromQueue(q)
+      let capt = match(Patterns.Expression).from(q)
       capt.error.should.equal(false)
       capt.result.expression_type.should.equal('operation')
       capt.result.op.should.equal('div')
@@ -535,7 +534,7 @@ describe('New Expression', () => {
     {
       let dato = '3 * 2'
       let q = queueFromSource(dato)
-      let capt = Expression.fromQueue(q)
+      let capt = match(Patterns.Expression).from(q)
       capt.error.should.equal(false)
       capt.result.expression_type.should.equal('operation')
       capt.result.op.should.equal('times')
@@ -544,7 +543,7 @@ describe('New Expression', () => {
     {
       let dato = '3 ^ 2'
       let q = queueFromSource(dato)
-      let capt = Expression.fromQueue(q)
+      let capt = match(Patterns.Expression).from(q)
       capt.error.should.equal(false)
       capt.result.expression_type.should.equal('operation')
       capt.result.op.should.equal('power')
@@ -555,7 +554,7 @@ describe('New Expression', () => {
     {
       let dato = 'not verdadero'
       let q = queueFromSource(dato)
-      let capt = Expression.fromQueue(q)
+      let capt = match(Patterns.Expression).from(q)
       capt.error.should.equal(false)
       capt.result.expression_type.should.equal('unary-operation')
       capt.result.op.should.equal('not')
@@ -564,7 +563,7 @@ describe('New Expression', () => {
     {
       let dato = '-2'
       let q = queueFromSource(dato)
-      let capt = Expression.fromQueue(q)
+      let capt = match(Patterns.Expression).from(q)
       capt.error.should.equal(false)
       capt.result.expression_type.should.equal('unary-operation')
       capt.result.op.should.equal('unary-minus')
@@ -573,7 +572,7 @@ describe('New Expression', () => {
     {
       let dato = '+3'
       let q = queueFromSource(dato)
-      let capt = Expression.fromQueue(q)
+      let capt = match(Patterns.Expression).from(q)
       capt.error.should.equal(false)
       capt.result.expression_type.should.equal('literal')
     }
@@ -583,7 +582,7 @@ describe('New Expression', () => {
     {
       let dato = '(not verdadero)'
       let q = queueFromSource(dato)
-      let capt = Expression.fromQueue(q)
+      let capt = match(Patterns.Expression).from(q)
       capt.error.should.equal(false)
       capt.result.expression_type.should.equal('expression')
       capt.result.expression.should.deepEqual({expression_type:'unary-operation', op:'not', operand:{expression_type:'literal', type:'logico', value:true}})
@@ -593,11 +592,11 @@ describe('New Expression', () => {
 
 
 describe('VariablePattern', () => {
-  const VariablePattern = require('../intermediate/structures/VariablePattern')
+
   it('captura la variable en una asignacion', () => {
     let dato = 'mi_variable <- 2'
     let q = queueFromSource(dato)
-    let report = VariablePattern.capture(q)
+    let report = match(Patterns.Variable).from(q)
 
     report.error.should.equal(false)
     report.result.should.deepEqual({
@@ -610,7 +609,7 @@ describe('VariablePattern', () => {
   it('captura la variable (un arreglo) en una asignacion', () => {
     let dato = 'mi_vector[2] <- 2'
     let q = queueFromSource(dato)
-    let report = VariablePattern.capture(q)
+    let report = match(Patterns.Variable).from(q)
 
     report.error.should.equal(false)
     report.result.should.deepEqual({
@@ -627,7 +626,7 @@ describe('VariablePattern', () => {
   it('captura la variable (una matriz) en una asignacion', () => {
     let dato = 'mi_matriz[i, j] <- 2'
     let q = queueFromSource(dato)
-    let report = VariablePattern.capture(q)
+    let report = match(Patterns.Variable).from(q)
 
     report.error.should.equal(false)
     report.result.should.deepEqual({
