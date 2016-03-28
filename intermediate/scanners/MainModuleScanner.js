@@ -1,7 +1,9 @@
 'use strict'
 
-const DeclarationPattern = require('../structures/DeclarationPattern')
 const StatementCollector = require('./StatementCollector')
+
+const Patterns = require('../Patterns')
+const match = Patterns.match
 
 function skipWhiteSpace(source) {
   let current = source.current()
@@ -45,13 +47,13 @@ class MainModuleScanner {
     if (current.kind === 'eol')
       skipWhiteSpace(source)
 
-    let varDeclaration = DeclarationPattern.capture(source)
+    let declaration_match = match(Patterns.Declaration).from(source)
 
-    if (varDeclaration.error && !(varDeclaration.result.reason === 'nonexistent-type' && varDeclaration.result.unexpectedToken === 'inicio')) {
-      return varDeclaration
+    if (declaration_match.error && !(declaration_match.result.reason === 'nonexistent-type' && declaration_match.result.unexpected === 'inicio')) {
+      return declaration_match
     }
     else {
-      moduleData.variables = varDeclaration.result
+      moduleData.variables = declaration_match.result
     }
     current = source.current()
 
