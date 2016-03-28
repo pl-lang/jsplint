@@ -1,7 +1,8 @@
 'use strict'
 
-const Expression = require('../intermediate/structures/Expression')
 const Emitter = require('../misc/Emitter.js')
+
+const expressionFromString = require('../intermediate/expressionFromString')
 
 /*
   Un evaluador sirve para ejecutar las acciones/enunciados de un modulo.
@@ -147,7 +148,7 @@ class Evaluator extends Emitter {
     let i = 0
     while (i < varname_list.length && !error) {
       // TODO: mover el parseo de la expreson al compilador
-      let exp = Expression.fromString(data_list[i])
+      let exp = expressionFromString(data_list[i])
 
       if (exp.error) {
         // TODO

@@ -140,24 +140,6 @@ class Compiler extends Emitter {
 
     return {error:false, result:scan_report.result}
   }
-
-  static expressionFromString(string) {
-    let source = new Source(string)
-    let tokenizer = new Parser(source)
-
-    let tokenArray = []
-    let t = tokenizer.nextToken()
-
-    while ( t.kind !== 'eof') {
-      tokenArray.push(t)
-      t = tokenizer.nextToken()
-    }
-    tokenArray.push(t)
-
-    let tokenq = new TokenQueue(tokenArray)
-
-    return match(Patterns.Expression).from(tokenq)
-  }
 }
 
 module.exports = Compiler
