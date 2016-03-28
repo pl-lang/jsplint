@@ -1,5 +1,7 @@
 'use strict'
 
+const Report = require('../../misc/Report')
+
 const StatementCollector = require('./StatementCollector')
 
 const Patterns = require('../Patterns')
@@ -15,7 +17,7 @@ function skipWhiteSpace(source) {
 class MainModuleScanner {
 
   static capture(source) {
-    let moduleData = {
+    let module_data = {
         statements      : []
       , variables       : {}
       , atColumn        : 0
@@ -25,27 +27,25 @@ class MainModuleScanner {
 
     let current = source.current()
 
-    if (current.kind === 'eol')
+    if (current.kind === 'eol') {
       skipWhiteSpace(source)
+    }
 
     if (current.kind !== 'variables') {
-      return {
-          error   : true
-        , result  : {
-            unexpected  : current.kind
-          , expected    : 'variables'
-          , atColumn    : current.columnNumber
-          , atLine      : current.lineNumber
-          , reason      : 'missing-var-declaration'
-        }
-      }
+      let unexpected  = current.kind
+      let expected    = 'variables'
+      let atColumn    = current.columnNumber
+      let atLine      = current.lineNumber
+      let reason      = 'missing-var-declaration'
+      return new Report(true, {unexpected, expected, atColumn, atLine, reason})
     }
     else {
       current = source.next()
     }
 
-    if (current.kind === 'eol')
+    if (current.kind === 'eol') {
       skipWhiteSpace(source)
+    }
 
     let declaration_match = match(Patterns.Declaration).from(source)
 
@@ -53,32 +53,31 @@ class MainModuleScanner {
       return declaration_match
     }
     else {
-      moduleData.variables = declaration_match.result
+      module_data.variables = declaration_match.result
     }
     current = source.current()
 
-    if (current.kind === 'eol')
+    if (current.kind === 'eol') {
       skipWhiteSpace(source)
+    }
 
     current = source.current()
     if (current.kind !== 'inicio') {
-      return {
-          error   : true
-        , result  : {
-            unexpected  : current.kind
-          , expected    : 'inicio'
-          , atColumn    : current.columnNumber
-          , atLine      : current.lineNumber
-          , reason      : 'missing-inicio'
-        }
-      }
+      let unexpected  = current.kind
+      let expected    = 'inicio'
+      let atColumn    = current.columnNumber
+      let atLine      = current.lineNumber
+      let reason      = 'missing-inicio'
+
+      return new Report(true, {unexpected, expected, atColumn, atLine, reason})
     }
     else {
       current = source.next()
     }
 
-    if (current.kind === 'eol')
+    if (current.kind === 'eol') {
       skipWhiteSpace(source)
+    }
 
     let statements = StatementCollector.capture(source)
 
@@ -86,34 +85,33 @@ class MainModuleScanner {
       return statements
     }
     else {
-      moduleData.statements = statements.result
+      module_data.statements = statements.result
     }
 
-    if (source.current().kind === 'eol')
+    if (source.current().kind === 'eol') {
       skipWhiteSpace(source)
+    }
 
     current = source.current()
 
     if (current.kind !== 'fin') {
-      return {
-          error   : true
-        , result  : {
-            unexpected  : current.kind
-          , expected    : 'fin'
-          , atColumn    : current.columnNumber
-          , atLine      : current.lineNumber
-          , reason      : 'missing-fin'
-        }
-      }
+      let unexpected  = current.kind
+      let expected    = 'fin'
+      let atColumn    = current.columnNumber
+      let atLine      = current.lineNumber
+      let reason      = 'missing-fin'
+
+      return new Report(true, {unexpected, expected, atColumn, atLine, reason})
     }
     else {
       source.next()
     }
 
-    if (source.current().kind === 'eol')
+    if (source.current().kind === 'eol') {
       skipWhiteSpace(source)
+    }
 
-    return {error:false, result:moduleData}
+    return new Report(false, module_data)
   }
 }
 
