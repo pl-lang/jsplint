@@ -1,10 +1,13 @@
 'use strict'
-var should = require('should');
-var fs = require('fs');
-var Source = require('../frontend/Source.js')
+const should = require('should');
+const fs = require('fs');
 
-let Parser = require('../frontend/Parser.js')
-let TokenQueue = require('../intermediate/TokenQueue')
+const Source = require('../frontend/Source.js')
+const Parser = require('../frontend/Parser.js')
+
+const TokenQueue = require('../intermediate/TokenQueue')
+const Patterns = require('../intermediate/Patterns')
+const match = Patterns.match
 
 function queueFromSource(string) {
   let source = new Source(string)
@@ -45,7 +48,6 @@ describe('MainModuleScanner', () => {
 })
 
 describe('Evaluator', () => {
-  let Expression = require('../intermediate\/structures\/Expression.js')
   let Evaluator = require('../backend/Evaluator.js')
   let evaluator = new Evaluator([], {}, {})
   it('multiplicacion', () => {
@@ -53,7 +55,7 @@ describe('Evaluator', () => {
     {
       let a = '2*3'
       let q = queueFromSource(a)
-      let exp = Expression.fromQueue(q)
+      let exp = match(Patterns.Expression).from(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateExp(exp.result)
       resultado.should.equal(6)
@@ -63,7 +65,7 @@ describe('Evaluator', () => {
     {
       let a = '-2*-3'
       let q = queueFromSource(a)
-      let exp = Expression.fromQueue(q)
+      let exp = match(Patterns.Expression).from(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateExp(exp.result)
       resultado.should.equal(6)
@@ -73,7 +75,7 @@ describe('Evaluator', () => {
     {
       let a = '2*2*2'
       let q = queueFromSource(a)
-      let exp = Expression.fromQueue(q)
+      let exp = match(Patterns.Expression).from(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateExp(exp.result)
       resultado.should.equal(8)
@@ -84,7 +86,7 @@ describe('Evaluator', () => {
     {
       let a = '3/2'
       let q = queueFromSource(a)
-      let exp = Expression.fromQueue(q)
+      let exp = match(Patterns.Expression).from(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateExp(exp.result)
       resultado.should.equal(1.5)
@@ -93,7 +95,7 @@ describe('Evaluator', () => {
     {
       let a = '-3/-2'
       let q = queueFromSource(a)
-      let exp = Expression.fromQueue(q)
+      let exp = match(Patterns.Expression).from(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateExp(exp.result)
       resultado.should.equal(1.5)
@@ -102,7 +104,7 @@ describe('Evaluator', () => {
     {
       let a = '2+3/3+4'
       let q = queueFromSource(a)
-      let exp = Expression.fromQueue(q)
+      let exp = match(Patterns.Expression).from(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateExp(exp.result)
       resultado.should.equal(2+3/3+4)
@@ -111,7 +113,7 @@ describe('Evaluator', () => {
     {
       let a = '3/2/2'
       let q = queueFromSource(a)
-      let exp = Expression.fromQueue(q)
+      let exp = match(Patterns.Expression).from(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateExp(exp.result)
       resultado.should.equal(3/2/2)
@@ -120,7 +122,7 @@ describe('Evaluator', () => {
     {
       let a = '2/2/2/2'
       let q = queueFromSource(a)
-      let exp = Expression.fromQueue(q)
+      let exp = match(Patterns.Expression).from(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateExp(exp.result)
       resultado.should.equal(2/2/2/2)
@@ -129,7 +131,7 @@ describe('Evaluator', () => {
     {
       let a = '4/2/2/2'
       let q = queueFromSource(a)
-      let exp = Expression.fromQueue(q)
+      let exp = match(Patterns.Expression).from(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateExp(exp.result)
       resultado.should.equal(4/2/2/2)
@@ -138,7 +140,7 @@ describe('Evaluator', () => {
     {
       let a = '2/2/2/4'
       let q = queueFromSource(a)
-      let exp = Expression.fromQueue(q)
+      let exp = match(Patterns.Expression).from(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateExp(exp.result)
       resultado.should.equal(2/2/2/4)
@@ -149,7 +151,7 @@ describe('Evaluator', () => {
     {
       let a = '3-3-3'
       let q = queueFromSource(a)
-      let exp = Expression.fromQueue(q)
+      let exp = match(Patterns.Expression).from(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateExp(exp.result)
       resultado.should.equal(-3)
@@ -158,7 +160,7 @@ describe('Evaluator', () => {
     {
       let a = '(3-3-3)'
       let q = queueFromSource(a)
-      let exp = Expression.fromQueue(q)
+      let exp = match(Patterns.Expression).from(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateExp(exp.result)
       resultado.should.equal(-3)
@@ -169,7 +171,7 @@ describe('Evaluator', () => {
     {
       let a = '2+43'
       let q = queueFromSource(a)
-      let exp = Expression.fromQueue(q)
+      let exp = match(Patterns.Expression).from(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateExp(exp.result)
       resultado.should.equal(45)
@@ -180,7 +182,7 @@ describe('Evaluator', () => {
     {
       let a = '2-(2-3)'
       let q = queueFromSource(a)
-      let exp = Expression.fromQueue(q)
+      let exp = match(Patterns.Expression).from(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateExp(exp.result)
       resultado.should.equal(2-(2-3))
@@ -189,7 +191,7 @@ describe('Evaluator', () => {
     {
       let a = '2+(2+3)'
       let q = queueFromSource(a)
-      let exp = Expression.fromQueue(q)
+      let exp = match(Patterns.Expression).from(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateExp(exp.result)
       resultado.should.equal(7)
@@ -198,7 +200,7 @@ describe('Evaluator', () => {
     {
       let a = '2+(2+3*4)'
       let q = queueFromSource(a)
-      let exp = Expression.fromQueue(q)
+      let exp = match(Patterns.Expression).from(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateExp(exp.result)
       resultado.should.equal(16)
@@ -207,7 +209,7 @@ describe('Evaluator', () => {
     {
       let a = '(3*2)-6'
       let q = queueFromSource(a)
-      let exp = Expression.fromQueue(q)
+      let exp = match(Patterns.Expression).from(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateExp(exp.result)
       resultado.should.equal(0)
@@ -216,7 +218,7 @@ describe('Evaluator', () => {
     {
       let a = '(-(-(2+2)))'
       let q = queueFromSource(a)
-      let exp = Expression.fromQueue(q)
+      let exp = match(Patterns.Expression).from(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateExp(exp.result)
       resultado.should.equal(4)
@@ -225,7 +227,7 @@ describe('Evaluator', () => {
     {
       let a = '2+8/2'
       let q = queueFromSource(a)
-      let exp = Expression.fromQueue(q)
+      let exp = match(Patterns.Expression).from(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateExp(exp.result)
       resultado.should.equal(2+8/2)
@@ -236,7 +238,7 @@ describe('Evaluator', () => {
     {
       let a = '2 = 2'
       let q = queueFromSource(a)
-      let exp = Expression.fromQueue(q)
+      let exp = match(Patterns.Expression).from(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateExp(exp.result)
       resultado.should.equal(true)
@@ -245,7 +247,7 @@ describe('Evaluator', () => {
     {
       let a = '2 <> 2'
       let q = queueFromSource(a)
-      let exp = Expression.fromQueue(q)
+      let exp = match(Patterns.Expression).from(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateExp(exp.result)
       resultado.should.equal(false)
@@ -254,7 +256,7 @@ describe('Evaluator', () => {
     {
       let a = '2 >= 2'
       let q = queueFromSource(a)
-      let exp = Expression.fromQueue(q)
+      let exp = match(Patterns.Expression).from(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateExp(exp.result)
       resultado.should.equal(true)
@@ -263,7 +265,7 @@ describe('Evaluator', () => {
     {
       let a = '2 <= 2'
       let q = queueFromSource(a)
-      let exp = Expression.fromQueue(q)
+      let exp = match(Patterns.Expression).from(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateExp(exp.result)
       resultado.should.equal(true)
@@ -272,7 +274,7 @@ describe('Evaluator', () => {
     {
       let a = '5 > 4'
       let q = queueFromSource(a)
-      let exp = Expression.fromQueue(q)
+      let exp = match(Patterns.Expression).from(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateExp(exp.result)
       resultado.should.equal(true)
@@ -281,7 +283,7 @@ describe('Evaluator', () => {
     {
       let a = '2 < 4'
       let q = queueFromSource(a)
-      let exp = Expression.fromQueue(q)
+      let exp = match(Patterns.Expression).from(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateExp(exp.result)
       resultado.should.equal(true)
@@ -290,7 +292,7 @@ describe('Evaluator', () => {
     {
       let a = 'verdadero or falso'
       let q = queueFromSource(a)
-      let exp = Expression.fromQueue(q)
+      let exp = match(Patterns.Expression).from(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateExp(exp.result)
       resultado.should.equal(true)
@@ -299,7 +301,7 @@ describe('Evaluator', () => {
     {
       let a = 'verdadero and falso'
       let q = queueFromSource(a)
-      let exp = Expression.fromQueue(q)
+      let exp = match(Patterns.Expression).from(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateExp(exp.result)
       resultado.should.equal(false)
@@ -309,7 +311,7 @@ describe('Evaluator', () => {
   it('prueba que no deberia fallar', () => {
     let a = '2 + 2 = 4'
     let q = queueFromSource(a)
-    let exp = Expression.fromString(a)
+    let exp = match(Patterns.Expression).from(q)
     exp.error.should.equal(false)
     let resultado = evaluator.evaluateExp(exp.result)
     resultado.should.equal(true)
@@ -319,7 +321,7 @@ describe('Evaluator', () => {
     {
       let a = '"hola"'
       let q = queueFromSource(a)
-      let exp = Expression.fromQueue(q)
+      let exp = match(Patterns.Expression).from(q)
       exp.error.should.equal(false)
       let resultado = evaluator.evaluateExp(exp.result)
       resultado.should.equal('hola')
