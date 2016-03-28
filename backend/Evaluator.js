@@ -116,7 +116,7 @@ class Evaluator extends Emitter {
       let index_list = target_info.indexes.map(expression => this.evaluateExp(expression) - 1)
 
       if (target_info.bounds_checked === false)  {
-        let bound_check = this.indexWithinBounds(index_list, target_variable.dimensions)
+        let bound_check = this.indexWithinBounds(index_list, target_variable.dimension)
         if (bound_check.error === true) {
           this.running = false
           this.emit({name:'evaluation-error'}, bound_check.result)
@@ -125,7 +125,7 @@ class Evaluator extends Emitter {
       }
       // NOTE: Por ahora, no se revisa si hay un error al evaluar un indice
 
-      let index = this.calculateIndex(target_info.indexes.map(a => this.evaluateExp(a) - 1), target_variable.dimensions)
+      let index = this.calculateIndex(target_info.indexes.map(a => this.evaluateExp(a) - 1), target_variable.dimension)
       target_variable.values[index] = this.evaluateExp(expression)
     }
     else {
@@ -317,14 +317,17 @@ class Evaluator extends Emitter {
   indexWithinBounds(index_values, dimensions_lengths) {
     let i = 0
 
+    // NOTE: en las condiciones de abajo sumo 1 porque en index_values se le
+    // restó 1 a cada elemento para que sea un indice válido en JS
+
     while (i < index_values.length) {
-      if (i < 1) {
+      if ((index_values[i] + 1) < 1) {
         this.running = false
         let reason = 'index-less-than-one'
         let bad_index = i
         return {error:true, result:{reason, bad_index}}
       }
-      else if (i > variable.dimension[i]) {
+      else if ((index_values[i] + 1) > dimensions_lengths[i]) {
         out_of_bounds_index = true
         let reason = 'index-out-of-bounds'
         let bad_index = i
