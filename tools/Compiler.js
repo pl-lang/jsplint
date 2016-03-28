@@ -1,10 +1,14 @@
 'use strict'
 
 const Emitter = require('../misc/Emitter')
+
 const Scanner = require('../intermediate/Scanner')
 const TokenQueue = require('../intermediate/TokenQueue')
+const Patterns = require('../intermediate/Patterns'), match = Patterns.match
+
 const Source = require('../frontend/Source')
 const Parser = require('../frontend/Parser')
+
 const TypeChecker = require('../analisys/TypeChecker')
 
 const defaults = {
@@ -135,6 +139,24 @@ class Compiler extends Emitter {
     this.emit({name:'compilation-finished', origin:'controller'}, {error:false})
 
     return {error:false, result:scan_report.result}
+  }
+
+  static expressionFromString(string) {
+    let source = new Source(string)
+    let tokenizer = new Parser(source)
+
+    let tokenArray = []
+    let t = tokenizer.nextToken()
+
+    while ( t.kind !== 'eof') {
+      tokenArray.push(t)
+      t = tokenizer.nextToken()
+    }
+    tokenArray.push(t)
+
+    let tokenq = new TokenQueue(tokenArray)
+
+    return match(Patterns.Expression).from(tokenq)
   }
 }
 
