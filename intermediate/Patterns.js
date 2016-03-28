@@ -567,12 +567,12 @@ function Assignment(source) {
     }
   }
   else {
-    let unexpectedToken = source.current().kind
-    let expectedToken   = 'assignment'
+    let unexpected      = source.current().kind
+    let expected        = 'assignment'
     let atColumn        = source.current().columnNumber
     let atLine          = source.current().lineNumber
 
-    let result = {unexpectedToken, expectedToken, atColumn, atLine}
+    let result = {unexpected, expected, atColumn, atLine}
 
     return new Report(true, result)
   }
