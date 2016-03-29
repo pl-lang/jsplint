@@ -79,6 +79,12 @@ describe('TypeChecker.getExpressionReturnType', () => {
       let type = checker.getExpressionReturnType(exp)
       type.result.should.equal('entero')
     }
+
+    {
+      let exp = expressionFromString('2 + verdadero').result
+      let type = checker.getExpressionReturnType(exp)
+      type.error.should.equal(true)
+    }
   })
 
   it('1 entero y un real en operadores matematicos', () => {
