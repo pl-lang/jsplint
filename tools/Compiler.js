@@ -120,8 +120,10 @@ class Compiler extends Emitter {
       let main = modules.main
 
       let type_checker = new TypeChecker(main.statements, {}, main.variables, main.variables)
+
       // TODO: agregar a Emitter la posibilidad de tener handlers que se
       // ejecuten solo una vez
+
       type_checker.on('type-error', () => {
         type_error = true
       })
