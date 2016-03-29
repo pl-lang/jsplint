@@ -187,7 +187,7 @@ class TypeChecker extends Emitter {
     else if (node instanceof UntilNode) {
       this.checkUntilNode(node)
     }
-    else if (node.data.action === 'assigment') {
+    else if (node.data.action === 'assignment') {
       this.checkAssignment(node.data)
     }
   }
@@ -295,22 +295,22 @@ class TypeChecker extends Emitter {
 
   /**
    * Revisa que no haya errores en un enunciado de asignacion dado
-   * @param  {object} assigment_data propiedad data de un nodo de asignacion
+   * @param  {object} assignment_data propiedad data de un nodo de asignacion
    * @return {void}
    */
-  checkAssignment(assigment_data) {
-    if (this.variableExists(assigment_data.target.name) === true) {
-      let target = this.getVariable(assigment_data.target.name)
+  checkAssignment(assignment_data) {
+    if (this.variableExists(assignment_data.target.name) === true) {
+      let target = this.getVariable(assignment_data.target.name)
 
-      if (target.isArray === true || assigment_data.target.isArray === true) {
-        let report = this.checkArrayInvocation(target, assigment_data.target)
+      if (target.isArray === true || assignment_data.target.isArray === true) {
+        let report = this.checkArrayInvocation(target, assignment_data.target)
 
         if (report.error === true) {
           this.emit({name:'type-error'}, report.result)
         }
       }
 
-      let expression_type_report = this.getExpressionReturnType(assigment_data.payload)
+      let expression_type_report = this.getExpressionReturnType(assignment_data.payload)
 
       if (expression_type_report.error === true) {
         this.emit({name:'type-error'}, expression_type_report.result)
@@ -330,7 +330,7 @@ class TypeChecker extends Emitter {
     else {
       this.emit({name:'type-error'}, {
         reason:'undeclared-variable',
-        name:assigment_data.target.name
+        name:assignment_data.target.name
       })
     }
   }
@@ -436,13 +436,13 @@ class TypeChecker extends Emitter {
 
   }
 
-  validateAssignment(assigment) {
-    if (this.variableExists(assigment.target.name)) {
-      let target = this.getVariable(assigment.target.name)
+  validateAssignment(assignment) {
+    if (this.variableExists(assignment.target.name)) {
+      let target = this.getVariable(assignment.target.name)
 
       let target_type = target.type
 
-      let payload_type_report = this.getExpressionReturnType(assigment.payload)
+      let payload_type_report = this.getExpressionReturnType(assignment.payload)
 
       if (payload_type_report.error) {
         return payload_type_report
