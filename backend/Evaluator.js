@@ -215,7 +215,7 @@ class Evaluator extends Emitter {
         }
       }
 
-      let index = this.calculateIndex(index_values, variable.dimensions)
+      let index = this.calculateIndex(index_values, variable.dimension)
       if (variable.values[index] === undefined) {
         this.running = false
         this.emit({name:'evaluation-error', origin:'evaluator'})
