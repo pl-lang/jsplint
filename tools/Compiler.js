@@ -124,8 +124,11 @@ class Compiler extends Emitter {
       // TODO: agregar a Emitter la posibilidad de tener handlers que se
       // ejecuten solo una vez
 
-      type_checker.on('type-error', () => {
+      let error_info = null
+
+      type_checker.on('type-error', (ev_info, error_report) => {
         type_error = true
+        error_info = error_report
       })
 
       this.repeatAllPublicEvents(type_checker)
@@ -133,7 +136,7 @@ class Compiler extends Emitter {
       type_checker.lookForErrors()
 
       if (type_error) {
-        this.emit({name:'compilation-finished'}, {error:true, result:'type_error'})
+        this.emit({name:'compilation-finished'}, {error:true, result:error_info})
         return {error:true, result:'type_error'}
       }
     }
