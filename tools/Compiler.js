@@ -61,14 +61,14 @@ class Compiler extends Emitter {
 
   constructor(config) {
     super([
-        'compilation-started']
+        'compilation-started'
       , 'lexical-error'
       , 'syntax-error'
       , 'compilation-finished'
       , 'type-check-started'
       , 'type-error'
       , 'type-check-finished'
-    )
+    ])
 
     if (config) {
       this.config = applyConfig(defaults, config)
