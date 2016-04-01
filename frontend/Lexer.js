@@ -80,24 +80,24 @@ class Lexer {
   }
 
   skipWhiteSpace() {
-    let comment = false
-    while( isWhiteSpace(this.currentChar()) || (comment = this.isCommentLine()) )
-      if (comment) {
-        this.skipCommment()
-        comment = false
-      }
-      else
-        this.nextChar()
+    while (isWhiteSpace(this.currentChar())) {
+      this.nextChar()
+    }
   }
 
   skipCommment() {
-    while ( this.currentChar() !== this._source.EOL )
+    while (this.currentChar() !== this._source.EOL && this.currentChar() !== this._source.EOF) {
       this.nextChar()
+    }
   }
 
   nextToken() {
 
-    if (isWhiteSpace(this.currentChar()) || this.isCommentLine())
+    if (this.isCommentLine()) {
+      this.skipCommment()
+    }
+
+    if (isWhiteSpace(this.currentChar()))
       this.skipWhiteSpace()
 
     let c = this.currentChar()

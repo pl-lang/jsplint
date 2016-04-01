@@ -280,6 +280,23 @@ describe('Lexer', () => {
     tokenArray[3].kind.should.equal('eof')
   })
 
+  it('deberia saltearse los comentarios', () => {
+    let source = new Source('//comentario\n')
+    let tokenizer = new Lexer(source)
+
+    let t = tokenizer.nextToken()
+    let tokenArray = []
+
+    while ( t.kind !== 'eof' ) {
+      tokenArray.push(t)
+      t = tokenizer.nextToken()
+    }
+    tokenArray.push(t)
+
+    tokenArray[0].kind.should.equal('eol')
+    tokenArray[1].kind.should.equal('eof')
+  })
+
   it('deberia fichar todos los tokens de un programa modelo', () => {
     let programa = fs.readFileSync('./test/programa.md', 'utf-8')
     let source = new Source(programa)
@@ -295,56 +312,58 @@ describe('Lexer', () => {
     tokenArray.push(t)
 
     tokenArray[0].kind.should.equal('eol')
-    tokenArray[0].kind.should.equal('eol')
 
-    tokenArray[1].kind.should.equal('variables')
-    tokenArray[2].kind.should.equal('eol')
+    tokenArray[1].kind.should.equal('eol')
 
-    tokenArray[3].kind.should.equal('entero')
-    tokenArray[4].kind.should.equal('word')
-    tokenArray[5].kind.should.equal('comma')
-    tokenArray[6].kind.should.equal('word')
-    tokenArray[7].kind.should.equal('eol')
+    tokenArray[2].kind.should.equal('variables')
+    tokenArray[3].kind.should.equal('eol')
 
-    tokenArray[8].kind.should.equal('inicio')
-    tokenArray[9].kind.should.equal('eol')
+    tokenArray[4].kind.should.equal('entero')
+    tokenArray[5].kind.should.equal('word')
+    tokenArray[6].kind.should.equal('comma')
+    tokenArray[7].kind.should.equal('word')
+    tokenArray[8].kind.should.equal('eol')
 
-    tokenArray[10].kind.should.equal('word')
-    tokenArray[11].kind.should.equal('assignment')
-    tokenArray[12].kind.should.equal('entero')
-    tokenArray[13].kind.should.equal('eol')
+    tokenArray[9].kind.should.equal('inicio')
+    tokenArray[10].kind.should.equal('eol')
 
-    tokenArray[14].kind.should.equal('word')
-    tokenArray[15].kind.should.equal('assignment')
-    tokenArray[16].kind.should.equal('entero')
-    tokenArray[17].kind.should.equal('eol')
+    tokenArray[11].kind.should.equal('word')
+    tokenArray[12].kind.should.equal('assignment')
+    tokenArray[13].kind.should.equal('entero')
+    tokenArray[14].kind.should.equal('eol')
 
-    tokenArray[18].kind.should.equal('si')
-    tokenArray[19].kind.should.equal('left-par')
-    tokenArray[20].kind.should.equal('word')
-    tokenArray[21].kind.should.equal('major-than')
-    tokenArray[22].kind.should.equal('word')
-    tokenArray[23].kind.should.equal('right-par')
-    tokenArray[24].kind.should.equal('entonces')
-    tokenArray[25].kind.should.equal('eol')
+    tokenArray[15].kind.should.equal('word')
+    tokenArray[16].kind.should.equal('assignment')
+    tokenArray[17].kind.should.equal('entero')
+    tokenArray[18].kind.should.equal('eol')
 
-    tokenArray[26].kind.should.equal('word')
-    tokenArray[27].kind.should.equal('left-par')
-    tokenArray[28].kind.should.equal('string')
-    tokenArray[29].kind.should.equal('right-par')
-    tokenArray[30].kind.should.equal('eol')
+    tokenArray[19].kind.should.equal('si')
+    tokenArray[20].kind.should.equal('left-par')
+    tokenArray[21].kind.should.equal('word')
+    tokenArray[22].kind.should.equal('major-than')
+    tokenArray[23].kind.should.equal('word')
+    tokenArray[24].kind.should.equal('right-par')
+    tokenArray[25].kind.should.equal('entonces')
+    tokenArray[26].kind.should.equal('eol')
 
-    tokenArray[31].kind.should.equal('sino')
-    tokenArray[32].kind.should.equal('eol')
+    tokenArray[27].kind.should.equal('word')
+    tokenArray[28].kind.should.equal('left-par')
+    tokenArray[29].kind.should.equal('string')
+    tokenArray[30].kind.should.equal('right-par')
+    tokenArray[31].kind.should.equal('eol')
 
-    tokenArray[33].kind.should.equal('word')
-    tokenArray[34].kind.should.equal('left-par')
-    tokenArray[35].kind.should.equal('string')
-    tokenArray[36].kind.should.equal('right-par')
-    tokenArray[37].kind.should.equal('eol')
+    tokenArray[32].kind.should.equal('sino')
+    tokenArray[33].kind.should.equal('eol')
 
-    tokenArray[38].kind.should.equal('fin')
-    tokenArray[39].kind.should.equal('eof')
+    tokenArray[34].kind.should.equal('word')
+    tokenArray[35].kind.should.equal('left-par')
+    tokenArray[36].kind.should.equal('string')
+    tokenArray[37].kind.should.equal('right-par')
+    tokenArray[38].kind.should.equal('eol')
+
+    tokenArray[39].kind.should.equal('fin')
+    tokenArray[40].kind.should.equal('eol')
+    tokenArray[41].kind.should.equal('eof')
   })
 })
 
