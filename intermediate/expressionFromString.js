@@ -1,7 +1,7 @@
 'use strict'
 
 const Source = require('../frontend/Source')
-const Parser = require('../frontend/Parser')
+const Lexer = require('../frontend/Lexer')
 
 const TokenQueue = require('./TokenQueue')
 const Patterns = require('./Patterns')
@@ -9,7 +9,7 @@ const match = Patterns.match
 
 function expressionFromString(string) {
   let source = new Source(string)
-  let tokenizer = new Parser(source)
+  let tokenizer = new Lexer(source)
 
   let tokenArray = []
   let t = tokenizer.nextToken()

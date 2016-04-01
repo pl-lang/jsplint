@@ -1,12 +1,12 @@
 'use strict'
 
 const Source = require('../frontend/Source.js')
-const Parser = require('../frontend/Parser.js')
+const Lexer = require('../frontend/Lexer.js')
 const TokenQueue = require('../intermediate/TokenQueue')
 
 function queueFromString(string) {
   let source = new Source(string)
-  let tokenizer = new Parser(source)
+  let tokenizer = new Lexer(source)
 
   let tokenArray = []
   let t = tokenizer.nextToken()

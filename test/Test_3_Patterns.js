@@ -3,7 +3,7 @@ var should = require('should');
 var fs = require('fs');
 var Source = require('../frontend/Source.js')
 
-let Parser = require('../frontend/Parser.js')
+let Lexer = require('../frontend/Lexer.js')
 let TokenQueue = require('../intermediate/TokenQueue')
 
 const Patterns = require('../intermediate/Patterns')
@@ -11,7 +11,7 @@ const match = Patterns.match
 
 function queueFromSource(string) {
   let source = new Source(string)
-  let tokenizer = new Parser(source)
+  let tokenizer = new Lexer(source)
 
   let tokenArray = []
   let t = tokenizer.nextToken()

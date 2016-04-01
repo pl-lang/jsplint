@@ -7,7 +7,7 @@ const TokenQueue = require('../intermediate/TokenQueue')
 const Patterns = require('../intermediate/Patterns'), match = Patterns.match
 
 const Source = require('../frontend/Source')
-const Parser = require('../frontend/Parser')
+const Lexer = require('../frontend/Lexer')
 
 const TypeChecker = require('../analisys/TypeChecker')
 
@@ -81,7 +81,7 @@ class Compiler extends Emitter {
       this.on('any', genericHandler)
     }
 
-    this.parser = new Parser()
+    this.parser = new Lexer()
   }
 
   compile(source_code_string, run_type_checker) {

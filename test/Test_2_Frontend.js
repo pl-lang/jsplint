@@ -256,11 +256,11 @@ describe('SpecialSymbolToken', () => {
   })
 })
 
-describe('Parser', () => {
-  let Parser = require('../frontend/Parser.js')
+describe('Lexer', () => {
+  let Lexer = require('../frontend/Lexer.js')
   it('deberia fichar un numero, una palabra y otro numero para: "1a 2.3"', () => {
     let source = new Source('1a 2.3')
-    let tokenizer = new Parser(source)
+    let tokenizer = new Lexer(source)
     let tokenArray = []
 
     let t = tokenizer.nextToken()
@@ -282,7 +282,7 @@ describe('Parser', () => {
   it('deberia fichar todos los tokens de un programa modelo', () => {
     let programa = fs.readFileSync('./test/programa.md', 'utf-8')
     let source = new Source(programa)
-    let tokenizer = new Parser(source)
+    let tokenizer = new Lexer(source)
 
     let tokenArray = []
     let t = tokenizer.nextToken()

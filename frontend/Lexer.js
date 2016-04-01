@@ -16,9 +16,9 @@ const isDigit             = StringMethods.isDigit
 /**
  * Clase para convertir una cadena en fichas.
  */
-class Parser {
+class Lexer {
   /**
-   * Crea un Parser.
+   * Crea un Lexer.
    * @param  {source} source Fuente a utilizar para construir las fichas
    */
   constructor(source) {
@@ -121,4 +121,4 @@ class Parser {
   }
 }
 
-module.exports = Parser
+module.exports = Lexer
