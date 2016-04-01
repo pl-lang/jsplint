@@ -1,12 +1,12 @@
 "use strict"
 
 let EOF_REACHED = -2
-let EON_REACHED = -1
+let EOL_REACHED = -1
 let READING_LINE = 0
 
 class Source {
   constructor(string) {
-    this.EON = '\n'
+    this.EOL = '\n'
     this.EOF = String.fromCharCode(0)
 
     this.lines = string.replace(/\r/g, '').split(/\n/g)
@@ -21,8 +21,8 @@ class Source {
   }
 
   currentChar() {
-    if (this.state === EON_REACHED)
-      return this.EON
+    if (this.state === EOL_REACHED)
+      return this.EOL
     else if (this.state === EOF_REACHED)
       return this.EOF
     else
@@ -40,7 +40,7 @@ class Source {
       return this.currentLine[this._currentCharIndex + 1]
     }
     else {
-      return this.EON
+      return this.EOL
     }
   }
 
@@ -52,13 +52,13 @@ class Source {
   }
 
   updateState() {
-    if (this.state === EON_REACHED) {
+    if (this.state === EOL_REACHED) {
       this.advanceLine()
     }
 
     if (this._currentCharIndex + 1 > this.currentLine.length) {
       if (this._currentLineIndex + 1 < this.lineAmount) {
-        this.state = EON_REACHED
+        this.state = EOL_REACHED
       }
       else {
         this.state = EOF_REACHED

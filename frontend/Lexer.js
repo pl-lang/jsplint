@@ -91,7 +91,7 @@ class Lexer {
   }
 
   skipCommment() {
-    while ( this.currentChar() !== this._source.EON )
+    while ( this.currentChar() !== this._source.EOL )
       this.nextChar()
   }
 
