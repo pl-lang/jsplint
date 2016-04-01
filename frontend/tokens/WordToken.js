@@ -151,8 +151,8 @@ class WordToken {
   constructor(source) {
     this.kind = 'word'
     this.text = ''
-    this.lineNumber = source._currentLineIndex
-    this.columnNumber = source._currentCharIndex
+    this.lineNumber = source._current_line
+    this.columnNumber = source._current_column
     this.extract(source)
   }
 

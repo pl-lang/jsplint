@@ -21,8 +21,8 @@ let symbols = new Set(list)
 
 class SpecialSymbolToken {
   constructor(source) {
-    this.lineNumber = source._currentLineIndex
-    this.columnNumber = source._currentCharIndex
+    this.lineNumber = source._current_line
+    this.columnNumber = source._current_column
     this.extract(source)
   }
 

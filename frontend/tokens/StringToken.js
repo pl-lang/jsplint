@@ -4,8 +4,8 @@ class StringToken {
   constructor(source) {
     this.kind = 'string'
     this.value = ''
-    this.lineNumber = source._currentLineIndex
-    this.columnNumer = source._currentCharIndex
+    this.lineNumber = source._current_line
+    this.columnNumer = source._current_column
     this.extract(source)
   }
 
@@ -27,8 +27,8 @@ class StringToken {
       this.kind = 'LEXICAL_ERROR'
       this.unexpectedChar = '\n'
       this.expectedChar = ['caracteres', '"']
-      this.atColumn = source._currentCharIndex
-      this.atLine = source._currentLineIndex
+      this.atColumn = source._current_column
+      this.atLine = source._current_line
       this.reason = 'unexpectedCharAtString'
     }
 

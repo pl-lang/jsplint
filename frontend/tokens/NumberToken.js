@@ -7,8 +7,8 @@ class NumberToken {
     // todos los numeros son enteros hasta que se 'demuestre' lo contrario
     this.kind = 'entero'
     this.text = ''
-    this.lineNumber = source._currentLineIndex
-    this.columnNumber = source._currentCharIndex
+    this.lineNumber = source._current_line
+    this.columnNumber = source._current_column
     this.extract(source)
   }
 
@@ -36,8 +36,8 @@ class NumberToken {
         this.kind = 'LEXICAL_ERROR'
         this.unexpectedChar = source.currentChar()
         this.expectedChar   = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-        this.atLine         = source._currentLineIndex
-        this.atColumn       = source._currentCharIndex
+        this.atLine         = source._current_line
+        this.atColumn       = source._current_column
         this.reason         = 'unexpectedCharAtFloat'
       }
     }
