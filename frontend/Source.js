@@ -2,70 +2,64 @@
 
 let EOF_REACHED = -2
 let EOL_REACHED = -1
-let READING_LINE = 0
+let READING = 0
 
 class Source {
   constructor(string) {
     this.EOL = '\n'
     this.EOF = String.fromCharCode(0)
 
-    this.lines = string.replace(/\r/g, '').split(/\n/g)
-    this.lineAmount = this.lines.length
+    this._source = string.replace(/\r/g, '')
 
-    this.currentLine = this.lines[0]
+    this._index = 0
 
-    this._currentCharIndex = 0
-    this._currentLineIndex = 0
+    this._current_column = 0
+    this._current_line = 0
 
     this.updateState()
   }
 
   currentChar() {
-    if (this.state === EOL_REACHED)
-      return this.EOL
-    else if (this.state === EOF_REACHED)
+    if (this.state === EOF_REACHED) {
       return this.EOF
-    else
-      return this.currentLine[this._currentCharIndex]
+    }
+    else {
+      return this._source[this._index]
+    }
   }
 
   nextChar() {
-    this._currentCharIndex++
+    this._index++
     this.updateState()
+    this.updatePosition()
     return this.currentChar()
   }
 
   peekChar() {
-    if (this._currentCharIndex + 1 < this.currentLine.length) {
-      return this.currentLine[this._currentCharIndex + 1]
+    if (this._index + 1 === this._source.length) {
+      return this.EOF
     }
     else {
-      return this.EOL
+      return this._source[this._index + 1]
     }
-  }
-
-  advanceLine() {
-    ++this._currentLineIndex
-    this.currentLine = this.lines[this._currentLineIndex]
-    this._currentCharIndex = 0
-    this.state = READING_LINE
   }
 
   updateState() {
-    if (this.state === EOL_REACHED) {
-      this.advanceLine()
-    }
-
-    if (this._currentCharIndex + 1 > this.currentLine.length) {
-      if (this._currentLineIndex + 1 < this.lineAmount) {
-        this.state = EOL_REACHED
-      }
-      else {
-        this.state = EOF_REACHED
-      }
+    if (this._index === this._source.length) {
+      this.state = EOF_REACHED
     }
     else {
-      this.state = READING_LINE
+      this.state = READING
+    }
+  }
+
+  updatePosition() {
+    if (this._source[this._index - 1] === this.EOL) {
+      this._current_line++
+      this._current_column = 0
+    }
+    else {
+      this._current_column++
     }
   }
 }

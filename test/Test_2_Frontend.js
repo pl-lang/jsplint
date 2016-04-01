@@ -10,24 +10,23 @@ describe('Source:', () => {
 
     let source = new Source(string)
 
-    source._currentLineIndex.should.equal(0)
-    source._currentCharIndex.should.equal(0)
+    source._current_line.should.equal(0)
+    source._current_column.should.equal(0)
     source.currentChar().should.equal('1')
     source.nextChar().should.equal('\n')
 
-
     source.nextChar().should.equal('2')
-    source._currentLineIndex.should.equal(1)
-    source._currentCharIndex.should.equal(0)
+    source._current_line.should.equal(1)
+    source._current_column.should.equal(0)
     source.nextChar() // consume '\n'
 
     source.nextChar().should.equal('3')
-    source._currentLineIndex.should.equal(2)
-    source._currentCharIndex.should.equal(0)
+    source._current_line.should.equal(2)
+    source._current_column.should.equal(0)
 
     source.nextChar().should.equal('4')
-    source._currentLineIndex.should.equal(2)
-    source._currentCharIndex.should.equal(1)
+    source._current_line.should.equal(2)
+    source._current_column.should.equal(1)
     source.nextChar() // consume '\n'
 
     source.nextChar().should.equal(source.EOF)
@@ -38,18 +37,16 @@ describe('Source:', () => {
 
     let source = new Source(string)
 
-    source.lineAmount.should.equal(3)
-
-    source._currentLineIndex.should.equal(0)
+    source._current_line.should.equal(0)
     source.nextChar()
     source.nextChar()
 
     source.currentChar().should.equal('1')
-    source._currentLineIndex.should.equal(1)
+    source._current_line.should.equal(1)
     source.nextChar()
     source.nextChar()
 
-    source._currentLineIndex.should.equal(2)
+    source._current_line.should.equal(2)
   })
 })
 
