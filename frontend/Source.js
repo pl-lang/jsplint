@@ -9,7 +9,7 @@ class Source {
     this.EON = '\n'
     this.EOF = String.fromCharCode(0)
 
-    this.lines = string.split(/\n|\r/g).filter(Boolean)
+    this.lines = string.replace(/\r/g, '').split(/\n/g)
     this.lineAmount = this.lines.length
 
     this.currentLine = this.lines[0]
@@ -17,7 +17,7 @@ class Source {
     this._currentCharIndex = 0
     this._currentLineIndex = 0
 
-    this.state = READING_LINE
+    this.updateState()
   }
 
   currentChar() {
@@ -30,18 +30,8 @@ class Source {
   }
 
   nextChar() {
-    if (this.state === EON_REACHED)
-      this.advanceLine()
-    else if (this.state !== EOF_REACHED)
-      if (this._currentCharIndex + 1 < this.currentLine.length)
-        ++this._currentCharIndex
-      else if (this._currentCharIndex + 1 === this.currentLine.length)
-        if (this._currentLineIndex + 1 < this.lineAmount) {
-          this.state = EON_REACHED
-        }
-        else
-          this.state = EOF_REACHED
-
+    this._currentCharIndex++
+    this.updateState()
     return this.currentChar()
   }
 
@@ -50,8 +40,8 @@ class Source {
       return this.currentLine[this._currentCharIndex + 1]
     }
     else {
-    }
       return this.EON
+    }
   }
 
   advanceLine() {
@@ -59,6 +49,24 @@ class Source {
     this.currentLine = this.lines[this._currentLineIndex]
     this._currentCharIndex = 0
     this.state = READING_LINE
+  }
+
+  updateState() {
+    if (this.state === EON_REACHED) {
+      this.advanceLine()
+    }
+
+    if (this._currentCharIndex + 1 > this.currentLine.length) {
+      if (this._currentLineIndex + 1 < this.lineAmount) {
+        this.state = EON_REACHED
+      }
+      else {
+        this.state = EOF_REACHED
+      }
+    }
+    else {
+      this.state = READING_LINE
+    }
   }
 }
 

@@ -1,7 +1,8 @@
 'use strict'
-var should = require('should');
-var fs = require('fs');
-var Source = require('../frontend/Source.js')
+const should = require('should');
+const fs = require('fs');
+const Source = require('../frontend/Source.js')
+const inspect = require('util').inspect
 
 describe('Source:', () => {
   it('funciona correctamente', () => {
@@ -34,7 +35,10 @@ describe('Source:', () => {
 
   it('cuenta bien los renglones', () => {
     let string = '0\n1\n2'
+
     let source = new Source(string)
+
+    source.lineAmount.should.equal(3)
 
     source._currentLineIndex.should.equal(0)
     source.nextChar()
@@ -148,7 +152,7 @@ describe('StringToken', () => {
     token.kind.should.equal('LEXICAL_ERROR')
     token.unexpectedChar.should.equal('\n')
     token.atLine.should.equal(0)
-    token.atColumn.should.equal(5)
+    token.atColumn.should.equal(6)
   })
 })
 
@@ -294,23 +298,30 @@ describe('Lexer', () => {
     tokenArray.push(t)
 
     tokenArray[0].kind.should.equal('eol')
+    tokenArray[0].kind.should.equal('eol')
+
     tokenArray[1].kind.should.equal('variables')
     tokenArray[2].kind.should.equal('eol')
+
     tokenArray[3].kind.should.equal('entero')
     tokenArray[4].kind.should.equal('word')
     tokenArray[5].kind.should.equal('comma')
     tokenArray[6].kind.should.equal('word')
     tokenArray[7].kind.should.equal('eol')
+
     tokenArray[8].kind.should.equal('inicio')
     tokenArray[9].kind.should.equal('eol')
+
     tokenArray[10].kind.should.equal('word')
     tokenArray[11].kind.should.equal('assignment')
     tokenArray[12].kind.should.equal('entero')
     tokenArray[13].kind.should.equal('eol')
+
     tokenArray[14].kind.should.equal('word')
     tokenArray[15].kind.should.equal('assignment')
     tokenArray[16].kind.should.equal('entero')
     tokenArray[17].kind.should.equal('eol')
+
     tokenArray[18].kind.should.equal('si')
     tokenArray[19].kind.should.equal('left-par')
     tokenArray[20].kind.should.equal('word')
@@ -319,18 +330,22 @@ describe('Lexer', () => {
     tokenArray[23].kind.should.equal('right-par')
     tokenArray[24].kind.should.equal('entonces')
     tokenArray[25].kind.should.equal('eol')
+
     tokenArray[26].kind.should.equal('word')
     tokenArray[27].kind.should.equal('left-par')
     tokenArray[28].kind.should.equal('string')
     tokenArray[29].kind.should.equal('right-par')
     tokenArray[30].kind.should.equal('eol')
+
     tokenArray[31].kind.should.equal('sino')
     tokenArray[32].kind.should.equal('eol')
+
     tokenArray[33].kind.should.equal('word')
     tokenArray[34].kind.should.equal('left-par')
     tokenArray[35].kind.should.equal('string')
     tokenArray[36].kind.should.equal('right-par')
     tokenArray[37].kind.should.equal('eol')
+
     tokenArray[38].kind.should.equal('fin')
     tokenArray[39].kind.should.equal('eof')
   })
