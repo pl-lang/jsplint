@@ -4,11 +4,14 @@
   "description": "interprete",
   "main": "main.js",
   "scripts": {
-    "test": "mocha -w -b"
+    "test": "mocha -w -b",
+
+    "coverage" : "istanbul cover node_modules/mocha/bin/_mocha -- -R spec"
   },
   "author": "Rodrigo Maximiliano Bellusci",
   "license": "MIT",
   "devDependencies": {
+    "istanbul": "^0.4.2",
     "mocha": "^2.3.2",
     "should": "^7.1.0"
   }
