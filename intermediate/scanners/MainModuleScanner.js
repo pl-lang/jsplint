@@ -31,6 +31,8 @@ class MainModuleScanner {
       skipWhiteSpace(source)
     }
 
+    current = source.current()
+
     if (current.kind !== 'variables') {
       let unexpected  = current.kind
       let expected    = 'variables'

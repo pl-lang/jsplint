@@ -46,8 +46,6 @@ describe('Captura de estructuras sintacticas', () => {
     `;
     let q = queueFromString(code);
 
-    console.log(q)
-
     let capture = StatementCollector.capture(q);
 
     capture.error.should.equal(false);
