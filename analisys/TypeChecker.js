@@ -168,7 +168,7 @@ class TypeChecker extends Emitter {
       current_node = current_node.getNext()
     }
 
-    this.emit('type-check-started')
+    this.emit('type-check-finished')
   }
 
   /**
