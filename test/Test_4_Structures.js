@@ -40,12 +40,13 @@ describe('Captura de estructuras sintacticas', () => {
   })
 
   it('Estructura mientras...', () => {
-    let code = `
-    mientras(a)
+    let code = `mientras(a)
       a <- 32
     finmientras
     `;
     let q = queueFromString(code);
+
+    console.log(q)
 
     let capture = StatementCollector.capture(q);
 
