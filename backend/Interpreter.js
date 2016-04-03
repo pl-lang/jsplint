@@ -46,12 +46,12 @@ class Interpreter extends Emitter {
     // Esto es necesario porque el interprete se "pausa" cuando un modulo hace
     // una llamada a leer
     if (this.paused) {
-      this.emit({name:'program-resumed', origin:'interpreter'})
+      this.emit('program-resumed')
       this.paused = false
       this.running = true
     }
     else {
-      this.emit({name:'program-started', origin:'interpreter'})
+      this.emit('program-started')
     }
 
     let evaluation_report
@@ -67,10 +67,10 @@ class Interpreter extends Emitter {
     }
 
     if (this.paused) {
-      this.emit({name:'program-paused', origin:'interpreter'})
+      this.emit('program-paused')
     }
     else {
-      this.emit({name:'program-finished', origin:'interpreter'})
+      this.emit('program-finished')
     }
 
     return evaluation_report

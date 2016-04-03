@@ -15,7 +15,7 @@ class Emitter {
     }
   }
 
-  emit(event_info) {
+  emit(event_name) {
     // Se encarga de llamar a los callbacks de los eventos.
     // Si se registro un callback para 'any' entonces se lo llama para cada evento que sea emitido. Es el callback por defecto.
     // Si un evento tiene registrado un callback entonces este se ejecuta despues del callback por defecto.
@@ -25,8 +25,8 @@ class Emitter {
       }
     }
 
-    if (this.callbacks.hasOwnProperty(event_info.name)) {
-      for (let callback of this.callbacks[event_info.name]) {
+    if (this.callbacks.hasOwnProperty(event_name)) {
+      for (let callback of this.callbacks[event_name]) {
         callback(...arguments)
       }
     }

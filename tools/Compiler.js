@@ -86,7 +86,7 @@ class Compiler extends Emitter {
 
   compile(source_code_string, run_type_checker) {
 
-    this.emit({name:'compilation-started'})
+    this.emit('compilation-started')
 
     let source_wrapper = new Source(source_code_string)
 
@@ -94,9 +94,9 @@ class Compiler extends Emitter {
 
     if (parse_report.error) {
       for (let bad_token of parse_report.result) {
-        this.emit({name:'lexical-error',  origin:'controller'}, bad_token)
+        this.emit('lexical-error', bad_token)
       }
-      this.emit({name:'compilation-finished', origin:'controller'}, {error:true, result:'parse_errors'})
+      this.emit('compilation-finished', {error:true, result:'parse_errors'})
       return {error:true, result:'parse_errors'}
     }
 
@@ -105,9 +105,9 @@ class Compiler extends Emitter {
     let scan_report = scanner.getModules()
 
     if (scan_report.error) {
-      this.emit({name:'syntax-error', origin:'controller'}, scan_report.result)
+      this.emit('syntax-error', scan_report.result)
 
-      this.emit({name:'compilation-finished', origin:'controller'}, {error:true, result:'syntax_error'})
+      this.emit('compilation-finished', {error:true, result:'syntax_error'})
 
       return {error:true, result:'syntax_error'}
     }
@@ -136,12 +136,12 @@ class Compiler extends Emitter {
       type_checker.lookForErrors()
 
       if (type_error) {
-        this.emit({name:'compilation-finished'}, {error:true, result:error_info})
+        this.emit('compilation-finished', {error:true, result:error_info})
         return {error:true, result:'type_error'}
       }
     }
 
-    this.emit({name:'compilation-finished', origin:'controller'}, {error:false})
+    this.emit('compilation-finished', {error:false})
 
     return {error:false, result:scan_report.result}
   }

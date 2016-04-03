@@ -161,14 +161,14 @@ class TypeChecker extends Emitter {
   lookForErrors() {
     let current_node = this.module_root
 
-    this.emit({name:'type-check-started'})
+    this.emit('type-check-started')
 
     while (current_node !== null) {
       this.checkNode(current_node)
       current_node = current_node.getNext()
     }
 
-    this.emit({name:'type-check-finished'})
+    this.emit('type-check-started')
   }
 
   /**
@@ -202,7 +202,7 @@ class TypeChecker extends Emitter {
     let condition_report = this.checkCondition(node.data.condition)
 
     if (condition_report.error === true) {
-      this.emit({name:'type-error'}, condition_report.result)
+      this.emit('type-error', condition_report.result)
     }
 
     let current_node = node.rightBranchNode
@@ -235,7 +235,7 @@ class TypeChecker extends Emitter {
     let condition_report = this.checkCondition(node.data.condition)
 
     if (condition_report.error === true) {
-      this.emit({name:'type-error'}, condition_report.result)
+      this.emit('type-error', condition_report.result)
     }
 
     let current_node = node.loop_body_root
@@ -261,7 +261,7 @@ class TypeChecker extends Emitter {
     let condition_report = this.checkCondition(node.data.condition)
 
     if (condition_report.error === true) {
-      this.emit({name:'type-error'}, condition_report.result)
+      this.emit('type-error', condition_report.result)
     }
 
     node.setCurrentBranchTo('program_body')
@@ -306,14 +306,14 @@ class TypeChecker extends Emitter {
         let report = this.checkArrayInvocation(target, assignment_data.target)
 
         if (report.error === true) {
-          this.emit({name:'type-error'}, report.result)
+          this.emit('type-error', report.result)
         }
       }
 
       let expression_type_report = this.getExpressionReturnType(assignment_data.payload)
 
       if (expression_type_report.error === true) {
-        this.emit({name:'type-error'}, expression_type_report.result)
+        this.emit('type-error', expression_type_report.result)
       }
       else {
         let payload_data_type = expression_type_report.result
@@ -322,13 +322,13 @@ class TypeChecker extends Emitter {
           let reason = 'incompatible-types-at-assignment'
           let target_type = target.type, payload_type = payload_data_type
           let error_info = {reason, target_type, payload_type}
-          this.emit({name:'type-error'}, error_info)
+          this.emit('type-error', error_info)
         }
       }
 
     }
     else {
-      this.emit({name:'type-error'}, {
+      this.emit('type-error', {
         reason:'undeclared-variable',
         name:assignment_data.target.name
       })
@@ -417,20 +417,20 @@ class TypeChecker extends Emitter {
 
     let error_found = false
 
-    this.emit({name:'type-check-started'})
+    this.emit('type-check-started')
 
     while (current_node !== null) {
       if (current_node.data.action === 'assignment') {
         let report = this.validateAssignment(current_node.data)
         if (report.error) {
           error_found = true
-          this.emit({name:'type-error', origin:'type-checker'}, report.result)
+          this.emit('type-error', report.result)
         }
       }
       current_node = current_node.getNext()
     }
 
-    this.emit({name:'type-check-finished'})
+    this.emit('type-check-started')
 
     return {errof:error_found}
 

@@ -90,13 +90,13 @@ class Evaluator extends Emitter {
       return this.evaluateExp(expression, expression.expression_type)
     })
 
-    this.emit({name:'write', origin:'evaluator'}, value_list)
+    this.emit('write', value_list)
   }
 
   sendReadEvent(call) {
     let varname_list = call.args
 
-    this.emit({name:'read', origin:'evaluator'}, varname_list)
+    this.emit('read', varname_list)
 
     // pausar la ejecucion (hasta q se reciban los datos de la lectura)
     this.running = false
@@ -119,7 +119,7 @@ class Evaluator extends Emitter {
         let bound_check = this.indexWithinBounds(index_list, target_variable.dimension)
         if (bound_check.error === true) {
           this.running = false
-          this.emit({name:'evaluation-error'}, bound_check.result)
+          this.emit('evaluation-error', bound_check.result)
           return
         }
       }
@@ -211,14 +211,14 @@ class Evaluator extends Emitter {
 
         if (bound_check.error === true) {
           this.running = false
-          this.emit({name:'evaluation-error'}, bound_check.result)
+          this.emit('evaluation-error', bound_check.result)
         }
       }
 
       let index = this.calculateIndex(index_values, variable.dimension)
       if (variable.values[index] === undefined) {
         this.running = false
-        this.emit({name:'evaluation-error', origin:'evaluator'})
+        this.emit('evaluation-error')
       }
       else {
         return variable.values[index]
@@ -227,7 +227,7 @@ class Evaluator extends Emitter {
     else {
       if (variable.value === null) {
         this.running = false
-        this.emit({name:'evaluation-error', origin:'evaluator'})
+        this.emit('evaluation-error')
       }
       else {
         return variable.value
