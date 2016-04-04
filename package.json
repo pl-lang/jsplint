@@ -4,8 +4,7 @@
   "description": "interprete",
   "main": "main.js",
   "scripts": {
-    "test": "mocha --compilers js:babel-register",
-    "tst2": "mocha --compilers js:babel-core/register ./test/Test_2_Frontend.js",
+    "test": "mocha -w --compilers js:babel-core/register",
     "coverage": "istanbul cover node_modules/mocha/bin/_mocha -- -R spec"
   },
   "author": "Rodrigo Maximiliano Bellusci",
