@@ -1,10 +1,14 @@
 'use strict'
-const should = require('should');
-const fs = require('fs');
-const queueFromString = require('../misc/queueFromString')
+import should from 'should'
+import fs from 'fs'
+
+import queueFromString from '../misc/queueFromString.js'
+import { getLastNode } from '../misc/List.js'
+
+import StatementCollector from '../intermediate/scanners/StatementCollector.js'
+import Scanner from '../intermediate/Scanner.js'
 
 describe('Captura de estructuras sintacticas', () => {
-  const StatementCollector = require('../intermediate/scanners/StatementCollector');
 
   it('Captura la estructura si...entonces', () => {
     let code = `si (a) entonces
@@ -119,7 +123,6 @@ describe('Captura de estructuras sintacticas', () => {
   })
 
   it('Estructura repetir', () => {
-    const getLastNode = require('../misc/List').getLastNode
 
     let code = `repetir
     a <- 32
@@ -159,7 +162,6 @@ describe('Captura de estructuras sintacticas', () => {
 })
 
 describe('Scanner', () => {
-  let Scanner = require('../intermediate/Scanner')
   it('genera correctamente los modulos de un programa (solo main)', () => {
     let programa = `
     variables

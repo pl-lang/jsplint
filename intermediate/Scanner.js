@@ -1,9 +1,10 @@
 'use strict'
 
-const MainModuleScanner = require('./scanners/MainModuleScanner.js')
-const TokenQueue = require('./TokenQueue.js')
+import MainModuleScanner from './scanners/MainModuleScanner.js'
 
-class Scanner {
+import TokenQueue from './TokenQueue.js'
+
+export default class Scanner {
   constructor(queue) {
     this.queue = queue
   }
@@ -31,5 +32,3 @@ class Scanner {
     }
   }
 }
-
-module.exports = Scanner

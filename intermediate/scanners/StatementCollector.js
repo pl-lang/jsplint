@@ -1,19 +1,18 @@
 'use strict'
 
-const Patterns = require('../Patterns')
+import Report from '../../misc/Report.js'
+
+import Node from '../../misc/Node.js'
+import IfNode from '../../misc/IfNode.js'
+import WhileNode from '../../misc/WhileNode.js'
+import UntilNode from '../../misc/UntilNode.js'
+
+import { LinkedList, getChainLength, getLastNode } from '../../misc/List.js'
+
+import TokenQueue from '../TokenQueue.js'
+
+import * as Patterns from '../Patterns.js'
 const match = Patterns.match
-
-const TokenQueue = require('../TokenQueue')
-
-const Report = require('../../misc/Report')
-
-const Node = require('../../misc/Node')
-const IfNode = require('../../misc/IfNode')
-const WhileNode = require('../../misc/WhileNode')
-const UntilNode = require('../../misc/UntilNode')
-const LinkedList = require('../../misc/List').LinkedList
-const getChainLength = require('../../misc/List').getChainLength
-const getLastNode = require('../../misc/List').getLastNode
 
 function skipWhiteSpace(source) {
   let current = source.current()
@@ -369,7 +368,7 @@ class IfScanner {
  * escribí esto para explicar deben funcionar los nodos.
  */
 
-class StatementCollector {
+export default class StatementCollector {
   static capture(source) {
     let list  = new LinkedList()
 
@@ -441,5 +440,3 @@ class StatementCollector {
     return new  Report(false, list.firstNode)
   }
 }
-
-module.exports = StatementCollector

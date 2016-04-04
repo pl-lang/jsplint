@@ -1,10 +1,11 @@
 'use strict'
 
-const Source = require('../frontend/Source.js')
-const Lexer = require('../frontend/Lexer.js')
-const TokenQueue = require('../intermediate/TokenQueue')
+import Source from '../frontend/Source.js'
+import Lexer from '../frontend/Lexer.js'
 
-function queueFromString(string) {
+import TokenQueue from '../intermediate/TokenQueue'
+
+export default function queueFromString(string) {
   let source = new Source(string)
   let tokenizer = new Lexer(source)
 
@@ -21,5 +22,3 @@ function queueFromString(string) {
 
   return q
 }
-
-module.exports = queueFromString

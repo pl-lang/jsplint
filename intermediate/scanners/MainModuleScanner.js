@@ -1,10 +1,10 @@
 'use strict'
 
-const Report = require('../../misc/Report')
+import Report from '../../misc/Report.js'
 
-const StatementCollector = require('./StatementCollector')
+import StatementCollector from './StatementCollector.js'
 
-const Patterns = require('../Patterns')
+import * as Patterns from '../Patterns'
 const match = Patterns.match
 
 function skipWhiteSpace(source) {
@@ -14,7 +14,7 @@ function skipWhiteSpace(source) {
   }
 }
 
-class MainModuleScanner {
+export default class MainModuleScanner {
 
   static capture(source) {
     let module_data = {
@@ -116,5 +116,3 @@ class MainModuleScanner {
     return new Report(false, module_data)
   }
 }
-
-module.exports = MainModuleScanner
