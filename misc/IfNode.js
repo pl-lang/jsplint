@@ -1,6 +1,6 @@
 'use strict'
 
-const getLastNode = require('./List').getLastNode
+import { getLastNode } from './List.js'
 
 /**
  * Este nodo va a ser utilizado para representar una if [else]
@@ -18,7 +18,7 @@ const getLastNode = require('./List').getLastNode
  * 			 -----
  * 			 -----
  */
-class IfNode {
+export default class IfNode {
   constructor(data) {
     if (data) {
       this.data = data
@@ -72,5 +72,3 @@ class IfNode {
     return this.next_statement_node
   }
 }
-
-module.exports = IfNode

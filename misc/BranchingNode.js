@@ -7,7 +7,7 @@
  * rightBranchNode, se lo pude modificar directamente. Para decidir que camino
  * tomar, getNext toma un boolean.
  */
-class BranchingNode {
+export default class BranchingNode {
   constructor(data) {
     if (data) {
       this.data = data
@@ -31,5 +31,3 @@ class BranchingNode {
     }
   }
 }
-
-module.exports = BranchingNode

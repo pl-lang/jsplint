@@ -1,8 +1,8 @@
 'use strict'
 
-const getLastNode = require('./List').getLastNode
+import { getLastNode } from './List.js'
 
-class WhileNode {
+export default class WhileNode {
   constructor(data) {
     if (data) {
       this.data = data
@@ -67,5 +67,3 @@ class WhileNode {
     return this._loop_body_root
   }
 }
-
-module.exports = WhileNode

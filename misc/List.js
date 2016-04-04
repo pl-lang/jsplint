@@ -1,6 +1,6 @@
 'use strict'
 
-function getLastNode(node) {
+export function getLastNode(node) {
   if (node.getNextStatementNode() === null) {
     return node
   }
@@ -17,7 +17,7 @@ function getLastNode(node) {
   }
 }
 
-function getChainLenght(node) {
+export function getChainLenght(node) {
   let lenght = 0
   let current = node
   while (current !== null) {
@@ -27,7 +27,7 @@ function getChainLenght(node) {
   return lenght
 }
 
-class LinkedList {
+export class LinkedList {
   constructor() {
     this.length = 0
     this.firstNode = null
@@ -44,10 +44,4 @@ class LinkedList {
       this.lastNode = getLastNode(node)
     }
   }
-}
-
-module.exports = {
-  LinkedList:LinkedList,
-  getChainLenght:getChainLenght,
-  getLastNode:getLastNode
 }

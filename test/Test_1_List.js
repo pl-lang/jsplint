@@ -1,15 +1,13 @@
-/**
- * Aca van las pruebas de LinkedList
- */
-
 'use strict'
 
-const should = require('should');
-const BranchingNode = require('../misc/BranchingNode')
-const LinkedList = require('../misc/List').LinkedList
-const getChainLenght = require('../misc/List').getChainLenght
-const getLastNode = require('../misc/List').getLastNode
-const Node = require('../misc/Node')
+import should from 'should'
+
+import { LinkedList, getChainLenght, getLastNode } from '../misc/List.js'
+
+import Node from '../misc/Node.js'
+import BranchingNode from '../misc/BranchingNode.js'
+import WhileNode from '../misc/WhileNode.js'
+import IfNode from '../misc/IfNode.js'
 
 describe("Metodos auxiliares de listas", () => {
   it('getChainLenght funciona bien', () => {
@@ -103,7 +101,6 @@ describe('BranchingNode', () => {
 })
 
 describe('IfNode', () => {
-  const IfNode = require('../misc/IfNode')
   it('Ambas raman "convergen" en el mismo nodo', () => {
     let leftNode = new Node('left')
     let rightNode = new Node('right')
@@ -161,8 +158,6 @@ describe('IfNode', () => {
 })
 
 describe('WhileNode', () => {
-  const WhileNode = require('../misc/WhileNode')
-
   it('Al llamar a getNext (por defecto) se entra al bucle', () => {
     let while_node = new WhileNode()
 

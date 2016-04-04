@@ -1,6 +1,6 @@
 'use strict'
 
-class Node {
+export default class Node {
   constructor(data) {
     if (data) {
       this.data = data
@@ -23,5 +23,3 @@ class Node {
     return this.getNext()
   }
 }
-
-module.exports = Node
