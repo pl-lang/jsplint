@@ -1,15 +1,17 @@
 'use strict'
 
-const Emitter = require('../misc/Emitter')
+import Emitter from '../misc/Emitter.js'
 
-const Scanner = require('../intermediate/Scanner')
-const TokenQueue = require('../intermediate/TokenQueue')
-const Patterns = require('../intermediate/Patterns'), match = Patterns.match
+import Scanner from '../intermediate/Scanner.js'
+import TokenQueue from '../intermediate/TokenQueue.js'
 
-const Source = require('../frontend/Source')
-const Lexer = require('../frontend/Lexer')
+import Source from '../frontend/Source.js'
+import Lexer from '../frontend/Lexer.js'
 
-const TypeChecker = require('../analisys/TypeChecker')
+import TypeChecker from '../analisys/TypeChecker.js'
+
+import * as Patterns from '../intermediate/Patterns.js'
+const match = Patterns.match
 
 const defaults = {
   event_logging : false
@@ -41,7 +43,7 @@ function genericHandler(event_info) {
   }
 }
 
-class Compiler extends Emitter {
+export default class Compiler extends Emitter {
   /**
    * Esta clase convierte el programa del usuario (cadena de texto) a una
    * estructura de datos con los datos necesarios para evaluarlo. En el proceso
@@ -146,5 +148,3 @@ class Compiler extends Emitter {
     return {error:false, result:scan_report.result}
   }
 }
-
-module.exports = Compiler

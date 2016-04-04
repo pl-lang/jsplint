@@ -1,11 +1,11 @@
 'use strict'
-const should = require('should')
+import should from 'should'
 
-const expressionFromString = require('../intermediate/expressionFromString')
+import expressionFromString from '../intermediate/expressionFromString'
 
-const TypeChecker = require('../analisys/TypeChecker')
+import TypeChecker from '../analisys/TypeChecker'
 
-const Compiler = require('../tools/Compiler')
+import Compiler from '../tools/Compiler.js'
 
 const RUN_TYPE_CHECKER = true
 const DO_NOT_RUN_TYPE_CHECKER = false

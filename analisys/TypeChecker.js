@@ -11,10 +11,10 @@
 // TODO: cual hay q devolver si los dos tienen errores? (renglon 232)
 
 
-const WhileNode = require('../misc/WhileNode')
-const UntilNode = require('../misc/UntilNode')
-const IfNode    = require('../misc/IfNode')
-const Emitter   = require('../misc/Emitter')
+import WhileNode from '../misc/WhileNode.js'
+import UntilNode from '../misc/UntilNode.js'
+import IfNode    from '../misc/IfNode.js'
+import Emitter   from '../misc/Emitter.js'
 
 let math_operators = new Set([
     'plus'
@@ -23,10 +23,26 @@ let math_operators = new Set([
   , 'power'
 ])
 
+function isMathOperator(token_name) {
+  switch (token_name) {
+    case 'plus':
+    case 'minus':
+    case 'times':
+    case 'power':
+      return true
+    default:
+      return false
+  }
+}
+
 let integer_operators = new Set([
     'mod'
   , 'div'
 ])
+
+function isIntegerOperator(token_name) {
+  return token_name === 'mod' || token_name === 'div' ? true:false
+}
 
 let comparison_operators = new Set([
     'equal'
@@ -37,15 +53,33 @@ let comparison_operators = new Set([
   , 'minor-equal'
 ])
 
+function isComparisonOperator(token_name) {
+  switch (token_name) {
+    case 'equal':
+    case 'diff-than':
+    case 'major-than':
+    case 'minor-than':
+    case 'major-equal':
+    case 'minor-equal':
+      return true
+    default:
+      return false
+  }
+}
+
 let logico_operators = new Set([
     'and'
   , 'or'
   , 'not'
 ])
 
+function isLogicOperator(token_name) {
+  return token_name === 'and' || token_name === 'or' || token_name === 'or' ? true: false
+}
+
 let type_data_by_category = {
   math_operators:{
-    supported_types:new Set(['entero', 'real']),
+    supported_types:['entero', 'real'],
     calculate_return_type: (a, b) => {
       let result = a === 'entero' && b === 'entero' ? 'entero' : 'real'
       return {error:false, result}
@@ -53,12 +87,12 @@ let type_data_by_category = {
   },
 
   integer_operators:{
-    supported_types: new Set(['entero']),
+    supported_types: ['entero'],
     calculate_return_type: () => ({error:false, result:'entero'})
   },
 
   comparison_operators:{
-    supported_types:new Set(['entero', 'real', 'character', 'logico']),
+    supported_types:['entero', 'real', 'character', 'logico'],
     calculate_return_type: (a, b) => {
       let comparable_types = a === 'entero' && b === 'real' || a === 'real' && b === 'entero'
       let equal_types = a === b
@@ -69,34 +103,34 @@ let type_data_by_category = {
   },
 
   logico_operators:{
-    supported_types: new Set(['logico']),
+    supported_types: ['logico'],
     calculate_return_type: () => {
       return {error:false, result:'logico'}
     }
   },
 
   unary_minus:{
-    supported_types:new Set(['entero', 'real']),
+    supported_types:['entero', 'real'],
     calculate_return_type:a => ({error:false, result:a})
   },
 
   divide:{
-    supported_types:new Set(['real']),
+    supported_types:['real'],
     calculate_return_type: () => ({error:false, result:'real'})
   }
 }
 
 function getOperatorInfo(operator) {
-  if (math_operators.has(operator))
+  if (isMathOperator(operator))
     return type_data_by_category.math_operators;
 
-  else if (integer_operators.has(operator))
+  else if (isIntegerOperator(operator))
     return type_data_by_category.integer_operators;
 
-  else if (comparison_operators.has(operator))
+  else if (isComparisonOperator(operator))
     return type_data_by_category.comparison_operators;
 
-  else if (logico_operators.has(operator))
+  else if (isLogicOperator(operator))
     return type_data_by_category.logico_operators;
 
   else if (operator === 'divide')
@@ -106,7 +140,16 @@ function getOperatorInfo(operator) {
     return type_data_by_category.unary_minus;
 }
 
-class TypeChecker extends Emitter {
+function includes(array, target_value) {
+
+  for (let value of array) {
+    if (value === target_value) return true;
+  }
+
+  return false
+}
+
+export default class TypeChecker extends Emitter {
   constructor(module_root, module_info, globals, locals) {
     super(['type-check-started', 'type-error', 'type-check-finished'])
     this.module_info = module_info
@@ -518,7 +561,7 @@ class TypeChecker extends Emitter {
         }
         else {
           let operand_type = type_report.result
-          if (operator_info.supported_types.has(operand_type)) {
+          if (includes(operator_info.supported_types, operand_type)) {
             let error = false
             let result = operator_info.calculate_return_type(operand_type)
             return {error, result}
@@ -546,8 +589,8 @@ class TypeChecker extends Emitter {
           let op_a_type = type_a_report.result
           let op_b_type = type_b_report.result
 
-          if (operator_info.supported_types.has(op_a_type)) {
-            if (operator_info.supported_types.has(op_b_type)) {
+          if (includes(operator_info.supported_types, op_a_type)) {
+            if (includes(operator_info.supported_types, op_b_type)) {
               let error = false, result = null
               let exp_type_report = operator_info.calculate_return_type(op_a_type, op_b_type)
 
@@ -585,5 +628,3 @@ class TypeChecker extends Emitter {
     }
   }
 }
-
-module.exports = TypeChecker
