@@ -15,7 +15,6 @@
     "babel-register": "^6.7.2",
     "gulp": "^3.9.1",
     "gulp-babel": "^6.1.2",
-    "gulp-rollup": "^1.8.0",
     "istanbul": "^0.4.2",
     "mocha": "^2.3.2",
     "should": "^7.1.0"
