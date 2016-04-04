@@ -1,12 +1,18 @@
 'use strict'
-const should = require('should');
-const fs = require('fs');
+import should from 'should'
+import fs from 'fs'
 
-const Source = require('../frontend/Source.js')
-const Lexer = require('../frontend/Lexer.js')
+import Source from '../frontend/Source.js'
+import Lexer from '../frontend/Lexer.js'
 
-const TokenQueue = require('../intermediate/TokenQueue')
-const Patterns = require('../intermediate/Patterns')
+import MainModuleScanner from '../intermediate/scanners/MainModuleScanner.js'
+import StatementCollector from '../intermediate/scanners/StatementCollector.js'
+
+import Evaluator from '../backend/Evaluator.js'
+import Interpreter from '../backend/Interpreter.js'
+
+import TokenQueue from '../intermediate/TokenQueue.js'
+import * as Patterns from '../intermediate/Patterns.js'
 const match = Patterns.match
 
 function queueFromSource(string) {
@@ -28,7 +34,6 @@ function queueFromSource(string) {
 }
 
 describe('MainModuleScanner', () => {
-  let MainModuleScanner = require('../intermediate/scanners/MainModuleScanner')
   it('leer un modulo principal', () => {
     let programa = 'variables\nentero a, b\ninicio\na<-48\nb <- 32\nfin\n'
     let q = queueFromSource(programa)
@@ -48,7 +53,6 @@ describe('MainModuleScanner', () => {
 })
 
 describe('Evaluator', () => {
-  let Evaluator = require('../backend/Evaluator.js')
   let evaluator = new Evaluator([], {}, {})
   it('multiplicacion', () => {
     // 2*3
@@ -330,7 +334,6 @@ describe('Evaluator', () => {
 })
 
 describe('StatementCollector', () => {
-  let StatementCollector = require('../intermediate/scanners/StatementCollector')
   it('si-entonces', () => {
     let if_block = 'si (verdadero) entonces \n escribir("verdadero") \n finsi \n'
     let q = queueFromSource(if_block)
@@ -342,8 +345,6 @@ describe('StatementCollector', () => {
 })
 
 describe.skip('Interpreter', () => {
-  let MainModuleScanner = require('../intermediate/scanners/MainModuleScanner')
-  let Interpreter = require('../backend/Interpreter.js')
   it('ejecuta las acciones de un programa', () => {
     let programa = 'variables\nentero a, b\ninicio\na<-48\nb <- -32\nfin\n'
     let q = queueFromSource(programa)

@@ -1,6 +1,6 @@
 'use strict'
 
-class Emitter {
+export default class Emitter {
   constructor(public_event_list) {
     this.public_events = new Set(public_event_list)
     this.callbacks = {}
@@ -49,5 +49,3 @@ class Emitter {
     }
   }
 }
-
-module.exports = Emitter

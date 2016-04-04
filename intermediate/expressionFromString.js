@@ -1,13 +1,13 @@
 'use strict'
 
-const Source = require('../frontend/Source')
-const Lexer = require('../frontend/Lexer')
+import Source from '../frontend/Source.js'
+import Lexer from '../frontend/Lexer.js'
 
-const TokenQueue = require('./TokenQueue')
-const Patterns = require('./Patterns')
+import TokenQueue from './TokenQueue.js'
+import * as Patterns from './Patterns.js'
 const match = Patterns.match
 
-function expressionFromString(string) {
+export default function expressionFromString(string) {
   let source = new Source(string)
   let tokenizer = new Lexer(source)
 
@@ -24,5 +24,3 @@ function expressionFromString(string) {
 
   return match(Patterns.Expression).from(tokenq)
 }
-
-module.exports = expressionFromString

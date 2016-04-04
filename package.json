@@ -6,7 +6,7 @@
   "scripts": {
     "test": "mocha -w --compilers js:babel-core/register",
     "coverage": "istanbul cover node_modules/mocha/bin/_mocha -- -R spec",
-    "4": "mocha -w --compilers js:babel-core/register ./test/Test_4_Structures.js"
+    "4": "mocha -w --compilers js:babel-core/register ./test/Test_5_Evaluator.js"
   },
   "author": "Rodrigo Maximiliano Bellusci",
   "license": "MIT",

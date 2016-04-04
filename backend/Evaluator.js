@@ -1,8 +1,8 @@
 'use strict'
 
-const Emitter = require('../misc/Emitter.js')
+import Emitter from '../misc/Emitter.js'
 
-const expressionFromString = require('../intermediate/expressionFromString')
+import expressionFromString from '../intermediate/expressionFromString.js'
 
 /*
   Un evaluador sirve para ejecutar las acciones/enunciados de un modulo.
@@ -23,7 +23,7 @@ const expressionFromString = require('../intermediate/expressionFromString')
  * 	- module-call
  */
 
-class Evaluator extends Emitter {
+export default class Evaluator extends Emitter {
   constructor(globals, locals, body_root_node, modules_info ) {
     super(['read', 'write', 'evaluation-error'])
     this.globals = globals
@@ -380,5 +380,3 @@ class Evaluator extends Emitter {
     return result
   }
 }
-
-module.exports = Evaluator

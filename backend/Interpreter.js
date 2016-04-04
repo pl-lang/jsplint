@@ -15,10 +15,10 @@
  * 	- evaluation-error (repite el de un Evaluator)
  */
 
-const Evaluator       = require('./Evaluator.js')
-const Emitter         = require('../misc/Emitter.js')
+import Evaluator from './Evaluator.js'
+import Emitter from '../misc/Emitter.js'
 
-class Interpreter extends Emitter {
+export default class Interpreter extends Emitter {
   constructor(program_modules) {
     super(['program-started', 'program-resumed', 'program-paused', 'program-finished'])
     this.current_program = program_modules
@@ -108,5 +108,3 @@ class Interpreter extends Emitter {
     this.current_module.assignReadData(varname_list, data)
   }
 }
-
-module.exports = Interpreter
