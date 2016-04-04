@@ -1,7 +1,8 @@
 'use strict'
 
-const should = require('should')
-const Compiler = require('../tools/Compiler')
+import should from 'should'
+
+import Compiler from '../tools/Compiler.js'
 
 describe('Compiler', () => {
   it('Un programa correcto se compila sin errores', () => {

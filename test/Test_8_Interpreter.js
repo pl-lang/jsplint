@@ -1,9 +1,9 @@
 'use strict'
-const should = require('should');
+import should from 'should'
 
-const Interpreter = require('../backend/Interpreter')
+import Interpreter from '../backend/Interpreter.js'
 
-const Compiler = require('../tools/Compiler')
+import Compiler from '../tools/Compiler.js'
 
 const DO_NOT_RUN_TYPE_CHECKER = false
 
