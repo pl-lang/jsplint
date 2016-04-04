@@ -1,6 +1,6 @@
 'use strict'
 
-class EoFToken {
+export default class EoFToken {
   constructor(source) {
     this.kind = 'eof'
     if (source) {
@@ -9,5 +9,3 @@ class EoFToken {
     }
   }
 }
-
-module.exports = EoFToken

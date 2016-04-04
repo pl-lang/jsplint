@@ -1,6 +1,6 @@
 'use strict'
 
-class StringToken {
+export default class StringToken {
   constructor(source) {
     this.kind = 'string'
     this.value = ''
@@ -37,5 +37,3 @@ class StringToken {
     source.nextChar()
   }
 }
-
-module.exports = StringToken

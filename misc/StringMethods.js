@@ -1,9 +1,5 @@
 'use strict'
 
-let StringMethods = {
-    isDigit       : (c) => {return /\d/.test(c)}
-  , isLetter      : (c) => {return /[a-zA-Z]/.test(c)}
-  , isWhiteSpace  : (c) => {return /\s/.test(c) && (c != '\n')}
-}
-
-module.exports = StringMethods
+export const isDigit = char => /\d/.test(char)
+export const isLetter = char => /[a-zA-Z]/.test(char)
+export const isWhiteSpace = char => /\s/.test(char) && (char !== '\n')

@@ -1,8 +1,18 @@
 'use strict'
-const should = require('should');
-const fs = require('fs');
-const Source = require('../frontend/Source.js')
-const inspect = require('util').inspect
+
+import Source from '../frontend/Source.js'
+import WordToken from '../frontend/tokens/WordToken.js'
+import NumberToken from '../frontend/tokens/NumberToken.js'
+import StringToken from '../frontend/tokens/StringToken.js'
+import SpecialSymbolToken from '../frontend/tokens/SpecialSymbolToken.js'
+import Lexer from '../frontend/Lexer.js'
+
+import TokenQueue from '../intermediate/TokenQueue.js'
+
+import should from 'should'
+import fs from 'fs'
+
+
 
 describe('Source:', () => {
   it('funciona correctamente', () => {
@@ -51,7 +61,6 @@ describe('Source:', () => {
 })
 
 describe('WordToken', () => {
-  let WordToken = require('../frontend/tokens/WordToken.js')
   it('lee un nombre de variable', () => {
     let source = new Source('palabra123')
 
@@ -88,7 +97,6 @@ describe('WordToken', () => {
 })
 
 describe('NumberToken', () => {
-  let NumberToken = require('../frontend/tokens/NumberToken.js')
   it('lee un entero', () => {
     let source = new Source('22')
 
@@ -121,7 +129,6 @@ describe('NumberToken', () => {
 })
 
 describe('StringToken', () => {
-  let StringToken = require('../frontend/tokens/StringToken.js')
   it('lee una cadena', () => {
     {
       let source = new Source('"Hola Mundo"')
@@ -154,7 +161,6 @@ describe('StringToken', () => {
 })
 
 describe('SpecialSymbolToken', () => {
-  let SpecialSymbolToken = require('../frontend/tokens/SpecialSymbolToken.js')
   it ('isSpecialSymbolChar funciona', () => {
     SpecialSymbolToken.isSpecialSymbolChar('<').should.equal(true)
   })
@@ -258,7 +264,6 @@ describe('SpecialSymbolToken', () => {
 })
 
 describe('Lexer', () => {
-  let Lexer = require('../frontend/Lexer.js')
   it('deberia fichar un numero, una palabra y otro numero para: "1a 2.3"', () => {
     let source = new Source('1a 2.3')
     let tokenizer = new Lexer(source)
@@ -368,7 +373,6 @@ describe('Lexer', () => {
 })
 
 describe('TokenQueue', () => {
-  let TokenQueue = require('../intermediate/TokenQueue')
   it('funciona correctamente', () => {
     let q = new TokenQueue([1, 2, 3])
 

@@ -1,6 +1,6 @@
 'use strict'
 
-class UnknownToken {
+export default class UnknownToken {
   constructor(source) {
     this.kind = 'LEXICAL_ERROR'
     this.unexpectedChar = source.currentChar()
@@ -10,5 +10,3 @@ class UnknownToken {
     source.nextChar()
   }
 }
-
-module.exports = UnknownToken

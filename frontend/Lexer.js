@@ -1,22 +1,22 @@
 'use strict'
-const SpecialSymbolToken = require('./tokens/SpecialSymbolToken.js')
-const StringMethods = require('../misc/StringMethods.js')
-const UnknownToken = require('./tokens/UnknownToken.js')
-const NumberToken = require('./tokens/NumberToken.js')
-const StringToken = require('./tokens/StringToken.js')
-const WordToken = require('./tokens/WordToken.js')
-const EoFToken = require('./tokens/EoFToken.js')
-const Source = require('./Source')
+
+import SpecialSymbolToken from './tokens/SpecialSymbolToken.js'
+import UnknownToken from './tokens/UnknownToken.js'
+import NumberToken from './tokens/NumberToken.js'
+import StringToken from './tokens/StringToken.js'
+import WordToken from './tokens/WordToken.js'
+import EoFToken from './tokens/EoFToken.js'
+
+import { isDigit, isLetter, isWhiteSpace } from '../misc/StringMethods.js'
+
+import Source from './Source.js'
 
 const isSpecialSymbolChar = SpecialSymbolToken.isSpecialSymbolChar
-const isWhiteSpace        = StringMethods.isWhiteSpace
-const isLetter            = StringMethods.isLetter
-const isDigit             = StringMethods.isDigit
 
 /**
  * Clase para convertir una cadena en fichas.
  */
-class Lexer {
+export default class Lexer {
   /**
    * Crea un Lexer.
    * @param  {source} source Fuente a utilizar para construir las fichas
@@ -120,5 +120,3 @@ class Lexer {
     return result
   }
 }
-
-module.exports = Lexer

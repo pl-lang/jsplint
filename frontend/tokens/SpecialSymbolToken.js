@@ -1,25 +1,6 @@
 'use strict'
 
-let list = [
-  '+'   ,
-  '-'   ,
-  '/'   ,
-  '*'   ,
-  '^'   ,
-  '='   ,
-  '<'   ,
-  '>'   ,
-  '('   ,
-  ')'   ,
-  '['   ,
-  ']'   ,
-  ','   ,
-  '\n'
-]
-
-let symbols = new Set(list)
-
-class SpecialSymbolToken {
+export default class SpecialSymbolToken {
   constructor(source) {
     this.lineNumber = source._current_line
     this.columnNumber = source._current_column
@@ -27,7 +8,25 @@ class SpecialSymbolToken {
   }
 
   static isSpecialSymbolChar(c) {
-    return symbols.has(c)
+    switch (c) {
+      case '+':
+      case '-':
+      case '/':
+      case '*':
+      case '^':
+      case '=':
+      case '<':
+      case '>':
+      case '(':
+      case ')':
+      case '[':
+      case ']':
+      case ',':
+      case '\n':
+        return true
+      default:
+        return false
+    }
   }
 
   extract(source) {
@@ -108,5 +107,3 @@ class SpecialSymbolToken {
     source.nextChar()
   }
 }
-
-module.exports = SpecialSymbolToken

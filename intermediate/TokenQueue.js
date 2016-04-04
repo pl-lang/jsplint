@@ -1,7 +1,7 @@
 'use strict'
-const EoFToken = require('../frontend/tokens/EoFToken.js')
+import EoFToken from '../frontend/tokens/EoFToken.js'
 
-class TokenQueue {
+export default class TokenQueue {
   constructor(array) {
     this.tokens = array
     this.totalElements = array.length
@@ -34,5 +34,3 @@ class TokenQueue {
       return new EoFToken()
   }
 }
-
-module.exports = TokenQueue

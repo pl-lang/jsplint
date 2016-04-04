@@ -1,8 +1,8 @@
 'use strict'
-const StringMethods = require('../../misc/StringMethods.js')
-const isDigit = StringMethods.isDigit
 
-class NumberToken {
+import { isDigit } from '../../misc/StringMethods.js'
+
+export default class NumberToken {
   constructor(source) {
     // todos los numeros son enteros hasta que se 'demuestre' lo contrario
     this.kind = 'entero'
@@ -48,5 +48,3 @@ class NumberToken {
       this.value = parseFloat(this.text)
   }
 }
-
-module.exports = NumberToken

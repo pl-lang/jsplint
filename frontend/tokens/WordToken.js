@@ -1,7 +1,8 @@
 'use strict'
-const StringMethods = require('../../misc/StringMethods.js')
 
-let list = [
+import { isDigit, isLetter } from '../../misc/StringMethods.js'
+
+const list = [
   'variables'         ,
   'inicio'            ,
   'fin'               ,
@@ -33,10 +34,6 @@ let list = [
   'verdadero'         ,
   'falso'
 ]
-
-let isDigit = StringMethods.isDigit
-
-let isLetter = StringMethods.isLetter
 
 function isReservedWord(word) {
   switch (word.length) {
@@ -147,7 +144,7 @@ function isReservedWord(word) {
   }
 }
 
-class WordToken {
+export default class WordToken {
   constructor(source) {
     this.kind = 'word'
     this.text = ''
@@ -173,5 +170,3 @@ class WordToken {
       this.kind = this.text.toLowerCase()
   }
 }
-
-module.exports = WordToken
