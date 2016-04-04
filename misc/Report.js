@@ -1,6 +1,6 @@
 'use strict'
 
-class Report {
+export default class Report {
   /**
    * Construye un reporte. Se usa para operaciones que pueden fallar.
    * @param  {bool} error_ocurred indica si ocurrió un error durante la operacion
@@ -17,5 +17,3 @@ class Report {
     }
   }
 }
-
-module.exports = Report

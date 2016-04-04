@@ -1,13 +1,13 @@
 'use strict'
 
-const Report = require('../misc/Report')
+import Report from '../misc/Report.js'
 
 /**
  * Funcion que intenta capturar un token numerico
  * @param {TokenQueue} source Fuente en la que hay que buscar el numero
  * @return {Report} reporte con el resultado
  */
-function Number(source) {
+export function Number(source) {
   let current = source.current()
 
   if (current.kind == 'real' || current.kind == 'entero') {
@@ -30,7 +30,7 @@ function Number(source) {
  * @param {TokenQueue} source fuente desde la cual se debe capturar
  * @return {Report}
  */
-function Integer(source) {
+export function Integer(source) {
   let current = source.current()
 
   if (current.kind === 'entero') {
@@ -50,7 +50,7 @@ function Integer(source) {
   }
 }
 
-function ArrayDimension(source) {
+export function ArrayDimension(source) {
   let indexes = []
 
   let index_report = Integer(source)
@@ -80,7 +80,7 @@ function ArrayDimension(source) {
   }
 }
 
-function Word(source) {
+export function Word(source) {
   let current = source.current()
 
   if (current.kind === 'word') {
@@ -97,7 +97,7 @@ function Word(source) {
   }
 }
 
-function VariableDeclaration(source) {
+export function VariableDeclaration(source) {
   let variable = {
       data    : {isArray : false, type:'unknown'}
     , name    : ''
@@ -141,7 +141,7 @@ function VariableDeclaration(source) {
   }
 }
 
-function VariableList(source) {
+export function VariableList(source) {
   let variables = []
   let partial_match = false
 
@@ -172,7 +172,7 @@ function VariableList(source) {
 
 let isType = string => {return /entero|real|logico|caracter/.test(string)}
 
-function TypeName(source) {
+export function TypeName(source) {
   let current = source.current()
 
   if ( isType(current.kind) ) {
@@ -190,7 +190,7 @@ function TypeName(source) {
   }
 }
 
-function Declaration(source) {
+export function Declaration(source) {
   let declarations = {}
 
   let typename = TypeName(source)
@@ -258,7 +258,7 @@ function Declaration(source) {
   }
 }
 
-function IndexExpression(source) {
+export function IndexExpression(source) {
   let indexes = []
 
   let index_report = Expression(source)
@@ -289,7 +289,7 @@ function IndexExpression(source) {
   }
 }
 
-function Variable(source) {
+export function Variable(source) {
   let name = '', isArray = false, indexes = null
 
   let word_match = Word(source)
@@ -524,7 +524,7 @@ function RPNtoTree(rpn_stack) {
   }
 }
 
-function Expression(source) {
+export function Expression(source) {
   let rpn = queueToRPN(source)
 
   if (rpn.error) {
@@ -536,7 +536,7 @@ function Expression(source) {
   }
 }
 
-function Assignment(source) {
+export function Assignment(source) {
 
   let variable_match = Variable(source)
 
@@ -578,7 +578,7 @@ function Assignment(source) {
   }
 }
 
-function ArgumentList(source) {
+export function ArgumentList(source) {
   let args = []
   let exp = Expression(source)
 
@@ -605,7 +605,7 @@ function ArgumentList(source) {
   }
 }
 
-function ModuleCall(source) {
+export function ModuleCall(source) {
   let name = Word(source)
 
   if (source.current().kind != 'left-par') {
@@ -666,27 +666,10 @@ function ModuleCall(source) {
  * Funcion que, dada una funcion de captura y una fuente devuelve un reporte
  * @param {Function} pattern_matcher Funcion que captura tokens
  */
-function match(pattern_matcher) {
+export function match(pattern_matcher) {
   return {
     from: (source) => {
       return pattern_matcher(source)
     }
   }
-}
-
-module.exports = {
-  match                   : match,
-  Integer                 : Integer,
-  ArrayDimension          : ArrayDimension,
-  Word                    : Word,
-  VariableDeclaration     : VariableDeclaration,
-  VariableList            : VariableList,
-  TypeName                : TypeName,
-  Declaration             : Declaration,
-  IndexExpression         : IndexExpression,
-  Variable                : Variable,
-  Expression              : Expression,
-  Assignment              : Assignment,
-  ArgumentList            : ArgumentList,
-  ModuleCall              : ModuleCall
 }

@@ -1,12 +1,13 @@
 'use strict'
-var should = require('should');
-var fs = require('fs');
-var Source = require('../frontend/Source.js')
+import should from 'should'
+import fs from 'fs'
 
-let Lexer = require('../frontend/Lexer.js')
-let TokenQueue = require('../intermediate/TokenQueue')
+import Source from '../frontend/Source.js'
+import Lexer from '../frontend/Lexer.js'
 
-const Patterns = require('../intermediate/Patterns')
+import TokenQueue from '../intermediate/TokenQueue'
+import * as Patterns from '../intermediate/Patterns'
+
 const match = Patterns.match
 
 function queueFromSource(string) {
