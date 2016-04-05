@@ -1,17 +1,15 @@
 'use strict'
 
-import Report from '../../misc/Report.js'
+import Report from '../../utility/Report.js'
 
-import Node from '../../misc/Node.js'
-import IfNode from '../../misc/IfNode.js'
-import WhileNode from '../../misc/WhileNode.js'
-import UntilNode from '../../misc/UntilNode.js'
+ import { GenericNode, IfNode, WhileNode, UntilNode } from '../ast/Nodes.js'
 
-import { LinkedList, getChainLength, getLastNode } from '../../misc/List.js'
+import { LinkedList, getChainLength, getLastNode } from '../ast/List.js'
 
 import TokenQueue from '../TokenQueue.js'
 
 import * as Patterns from '../Patterns.js'
+
 const match = Patterns.match
 
 function skipWhiteSpace(source) {
@@ -386,7 +384,7 @@ export default class StatementCollector {
           return call
         }
         else {
-          list.addNode(new Node(call.result))
+          list.addNode(new GenericNode(call.result))
         }
       }
       else if (current.kind === 'word') {
@@ -395,7 +393,7 @@ export default class StatementCollector {
           return assignment
         }
         else {
-          list.addNode(new Node(assignment.result))
+          list.addNode(new GenericNode(assignment.result))
         }
       }
       else if (current.kind === 'si') {

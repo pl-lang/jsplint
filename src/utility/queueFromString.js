@@ -1,12 +1,12 @@
 'use strict'
 
-import Source from '../frontend/Source.js'
-import Lexer from '../frontend/Lexer.js'
+import SourceWrapper from '../parser/SourceWrapper.js'
+import Lexer from '../parser/Lexer.js'
 
-import TokenQueue from '../intermediate/TokenQueue'
+import TokenQueue from '../parser/TokenQueue.js'
 
 export default function queueFromString(string) {
-  let source = new Source(string)
+  let source = new SourceWrapper(string)
   let tokenizer = new Lexer(source)
 
   let tokenArray = []

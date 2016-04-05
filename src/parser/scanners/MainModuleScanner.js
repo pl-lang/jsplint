@@ -1,10 +1,10 @@
 'use strict'
 
-import Report from '../../misc/Report.js'
+import Report from '../../utility/Report.js'
 
 import StatementCollector from './StatementCollector.js'
 
-import * as Patterns from '../Patterns'
+import * as Patterns from '../Patterns.js'
 const match = Patterns.match
 
 function skipWhiteSpace(source) {

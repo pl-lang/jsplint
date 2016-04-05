@@ -2,11 +2,11 @@
 import should from 'should'
 import fs from 'fs'
 
-import queueFromString from '../misc/queueFromString.js'
-import { getLastNode } from '../misc/List.js'
+import queueFromString from '../src/utility/queueFromString.js'
+import { getLastNode } from '../src/parser/ast/List.js'
 
-import StatementCollector from '../intermediate/scanners/StatementCollector.js'
-import Scanner from '../intermediate/Scanner.js'
+import StatementCollector from '../src/parser/scanners/StatementCollector.js'
+import Scanner from '../src/parser/Scanner.js'
 
 describe('Captura de estructuras sintacticas', () => {
 
