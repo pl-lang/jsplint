@@ -2,7 +2,7 @@
 
 import should from 'should'
 
-import Compiler from '../tools/Compiler.js'
+import Compiler from '../src/parser/Compiler.js'
 
 describe('Compiler', () => {
   it('Un programa correcto se compila sin errores', () => {
