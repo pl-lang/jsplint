@@ -1,15 +1,10 @@
 'use strict'
 
-import SpecialSymbolToken from './tokens/SpecialSymbolToken.js'
-import UnknownToken from './tokens/UnknownToken.js'
-import NumberToken from './tokens/NumberToken.js'
-import StringToken from './tokens/StringToken.js'
-import WordToken from './tokens/WordToken.js'
-import EoFToken from './tokens/EoFToken.js'
+import { EoFToken, WordToken, NumberToken, StringToken, SpecialSymbolToken } from './TokenTypes.js'
 
-import { isDigit, isLetter, isWhiteSpace } from '../misc/StringMethods.js'
+import { isDigit, isLetter, isWhiteSpace } from '../utility/StringMethods.js'
 
-import Source from './Source.js'
+import SourceWrapper from './SourceWrapper.js'
 
 const isSpecialSymbolChar = SpecialSymbolToken.isSpecialSymbolChar
 
@@ -54,7 +49,7 @@ export default class Lexer {
     }
   }
 
-  // Envolturas para algunos metodos de Source
+  // Envolturas para algunos metodos de SourceWrapper
   currentChar() {
     return this._source.currentChar()
   }

@@ -1,6 +1,6 @@
 'use strict'
 
-import { isDigit, isLetter } from '../../misc/StringMethods.js'
+import { isDigit, isLetter } from '../utility/StringMethods.js'
 
 export class EoFToken {
   constructor(source) {
@@ -59,7 +59,7 @@ export class NumberToken {
   }
 }
 
-default export class SpecialSymbolToken {
+export class SpecialSymbolToken {
   constructor(source) {
     this.lineNumber = source._current_line
     this.columnNumber = source._current_column

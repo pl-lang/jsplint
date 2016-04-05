@@ -1,5 +1,5 @@
 'use strict'
-import EoFToken from '../frontend/tokens/EoFToken.js'
+import { EoFToken } from './TokenTypes.js'
 
 export default class TokenQueue {
   constructor(array) {

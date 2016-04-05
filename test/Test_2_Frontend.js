@@ -1,24 +1,20 @@
 'use strict'
 
-import Source from '../frontend/Source.js'
-import WordToken from '../frontend/tokens/WordToken.js'
-import NumberToken from '../frontend/tokens/NumberToken.js'
-import StringToken from '../frontend/tokens/StringToken.js'
-import SpecialSymbolToken from '../frontend/tokens/SpecialSymbolToken.js'
-import Lexer from '../frontend/Lexer.js'
-
-import TokenQueue from '../intermediate/TokenQueue.js'
+import SourceWrapper from '../src/parser/SourceWrapper.js'
+import { WordToken, NumberToken, StringToken, SpecialSymbolToken } from '../src/parser/TokenTypes.js'
+import Lexer from '../src/parser/Lexer.js'
+import TokenQueue from '../src/parser/TokenQueue.js'
 
 import should from 'should'
 import fs from 'fs'
 
 
 
-describe('Source:', () => {
+describe('SourceWrapper:', () => {
   it('funciona correctamente', () => {
     let string = fs.readFileSync('./test/ejemplo.md', 'utf-8')
 
-    let source = new Source(string)
+    let source = new SourceWrapper(string)
 
     source._current_line.should.equal(0)
     source._current_column.should.equal(0)
@@ -45,7 +41,7 @@ describe('Source:', () => {
   it('cuenta bien los renglones', () => {
     let string = '0\n1\n2'
 
-    let source = new Source(string)
+    let source = new SourceWrapper(string)
 
     source._current_line.should.equal(0)
     source.nextChar()
@@ -62,7 +58,7 @@ describe('Source:', () => {
 
 describe('WordToken', () => {
   it('lee un nombre de variable', () => {
-    let source = new Source('palabra123')
+    let source = new SourceWrapper('palabra123')
 
     let token = new WordToken(source)
 
@@ -72,7 +68,7 @@ describe('WordToken', () => {
   })
 
   it('lee un nombre reservado', () => {
-    let source = new Source('variables')
+    let source = new SourceWrapper('variables')
     let token = new WordToken(source)
 
     token.kind.should.equal('variables')
@@ -80,7 +76,7 @@ describe('WordToken', () => {
   })
 
   it('se detiene al encontrar un caracter que no sea numero o letra', () => {
-    let source = new Source('nombre24 chau')
+    let source = new SourceWrapper('nombre24 chau')
     let token = new WordToken(source)
 
     token.kind.should.equal('word')
@@ -88,7 +84,7 @@ describe('WordToken', () => {
   })
 
   it('funciona con nombres que contengan guion bajo', () => {
-    let source = new Source('costo_total')
+    let source = new SourceWrapper('costo_total')
     let token = new WordToken(source)
 
     token.kind.should.equal('word')
@@ -98,7 +94,7 @@ describe('WordToken', () => {
 
 describe('NumberToken', () => {
   it('lee un entero', () => {
-    let source = new Source('22')
+    let source = new SourceWrapper('22')
 
     let token = new NumberToken(source)
 
@@ -108,7 +104,7 @@ describe('NumberToken', () => {
   })
 
   it('lee un real', () => {
-    let source = new Source('3.1487')
+    let source = new SourceWrapper('3.1487')
     let token = new NumberToken(source)
 
     token.kind.should.equal('real')
@@ -117,7 +113,7 @@ describe('NumberToken', () => {
   })
 
   it('devuelve un error al encontrar un caracter no permitido en un real', () => {
-    let source = new Source('3.A')
+    let source = new SourceWrapper('3.A')
     let token = new NumberToken(source)
 
     token.kind.should.equal('LEXICAL_ERROR')
@@ -131,7 +127,7 @@ describe('NumberToken', () => {
 describe('StringToken', () => {
   it('lee una cadena', () => {
     {
-      let source = new Source('"Hola Mundo"')
+      let source = new SourceWrapper('"Hola Mundo"')
       let token = new StringToken(source)
 
       token.kind.should.equal('string')
@@ -140,7 +136,7 @@ describe('StringToken', () => {
     }
 
     {
-      let source = new Source('"hasta que los chanchos vuelen..."')
+      let source = new SourceWrapper('"hasta que los chanchos vuelen..."')
       let token = new StringToken(source)
 
       token.kind.should.equal('string')
@@ -150,7 +146,7 @@ describe('StringToken', () => {
   })
 
   it('devuelve error al encontrar \\n en medio de una cadena', () => {
-    let source = new Source('"Hola \n Mundo"')
+    let source = new SourceWrapper('"Hola \n Mundo"')
     let token = new StringToken(source)
 
     token.kind.should.equal('LEXICAL_ERROR')
@@ -166,31 +162,31 @@ describe('SpecialSymbolToken', () => {
   })
 
   it('lee operadores aritmeticos', () => {
-    let source = new Source('+')
+    let source = new SourceWrapper('+')
     let token = new SpecialSymbolToken(source)
 
     token.kind.should.equal('plus')
     token.text.should.equal('+')
 
-    source = new Source('-')
+    source = new SourceWrapper('-')
     token = new SpecialSymbolToken(source)
 
     token.kind.should.equal('minus')
     token.text.should.equal('-')
 
-    source = new Source('*')
+    source = new SourceWrapper('*')
     token = new SpecialSymbolToken(source)
 
     token.kind.should.equal('times')
     token.text.should.equal('*')
 
-    source = new Source('/')
+    source = new SourceWrapper('/')
     token = new SpecialSymbolToken(source)
 
     token.kind.should.equal('divide')
     token.text.should.equal('/')
 
-    source = new Source('^')
+    source = new SourceWrapper('^')
     token = new SpecialSymbolToken(source)
 
     token.kind.should.equal('power')
@@ -199,64 +195,64 @@ describe('SpecialSymbolToken', () => {
   })
 
   it('lee operadores relacionales', () => {
-    let source = new Source('<')
+    let source = new SourceWrapper('<')
     let token = new SpecialSymbolToken(source)
     token.kind.should.equal('minor-than')
     token.text.should.equal('<')
 
-    source = new Source('=')
+    source = new SourceWrapper('=')
     token = new SpecialSymbolToken(source)
     token.kind.should.equal('equal')
     token.text.should.equal('=')
 
-    source = new Source('<=')
+    source = new SourceWrapper('<=')
     token = new SpecialSymbolToken(source)
     token.kind.should.equal('minor-equal')
     token.text.should.equal('<=')
 
-    source = new Source('<>')
+    source = new SourceWrapper('<>')
     token = new SpecialSymbolToken(source)
     token.kind.should.equal('diff-than')
     token.text.should.equal('<>')
 
-    source = new Source('>')
+    source = new SourceWrapper('>')
     token = new SpecialSymbolToken(source)
     token.kind.should.equal('major-than')
     token.text.should.equal('>')
 
-    source = new Source('>=')
+    source = new SourceWrapper('>=')
     token = new SpecialSymbolToken(source)
     token.kind.should.equal('major-equal')
     token.text.should.equal('>=')
   })
 
   it('lee otros simbolos', () => {
-    let source = new Source('(')
+    let source = new SourceWrapper('(')
     let token = new SpecialSymbolToken(source)
     token.kind.should.equal('left-par')
     token.text.should.equal('(')
 
-    source = new Source(')')
+    source = new SourceWrapper(')')
     token = new SpecialSymbolToken(source)
     token.kind.should.equal('right-par')
     token.text.should.equal(')')
 
-    source = new Source('[')
+    source = new SourceWrapper('[')
     token = new SpecialSymbolToken(source)
     token.kind.should.equal('left-bracket')
     token.text.should.equal('[')
 
-    source = new Source(']')
+    source = new SourceWrapper(']')
     token = new SpecialSymbolToken(source)
     token.kind.should.equal('right-bracket')
     token.text.should.equal(']')
 
-    source = new Source(',')
+    source = new SourceWrapper(',')
     token = new SpecialSymbolToken(source)
     token.kind.should.equal('comma')
     token.text.should.equal(',')
 
-    source = new Source('<-')
+    source = new SourceWrapper('<-')
     token = new SpecialSymbolToken(source)
     token.kind.should.equal('assignment')
     token.text.should.equal('<-')
@@ -265,7 +261,7 @@ describe('SpecialSymbolToken', () => {
 
 describe('Lexer', () => {
   it('deberia fichar un numero, una palabra y otro numero para: "1a 2.3"', () => {
-    let source = new Source('1a 2.3')
+    let source = new SourceWrapper('1a 2.3')
     let tokenizer = new Lexer(source)
     let tokenArray = []
 
@@ -286,7 +282,7 @@ describe('Lexer', () => {
   })
 
   it('deberia saltearse los comentarios', () => {
-    let source = new Source('//comentario\n')
+    let source = new SourceWrapper('//comentario\n')
     let tokenizer = new Lexer(source)
 
     let t = tokenizer.nextToken()
@@ -304,7 +300,7 @@ describe('Lexer', () => {
 
   it('deberia fichar todos los tokens de un programa modelo', () => {
     let programa = fs.readFileSync('./test/programa.md', 'utf-8')
-    let source = new Source(programa)
+    let source = new SourceWrapper(programa)
     let tokenizer = new Lexer(source)
 
     let tokenArray = []
