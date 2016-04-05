@@ -16,12 +16,12 @@ import UntilNode from '../misc/UntilNode.js'
 import IfNode    from '../misc/IfNode.js'
 import Emitter   from '../misc/Emitter.js'
 
-let math_operators = new Set([
+let math_operators = [
     'plus'
   , 'minus'
   , 'times'
   , 'power'
-])
+]
 
 function isMathOperator(token_name) {
   switch (token_name) {
@@ -35,23 +35,23 @@ function isMathOperator(token_name) {
   }
 }
 
-let integer_operators = new Set([
+let integer_operators = [
     'mod'
   , 'div'
-])
+]
 
 function isIntegerOperator(token_name) {
   return token_name === 'mod' || token_name === 'div' ? true:false
 }
 
-let comparison_operators = new Set([
+let comparison_operators = [
     'equal'
   , 'diff-than'
   , 'major-than'
   , 'minor-than'
   , 'major-equal'
   , 'minor-equal'
-])
+]
 
 function isComparisonOperator(token_name) {
   switch (token_name) {
@@ -67,11 +67,11 @@ function isComparisonOperator(token_name) {
   }
 }
 
-let logico_operators = new Set([
+let logico_operators = [
     'and'
   , 'or'
   , 'not'
-])
+]
 
 function isLogicOperator(token_name) {
   return token_name === 'and' || token_name === 'or' || token_name === 'or' ? true: false
