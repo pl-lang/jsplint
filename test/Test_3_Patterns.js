@@ -2,16 +2,16 @@
 import should from 'should'
 import fs from 'fs'
 
-import Source from '../frontend/Source.js'
-import Lexer from '../frontend/Lexer.js'
+import SourceWrapper from '../src/parser/SourceWrapper.js'
+import Lexer from '../src/parser/Lexer.js'
 
-import TokenQueue from '../intermediate/TokenQueue'
-import * as Patterns from '../intermediate/Patterns'
+import TokenQueue from '../src/parser/TokenQueue.js'
+import * as Patterns from '../src/parser/Patterns.js'
 
 const match = Patterns.match
 
 function queueFromSource(string) {
-  let source = new Source(string)
+  let source = new SourceWrapper(string)
   let tokenizer = new Lexer(source)
 
   let tokenArray = []

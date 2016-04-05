@@ -1,6 +1,6 @@
 'use strict'
 
-import Report from '../misc/Report.js'
+import Report from '../utility/Report.js'
 
 /**
  * Funcion que intenta capturar un token numerico
