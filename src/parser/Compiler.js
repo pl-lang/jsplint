@@ -1,16 +1,16 @@
 'use strict'
 
-import Emitter from '../misc/Emitter.js'
+import Emitter from '../utility/Emitter.js'
 
-import Scanner from '../intermediate/Scanner.js'
-import TokenQueue from '../intermediate/TokenQueue.js'
+import Scanner from './Scanner.js'
+import TokenQueue from './TokenQueue.js'
 
-import Source from '../frontend/Source.js'
-import Lexer from '../frontend/Lexer.js'
+import SourceWrapper from './SourceWrapper.js'
+import Lexer from './Lexer.js'
 
-import TypeChecker from '../analisys/TypeChecker.js'
+import TypeChecker from '../typechecker/TypeChecker.js'
 
-import * as Patterns from '../intermediate/Patterns.js'
+import * as Patterns from './Patterns.js'
 const match = Patterns.match
 
 const defaults = {
@@ -90,7 +90,7 @@ export default class Compiler extends Emitter {
 
     this.emit('compilation-started')
 
-    let source_wrapper = new Source(source_code_string)
+    let source_wrapper = new SourceWrapper(source_code_string)
 
     let parse_report = this.parser.parse(source_wrapper)
 

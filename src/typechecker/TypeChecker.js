@@ -10,11 +10,9 @@
 
 // TODO: cual hay q devolver si los dos tienen errores? (renglon 232)
 
+import { WhileNode, UntilNode, IfNode } from '../parser/ast/Nodes.js'
 
-import WhileNode from '../misc/WhileNode.js'
-import UntilNode from '../misc/UntilNode.js'
-import IfNode    from '../misc/IfNode.js'
-import Emitter   from '../misc/Emitter.js'
+import Emitter   from '../utility/Emitter.js'
 
 let math_operators = [
     'plus'

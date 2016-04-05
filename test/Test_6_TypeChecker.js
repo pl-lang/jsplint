@@ -1,11 +1,11 @@
 'use strict'
 import should from 'should'
 
-import expressionFromString from '../intermediate/expressionFromString'
+import expressionFromString from '../src/parser/expressionFromString.js'
 
-import TypeChecker from '../analisys/TypeChecker'
+import TypeChecker from '../src/typechecker/TypeChecker.js'
 
-import Compiler from '../tools/Compiler.js'
+import Compiler from '../src/parser/Compiler.js'
 
 const RUN_TYPE_CHECKER = true
 const DO_NOT_RUN_TYPE_CHECKER = false
