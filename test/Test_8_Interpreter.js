@@ -1,9 +1,9 @@
 'use strict'
 import should from 'should'
 
-import Interpreter from '../backend/Interpreter.js'
+import Interpreter from '../src/interpreter/Interpreter.js'
 
-import Compiler from '../tools/Compiler.js'
+import Compiler from '../src/parser/Compiler.js'
 
 const DO_NOT_RUN_TYPE_CHECKER = false
 
