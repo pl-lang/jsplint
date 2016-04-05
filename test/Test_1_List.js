@@ -2,18 +2,14 @@
 
 import should from 'should'
 
-import { LinkedList, getChainLenght, getLastNode } from '../misc/List.js'
-
-import Node from '../misc/Node.js'
-import BranchingNode from '../misc/BranchingNode.js'
-import WhileNode from '../misc/WhileNode.js'
-import IfNode from '../misc/IfNode.js'
+import { LinkedList, getChainLenght, getLastNode } from '../src/parser/ast/List.js'
+import { GenericNode, WhileNode, IfNode } from '../src/parser/ast/Nodes.js'
 
 describe("Metodos auxiliares de listas", () => {
   it('getChainLenght funciona bien', () => {
-    let nodeA = new Node('a')
-    let nodeB = new Node('b')
-    let nodeC = new Node('c')
+    let nodeA = new GenericNode('a')
+    let nodeB = new GenericNode('b')
+    let nodeC = new GenericNode('c')
 
     nodeA.setNext(nodeB)
     nodeB.setNext(nodeC)
@@ -22,9 +18,9 @@ describe("Metodos auxiliares de listas", () => {
   })
 
   it('getLastNode funciona bien', () => {
-    let nodeA = new Node('a')
-    let nodeB = new Node('b')
-    let nodeC = new Node('c')
+    let nodeA = new GenericNode('a')
+    let nodeB = new GenericNode('b')
+    let nodeC = new GenericNode('c')
 
     nodeA.setNext(nodeB)
     nodeB.setNext(nodeC)
@@ -35,7 +31,7 @@ describe("Metodos auxiliares de listas", () => {
 
 describe('LinkedList', () => {
   it('Los nodos guardan sus datos correctamente', () => {
-    let node = new Node('i am a node')
+    let node = new GenericNode('i am a node')
 
     node.data.should.equal('i am a node')
 
@@ -44,7 +40,7 @@ describe('LinkedList', () => {
   })
 
   it('Agregar un nodo a una lista', () => {
-    let node = new Node(1)
+    let node = new GenericNode(1)
     let list = new LinkedList()
 
     list.addNode(node)
@@ -58,7 +54,7 @@ describe('LinkedList', () => {
     let list = new LinkedList()
 
     for (let item of data) {
-      let node = new Node(item)
+      let node = new GenericNode(item)
 
       list.addNode(node)
     }
@@ -73,39 +69,12 @@ describe('LinkedList', () => {
   })
 })
 
-describe('BranchingNode', () => {
-  it('Cuando a getNext se le pasa true devuelve el nodo "derecho"', () => {
-    let leftNode = new Node('left')
-    let rightNode = new Node('right')
-
-    let branching = new BranchingNode()
-
-    branching.leftBranchNode = leftNode
-    branching.rightBranchNode = rightNode
-
-    branching.getNext(true).should.equal(rightNode)
-  })
-
-  it('Cuando a getNext no se le pasa nada (o false) devuelve el nodo "izquierdo"', () => {
-    let leftNode = new Node('left')
-    let rightNode = new Node('right')
-
-    let branching = new BranchingNode()
-
-    branching.leftBranchNode = leftNode
-    branching.rightBranchNode = rightNode
-
-    branching.getNext().should.equal(leftNode)
-    branching.getNext(false).should.equal(leftNode)
-  })
-})
-
 describe('IfNode', () => {
   it('Ambas raman "convergen" en el mismo nodo', () => {
-    let leftNode = new Node('left')
-    let rightNode = new Node('right')
+    let leftNode = new GenericNode('left')
+    let rightNode = new GenericNode('right')
 
-    let testNode = new Node('test')
+    let testNode = new GenericNode('test')
 
     let ifNode = new IfNode()
 
@@ -119,9 +88,9 @@ describe('IfNode', () => {
   })
 
   it('Cuando solo existe la rama verdadera, el nodo de la rama izquierda es el que le sigue al bloque if', () => {
-    let rightNode = new Node('right')
+    let rightNode = new GenericNode('right')
 
-    let testNode = new Node('test')
+    let testNode = new GenericNode('test')
 
     let ifNode = new IfNode()
 
@@ -133,9 +102,9 @@ describe('IfNode', () => {
   })
 
   it('setCurrentBranchTo cambia el nodo que getNext devuelve', () => {
-    let rightNode = new Node('right')
-    let leftNode = new Node('left')
-    let next = new Node('next')
+    let rightNode = new GenericNode('right')
+    let leftNode = new GenericNode('left')
+    let next = new GenericNode('next')
 
     let ifNode = new IfNode()
 
@@ -161,9 +130,9 @@ describe('WhileNode', () => {
   it('Al llamar a getNext (por defecto) se entra al bucle', () => {
     let while_node = new WhileNode()
 
-    let body_root = new Node('test')
+    let body_root = new GenericNode('test')
 
-    let other_node = new Node('asdasd')
+    let other_node = new GenericNode('asdasd')
 
     while_node.loop_body_root = body_root
 
@@ -175,9 +144,9 @@ describe('WhileNode', () => {
   it('El ultimo nodo del bucle apunta al nodo de la condicion de entrada', () => {
     let while_node = new WhileNode()
 
-    let body_root = new Node('test')
+    let body_root = new GenericNode('test')
 
-    let other_node = new Node('asdasd')
+    let other_node = new GenericNode('asdasd')
 
     while_node.loop_body_root = body_root
 
@@ -189,9 +158,9 @@ describe('WhileNode', () => {
   it('con setCurrentBranchTo se puede cambiar el nodo que le "sigue" a un WhileNode', () => {
     let while_node = new WhileNode()
 
-    let body_root = new Node('body_root')
+    let body_root = new GenericNode('body_root')
 
-    let other_node = new Node('next statement node')
+    let other_node = new GenericNode('next statement node')
 
     while_node.loop_body_root = body_root
 
