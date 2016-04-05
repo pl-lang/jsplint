@@ -4,7 +4,7 @@ let EOF_REACHED = -2
 let EOL_REACHED = -1
 let READING = 0
 
-export default class Source {
+export default class SourceWrapper {
   constructor(string) {
     this.EOL = '\n'
     this.EOF = String.fromCharCode(0)
