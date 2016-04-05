@@ -16,7 +16,7 @@
  */
 
 import Evaluator from './Evaluator.js'
-import Emitter from '../misc/Emitter.js'
+import Emitter from '../utility/Emitter.js'
 
 export default class Interpreter extends Emitter {
   constructor(program_modules) {

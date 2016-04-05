@@ -1,14 +1,14 @@
 'use strict'
 
-import Source from '../frontend/Source.js'
-import Lexer from '../frontend/Lexer.js'
+import SourceWrapper from './SourceWrapper.js'
+import Lexer from './Lexer.js'
 
 import TokenQueue from './TokenQueue.js'
 import * as Patterns from './Patterns.js'
 const match = Patterns.match
 
 export default function expressionFromString(string) {
-  let source = new Source(string)
+  let source = new SourceWrapper(string)
   let tokenizer = new Lexer(source)
 
   let tokenArray = []

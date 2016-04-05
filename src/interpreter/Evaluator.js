@@ -1,8 +1,8 @@
 'use strict'
 
-import Emitter from '../misc/Emitter.js'
+import Emitter from '../utility/Emitter.js'
 
-import expressionFromString from '../intermediate/expressionFromString.js'
+import expressionFromString from '../parser/expressionFromString.js'
 
 /*
   Un evaluador sirve para ejecutar las acciones/enunciados de un modulo.
