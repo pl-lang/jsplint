@@ -1,6 +1,6 @@
 'use strict'
 
-import { EoFToken, WordToken, NumberToken, StringToken, SpecialSymbolToken } from './TokenTypes.js'
+import { EoFToken, WordToken, NumberToken, StringToken, SpecialSymbolToken, UnknownToken } from './TokenTypes.js'
 
 import { isDigit, isLetter, isWhiteSpace } from '../utility/StringMethods.js'
 
