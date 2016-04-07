@@ -700,3 +700,149 @@ describe('NewAssignment', () => {
     })
   })
 })
+
+describe('If', () => {
+  it('captura una estructura si bien escrita', () => {
+    let code = `si (verdadero) entonces
+    var <- 32
+    finsi
+    `
+    let q = queueFromSource(code)
+    let report = match(Patterns.If).from(q)
+
+    report.error.should.equal(false)
+    report.result.should.deepEqual({
+      type:'if',
+      condition:{expression_type:'literal', type:'logico', value:true},
+      true_branch:[{
+        type:'assignment',
+        left:{name:'var', isArray:false, indexes:null, bounds_checked:false},
+        right:{expression_type:'literal', type:'entero', value:32}
+      }],
+      false_branch:[]
+    })
+  })
+
+  it('captura una estructura si...sino bien escrita', () => {
+    let code = `si (verdadero) entonces
+    var <- 32
+    sino
+    var <- 16
+    finsi
+    `
+    let q = queueFromSource(code)
+    let report = match(Patterns.If).from(q)
+
+    report.error.should.equal(false)
+    report.result.should.deepEqual({
+      type:'if',
+      condition:{expression_type:'literal', type:'logico', value:true},
+      true_branch:[{
+        type:'assignment',
+        left:{name:'var', isArray:false, indexes:null, bounds_checked:false},
+        right:{expression_type:'literal', type:'entero', value:32}
+      }],
+      false_branch:[{
+        type:'assignment',
+        left:{name:'var', isArray:false, indexes:null, bounds_checked:false},
+        right:{expression_type:'literal', type:'entero', value:16}
+      }]
+    })
+  })
+
+  it('captura una estructura si...sino sin enunciados', () => {
+    let code = `si (verdadero) entonces
+    sino
+    finsi
+    `
+    let q = queueFromSource(code)
+    let report = match(Patterns.If).from(q)
+
+    report.error.should.equal(false)
+    report.result.should.deepEqual({
+      type:'if',
+      condition:{expression_type:'literal', type:'logico', value:true},
+      true_branch:[],
+      false_branch:[]
+    })
+  })
+
+  it('falta el parentesis izquierdo', () => {
+    let code = `si verdadero) entonces
+    var <- 32
+    sino
+    var <- 16
+    finsi
+    `
+    let q = queueFromSource(code)
+    let report = match(Patterns.If).from(q)
+
+    report.error.should.equal(true)
+    report.result.should.deepEqual({
+      unexpected:'verdadero',
+      expected:'(',
+      line:0,
+      column:3,
+      reason:'missing-par-at-condition'
+    })
+  })
+
+  it.skip('falta el parentesis derecho', () => {
+    let code = `si (verdadero entonces
+    var <- 32
+    sino
+    var <- 16
+    finsi
+    `
+    let q = queueFromSource(code)
+    let report = match(Patterns.If).from(q)
+
+    report.error.should.equal(true)
+    report.result.should.deepEqual({
+      unexpected:'entonces',
+      expected:')',
+      line:0,
+      column:12,
+      reason:'missing-par-at-condition'
+    })
+  })
+
+  it('falta entonces', () => {
+    let code = `si (verdadero)
+    var <- 32
+    sino
+    var <- 16
+    finsi
+    `
+    let q = queueFromSource(code)
+    let report = match(Patterns.If).from(q)
+
+    report.error.should.equal(true)
+    report.result.should.deepEqual({
+      unexpected:'eol',
+      expected:'entonces',
+      line:0,
+      column:14,
+      reason:'missing-entonces'
+    })
+  })
+
+  it('falta finsi', () => {
+    let code = `si (verdadero) entonces
+    var <- 32
+    sino
+    var<-16
+    `
+    let q = queueFromSource(code)
+    let report = match(Patterns.If).from(q)
+
+    report.error.should.equal(true)
+    report.result.should.deepEqual({
+      unexpected:'eof',
+      expected:'finsi',
+      line:4,
+      column:4,
+      reason:'missing-finsi'
+    })
+  })
+})
