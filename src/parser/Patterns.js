@@ -2,6 +2,8 @@
 
 import Report from '../utility/Report.js'
 
+import TokenQueue from './TokenQueue.js'
+
 /**
  * Funcion que intenta capturar un token numerico
  * @param {TokenQueue} source Fuente en la que hay que buscar el numero
@@ -773,6 +775,8 @@ export function If(source) {
     return new Report(true, {unexpected, expected, line, column, reason})
   }
 
+  skipWhiteSpace(source)
+
   while ( /finsi|sino|eof/.test(source.current().kind) === false ) {
     let statement_match = Statement(source)
 
@@ -781,10 +785,14 @@ export function If(source) {
     }
 
     result.true_branch.push(statement_match.result)
+
+    skipWhiteSpace(source)
   }
 
   if (source.current().kind === 'sino') {
     source.next()
+
+    skipWhiteSpace(source)
 
     while ( /finsi|eof/.test(source.current().kind) === false ) {
       let statement_match = Statement(source)
@@ -794,6 +802,8 @@ export function If(source) {
       }
 
       result.false_branch.push(statement_match.result)
+
+      skipWhiteSpace(source)
     }
   }
 
@@ -809,6 +819,8 @@ export function If(source) {
     let reason = 'missing-finsi'
     return new Report(true, {unexpected, expected, line, column, reason})
   }
+
+  skipWhiteSpace(source)
 
   return new Report(false, result)
 }
@@ -1027,6 +1039,13 @@ export function Statement(source) {
       let reason = 'missing-statement'
       return new Report(true, {unexpected, expected, line, column, reason})
     }
+  }
+}
+
+function skipWhiteSpace(source) {
+  let current = source.current()
+  while (current.kind === 'eol') {
+    current = source.next()
   }
 }
 
