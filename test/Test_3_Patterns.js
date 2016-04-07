@@ -638,7 +638,8 @@ describe('VariablePattern', () => {
         expression_type:'literal',
         type:'entero',
         value:2
-      }]
+      }],
+      bounds_checked:false
     })
   })
 
@@ -654,8 +655,48 @@ describe('VariablePattern', () => {
       indexes:[
         {expression_type:'invocation', name:'i', isArray:false, indexes:null},
         {expression_type:'invocation', name:'j', isArray:false, indexes:null}
-      ]
+      ],
+      bounds_checked:false
     })
   })
 
+})
+
+describe('NewAssignment', () => {
+  it('captura una asignacion bien escrita', () => {
+    let code = 'var <- 32'
+    let q = queueFromSource(code)
+    let report = match(Patterns.NewAssignment).from(q)
+
+    report.error.should.equal(false)
+    report.result.should.deepEqual({
+      type:'assignment',
+      left:{
+        name:'var',
+        isArray:false,
+        indexes:null,
+        bounds_checked:false
+      },
+      right:{
+        expression_type:'literal',
+        type:'entero',
+        value:32
+      }
+    })
+  })
+
+  it('captura una asignacion bien escrita', () => {
+    let code = 'var = 32'
+    let q = queueFromSource(code)
+    let report = match(Patterns.NewAssignment).from(q)
+
+    report.error.should.equal(true)
+    report.result.should.deepEqual({
+      unexpected:'equal',
+      expected:'<-',
+      line:0,
+      column:4,
+      reason:'bad-assignment-operator'
+    })
+  })
 })
