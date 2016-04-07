@@ -92,7 +92,7 @@ export default class Compiler extends Emitter {
 
     let source_wrapper = new SourceWrapper(source_code_string)
 
-    let parse_report = this.parser.parse(source_wrapper)
+    let parse_report = this.parser.tokenize(source_wrapper)
 
     if (parse_report.error) {
       for (let bad_token of parse_report.result) {
