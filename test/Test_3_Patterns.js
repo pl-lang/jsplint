@@ -620,7 +620,8 @@ describe('VariablePattern', () => {
     report.result.should.deepEqual({
       name:'mi_variable',
       isArray:false,
-      indexes:null
+      indexes:null,
+      bounds_checked:false
     })
   })
 

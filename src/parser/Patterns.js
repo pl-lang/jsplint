@@ -290,7 +290,7 @@ export function IndexExpression(source) {
 }
 
 export function Variable(source) {
-  let name = '', isArray = false, indexes = null
+  let name = '', isArray = false, indexes = null, bounds_checked = false
 
   let word_match = Word(source)
 
@@ -329,7 +329,7 @@ export function Variable(source) {
       }
     }
     else {
-      return new Report(false, {name, isArray, indexes})
+      return new Report(false, {name, isArray, indexes, bounds_checked})
     }
   }
 }
@@ -544,11 +544,7 @@ export function Assignment(source) {
     return variable_match
   }
 
-  let name = variable_match.result.name
-  let isArray = variable_match.result.isArray
-  let indexes = variable_match.result.indexes
-  let bounds_checked = false
-  let target = {name, isArray, indexes, bounds_checked}
+  let target = variable_match.result
 
   let current = source.current()
 
