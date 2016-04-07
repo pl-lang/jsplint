@@ -25,7 +25,7 @@ export default class Parser extends Emitter {
     let lexer_report = lexer.tokenize(source)
 
     if (lexer_report.error) {
-      for (let error_report of lexer_report) {
+      for (let error_report of lexer_report.result) {
         this.emit('lexical-error', error_report)
       }
       this.emit('parsing-finished', {error:true, result:'lexical-error'})
