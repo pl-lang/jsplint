@@ -752,7 +752,11 @@ describe('If', () => {
 
   it('captura una estructura si...sino sin enunciados', () => {
     let code = `si (verdadero) entonces
+
+
     sino
+
+    
     finsi
     `
     let q = queueFromSource(code)
@@ -870,6 +874,9 @@ describe('While', () => {
 
   it('captura un bucle mientras vacio', () => {
     let code = `mientras (verdadero)
+
+
+
     finmientras
     `
     let q = queueFromSource(code)
@@ -917,7 +924,7 @@ describe('While', () => {
 })
 
 
-describe.only('Until', () => {
+describe('Until', () => {
   it('captura un bucle repetir bien escrito', () => {
     let code = `repetir
     var <- 32
@@ -940,6 +947,11 @@ describe.only('Until', () => {
 
   it('captura un bucle repetir vacio', () => {
     let code = `repetir
+
+
+
+
+
     hasta que (verdadero)
     `
     let q = queueFromSource(code)
