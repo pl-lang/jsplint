@@ -315,7 +315,7 @@ export function Variable(source) {
       if (source.current().kind === 'right-bracket') {
         source.next()
 
-        return new Report(false, {name, isArray, indexes})
+        return new Report(false, {name, isArray, indexes, bounds_checked})
       }
       else {
         let current = source.current()
@@ -658,7 +658,7 @@ export function ModuleCall(source) {
   }
 }
 
-export function Assignment(source) {
+export function NewAssignment(source) {
   let result = {
     type : 'assignment',
     left : null,
@@ -700,7 +700,7 @@ export function Assignment(source) {
 export function If(source) {
   let result = {
     type : 'if',
-    condition : null
+    condition : null,
     true_branch : [],
     false_branch :[]
   }
@@ -817,7 +817,7 @@ export function While(source) {
   let result = {
     type : 'while',
     condition : null,
-    body = []
+    body : []
   }
 
   if (source.current().kind === 'mientras') {
@@ -1009,7 +1009,7 @@ export function Statement(source) {
         return ModuleCall(source)
       }
       else {
-        return Assignment(source)
+        return NewAssignment(source)
       }
       break;
     case 'si':
