@@ -4,9 +4,6 @@ import Report from '../utility/Report.js'
 
 import TokenQueue from '../TokenQueue.js'
 
-import * as Patterns from '../Patterns.js'
-const match = Patterns.match
-
 function skipWhiteSpace(source) {
   let current = source.current()
   while (current.kind === 'eol') {
@@ -21,7 +18,7 @@ export function Assignment(source) {
     right : null
   }
 
-  let left_hand_match = match(Patterns.Variable).from(source)
+  let left_hand_match = Variable(source)
 
   if (left_hand_match.error) {
     return left_hand_match.result
@@ -42,7 +39,7 @@ export function Assignment(source) {
     source.next()
   }
 
-  let right_hand_match = match(Patterns.Expression).from(source)
+  let right_hand_match = Expression(source)
 
   if (right_hand_match.error) {
     return right_hand_match.result
@@ -94,7 +91,7 @@ export function If(source) {
     source.next()
   }
 
-  let expression_match = match(Patterns.Expression).from(new TokenQueue(queue))
+  let expression_match = Expression(new TokenQueue(queue))
 
   if (expression_match.error) {
     return expression_match.result
@@ -170,9 +167,218 @@ export function If(source) {
 }
 
 export function While(source) {
+  let result = {
+    type : 'while',
+    condition : null,
+    body = []
+  }
 
+  if (source.current().kind === 'mientras') {
+    source.next()
+  }
+  else {
+    let current = source.current()
+    let unexpected = current.kind
+    let expected = 'mientras'
+    let line = current.lineNumber
+    let column = current.columnNumber
+    let reason = 'missing-mientras'
+    return new Report(true, {unexpected, expected, line, column, reason})
+  }
+
+  if (source.current().kind === 'left-par') {
+    source.next()
+  }
+  else {
+    let current = source.current()
+    let unexpected = current.kind
+    let expected = '('
+    let line = current.lineNumber
+    let column = current.columnNumber
+    let reason = 'missing-par-at-condition'
+    return new Report(true, {unexpected, expected, line, column, reason})
+  }
+
+
+  let queue = []
+  while ( /right\-par|eof|eol/.test(source.current().kind) === false ) {
+    queue.push(source.current())
+    source.next()
+  }
+
+  let expression_match = Expression(new TokenQueue(queue))
+
+  if (expression_match.error) {
+    return expression_match.result
+  }
+  else {
+    result.condition = expression_match.result
+  }
+
+  if (source.current().kind === 'right-par') {
+    source.next()
+  }
+  else {
+    let current = source.current()
+    let unexpected = current.kind
+    let expected = ')'
+    let line = current.lineNumber
+    let column = current.columnNumber
+    let reason = 'missing-par-at-condition'
+    return new Report(true, {unexpected, expected, line, column, reason})
+  }
+
+  while ( /finmientras|eof/.test(source.current().kind) === false ) {
+    let statement_match = match(AnyStatement).from(source)
+
+    if (statement_match.error) {
+      return statement_match.result
+    }
+
+    result.body.push(statement_match.result)
+  }
+
+  if (source.current().kind === 'finmientras') {
+    source.next()
+  }
+  else {
+    let current = source.current()
+    let unexpected = current.kind
+    let expected = 'finmientras'
+    let line = current.lineNumber
+    let column = current.columnNumber
+    let reason = 'missing-finmientras'
+    return new Report(true, {unexpected, expected, line, column, reason})
+  }
+
+  return new Report(false, result)
 }
 
 export function Until(source) {
+  let result = {
+    type : 'until',
+    condition : null,
+    body : []
+  }
 
+  if (source.current().kind === 'repetir') {
+    source.next()
+  }
+  else {
+    let current = source.current()
+    let unexpected = current.kind
+    let expected = 'repetir'
+    let line = current.lineNumber
+    let column = current.columnNumber
+    let reason = 'missing-repetir'
+    return new Report(true, {unexpected, expected, line, column, reason})
+  }
+
+  while ( /hasta|eof/.test(source.current().kind) === false ) {
+    let statement_match = match(AnyStatement).from(source)
+
+    if (statement_match.error) {
+      return statement_match.result
+    }
+
+    result.body.push(statement_match.result)
+  }
+
+  if (source.current().kind === 'hasta') {
+    source.next()
+  }
+  else {
+    let current = source.current()
+    let unexpected = current.kind
+    let expected = 'hasta'
+    let line = current.lineNumber
+    let column = current.columnNumber
+    let reason = 'missing-hasta'
+    return new Report(true, {unexpected, expected, line, column, reason})
+  }
+
+  if (source.current().kind === 'que') {
+    source.next()
+  }
+  else {
+    let current = source.current()
+    let unexpected = current.kind
+    let expected = 'que'
+    let line = current.lineNumber
+    let column = current.columnNumber
+    let reason = 'missing-que'
+    return new Report(true, {unexpected, expected, line, column, reason})
+  }
+
+  if (source.current().kind === 'left-par') {
+    source.next()
+  }
+  else {
+    let current = source.current()
+    let unexpected = current.kind
+    let expected = '('
+    let line = current.lineNumber
+    let column = current.columnNumber
+    let reason = 'missing-par-at-condition'
+    return new Report(true, {unexpected, expected, line, column, reason})
+  }
+
+
+  let queue = []
+  while ( /right\-par|eof|eol/.test(source.current().kind) === false ) {
+    queue.push(source.current())
+    source.next()
+  }
+
+  let expression_match = Expression(new TokenQueue(queue))
+
+  if (expression_match.error) {
+    return expression_match.result
+  }
+  else {
+    result.condition = expression_match.result
+  }
+
+  if (source.current().kind === 'right-par') {
+    source.next()
+  }
+  else {
+    let current = source.current()
+    let unexpected = current.kind
+    let expected = ')'
+    let line = current.lineNumber
+    let column = current.columnNumber
+    let reason = 'missing-par-at-condition'
+    return new Report(true, {unexpected, expected, line, column, reason})
+  }
+
+  return new Report(false, result)
+}
+
+export function AnyStatement(source) {
+  switch (source.current().kind) {
+    case 'word':
+      if (source.peek().kind === 'left-par') {
+        return ModuleCall(source)
+      }
+      else {
+        return Assignment(source)
+      }
+      break;
+    case 'si':
+      return If(source)
+    case 'mientras':
+      return While(source)
+    case 'repetir':
+      return Until(source)
+    default: {
+      let current = source.current()
+      let unexpected = current.kind
+      let expected = 'variable|funcion|procedimiento|si|mientras|repetir'
+      let line = current.lineNumber
+      let column = current.columnNumber
+      let reason = 'missing-statement'
+      return new Report(true, {unexpected, expected, line, column, reason})
+    }
+  }
 }
