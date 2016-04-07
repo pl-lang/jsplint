@@ -49,6 +49,35 @@ export default class Lexer {
     }
   }
 
+  tokenize(source) {
+    this.source = source;
+
+    let tokens = [];
+    let bad_tokens = [];
+
+    let t = this.nextToken()
+
+    while (t.kind !== 'eof') {
+      if (t.kind == 'LEXICAL_ERROR') {
+        bad_tokens.push(t);
+      } else {
+        tokens.push(t)
+      }
+      t = this.nextToken()
+    }
+    tokens.push(t)
+
+    if (bad_tokens.length > 0) {
+      let result = bad_tokens;
+      let error = true;
+      return {error, result};
+    } else {
+      let result = tokens;
+      let error = false;
+      return {error, result};
+    }
+  }
+
   // Envolturas para algunos metodos de SourceWrapper
   currentChar() {
     return this._source.currentChar()

@@ -22,7 +22,7 @@ export default class Parser extends Emitter {
     let source = new SourceWrapper(code)
     let lexer = new Lexer()
 
-    let lexer_report = lexer.tokenize()
+    let lexer_report = lexer.tokenize(source)
 
     if (lexer_report.error) {
       for (let error_report of lexer_report) {
