@@ -673,7 +673,7 @@ export function NewAssignment(source) {
 
   result.left = left_hand_match.result
 
-  if (source.current() !== 'assignment') {
+  if (source.current().kind !== 'assignment') {
     let current = source.current()
     let unexpected = current.kind
     let expected = '<-'
