@@ -938,14 +938,21 @@ export function Until(source) {
     return new Report(true, {unexpected, expected, line, column, reason})
   }
 
-  while ( /hasta|eof/.test(source.current().kind) === false ) {
+  skipWhiteSpace(source)
+
+  // TODO: hacer que "hasta que" sea un solo token ("hastaque")
+  while ( /hasta|que|eof/.test(source.current().kind) === false ) {
     let statement_match = Statement(source)
 
     if (statement_match.error) {
       return statement_match.result
     }
 
-    result.body.push(statement_match.result)
+    if (statement_match.result !== null) {
+      result.body.push(statement_match.result)
+    }
+
+    skipWhiteSpace(source)
   }
 
   if (source.current().kind === 'hasta') {
@@ -987,7 +994,6 @@ export function Until(source) {
     return new Report(true, {unexpected, expected, line, column, reason})
   }
 
-
   let queue = []
   while ( /right\-par|eof|eol/.test(source.current().kind) === false ) {
     queue.push(source.current())
@@ -1015,6 +1021,8 @@ export function Until(source) {
     let reason = 'missing-par-at-condition'
     return new Report(true, {unexpected, expected, line, column, reason})
   }
+
+  skipWhiteSpace(source)
 
   return new Report(false, result)
 }

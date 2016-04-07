@@ -915,3 +915,77 @@ describe('While', () => {
     })
   })
 })
+
+
+describe.only('Until', () => {
+  it('captura un bucle repetir bien escrito', () => {
+    let code = `repetir
+    var <- 32
+    hasta que (verdadero)
+    `
+    let q = queueFromSource(code)
+    let report = match(Patterns.Until).from(q)
+
+    report.error.should.equal(false)
+    report.result.should.deepEqual({
+      type:'until',
+      condition:{expression_type:'literal', type:'logico', value:true},
+      body:[{
+        type:'assignment',
+        left:{name:'var', isArray:false, indexes:null, bounds_checked:false},
+        right:{expression_type:'literal', type:'entero', value:32}
+      }]
+    })
+  })
+
+  it('captura un bucle repetir vacio', () => {
+    let code = `repetir
+    hasta que (verdadero)
+    `
+    let q = queueFromSource(code)
+    let report = match(Patterns.Until).from(q)
+
+    report.error.should.equal(false)
+    report.result.should.deepEqual({
+      type:'until',
+      condition:{expression_type:'literal', type:'logico', value:true},
+      body:[]
+    })
+  })
+
+  it('falta hasta al final del bucle', () => {
+    let code = `repetir
+    var <- 32
+    que (verdadero)
+    `
+    let q = queueFromSource(code)
+    let report = match(Patterns.Until).from(q)
+
+    report.error.should.equal(true)
+    report.result.should.deepEqual({
+      unexpected : 'que',
+      expected : 'hasta',
+      line : 2,
+      column : 4,
+      reason : 'missing-hasta'
+    })
+  })
+
+  it('falta que al final del bucle', () => {
+    let code = `repetir
+    var <- 32
+    hasta (verdadero)
+    `
+    let q = queueFromSource(code)
+    let report = match(Patterns.Until).from(q)
+
+    report.error.should.equal(true)
+    report.result.should.deepEqual({
+      unexpected : 'left-par',
+      expected : 'que',
+      line : 2,
+      column : 10,
+      reason : 'missing-que'
+    })
+  })
+})
