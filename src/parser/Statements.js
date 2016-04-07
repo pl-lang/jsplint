@@ -54,7 +54,119 @@ export function Assignment(source) {
 }
 
 export function If(source) {
+  let result = {
+    type : 'if',
+    condition : null
+    true_branch : [],
+    false_branch :[]
+  }
 
+  if (source.current().kind === 'si') {
+    source.next()
+  }
+  else {
+    let current = source.current()
+    let unexpected = current.kind
+    let expected = 'si'
+    let line = current.lineNumber
+    let column = current.columnNumber
+    let reason = 'missing-si'
+    return new Report(true, {unexpected, expected, line, column, reason})
+  }
+
+  if (source.current().kind === 'left-par') {
+    source.next()
+  }
+  else {
+    let current = source.current()
+    let unexpected = current.kind
+    let expected = '('
+    let line = current.lineNumber
+    let column = current.columnNumber
+    let reason = 'missing-par-at-condition'
+    return new Report(true, {unexpected, expected, line, column, reason})
+  }
+
+
+  let queue = []
+  while ( /right\-par|eof|eol/.test(source.current().kind) === false ) {
+    queue.push(source.current())
+    source.next()
+  }
+
+  let expression_match = match(Patterns.Expression).from(new TokenQueue(queue))
+
+  if (expression_match.error) {
+    return expression_match.result
+  }
+  else {
+    result.condition = expression_match.result
+  }
+
+  if (source.current().kind === 'right-par') {
+    source.next()
+  }
+  else {
+    let current = source.current()
+    let unexpected = current.kind
+    let expected = ')'
+    let line = current.lineNumber
+    let column = current.columnNumber
+    let reason = 'missing-par-at-condition'
+    return new Report(true, {unexpected, expected, line, column, reason})
+  }
+
+  if (source.current().kind === 'entonces') {
+    source.next()
+  }
+  else {
+    let current = source.current()
+    let unexpected = current.kind
+    let expected = 'entonces'
+    let line = current.lineNumber
+    let column = current.columnNumber
+    let reason = 'missing-entonces'
+    return new Report(true, {unexpected, expected, line, column, reason})
+  }
+
+  while ( /finsi|sino|eof/.test(source.current().kind) === false ) {
+    let statement_match = match(AnyStatement).from(source)
+
+    if (statement_match.error) {
+      return statement_match.result
+    }
+
+    result.true_branch.push(statement_match.result)
+  }
+
+  if (source.current().kind === 'sino') {
+    source.next()
+
+    while ( /finsi|eof/.test(source.current().kind) === false ) {
+      let statement_match = match(AnyStatement).from(source)
+
+      if (statement_match.error) {
+        return statement_match.result
+      }
+
+      result.false_branch.push(statement_match.result)
+    }
+  }
+
+  if (source.current().kind === 'finsi') {
+    source.next()
+  }
+  else {
+    let current = source.current()
+    let unexpected = current.kind
+    let expected = 'finsi'
+    let line = current.lineNumber
+    let column = current.columnNumber
+    let reason = 'missing-finsi'
+    return new Report(true, {unexpected, expected, line, column, reason})
+  }
+
+  return new Report(false, result)
 }
 
 export function While(source) {
