@@ -846,3 +846,72 @@ describe('If', () => {
     })
   })
 })
+
+describe('While', () => {
+  it('captura un bucle mientras bien escrito', () => {
+    let code = `mientras (verdadero)
+    var <- 32
+    finmientras
+    `
+    let q = queueFromSource(code)
+    let report = match(Patterns.While).from(q)
+
+    report.error.should.equal(false)
+    report.result.should.deepEqual({
+      type:'while',
+      condition:{expression_type:'literal', type:'logico', value:true},
+      body:[{
+        type:'assignment',
+        left:{name:'var', isArray:false, indexes:null, bounds_checked:false},
+        right:{expression_type:'literal', type:'entero', value:32}
+      }]
+    })
+  })
+
+  it('captura un bucle mientras vacio', () => {
+    let code = `mientras (verdadero)
+    finmientras
+    `
+    let q = queueFromSource(code)
+    let report = match(Patterns.While).from(q)
+
+    report.error.should.equal(false)
+    report.result.should.deepEqual({
+      type:'while',
+      condition:{expression_type:'literal', type:'logico', value:true},
+      body:[]
+    })
+  })
+
+  it('falta el parentesis izquierdo en la condicion', () => {
+    let code = `mientras verdadero)
+    finmientras
+    `
+    let q = queueFromSource(code)
+    let report = match(Patterns.While).from(q)
+
+    report.error.should.equal(true)
+    report.result.should.deepEqual({
+      unexpected : 'verdadero',
+      expected : '(',
+      line : 0,
+      column : 9,
+      reason : 'missing-par-at-condition'
+    })
+  })
+
+  it('falta el parentesis izquierdo en la condicion', () => {
+    let code = `mientras (verdadero)`
+    let q = queueFromSource(code)
+    let report = match(Patterns.While).from(q)
+
+    report.error.should.equal(true)
+    report.result.should.deepEqual({
+      unexpected : 'eof',
+      expected : 'finmientras',
+      line : 0,
+      column : 20,
+      reason : 'missing-finmientras'
+    })
+  })
+})

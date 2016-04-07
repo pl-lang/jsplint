@@ -858,7 +858,6 @@ export function While(source) {
     return new Report(true, {unexpected, expected, line, column, reason})
   }
 
-
   let queue = []
   while ( /right\-par|eof|eol/.test(source.current().kind) === false ) {
     queue.push(source.current())
@@ -887,6 +886,8 @@ export function While(source) {
     return new Report(true, {unexpected, expected, line, column, reason})
   }
 
+  skipWhiteSpace(source)
+
   while ( /finmientras|eof/.test(source.current().kind) === false ) {
     let statement_match = Statement(source)
 
@@ -895,6 +896,8 @@ export function While(source) {
     }
 
     result.body.push(statement_match.result)
+
+    skipWhiteSpace(source)
   }
 
   if (source.current().kind === 'finmientras') {
@@ -909,6 +912,8 @@ export function While(source) {
     let reason = 'missing-finmientras'
     return new Report(true, {unexpected, expected, line, column, reason})
   }
+
+  skipWhiteSpace(source)
 
   return new Report(false, result)
 }
