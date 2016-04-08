@@ -1051,12 +1051,9 @@ export function Statement(source) {
       return Until(source)
     default: {
       let current = source.current()
-      let unexpected = current.kind
-      let expected = 'variable|funcion|procedimiento|si|mientras|repetir'
-      let line = current.lineNumber
-      let column = current.columnNumber
       let reason = 'missing-statement'
-      return new Report(true, {unexpected, expected, line, column, reason})
+      let expected = 'variable|funcion|procedimiento|si|mientras|repetir'
+      return UnexpectedTokenReport(current, expected, reason)
     }
   }
 }
@@ -1083,6 +1080,15 @@ export function MainModule(source) {
   }
 
   skipWhiteSpace(source)
+
+  let var_declaration_report = Declaration(source)
+
+  if (var_declaration_match.error) {
+    return var_declaration_match
+  }
+  else {
+    result.locals = var_declaration_match.result
+  }
 
   if (source.current().kind === 'inicio') {
     source.next()
@@ -1125,6 +1131,10 @@ export function MainModule(source) {
     return new Report(true, {unexpected, expected, line, column, reason})
   }
 
+  if (source.current().kind === 'eol') {
+    source.next()
+  }
+
   return new Report(false, result)
 }
 
@@ -1133,6 +1143,24 @@ function skipWhiteSpace(source) {
   while (current.kind === 'eol') {
     current = source.next()
   }
+}
+
+function UnexpectedTokenReport(current_token, expected, reason) {
+  let result = {}
+
+  result.unexpected = current_token.kind
+  result.line = current_token.lineNumber
+  result.column = current_token.columnNumber
+
+  if (expected) {
+    result.expected = expected
+  }
+
+  if (reason) {
+    result.reason = reason
+  }
+
+  return new Report(true, result)
 }
 
 /**
