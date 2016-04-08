@@ -820,7 +820,9 @@ export function If(source) {
     return new Report(true, {unexpected, expected, line, column, reason})
   }
 
-  skipWhiteSpace(source)
+  if (source.current().kind === 'eol') {
+    source.next()
+  }
 
   return new Report(false, result)
 }
@@ -913,7 +915,9 @@ export function While(source) {
     return new Report(true, {unexpected, expected, line, column, reason})
   }
 
-  skipWhiteSpace(source)
+  if (source.current().kind === 'eol') {
+    source.next()
+  }
 
   return new Report(false, result)
 }
@@ -1022,7 +1026,9 @@ export function Until(source) {
     return new Report(true, {unexpected, expected, line, column, reason})
   }
 
-  skipWhiteSpace(source)
+  if (source.current().kind === 'eol') {
+    source.next()
+  }
 
   return new Report(false, result)
 }
