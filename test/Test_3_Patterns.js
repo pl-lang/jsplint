@@ -756,7 +756,7 @@ describe('If', () => {
 
     sino
 
-    
+
     finsi
     `
     let q = queueFromSource(code)
@@ -998,6 +998,59 @@ describe('Until', () => {
       line : 2,
       column : 10,
       reason : 'missing-que'
+    })
+  })
+})
+
+describe('Statement', () => {
+  it('captura un si', () => {
+    let code = `si (falso) entonces
+    var <- 32
+    finsi
+    `
+    let q = queueFromSource(code)
+    let report = match(Patterns.Statement).from(q)
+
+    report.error.should.equal(false)
+    report.result.type.should.equal('if')
+  })
+
+  it('captura un mientras', () => {
+    let code = `mientras (falso)
+    var <- 32
+    finmientras
+    `
+    let q = queueFromSource(code)
+    let report = match(Patterns.Statement).from(q)
+
+    report.error.should.equal(false)
+    report.result.type.should.equal('while')
+  })
+
+  it('captura un repetir', () => {
+    let code = `repetir
+    var <- 32
+    hasta que (verdadero)
+    `
+    let q = queueFromSource(code)
+    let report = match(Patterns.Statement).from(q)
+
+    report.error.should.equal(false)
+    report.result.type.should.equal('until')
+  })
+
+  it('devuelve un error cuando no encuentra un enunciado', () => {
+    let code = `2 + 3`
+    let q = queueFromSource(code)
+    let report = match(Patterns.Statement).from(q)
+
+    report.error.should.equal(true)
+    report.result.should.deepEqual({
+      unexpected : 'entero',
+      expected : 'variable|funcion|procedimiento|si|mientras|repetir',
+      line : 0,
+      column : 0,
+      reason : 'missing-statement'
     })
   })
 })
