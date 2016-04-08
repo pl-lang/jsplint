@@ -155,12 +155,12 @@ export function VariableList(source) {
   else {
     variables.push(name_report.result)
 
-    if (source.current().kind === 'comma') {
+    if (source.current().kind === 'comma' && source.peek().kind === 'word') {
       source.next()
       let var_list_match = VariableList(source)
 
       if (var_list_match.error) {
-        return new Report(false, variables)
+        return var_list_match
       }
       else {
         return new Report(false, variables.concat(var_list_match.result))
