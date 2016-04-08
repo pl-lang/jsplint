@@ -1161,7 +1161,7 @@ export function NewDeclaration(source) {
   }
   else {
     for (let variable of variable_match.result) {
-      let new_var {
+      let new_var = {
         type:current_type
       }
       for (let property of variable) {
