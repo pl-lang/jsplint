@@ -1055,6 +1055,73 @@ export function Statement(source) {
   }
 }
 
+export function MainModule(source) {
+  let result = {
+    type:'module',
+    name:'main',
+    locals:null,
+    body:[]
+  }
+
+  if (source.current().kind === 'variables') {
+    source.next()
+  }
+  else {
+    let current = source.current()
+    let unexpected = current.kind
+    let expected = 'variables'
+    let line = current.lineNumber
+    let column = current.columnNumber
+    let reason = 'missing-variables'
+    return new Report(true, {unexpected, expected, line, column, reason})
+  }
+
+  skipWhiteSpace(source)
+
+  if (source.current().kind === 'inicio') {
+    source.next()
+  }
+  else {
+    let current = source.current()
+    let unexpected = current.kind
+    let expected = 'inicio'
+    let line = current.lineNumber
+    let column = current.columnNumber
+    let reason = 'missing-inicio'
+    return new Report(true, {unexpected, expected, line, column, reason})
+  }
+
+  skipWhiteSpace(source)
+
+  while (/fin|eof/.test(source.current().kind) === false) {
+    let statement_match = Statement(source)
+
+    if (statement_match.error) {
+      return statement_match
+    }
+    else {
+      result.body.push(statement_match.result)
+    }
+
+    skipWhiteSpace(source)
+  }
+
+  if (source.current().kind === 'fin') {
+    source.next()
+  }
+  else {
+    let current = source.current()
+    let unexpected = current.kind
+    let expected = 'fin'
+    let line = current.lineNumber
+    let column = current.columnNumber
+    let reason = 'missing-fin'
+    return new Report(true, {unexpected, expected, line, column, reason})
+  }
+
+  return new Report(false, result)
+}
+
 function skipWhiteSpace(source) {
   let current = source.current()
   while (current.kind === 'eol') {
