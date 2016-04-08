@@ -1138,6 +1138,70 @@ export function MainModule(source) {
   return new Report(false, result)
 }
 
+export function NewDeclaration(source) {
+  let result = {
+    type:'declaration',
+    variables:[]
+  }
+
+  let type_match = TypeName(source)
+  let current_type = null
+
+  if (type_match.error) {
+    return type_match
+  }
+  else {
+    current_type = type_match.result
+  }
+
+  let variables_match = VariableList(source)
+
+  if (variables_match.error) {
+    return variables_match
+  }
+  else {
+    for (let variable of variable_match.result) {
+      let new_var {
+        type:current_type
+      }
+      for (let property of variable) {
+        new_var[property] = variable[property]
+      }
+      result.variables.push(new_var)
+    }
+  }
+
+  let eol_found = false, comma_found = false
+
+  switch (source.current().kind) {
+    case 'comma':
+      comma_found = true
+      break
+    case 'eol':
+      eol = true
+      break
+    default:
+      return UnexpectedTokenReport(source.current(), 'eol|comma', 'unexpected-token-at-declaration')
+  }
+
+  if (eol_found) {
+    source.next()
+    return new Report(false, result)
+  }
+  else if (comma_found) {
+    source.next()
+    let next_declaration_match = Declaration(source)
+
+    if (next_declaration_match.error) {
+      return next_declaration_match
+    }
+    else {
+      result.variables = [...result.variables, ...next_declaration_match.result.variables]
+      return new Report(false, result)
+    }
+  }
+}
+
 function skipWhiteSpace(source) {
   let current = source.current()
   while (current.kind === 'eol') {
