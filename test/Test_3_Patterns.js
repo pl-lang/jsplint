@@ -231,20 +231,6 @@ describe('Declaration', () => {
   })
 })
 
-describe.skip('MainModulePattern', () => {
-  it('funciona correctamente en un programa con "inicio" y variables declaradas')
-
-  it('funciona correctamente para un programa sin variables declaradas')
-
-  it('programa sin encabezado ("variables") para el modulo principal')
-
-  it('programa sin "inicio" pero con varibles declaradas')
-
-  it('programa sin "inicio" sin varibles declaradas')
-
-  it('programa sin "fin"')
-})
-
 describe('Assignment pattern', () => {
   it('captura un enunciado de asignacion', () => {
     let asignacion = 'var <- 48'
@@ -1055,8 +1041,8 @@ describe('Statement', () => {
   })
 })
 
-describe.only('NewDeclaration', () => {
-  it.only('captura tres variables del mismo tipo', () => {
+describe('NewDeclaration', () => {
+  it('captura tres variables del mismo tipo', () => {
     let code = `entero a, b, c\n`
     let q = queueFromSource(code)
     let report = match(Patterns.NewDeclaration).from(q)
@@ -1113,4 +1099,82 @@ describe.only('NewDeclaration', () => {
       ]
     })
   })
+})
+
+describe.only('MainModule', () => {
+  it('captura un modulo principal bien escrito y con variables', () => {
+    let code = `variables
+    entero var_entera1, var_entera2
+    inicio
+    var<-32
+    fin
+    `
+    let q = queueFromSource(code)
+
+    let report = match(Patterns.MainModule).from(q)
+
+    report.error.should.equal(false)
+    report.result.should.deepEqual({
+      type:'module',
+      name:'main',
+      locals:[
+        {type:'entero', name:'var_entera1', isArray:false, bounds_checked:false, dimension:null},
+        {type:'entero', name:'var_entera2', isArray:false, bounds_checked:false, dimension:null},
+      ],
+      body:[{
+        type:'assignment',
+        left:{
+          name:'var',
+          isArray:false,
+          indexes:null,
+          bounds_checked:false
+        },
+        right:{
+          expression_type:'literal',
+          type:'entero',
+          value:32
+        }
+      }]
+    })
+  })
+
+  it('captura un modulo principal bien escrito y sin variables', () => {
+    let code = `variables
+    inicio
+    var<-32
+    fin
+    `
+    let q = queueFromSource(code)
+
+    let report = match(Patterns.MainModule).from(q)
+
+    report.error.should.equal(false)
+    report.result.should.deepEqual({
+      type:'module',
+      name:'main',
+      locals:[],
+      body:[{
+        type:'assignment',
+        left:{
+          name:'var',
+          isArray:false,
+          indexes:null,
+          bounds_checked:false
+        },
+        right:{
+          expression_type:'literal',
+          type:'entero',
+          value:32
+        }
+      }]
+    })
+  })
+
+  it('programa sin encabezado ("variables") para el modulo principal')
+
+  it('programa sin "inicio" pero con varibles declaradas')
+
+  it('programa sin "inicio" sin varibles declaradas')
+
+  it('programa sin "fin"')
 })

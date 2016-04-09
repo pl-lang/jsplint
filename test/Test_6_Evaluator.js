@@ -33,25 +33,6 @@ function queueFromSource(string) {
   return q
 }
 
-describe('MainModuleScanner', () => {
-  it('leer un modulo principal', () => {
-    let programa = 'variables\nentero a, b\ninicio\na<-48\nb <- 32\nfin\n'
-    let q = queueFromSource(programa)
-
-    let mod_data = MainModuleScanner.capture(q)
-
-    mod_data.error.should.equal(false)
-  })
-
-  it('leer un modulo con "escribir"', () => {
-    let programa = 'variables\ninicio\nescribir(42)\nfin\n'
-    let q = queueFromSource(programa)
-
-    let mod_data = MainModuleScanner.capture(q)
-    mod_data.error.should.equal(false)
-  })
-})
-
 describe('Evaluator', () => {
   let evaluator = new Evaluator([], {}, {})
   it('multiplicacion', () => {
