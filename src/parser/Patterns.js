@@ -1065,7 +1065,7 @@ export function MainModule(source) {
   let result = {
     type:'module',
     name:'main',
-    locals:null,
+    locals:[],
     body:[]
   }
 
@@ -1084,13 +1084,17 @@ export function MainModule(source) {
 
   skipWhiteSpace(source)
 
-  let var_declaration_report = Declaration(source)
+  while (/inicio|eof/.test(source.current().kind) === false) {
+    let var_declaration_match = NewDeclaration(source)
 
-  if (var_declaration_match.error) {
-    return var_declaration_match
-  }
-  else {
-    result.locals = var_declaration_match.result
+    if (var_declaration_match.error) {
+      return var_declaration_match
+    }
+    else {
+      result.locals = [...result.locals, ...var_declaration_match.result.variables]
+    }
+
+    skipWhiteSpace(source)
   }
 
   if (source.current().kind === 'inicio') {
