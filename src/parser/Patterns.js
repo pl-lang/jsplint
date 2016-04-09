@@ -101,8 +101,11 @@ export function Word(source) {
 
 export function VariableDeclaration(source) {
   let variable = {
-      data    : {isArray : false, type:'unknown'}
-    , name    : ''
+    name    : '',
+    isArray : false,
+    type    : '',
+    bounds_checked: false,
+    dimension:null
   }
 
   let text = Word(source)
@@ -119,8 +122,8 @@ export function VariableDeclaration(source) {
         return dimension
       }
       else {
-        variable.data.isArray = true
-        variable.data.dimension = dimension.result
+        variable.isArray = true
+        variable.dimension = dimension.result
         if (source.current().kind === 'right-bracket') {
           source.next()
           return new Report(false, variable)
@@ -1160,14 +1163,9 @@ export function NewDeclaration(source) {
     return variables_match
   }
   else {
-    for (let variable of variable_match.result) {
-      let new_var = {
-        type:current_type
-      }
-      for (let property of variable) {
-        new_var[property] = variable[property]
-      }
-      result.variables.push(new_var)
+    for (let variable of variables_match.result) {
+      variable.type = current_type
+      result.variables.push(variable)
     }
   }
 
@@ -1178,19 +1176,16 @@ export function NewDeclaration(source) {
       comma_found = true
       break
     case 'eol':
-      eol = true
+      eol_found = true
       break
     default:
       return UnexpectedTokenReport(source.current(), 'eol|comma', 'unexpected-token-at-declaration')
   }
 
-  if (eol_found) {
-    source.next()
-    return new Report(false, result)
-  }
-  else if (comma_found) {
-    source.next()
-    let next_declaration_match = Declaration(source)
+  source.next()
+
+  if (comma_found) {
+    let next_declaration_match = NewDeclaration(source)
 
     if (next_declaration_match.error) {
       return next_declaration_match
@@ -1199,6 +1194,10 @@ export function NewDeclaration(source) {
       result.variables = [...result.variables, ...next_declaration_match.result.variables]
       return new Report(false, result)
     }
+  }
+
+  if (eol_found) {
+    return new Report(false, result)
   }
 }
 

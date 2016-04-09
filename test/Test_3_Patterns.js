@@ -1054,3 +1054,63 @@ describe('Statement', () => {
     })
   })
 })
+
+describe.only('NewDeclaration', () => {
+  it.only('captura tres variables del mismo tipo', () => {
+    let code = `entero a, b, c\n`
+    let q = queueFromSource(code)
+    let report = match(Patterns.NewDeclaration).from(q)
+
+    report.error.should.equal(false)
+    report.result.should.deepEqual({
+      type:'declaration',
+      variables:[
+        {type:'entero', name:'a', isArray:false, bounds_checked:false, dimension:null},
+        {type:'entero', name:'b', isArray:false, bounds_checked:false, dimension:null},
+        {type:'entero', name:'c', isArray:false, bounds_checked:false, dimension:null}
+      ]
+    })
+  })
+
+  it('captura variable de distintos tipos en el mismo renglon', () => {
+    let code = `entero var_entera1, var_entera2, real var_real\n`
+    let q = queueFromSource(code)
+    let report = match(Patterns.NewDeclaration).from(q)
+
+    report.error.should.equal(false)
+    report.result.should.deepEqual({
+      type:'declaration',
+      variables:[
+        {type:'entero', name:'var_entera1', isArray:false, bounds_checked:false, dimension:null},
+        {type:'entero', name:'var_entera2', isArray:false, bounds_checked:false, dimension:null},
+        {type:'real', name:'var_real', isArray:false, bounds_checked:false, dimension:null}
+      ]
+    })
+  })
+
+  it('captura tres varaibles declaradas en distintos renglones', () => {
+    let code = `entero var_entera1, var_entera2\nreal var_real\n`
+    let q = queueFromSource(code)
+
+    let first_line = match(Patterns.NewDeclaration).from(q)
+
+    let second_line = match(Patterns.NewDeclaration).from(q)
+
+    first_line.error.should.equal(false)
+    first_line.result.should.deepEqual({
+      type:'declaration',
+      variables:[
+        {type:'entero', name:'var_entera1', isArray:false, bounds_checked:false, dimension:null},
+        {type:'entero', name:'var_entera2', isArray:false, bounds_checked:false, dimension:null},
+      ]
+    })
+
+    second_line.error.should.equal(false)
+    second_line.result.should.deepEqual({
+      type:'declaration',
+      variables:[
+        {type:'real', name:'var_real', isArray:false, bounds_checked:false, dimension:null}
+      ]
+    })
+  })
+})
