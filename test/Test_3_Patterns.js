@@ -1189,7 +1189,7 @@ describe.only('MainModule', () => {
     })
   })
 
-  it.skip('programa sin "inicio" pero con varibles declaradas', () => {
+  it('programa sin "inicio" pero con varibles declaradas', () => {
     let code = `variables
     entero var
     var<-32
@@ -1204,12 +1204,29 @@ describe.only('MainModule', () => {
       unexpected : 'word',
       expected : ['entero', 'real', 'logico', 'caracter'],
       line : 2,
-      column : 0,
+      column : 4,
       reason : 'nonexistent-type'
     })
   })
 
-  it('programa sin "inicio" sin varibles declaradas')
+  it('programa sin "inicio" sin varibles declaradas', () => {
+    let code = `variables
+    var<-32
+    fin
+    `
+    let q = queueFromSource(code)
+
+    let report = match(Patterns.MainModule).from(q)
+
+    report.error.should.equal(true)
+    report.result.should.deepEqual({
+      unexpected : 'word',
+      expected : ['entero', 'real', 'logico', 'caracter'],
+      line : 1,
+      column : 4,
+      reason : 'nonexistent-type'
+    })
+  })
 
   it('programa sin "fin"', () => {
     let code = `variables\ninicio\nvar<-32`
