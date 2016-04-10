@@ -1212,10 +1212,7 @@ describe.only('MainModule', () => {
   it('programa sin "inicio" sin varibles declaradas')
 
   it('programa sin "fin"', () => {
-    let code = `variables
-    inicio
-    var<-32
-    `
+    let code = `variables\ninicio\nvar<-32`
     let q = queueFromSource(code)
 
     let report = match(Patterns.MainModule).from(q)
@@ -1224,8 +1221,8 @@ describe.only('MainModule', () => {
     report.result.should.deepEqual({
       unexpected : 'eof',
       expected : 'fin',
-      line : 3,
-      column : 4,
+      line : 2,
+      column : 7,
       reason : 'missing-fin'
     })
   })
