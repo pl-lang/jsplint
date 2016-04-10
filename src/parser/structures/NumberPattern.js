@@ -13,8 +13,8 @@ class NumberPattern {
           result  : {
               unexpected  : current.kind
             , expected    : ['entero', 'real']
-            , atColumn    : current.columnNumber
-            , atLine      : current.lineNumber
+            , column    : current.columnNumber
+            , line      : current.lineNumber
           }
         , error   : true
       }

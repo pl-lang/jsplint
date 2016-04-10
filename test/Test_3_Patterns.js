@@ -49,8 +49,8 @@ describe('IntegerPattern', () => {
     let info = number.result
     info.expected.should.equal('entero')
     info.unexpected.should.equal('word')
-    info.atLine.should.equal(0)
-    info.atColumn.should.equal(0)
+    info.line.should.equal(0)
+    info.column.should.equal(0)
     q.current().kind.should.equal('word')
   })
 })
@@ -83,8 +83,8 @@ describe('ArrayDimension', () => {
 
     capture.error.should.equal(true)
     capture.result.unexpected.should.equal('real')
-    capture.result.atLine.should.equal(0)
-    capture.result.atColumn.should.equal(6)
+    capture.result.line.should.equal(0)
+    capture.result.column.should.equal(6)
     q.current().kind.should.equal('real')
   })
 })
@@ -110,8 +110,8 @@ describe('WordPattern', () => {
     capture.result.should.deepEqual({
       expected : 'word',
       unexpected : 'entero',
-      atColumn : 0,
-      atLine : 0
+      column : 0,
+      line : 0
     })
     q.current().kind.should.equal('entero')
   })
@@ -181,8 +181,8 @@ describe('TypeName', () => {
     capture.result.should.deepEqual({
         unexpected : 'word'
       , expected  : ['entero', 'real', 'logico', 'caracter']
-      , atColumn        : 0
-      , atLine          : 0
+      , column        : 0
+      , line          : 0
       , reason          : 'nonexistent-type'
     })
     q.current().kind.should.equal('word')

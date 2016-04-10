@@ -37,9 +37,9 @@ class WhileScanner {
       let current = source.current()
       let unexpected = current.kind
       let expected = 'left-par'
-      let atColumn = current.columnNumber
-      let atLine = current.lineNumber
-      return new Report(true, {unexpected, expected, atColumn, atLine})
+      let column = current.columnNumber
+      let line = current.lineNumber
+      return new Report(true, {unexpected, expected, column, line})
     }
 
     // Esto arma un TokenQueue con los tokens de la condicion del bucle
@@ -59,9 +59,9 @@ class WhileScanner {
       let current = source.current()
       let unexpected = current.kind
       let expected = 'right-par'
-      let atColumn = current.columnNumber
-      let atLine = current.lineNumber
-      return new Report(true, {unexpected, expected, atColumn, atLine})
+      let column = current.columnNumber
+      let line = current.lineNumber
+      return new Report(true, {unexpected, expected, column, line})
     }
 
     let expression_q = new TokenQueue(token_array)
@@ -97,9 +97,9 @@ class WhileScanner {
       let current = source.current()
       let unexpected = current.kind
       let expected = 'finmientras'
-      let atColumn = current.columnNumber
-      let atLine = current.lineNumber
-      return new Report(true, {unexpected, expected, atColumn, atLine})
+      let column = current.columnNumber
+      let line = current.lineNumber
+      return new Report(true, {unexpected, expected, column, line})
     }
 
     if (source.current().kind === 'eol')
@@ -144,10 +144,10 @@ class RepeatScanner {
       let current = source.current()
       let unexpected  = current.kind
       let expected    = 'hasta'
-      let atColumn    = current.columnNumber
-      let atLine      = current.lineNumber
+      let column    = current.columnNumber
+      let line      = current.lineNumber
 
-      return new Report(true, {unexpected, expected, atColumn, atLine})
+      return new Report(true, {unexpected, expected, column, line})
     }
 
     if (source.current().kind === 'que') {
@@ -157,10 +157,10 @@ class RepeatScanner {
       let current = source.current()
       let unexpected  = current.kind
       let expected    = 'que'
-      let atColumn    = current.columnNumber
-      let atLine      = current.lineNumber
+      let column    = current.columnNumber
+      let line      = current.lineNumber
 
-      return new Report(true, {unexpected, expected, atColumn, atLine})
+      return new Report(true, {unexpected, expected, column, line})
     }
 
     if (source.current().kind === 'left-par') {
@@ -170,10 +170,10 @@ class RepeatScanner {
       let current = source.current()
       let unexpected  = current.kind
       let expected    = 'letf-par'
-      let atColumn    = current.columnNumber
-      let atLine      = current.lineNumber
+      let column    = current.columnNumber
+      let line      = current.lineNumber
 
-      return new Report(true, {unexpected, expected, atColumn, atLine})
+      return new Report(true, {unexpected, expected, column, line})
     }
 
     let token_array = []
@@ -191,10 +191,10 @@ class RepeatScanner {
       let current = source.current()
       let unexpected  = current.kind
       let expected    = 'right-par'
-      let atColumn    = current.columnNumber
-      let atLine      = current.lineNumber
+      let column    = current.columnNumber
+      let line      = current.lineNumber
 
-      return new Report(true, {unexpected, expected, atColumn, atLine})
+      return new Report(true, {unexpected, expected, column, line})
     }
 
     let expression_q = new TokenQueue(token_array)
@@ -239,11 +239,11 @@ class IfScanner {
       let current = source.current()
       let unexpected  = source.current().kind
       let expected    = 'left-par'
-      let atColumn    = source.current().columnNumber
-      let atLine      = source.current().lineNumber
+      let column    = source.current().columnNumber
+      let line      = source.current().lineNumber
       let reason      = 'missing-par-at-if'
 
-      return new Report(true, {unexpected, expected, atColumn, atLine, reason})
+      return new Report(true, {unexpected, expected, column, line, reason})
     }
 
     let token_array = []
@@ -260,11 +260,11 @@ class IfScanner {
       let current = source.current()
       let unexpected  = source.current().kind
       let expected    = 'right-par'
-      let atColumn    = source.current().columnNumber
-      let atLine      = source.current().lineNumber
+      let column    = source.current().columnNumber
+      let line      = source.current().lineNumber
       let reason      = 'missing-par-at-if'
 
-      return new Report(true, {unexpected, expected, atColumn, atLine, reason})
+      return new Report(true, {unexpected, expected, column, line, reason})
     }
 
     let expression_q = new TokenQueue(token_array)
@@ -284,11 +284,11 @@ class IfScanner {
       let current = source.current()
       let unexpected  = source.current().kind
       let expected    = 'entonces'
-      let atColumn    = source.current().columnNumber
-      let atLine      = source.current().lineNumber
+      let column    = source.current().columnNumber
+      let line      = source.current().lineNumber
       let reason      = 'missing-entonces-at-if'
 
-      return new Report(true, {unexpected, expected, atColumn, atLine, reason})
+      return new Report(true, {unexpected, expected, column, line, reason})
     }
 
     if (source.current().kind === 'eol')
@@ -347,11 +347,11 @@ class IfScanner {
       let current = source.current()
       let unexpected  = source.current().kind
       let expected    = ['finsi', 'sino']
-      let atColumn    = source.current().columnNumber
-      let atLine      = source.current().lineNumber
+      let column    = source.current().columnNumber
+      let line      = source.current().lineNumber
       let reason      = 'missing-sino-finsi-at-if'
 
-      return new Report(true, {unexpected, expected, atColumn, atLine, reason})
+      return new Report(true, {unexpected, expected, column, line, reason})
     }
   }
 }

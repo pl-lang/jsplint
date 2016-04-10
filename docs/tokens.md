@@ -58,5 +58,5 @@ error en las siguientes propiedades:
 Propiedad | Descripcion
 -----------------------|--------------------
 unexpectedChar         | caracter inesperado
-atLine                 | entero que indica el renglón donde se produjo el error
-atColumn               | entero que indica la columna donde se produjo el error
+line                 | entero que indica el renglón donde se produjo el error
+column               | entero que indica la columna donde se produjo el error

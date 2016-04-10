@@ -119,8 +119,8 @@ describe('NumberToken', () => {
     token.kind.should.equal('LEXICAL_ERROR')
     token.text.should.equal('3.')
     token.unexpectedChar.should.equal('A')
-    token.atLine.should.equal(0)
-    token.atColumn.should.equal(2)
+    token.line.should.equal(0)
+    token.column.should.equal(2)
   })
 })
 
@@ -151,8 +151,8 @@ describe('StringToken', () => {
 
     token.kind.should.equal('LEXICAL_ERROR')
     token.unexpectedChar.should.equal('\n')
-    token.atLine.should.equal(0)
-    token.atColumn.should.equal(6)
+    token.line.should.equal(0)
+    token.column.should.equal(6)
   })
 })
 

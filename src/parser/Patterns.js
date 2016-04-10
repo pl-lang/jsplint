@@ -20,10 +20,10 @@ export function Number(source) {
   else {
     let unexpected  = current.kind
     let expected    = ['entero', 'real']
-    let atColumn    = current.columnNumber
-    let atLine      = current.lineNumber
+    let column    = current.columnNumber
+    let line      = current.lineNumber
 
-    return new Report(true, {unexpected, expected, atColumn, atLine})
+    return new Report(true, {unexpected, expected, column, line})
   }
 }
 
@@ -45,10 +45,10 @@ export function Integer(source) {
     // ...devolver informacion sobre el error
     let unexpected = current.kind
     let expected = 'entero'
-    let atColumn = current.columnNumber
-    let atLine = current.lineNumber
+    let column = current.columnNumber
+    let line = current.lineNumber
 
-    return new Report(true, {unexpected, expected, atColumn, atLine})
+    return new Report(true, {unexpected, expected, column, line})
   }
 }
 
@@ -92,10 +92,10 @@ export function Word(source) {
   else {
     let unexpected = current.kind
     let expected = 'word'
-    let atColumn = current.columnNumber
-    let atLine = current.lineNumber
+    let column = current.columnNumber
+    let line = current.lineNumber
 
-    return new Report(true, {unexpected, expected, atColumn, atLine})
+    return new Report(true, {unexpected, expected, column, line})
   }
 }
 
@@ -133,10 +133,10 @@ export function VariableDeclaration(source) {
 
           let unexpected = current.kind
           let expected   = 'right-bracket'
-          let atColumn        = current.columnNumber
-          let atLine          = current.lineNumber
+          let column        = current.columnNumber
+          let line          = current.lineNumber
 
-          return new Report(true, {unexpected, expected, atColumn, atLine})
+          return new Report(true, {unexpected, expected, column, line})
         }
       }
     }
@@ -187,11 +187,11 @@ export function TypeName(source) {
   else {
     let unexpected = current.kind
     let expected  = ['entero', 'real', 'logico', 'caracter']
-    let atColumn        = current.columnNumber
-    let atLine          = current.lineNumber
+    let column        = current.columnNumber
+    let line          = current.lineNumber
     let reason          = 'nonexistent-type'
 
-    return new Report(true, {unexpected, expected, atColumn, atLine, reason})
+    return new Report(true, {unexpected, expected, column, line, reason})
   }
 }
 
@@ -327,10 +327,10 @@ export function Variable(source) {
 
         let unexpected  = current.kind
         let expected    = 'right-bracket'
-        let atColumn    = current.columnNumber
-        let atLine      = current.lineNumber
+        let column    = current.columnNumber
+        let line      = current.lineNumber
 
-        return new Report(true, {unexpected, expected, atColumn, atLine})
+        return new Report(true, {unexpected, expected, column, line})
       }
     }
     else {
@@ -462,11 +462,11 @@ function PrimaryExpression(source) {
       else {
         let unexpected = source.current().kind
         let expected   = 'right-par'
-        let atColumn        = source.current().columnNumber
-        let atLine          = source.current().lineNumber
+        let column        = source.current().columnNumber
+        let line          = source.current().lineNumber
 
         let error = false
-        let result = {unexpected, expected, atColumn, atLine}
+        let result = {unexpected, expected, column, line}
 
         return new Report(error, result)
       }
@@ -475,11 +475,11 @@ function PrimaryExpression(source) {
   else {
     let unexpected = current.kind
     let expected   = ['entero', 'real', 'cadena', 'verdadero', 'falso', '(expresion)']
-    let atColumn        = current.columnNumber
-    let atLine          = current.lineNumber
+    let column        = current.columnNumber
+    let line          = current.lineNumber
 
     let error           = true
-    let result          = {unexpected, expected, atColumn, atLine}
+    let result          = {unexpected, expected, column, line}
 
     return new Report(error, result)
   }
@@ -570,10 +570,10 @@ export function Assignment(source) {
   else {
     let unexpected      = source.current().kind
     let expected        = 'assignment'
-    let atColumn        = source.current().columnNumber
-    let atLine          = source.current().lineNumber
+    let column        = source.current().columnNumber
+    let line          = source.current().lineNumber
 
-    let result = {unexpected, expected, atColumn, atLine}
+    let result = {unexpected, expected, column, line}
 
     return new Report(true, result)
   }
@@ -613,10 +613,10 @@ export function ModuleCall(source) {
     let current = source.current()
     let unexpected  = current.kind
     let expected    = 'right-par'
-    let atColumn    = current.columnNumber
-    let atLine      = current.lineNumber
+    let column    = current.columnNumber
+    let line      = current.lineNumber
 
-    return new Report(true, {unexpected, expected, atColumn, atLine})
+    return new Report(true, {unexpected, expected, column, line})
   }
   else {
     source.next()
@@ -644,10 +644,10 @@ export function ModuleCall(source) {
         let current = source.current()
         let unexpected  = current.kind
         let expected    = 'right-par'
-        let atColumn    = current.columnNumber
-        let atLine      = current.lineNumber
+        let column    = current.columnNumber
+        let line      = current.lineNumber
 
-        return new Report(true, {unexpected, expected, atColumn, atLine})
+        return new Report(true, {unexpected, expected, column, line})
       }
     }
   }

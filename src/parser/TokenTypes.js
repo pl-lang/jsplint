@@ -46,8 +46,8 @@ export class NumberToken {
         this.kind = 'LEXICAL_ERROR'
         this.unexpectedChar = source.currentChar()
         this.expectedChar   = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-        this.atLine         = source._current_line
-        this.atColumn       = source._current_column
+        this.line         = source._current_line
+        this.column       = source._current_column
         this.reason         = 'unexpectedCharAtFloat'
       }
     }
@@ -194,8 +194,8 @@ export class StringToken {
       this.kind = 'LEXICAL_ERROR'
       this.unexpectedChar = '\n'
       this.expectedChar = ['caracteres', '"']
-      this.atColumn = source._current_column
-      this.atLine = source._current_line
+      this.column = source._current_column
+      this.line = source._current_line
       this.reason = 'unexpectedCharAtString'
     }
 
@@ -345,8 +345,8 @@ export class UnknownToken {
   constructor(source) {
     this.kind = 'LEXICAL_ERROR'
     this.unexpectedChar = source.currentChar()
-    this.atLine = source._current_line
-    this.atColumn = source._current_column
+    this.line = source._current_line
+    this.column = source._current_column
     this.reason = 'unknownToken'
     source.nextChar()
   }

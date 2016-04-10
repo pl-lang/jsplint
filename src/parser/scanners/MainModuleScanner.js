@@ -20,8 +20,8 @@ export default class MainModuleScanner {
     let module_data = {
         statements      : []
       , variables       : {}
-      , atColumn        : 0
-      , atLine          : 0
+      , column        : 0
+      , line          : 0
       , name            : 'main'
     }
 
@@ -36,10 +36,10 @@ export default class MainModuleScanner {
     if (current.kind !== 'variables') {
       let unexpected  = current.kind
       let expected    = 'variables'
-      let atColumn    = current.columnNumber
-      let atLine      = current.lineNumber
+      let column    = current.columnNumber
+      let line      = current.lineNumber
       let reason      = 'missing-var-declaration'
-      return new Report(true, {unexpected, expected, atColumn, atLine, reason})
+      return new Report(true, {unexpected, expected, column, line, reason})
     }
     else {
       current = source.next()
@@ -67,11 +67,11 @@ export default class MainModuleScanner {
     if (current.kind !== 'inicio') {
       let unexpected  = current.kind
       let expected    = 'inicio'
-      let atColumn    = current.columnNumber
-      let atLine      = current.lineNumber
+      let column    = current.columnNumber
+      let line      = current.lineNumber
       let reason      = 'missing-inicio'
 
-      return new Report(true, {unexpected, expected, atColumn, atLine, reason})
+      return new Report(true, {unexpected, expected, column, line, reason})
     }
     else {
       current = source.next()
@@ -99,11 +99,11 @@ export default class MainModuleScanner {
     if (current.kind !== 'fin') {
       let unexpected  = current.kind
       let expected    = 'fin'
-      let atColumn    = current.columnNumber
-      let atLine      = current.lineNumber
+      let column    = current.columnNumber
+      let line      = current.lineNumber
       let reason      = 'missing-fin'
 
-      return new Report(true, {unexpected, expected, atColumn, atLine, reason})
+      return new Report(true, {unexpected, expected, column, line, reason})
     }
     else {
       source.next()
