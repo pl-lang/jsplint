@@ -54,6 +54,81 @@ describe('SourceWrapper:', () => {
 
     source._current_line.should.equal(2)
   })
+
+  it('cuenta bien las columnas', () => {
+    let string = '0123\n456\n789'
+
+    let source = new SourceWrapper(string)
+
+    source._current_line.should.equal(0)
+
+    source.currentChar().should.equal('0')
+    source._current_column.should.equal(0)
+
+    source.nextChar()
+
+    source.currentChar().should.equal('1')
+    source._current_column.should.equal(1)
+
+    source.nextChar()
+
+    source.currentChar().should.equal('2')
+    source._current_column.should.equal(2)
+
+    source.nextChar()
+
+    source.currentChar().should.equal('3')
+    source._current_column.should.equal(3)
+
+    source.nextChar()
+
+    source.currentChar().should.equal(source.EOL)
+    source._current_column.should.equal(4)
+
+    source.nextChar()
+
+    source._current_line.should.equal(1)
+
+    source.currentChar().should.equal('4')
+    source._current_column.should.equal(0)
+
+    source.nextChar()
+
+    source.currentChar().should.equal('5')
+    source._current_column.should.equal(1)
+
+    source.nextChar()
+
+    source.currentChar().should.equal('6')
+    source._current_column.should.equal(2)
+
+    source.nextChar()
+
+    source.currentChar().should.equal(source.EOL)
+    source._current_column.should.equal(3)
+
+    source.nextChar()
+
+    source._current_line.should.equal(2)
+
+    source.currentChar().should.equal('7')
+    source._current_column.should.equal(0)
+
+    source.nextChar()
+
+    source.currentChar().should.equal('8')
+    source._current_column.should.equal(1)
+
+    source.nextChar()
+
+    source.currentChar().should.equal('9')
+    source._current_column.should.equal(2)
+
+    source.nextChar()
+
+    source.currentChar().should.equal(source.EOF)
+    source._current_column.should.equal(3)
+  })
 })
 
 describe('WordToken', () => {
