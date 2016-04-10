@@ -1170,11 +1170,63 @@ describe.only('MainModule', () => {
     })
   })
 
-  it('programa sin encabezado ("variables") para el modulo principal')
+  it('programa sin encabezado ("variables") para el modulo principal', () => {
+    let code = `inicio
+    var<-32
+    fin
+    `
+    let q = queueFromSource(code)
 
-  it('programa sin "inicio" pero con varibles declaradas')
+    let report = match(Patterns.MainModule).from(q)
+
+    report.error.should.equal(true)
+    report.result.should.deepEqual({
+      unexpected : 'inicio',
+      expected : 'variables',
+      line : 0,
+      column : 0,
+      reason : 'missing-variables'
+    })
+  })
+
+  it.skip('programa sin "inicio" pero con varibles declaradas', () => {
+    let code = `variables
+    entero var
+    var<-32
+    fin
+    `
+    let q = queueFromSource(code)
+
+    let report = match(Patterns.MainModule).from(q)
+
+    report.error.should.equal(true)
+    report.result.should.deepEqual({
+      unexpected : 'word',
+      expected : ['entero', 'real', 'logico', 'caracter'],
+      line : 2,
+      column : 0,
+      reason : 'nonexistent-type'
+    })
+  })
 
   it('programa sin "inicio" sin varibles declaradas')
 
-  it('programa sin "fin"')
+  it('programa sin "fin"', () => {
+    let code = `variables
+    inicio
+    var<-32
+    `
+    let q = queueFromSource(code)
+
+    let report = match(Patterns.MainModule).from(q)
+
+    report.error.should.equal(true)
+    report.result.should.deepEqual({
+      unexpected : 'eof',
+      expected : 'fin',
+      line : 3,
+      column : 4,
+      reason : 'missing-fin'
+    })
+  })
 })
