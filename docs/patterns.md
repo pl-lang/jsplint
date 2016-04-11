@@ -34,7 +34,7 @@ result = {
 
 ```
 
-#### Declaration
+#### DeclarationStatement
 ```js
 result = {
   type : 'declaration',

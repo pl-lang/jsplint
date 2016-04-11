@@ -192,47 +192,6 @@ describe('TypeName', () => {
   })
 })
 
-describe('Declaration', () => {
-  it('captura dos variables de tipo entero y una real declaradas en un renglon', () => {
-    let q = queueFromSource('entero a, b, real c')
-
-    let capt = match(Patterns.Declaration).from(q)
-
-    capt.error.should.deepEqual(false)
-    capt.result.should.deepEqual({
-      a : {type:'entero', isArray:false, value:null},
-      b : {type:'entero', isArray:false, value:null},
-      c : {type:'real', isArray:false, value:null}
-    })
-  })
-
-  it('captura variables de distintos tipos declaradas dos renglones distintos', () => {
-    let q = queueFromSource('caracter a, b\nlogico c')
-
-    let capt = match(Patterns.Declaration).from(q)
-
-    capt.error.should.deepEqual(false)
-    capt.result.should.deepEqual({
-      a : {type:'caracter', isArray:false, value:null},
-      b : {type:'caracter', isArray:false, value:null},
-      c : {type:'logico', isArray:false, value:null}
-    })
-  })
-
-  it('captura variables de un solo tipo', () => {
-    let q = queueFromSource('caracter a, b[4, 4]')
-
-    let capt = match(Patterns.Declaration).from(q)
-
-    capt.error.should.deepEqual(false)
-    capt.result.a.should.deepEqual({type:'caracter', isArray:false, value:null})
-
-    capt.result.b.type.should.equal('caracter')
-    capt.result.b.isArray.should.equal(true)
-    capt.result.b.dimension.should.deepEqual([4, 4])
-  })
-})
-
 describe('Assignment pattern', () => {
   it('captura un enunciado de asignacion', () => {
     let asignacion = 'var <- 48'
