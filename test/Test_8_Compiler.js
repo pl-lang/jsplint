@@ -4,7 +4,7 @@ import should from 'should'
 
 import Compiler from '../src/parser/Compiler.js'
 
-describe('Compiler', () => {
+describe.skip('Compiler', () => {
   it('Un programa correcto se compila sin errores', () => {
     let code = `
     variables
