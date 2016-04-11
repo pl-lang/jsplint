@@ -1082,7 +1082,7 @@ export function MainModule(source) {
   skipWhiteSpace(source)
 
   while (/inicio|eof/.test(source.current().kind) === false) {
-    let var_declaration_match = NewDeclaration(source)
+    let var_declaration_match = DeclarationStatement(source)
 
     if (var_declaration_match.error) {
       return var_declaration_match
@@ -1142,7 +1142,7 @@ export function MainModule(source) {
   return new Report(false, result)
 }
 
-export function NewDeclaration(source) {
+export function DeclarationStatement(source) {
   let result = {
     type:'declaration',
     variables:[]
@@ -1186,7 +1186,7 @@ export function NewDeclaration(source) {
   source.next()
 
   if (comma_found) {
-    let next_declaration_match = NewDeclaration(source)
+    let next_declaration_match = DeclarationStatement(source)
 
     if (next_declaration_match.error) {
       return next_declaration_match

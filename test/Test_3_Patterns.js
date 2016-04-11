@@ -1043,11 +1043,11 @@ describe('Statement', () => {
   })
 })
 
-describe('NewDeclaration', () => {
+describe('DeclarationStatement', () => {
   it('captura tres variables del mismo tipo', () => {
     let code = `entero a, b, c\n`
     let q = queueFromSource(code)
-    let report = match(Patterns.NewDeclaration).from(q)
+    let report = match(Patterns.DeclarationStatement).from(q)
 
     report.error.should.equal(false)
     report.result.should.deepEqual({
@@ -1063,7 +1063,7 @@ describe('NewDeclaration', () => {
   it('captura variable de distintos tipos en el mismo renglon', () => {
     let code = `entero var_entera1, var_entera2, real var_real\n`
     let q = queueFromSource(code)
-    let report = match(Patterns.NewDeclaration).from(q)
+    let report = match(Patterns.DeclarationStatement).from(q)
 
     report.error.should.equal(false)
     report.result.should.deepEqual({
@@ -1080,9 +1080,9 @@ describe('NewDeclaration', () => {
     let code = `entero var_entera1, var_entera2\nreal var_real\n`
     let q = queueFromSource(code)
 
-    let first_line = match(Patterns.NewDeclaration).from(q)
+    let first_line = match(Patterns.DeclarationStatement).from(q)
 
-    let second_line = match(Patterns.NewDeclaration).from(q)
+    let second_line = match(Patterns.DeclarationStatement).from(q)
 
     first_line.error.should.equal(false)
     first_line.result.should.deepEqual({
