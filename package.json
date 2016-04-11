@@ -4,7 +4,8 @@
   "description": "interprete",
   "main": "main.js",
   "scripts": {
-    "test": "mocha -w --compilers js:babel-register --reporter min",
+    "test": "mocha --compilers js:babel-register --reporter min",
+    "m_watch":"mocha -w --compilers js:babel-register --reporter min",
     "coverage": "istanbul cover node_modules/mocha/bin/_mocha -- --reporter min"
   },
   "author": "Rodrigo Maximiliano Bellusci",
