@@ -5,6 +5,7 @@ import SourceWrapper from './SourceWrapper.js'
 import Lexer from './Lexer.js'
 import Scanner from './Scanner.js'
 import TokenQueue from './TokenQueue.js'
+import { match, MainModule as MainModulePattern, skipWhiteSpace } from './Patterns.js'
 
 export default class Parser extends Emitter {
   constructor() {
@@ -19,6 +20,10 @@ export default class Parser extends Emitter {
   parse(code) {
     this.emit('parsing-started')
 
+    let result = {
+      modules : []
+    }
+
     let source = new SourceWrapper(code)
     let lexer = new Lexer()
 
@@ -32,17 +37,32 @@ export default class Parser extends Emitter {
       return {error:true, result:'lexical-error'}
     }
 
-    let scanner = new Scanner(new TokenQueue(lexer_report.result))
+    let token_queue = new TokenQueue(lexer_report.result)
 
-    let scan_report = scanner.getModules()
+    while (token_queue.current().kind !== 'eof') {
+      skipWhiteSpace(token_queue)
 
-    if (scan_report.error) {
-      this.emit('syntax-error', scan_report.result)
-      return {error:true, result:'syntax-error'}
+      let module_match
+
+      switch (token_queue.current().kind) {
+        case 'variables':
+          module_match = match(MainModulePattern).from(token_queue)
+          break
+        default:
+          throw new TypeError(`${token_queue.current().kind} no coincide con el encabezado de ninguna clase de modulo`)
+      }
+
+      if (module_match.error) {
+        this.emit('syntax-error', module_match.result)
+        return {error:true, result:'syntax-error'}
+      }
+      else {
+        result.modules.push(module_match.result)
+      }
     }
 
     this.emit('parsing-finished')
 
-    return {error:false, result:scan_report.result}
+    return {error:false, result}
   }
 }
