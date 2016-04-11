@@ -1101,7 +1101,7 @@ describe('NewDeclaration', () => {
   })
 })
 
-describe.only('MainModule', () => {
+describe('MainModule', () => {
   it('captura un modulo principal bien escrito y con variables', () => {
     let code = `variables
     entero var_entera1, var_entera2
@@ -1117,24 +1117,29 @@ describe.only('MainModule', () => {
     report.result.should.deepEqual({
       type:'module',
       name:'main',
-      locals:[
-        {type:'entero', name:'var_entera1', isArray:false, bounds_checked:false, dimension:null},
-        {type:'entero', name:'var_entera2', isArray:false, bounds_checked:false, dimension:null},
-      ],
-      body:[{
-        type:'assignment',
-        left:{
-          name:'var',
-          isArray:false,
-          indexes:null,
-          bounds_checked:false
+      body:[
+        {
+          type:'declaration',
+          variables:[
+            {type:'entero', name:'var_entera1', isArray:false, bounds_checked:false, dimension:null},
+            {type:'entero', name:'var_entera2', isArray:false, bounds_checked:false, dimension:null}
+          ]
         },
-        right:{
-          expression_type:'literal',
-          type:'entero',
-          value:32
+        {
+          type:'assignment',
+          left:{
+            name:'var',
+            isArray:false,
+            indexes:null,
+            bounds_checked:false
+          },
+          right:{
+            expression_type:'literal',
+            type:'entero',
+            value:32
+          }
         }
-      }]
+      ]
     })
   })
 
@@ -1152,7 +1157,6 @@ describe.only('MainModule', () => {
     report.result.should.deepEqual({
       type:'module',
       name:'main',
-      locals:[],
       body:[{
         type:'assignment',
         left:{

@@ -1065,7 +1065,6 @@ export function MainModule(source) {
   let result = {
     type:'module',
     name:'main',
-    locals:[],
     body:[]
   }
 
@@ -1091,7 +1090,7 @@ export function MainModule(source) {
       return var_declaration_match
     }
     else {
-      result.locals = [...result.locals, ...var_declaration_match.result.variables]
+      result.body.push(var_declaration_match.result)
     }
 
     skipWhiteSpace(source)
