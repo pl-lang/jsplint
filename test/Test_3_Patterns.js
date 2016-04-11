@@ -1082,8 +1082,8 @@ describe('MainModule', () => {
         {
           type:'declaration',
           variables:[
-            {type:'entero', name:'var_entera1', isArray:false, bounds_checked:false, dimension:null},
-            {type:'entero', name:'var_entera2', isArray:false, bounds_checked:false, dimension:null}
+            {type:'entero', name:'var_entera1', isArray:false, dimension:null},
+            {type:'entero', name:'var_entera2', isArray:false, dimension:null}
           ]
         },
         {
