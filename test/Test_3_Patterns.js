@@ -1012,9 +1012,9 @@ describe('DeclarationStatement', () => {
     report.result.should.deepEqual({
       type:'declaration',
       variables:[
-        {type:'entero', name:'a', isArray:false, bounds_checked:false, dimension:null},
-        {type:'entero', name:'b', isArray:false, bounds_checked:false, dimension:null},
-        {type:'entero', name:'c', isArray:false, bounds_checked:false, dimension:null}
+        {type:'entero', name:'a', isArray:false, dimension:null},
+        {type:'entero', name:'b', isArray:false, dimension:null},
+        {type:'entero', name:'c', isArray:false, dimension:null}
       ]
     })
   })
@@ -1028,9 +1028,9 @@ describe('DeclarationStatement', () => {
     report.result.should.deepEqual({
       type:'declaration',
       variables:[
-        {type:'entero', name:'var_entera1', isArray:false, bounds_checked:false, dimension:null},
-        {type:'entero', name:'var_entera2', isArray:false, bounds_checked:false, dimension:null},
-        {type:'real', name:'var_real', isArray:false, bounds_checked:false, dimension:null}
+        {type:'entero', name:'var_entera1', isArray:false, dimension:null},
+        {type:'entero', name:'var_entera2', isArray:false, dimension:null},
+        {type:'real', name:'var_real', isArray:false, dimension:null}
       ]
     })
   })
@@ -1047,8 +1047,8 @@ describe('DeclarationStatement', () => {
     first_line.result.should.deepEqual({
       type:'declaration',
       variables:[
-        {type:'entero', name:'var_entera1', isArray:false, bounds_checked:false, dimension:null},
-        {type:'entero', name:'var_entera2', isArray:false, bounds_checked:false, dimension:null},
+        {type:'entero', name:'var_entera1', isArray:false, dimension:null},
+        {type:'entero', name:'var_entera2', isArray:false, dimension:null},
       ]
     })
 
@@ -1056,7 +1056,7 @@ describe('DeclarationStatement', () => {
     second_line.result.should.deepEqual({
       type:'declaration',
       variables:[
-        {type:'real', name:'var_real', isArray:false, bounds_checked:false, dimension:null}
+        {type:'real', name:'var_real', isArray:false, dimension:null}
       ]
     })
   })
