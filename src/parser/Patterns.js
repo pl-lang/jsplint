@@ -103,8 +103,6 @@ export function VariableDeclaration(source) {
   let variable = {
     name    : '',
     isArray : false,
-    type    : '',
-    bounds_checked: false,
     dimension:null
   }
 
