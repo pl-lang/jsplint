@@ -127,7 +127,8 @@ describe('VariableDeclaration', () => {
     capture.error.should.equal(false)
     capture.result.should.deepEqual({
       name    : 'sueldo',
-      data    : {isArray : false, type:'unknown'}
+      isArray : false,
+      dimension: null
     })
   })
 
@@ -139,7 +140,8 @@ describe('VariableDeclaration', () => {
     capture.error.should.equal(false)
     capture.result.should.deepEqual({
       name        : 'vuelos',
-      data        : {isArray: true, dimension: [3, 12], type: 'unknown'}
+      isArray     : true,
+      dimension   : [3, 12]
     })
   })
 })
