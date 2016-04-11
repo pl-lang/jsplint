@@ -1204,7 +1204,7 @@ export function NewDeclaration(source) {
   }
 }
 
-function skipWhiteSpace(source) {
+export function skipWhiteSpace(source) {
   let current = source.current()
   while (current.kind === 'eol') {
     current = source.next()
