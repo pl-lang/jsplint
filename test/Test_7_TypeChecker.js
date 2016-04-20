@@ -24,7 +24,7 @@ let globals = {
 }
 let checker = new TypeChecker(null, null, globals, {})
 
-describe('TypeChecker.getExpressionReturnType', () => {
+describe.skip('TypeChecker.getExpressionReturnType', () => {
   it('literal', () => {
     let exp = expressionFromString('2').result
     let type = checker.getExpressionReturnType(exp)
@@ -201,7 +201,7 @@ describe('TypeChecker.getExpressionReturnType', () => {
   })
 })
 
-describe('TypeChecker', () => {
+describe.skip('TypeChecker', () => {
 
   it('checkAssigmentNodes', () => {
     let compiler = new Compiler()
