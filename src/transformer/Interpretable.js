@@ -50,6 +50,7 @@ function transformStatement(statement) {
 
 function transformAssigment(assignment) {
   let result = {
+    action : 'assignment',
     target : assignment.left,
     payload : assignment.right
   }

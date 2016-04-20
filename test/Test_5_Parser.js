@@ -239,6 +239,66 @@ describe('Interpretable', () => {
     let transformed_program = Interpretable(checkable_report.result)
 
     transformed_program.modules.main.root.data.should.deepEqual({
+      action : 'assignment',
+      target : {
+        name:'variable',
+        isArray:false,
+        indexes:null,
+        bounds_checked:false
+      },
+      payload : {
+        expression_type:'literal',
+        type:'entero',
+        value:32
+      }
+    })
+  })
+
+  it('prueba con un programa con un enunciado si..sino', () => {
+    let code = `variables
+    entero variable
+    inicio
+    si (verdadero) entonces
+      variable <- 32
+    sino
+      variable <- 32
+    finsi
+    fin`
+
+    let parser = new Parser()
+
+    let parsing_report =  parser.parse(code)
+
+    parsing_report.error.should.equal(false)
+
+    let checkable_report = Checkable(parsing_report.result)
+
+    checkable_report.error.should.equal(false)
+
+    let transformed_program = Interpretable(checkable_report.result)
+
+    transformed_program.modules.main.root.data.should.deepEqual({
+      action:'if',
+      condition:{expression_type:'literal', type:'logico', value:true}
+    })
+
+    transformed_program.modules.main.root.leftBranchNode.data.should.deepEqual({
+      action:'assignment',
+      target : {
+        name:'variable',
+        isArray:false,
+        indexes:null,
+        bounds_checked:false
+      },
+      payload : {
+        expression_type:'literal',
+        type:'entero',
+        value:32
+      }
+    })
+
+    transformed_program.modules.main.root.rightBranchNode.data.should.deepEqual({
+      action:'assignment',
       target : {
         name:'variable',
         isArray:false,
