@@ -568,7 +568,6 @@ describe('VariablePattern', () => {
       name:'mi_variable',
       isArray:false,
       indexes:null,
-      bounds_checked:false
     })
   })
 
@@ -585,8 +584,7 @@ describe('VariablePattern', () => {
         expression_type:'literal',
         type:'entero',
         value:2
-      }],
-      bounds_checked:false
+      }]
     })
   })
 
@@ -602,8 +600,7 @@ describe('VariablePattern', () => {
       indexes:[
         {expression_type:'invocation', name:'i', isArray:false, indexes:null},
         {expression_type:'invocation', name:'j', isArray:false, indexes:null}
-      ],
-      bounds_checked:false
+      ]
     })
   })
 
@@ -621,8 +618,7 @@ describe('NewAssignment', () => {
       left:{
         name:'var',
         isArray:false,
-        indexes:null,
-        bounds_checked:false
+        indexes:null
       },
       right:{
         expression_type:'literal',
@@ -663,7 +659,7 @@ describe('If', () => {
       condition:{expression_type:'literal', type:'logico', value:true},
       true_branch:[{
         type:'assignment',
-        left:{name:'var', isArray:false, indexes:null, bounds_checked:false},
+        left:{name:'var', isArray:false, indexes:null},
         right:{expression_type:'literal', type:'entero', value:32}
       }],
       false_branch:[]
@@ -686,12 +682,12 @@ describe('If', () => {
       condition:{expression_type:'literal', type:'logico', value:true},
       true_branch:[{
         type:'assignment',
-        left:{name:'var', isArray:false, indexes:null, bounds_checked:false},
+        left:{name:'var', isArray:false, indexes:null},
         right:{expression_type:'literal', type:'entero', value:32}
       }],
       false_branch:[{
         type:'assignment',
-        left:{name:'var', isArray:false, indexes:null, bounds_checked:false},
+        left:{name:'var', isArray:false, indexes:null},
         right:{expression_type:'literal', type:'entero', value:16}
       }]
     })
@@ -813,7 +809,7 @@ describe('While', () => {
       condition:{expression_type:'literal', type:'logico', value:true},
       body:[{
         type:'assignment',
-        left:{name:'var', isArray:false, indexes:null, bounds_checked:false},
+        left:{name:'var', isArray:false, indexes:null},
         right:{expression_type:'literal', type:'entero', value:32}
       }]
     })
@@ -886,7 +882,7 @@ describe('Until', () => {
       condition:{expression_type:'literal', type:'logico', value:true},
       body:[{
         type:'assignment',
-        left:{name:'var', isArray:false, indexes:null, bounds_checked:false},
+        left:{name:'var', isArray:false, indexes:null},
         right:{expression_type:'literal', type:'entero', value:32}
       }]
     })
@@ -1091,8 +1087,7 @@ describe('MainModule', () => {
           left:{
             name:'var',
             isArray:false,
-            indexes:null,
-            bounds_checked:false
+            indexes:null
           },
           right:{
             expression_type:'literal',
@@ -1123,8 +1118,7 @@ describe('MainModule', () => {
         left:{
           name:'var',
           isArray:false,
-          indexes:null,
-          bounds_checked:false
+          indexes:null
         },
         right:{
           expression_type:'literal',

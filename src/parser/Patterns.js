@@ -225,7 +225,7 @@ export function IndexExpression(source) {
 }
 
 export function Variable(source) {
-  let name = '', isArray = false, indexes = null, bounds_checked = false
+  let name = '', isArray = false, indexes = null
 
   let word_match = Word(source)
 
@@ -250,7 +250,7 @@ export function Variable(source) {
       if (source.current().kind === 'right-bracket') {
         source.next()
 
-        return new Report(false, {name, isArray, indexes, bounds_checked})
+        return new Report(false, {name, isArray, indexes})
       }
       else {
         let current = source.current()
@@ -264,7 +264,7 @@ export function Variable(source) {
       }
     }
     else {
-      return new Report(false, {name, isArray, indexes, bounds_checked})
+      return new Report(false, {name, isArray, indexes})
     }
   }
 }

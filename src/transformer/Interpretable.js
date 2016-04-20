@@ -54,6 +54,8 @@ function transformAssigment(assignment) {
     payload : assignment.right
   }
 
+  result.target['bounds_checked'] = false
+
   return new GenericNode(result)
 }
 
