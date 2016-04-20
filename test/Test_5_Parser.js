@@ -101,11 +101,11 @@ describe('Checkable transformer', () => {
 
     report.error.should.equal(false)
 
-    let transformation_report = Checkable(report.result.modules[0])
+    let transformation_report = Checkable(report.result)
 
     transformation_report.error.should.equal(false)
 
-    let module = transformation_report.result
+    let module = transformation_report.result.modules[0]
 
     module.should.deepEqual({
       type:'module',
@@ -142,27 +142,48 @@ describe('Checkable transformer', () => {
 
     report.error.should.equal(false)
 
-    let transformation_report = Checkable(report.result.modules[0])
+    let transformation_report = Checkable(report.result)
 
     transformation_report.error.should.equal(true)
 
     let repeated_pairs = transformation_report.result
 
     repeated_pairs.should.deepEqual([
-      {
-        first:{
-          name:'a',
-          type:'entero',
-          isArray:false,
-          dimension:null
-        },
-        second:{
-          name:'a',
-          type:'real',
-          isArray:false,
-          dimension:null
+      [
+        {
+          first:{
+            name:'a',
+            type:'entero',
+            isArray:false,
+            dimension:null
+          },
+          second:{
+            name:'a',
+            type:'real',
+            isArray:false,
+            dimension:null
+          }
         }
-      }
+      ]
     ])
+  })
+})
+
+describe.skip('Interpretable', () => {
+  it('prueba...', () => {
+    let code = `variables
+    entero a, real a
+    inicio
+    fin`
+
+    let parser = new Parser()
+
+    let parsing_report =  parser.parse(code)
+
+    parsing_report.error.should.equal(false)
+
+    let modules_report = parsing_report.result.modules.map(Checkable)
+
+
   })
 })

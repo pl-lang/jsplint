@@ -26,7 +26,32 @@ modulo = {
 
 import Report from '../utility/Report.js'
 
-export default function transform(module) {
+export default function transformAST(ast) {
+  let program = {
+    modules : []
+  }
+
+  let repeated_vars = []
+
+  for (let module of ast.modules) {
+    let transformation_report = transform(module)
+    if (transformation_report.error) {
+      repeated_vars.push(transformation_report.result)
+    }
+    else {
+      program.modules.push(transformation_report.result)
+    }
+  }
+
+  if (repeated_vars.length > 0) {
+    return new Report(true, repeated_vars)
+  }
+  else {
+    return new Report(false, program)
+  }
+}
+
+function transform(module) {
   let declaration_statements = module.body.filter(statement => statement.type === 'declaration')
   let regular_statements = module.body.filter(statement => statement.type !== 'declaration')
 
