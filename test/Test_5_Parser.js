@@ -354,4 +354,46 @@ describe('Interpretable', () => {
       }
     })
   })
+
+  it('prueba para un programa con una estructura mientras', () => {
+    let code = `variables
+    entero variable
+    inicio
+    repetir
+      variable <- 32
+    hasta que (verdadero)
+    fin`
+
+    let parser = new Parser()
+
+    let parsing_report =  parser.parse(code)
+
+    parsing_report.error.should.equal(false)
+
+    let checkable_report = Checkable(parsing_report.result)
+
+    checkable_report.error.should.equal(false)
+
+    let transformed_program = Interpretable(checkable_report.result)
+
+    transformed_program.modules.main.root.data.should.deepEqual({
+      action:'until',
+      condition:{expression_type:'literal', type:'logico', value:true}
+    })
+
+    transformed_program.modules.main.root.loop_body_root.data.should.deepEqual({
+      action:'assignment',
+      target : {
+        name:'variable',
+        isArray:false,
+        indexes:null,
+        bounds_checked:false
+      },
+      payload : {
+        expression_type:'literal',
+        type:'entero',
+        value:32
+      }
+    })
+  })
 })
