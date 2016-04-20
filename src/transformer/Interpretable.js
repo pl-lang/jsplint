@@ -18,26 +18,14 @@ export default function transform(ast) {
 
 function transformModule(module) {
   let result = {
-    locals : {},
+    locals : module.locals,
     root : null
   }
 
   let temp_list = new LinkedList()
 
   for (let statement of module.body) {
-    if (statement.type === 'declaration') {
-      for (let variable of statement.variables) {
-        result.locals[variable.name] = {}
-        for (let prop in variable) {
-          if (prop !== 'name') {
-            result.locals[variable.name][prop] = variable[prop]
-          }
-        }
-      }
-    }
-    else {
-      temp_list.addNode(transformStatement(statement))
-    }
+    temp_list.addNode(transformStatement(statement))
   }
 
   result.root = temp_list.firstNode

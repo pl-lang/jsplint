@@ -6,6 +6,10 @@ import Parser from '../src/parser/Parser.js'
 
 import Checkable from '../src/transformer/Checkable.js'
 
+import Interpretable from '../src/transformer/Interpretable.js'
+
+import { inspect } from 'util'
+
 describe('Parser', () => {
   it('emite los eventos de inicio y fin para un programa sin errores', () => {
     let code = `variables
@@ -169,10 +173,10 @@ describe('Checkable transformer', () => {
   })
 })
 
-describe.skip('Interpretable', () => {
-  it('prueba...', () => {
+describe('Interpretable', () => {
+  it('prueba con un programa con un cuerpo vacio', () => {
     let code = `variables
-    entero a, real a
+    entero a, real b
     inicio
     fin`
 
@@ -182,8 +186,36 @@ describe.skip('Interpretable', () => {
 
     parsing_report.error.should.equal(false)
 
-    let modules_report = parsing_report.result.modules.map(Checkable)
+    let checkable_report = Checkable(parsing_report.result)
 
+    checkable_report.error.should.equal(false)
 
+    let transformed_program = Interpretable(checkable_report.result)
+
+    transformed_program.should.deepEqual(
+      {
+        modules : {
+          main : {
+            locals : {
+              a : {
+                name : 'a',
+                isArray : false,
+                dimension : null,
+                type : 'entero',
+                bounds_checked : false
+              },
+              b : {
+                name : 'b',
+                isArray : false,
+                dimension : null,
+                type : 'real',
+                bounds_checked : false
+              }
+            },
+            root : null
+          }
+        }
+      }
+    )
   })
 })
