@@ -563,9 +563,9 @@ export function ModuleCall(source) {
       if (source.current().kind == 'right-par') {
         source.next()
         let data = {
+          type:'call',
           args:args.result,
           name:name.result,
-          action:'module_call',
           expression_type:'module_call'
         }
         return new Report(false, data)
@@ -584,9 +584,9 @@ export function ModuleCall(source) {
   else {
     source.next()
     let data = {
+      type:'call',
       args:[],
       name:name.result,
-      action:'module_call',
       expression_type:'module_call'
     }
     return new Report(false, data)

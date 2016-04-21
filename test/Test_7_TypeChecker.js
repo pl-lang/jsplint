@@ -5,7 +5,11 @@ import expressionFromString from '../src/parser/expressionFromString.js'
 
 import TypeChecker from '../src/typechecker/TypeChecker.js'
 
-import Compiler from '../src/parser/Compiler.js'
+import Parser from '../src/parser/Parser.js'
+
+import Checkable from '../src/transformer/Checkable.js'
+
+import Interpretable from '../src/transformer/Interpretable.js'
 
 const RUN_TYPE_CHECKER = true
 const DO_NOT_RUN_TYPE_CHECKER = false
@@ -24,9 +28,9 @@ let globals = {
 }
 let checker = new TypeChecker(null, null, globals, {})
 
-describe('TypeChecker', () => {
+describe.only('TypeChecker', () => {
 
-  describe('#getExpressionReturnType', () => {
+  describe.skip('#getExpressionReturnType', () => {
     it('literal', () => {
       let exp = expressionFromString('2').result
       let type = checker.getExpressionReturnType(exp)
@@ -204,7 +208,7 @@ describe('TypeChecker', () => {
   })
 
   it('checkAssigmentNodes', () => {
-    let compiler = new Compiler()
+    let parser = new Parser()
 
     let code = `
     variables
@@ -216,12 +220,14 @@ describe('TypeChecker', () => {
     fin
     `
 
-    let compilation_report = compiler.compile(code, DO_NOT_RUN_TYPE_CHECKER)
+    let parsing_report = parser.parse(code)
 
-    compilation_report.error.should.equal(false)
+    parsing_report.error.should.equal(false)
 
-    let module_root = compilation_report.result.main.statements
-    let globals = compilation_report.result.main.variables, locals = globals
+    let program = Interpretable(Checkable(parsing_report.result).result)
+
+    let module_root = program.modules.main.root
+    let globals = program.modules.main.locals, locals = globals
     let module_info = {main:{return_data_type:'none'}}
 
     let error_list = []
@@ -240,14 +246,7 @@ describe('TypeChecker', () => {
   })
 
   it('lookForErrors', () => {
-    let compiler = new Compiler()
-
-    let condition_error = false
-
-    compiler.on('type-error', (ev, reason) => {
-      console.log(reason)
-      if (reason === 'incorrect-type-at-condition') condition_error = true;
-    })
+    let parser = new Parser()
 
     let code = `
     variables
@@ -261,9 +260,26 @@ describe('TypeChecker', () => {
     fin
     `
 
-    let compilation_report = compiler.compile(code, RUN_TYPE_CHECKER)
+    let parsing_report = parser.parse(code)
 
-    compilation_report.error.should.equal(false)
+    parsing_report.error.should.equal(false)
+
+    let program = Interpretable(Checkable(parsing_report.result).result)
+
+    let module_root = program.modules.main.root
+    let globals = program.modules.main.locals, locals = globals
+    let module_info = {main:{return_data_type:'none'}}
+
+    let checker = new TypeChecker(module_root, module_info, globals, locals)
+
+    let condition_error = false
+
+    checker.on('type-error', (reason) => {
+      console.log(reason)
+      if (reason === 'incorrect-type-at-condition') condition_error = true;
+    })
+
+    checker.lookForErrors()
 
     condition_error.should.equal(false)
   })

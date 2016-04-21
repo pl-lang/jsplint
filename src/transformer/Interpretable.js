@@ -43,6 +43,8 @@ function transformStatement(statement) {
     return transformWhile(statement)
     case 'until':
     return transformUntil(statement)
+    case 'call':
+    return transformCall(statement)
     default:
     throw new TypeError(`'${statement.type}' no es un tipo de enunciado reconocido`)
   }
@@ -106,4 +108,15 @@ function transformUntil(until_statement) {
   until_node.loop_body_root = temp_list.firstNode
 
   return until_node
+}
+
+function transformCall(call_statement) {
+  let call = {
+    name:call_statement.name,
+    action:'module_call',
+    expression_type:'module_call',
+    args:call_statement.args
+  }
+
+  return new GenericNode(call)
 }
