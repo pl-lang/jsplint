@@ -24,184 +24,184 @@ let globals = {
 }
 let checker = new TypeChecker(null, null, globals, {})
 
-describe.skip('TypeChecker.getExpressionReturnType', () => {
-  it('literal', () => {
-    let exp = expressionFromString('2').result
-    let type = checker.getExpressionReturnType(exp)
-    type.result.should.equal('entero')
-  })
+describe('TypeChecker', () => {
 
-  it('operacion', () => {
-    {
-      let exp = expressionFromString('verdadero AND falso').result
-      let type = checker.getExpressionReturnType(exp)
-      type.result.should.equal('logico')
-    }
-  })
-
-  it('expresion entre parentesis', () => {
-    {
-      let exp = expressionFromString('(verdadero AND falso)').result
-      let type = checker.getExpressionReturnType(exp)
-      type.result.should.equal('logico')
-    }
-  })
-
-  it('expresion de invocacion', () => {
-    {
-      let exp = expressionFromString('a').result
+  describe('#getExpressionReturnType', () => {
+    it('literal', () => {
+      let exp = expressionFromString('2').result
       let type = checker.getExpressionReturnType(exp)
       type.result.should.equal('entero')
-    }
+    })
+
+    it('operacion', () => {
+      {
+        let exp = expressionFromString('verdadero AND falso').result
+        let type = checker.getExpressionReturnType(exp)
+        type.result.should.equal('logico')
+      }
+    })
+
+    it('expresion entre parentesis', () => {
+      {
+        let exp = expressionFromString('(verdadero AND falso)').result
+        let type = checker.getExpressionReturnType(exp)
+        type.result.should.equal('logico')
+      }
+    })
+
+    it('expresion de invocacion', () => {
+      {
+        let exp = expressionFromString('a').result
+        let type = checker.getExpressionReturnType(exp)
+        type.result.should.equal('entero')
+      }
+    })
+
+    it('2 parametros enteros en operadores matematicos', () => {
+      {
+        let exp = expressionFromString('2 + 2').result
+        let type = checker.getExpressionReturnType(exp)
+        type.result.should.equal('entero')
+      }
+
+      {
+        let exp = expressionFromString('2 * 2').result
+        let type = checker.getExpressionReturnType(exp)
+        type.result.should.equal('entero')
+      }
+
+      {
+        let exp = expressionFromString('2 - 2').result
+        let type = checker.getExpressionReturnType(exp)
+        type.result.should.equal('entero')
+      }
+
+      {
+        let exp = expressionFromString('2 ^ 2').result
+        let type = checker.getExpressionReturnType(exp)
+        type.result.should.equal('entero')
+      }
+
+      {
+        let exp = expressionFromString('2 + verdadero').result
+        let type = checker.getExpressionReturnType(exp)
+        type.error.should.equal(true)
+      }
+    })
+
+    it('1 entero y un real en operadores matematicos', () => {
+      {
+        let exp = expressionFromString('2 + 2.3').result
+        let type = checker.getExpressionReturnType(exp)
+        type.result.should.equal('real')
+      }
+
+      {
+        let exp = expressionFromString('2 * 2.3').result
+        let type = checker.getExpressionReturnType(exp)
+        type.result.should.equal('real')
+      }
+
+      {
+        let exp = expressionFromString('2 - 2.3').result
+        let type = checker.getExpressionReturnType(exp)
+        type.result.should.equal('real')
+      }
+
+      {
+        let exp = expressionFromString('2 ^ 2.3').result
+        let type = checker.getExpressionReturnType(exp)
+        type.result.should.equal('real')
+      }
+    })
+
+    it('operadores de comparasion', () => {
+      {
+        let exp = expressionFromString('2 = 2.3').result
+        let type = checker.getExpressionReturnType(exp)
+        type.result.should.equal('logico')
+      }
+
+      {
+        let exp = expressionFromString('2 + 2 = 4').result
+        let type = checker.getExpressionReturnType(exp)
+        type.result.should.equal('logico')
+      }
+
+      {
+        let exp = expressionFromString('2 <> 2.3').result
+        let type = checker.getExpressionReturnType(exp)
+        type.result.should.equal('logico')
+      }
+
+      {
+        let exp = expressionFromString('2 < 2.3').result
+        let type = checker.getExpressionReturnType(exp)
+        type.result.should.equal('logico')
+      }
+
+      {
+        let exp = expressionFromString('2 > 2.3').result
+        let type = checker.getExpressionReturnType(exp)
+        type.result.should.equal('logico')
+      }
+
+      {
+        let exp = expressionFromString('2 <= 2.3').result
+        let type = checker.getExpressionReturnType(exp)
+        type.result.should.equal('logico')
+      }
+
+      {
+        let exp = expressionFromString('2 >= 2.3').result
+        let type = checker.getExpressionReturnType(exp)
+        type.result.should.equal('logico')
+      }
+    })
+
+    it('operadores que solo toman enteros', () => {
+      {
+        let exp = expressionFromString('2 div 2').result
+        let type = checker.getExpressionReturnType(exp)
+        type.result.should.equal('entero')
+      }
+
+      {
+        let exp = expressionFromString('2 mod 2').result
+        let type = checker.getExpressionReturnType(exp)
+        type.result.should.equal('entero')
+      }
+    })
+
+    it('operador de division', () => {
+      {
+        let exp = expressionFromString('2.0 / 2.0').result
+        let type = checker.getExpressionReturnType(exp)
+        type.result.should.equal('real')
+      }
+    })
+
+    it('operadores logicos', () => {
+      {
+        let exp = expressionFromString('verdadero AND falso').result
+        let type = checker.getExpressionReturnType(exp)
+        type.result.should.equal('logico')
+      }
+
+      {
+        let exp = expressionFromString('verdadero OR falso').result
+        let type = checker.getExpressionReturnType(exp)
+        type.result.should.equal('logico')
+      }
+
+      // TODO: ver por que esta expresion devuelve undefined
+      // {
+      //   let exp = expressionFromString('NOT verdadero').result
+      //   let type = checker.getExpressionReturnType(exp)
+      //   type.result.should.equal('logico')
+      // }
+    })
   })
-
-  it('2 parametros enteros en operadores matematicos', () => {
-    {
-      let exp = expressionFromString('2 + 2').result
-      let type = checker.getExpressionReturnType(exp)
-      type.result.should.equal('entero')
-    }
-
-    {
-      let exp = expressionFromString('2 * 2').result
-      let type = checker.getExpressionReturnType(exp)
-      type.result.should.equal('entero')
-    }
-
-    {
-      let exp = expressionFromString('2 - 2').result
-      let type = checker.getExpressionReturnType(exp)
-      type.result.should.equal('entero')
-    }
-
-    {
-      let exp = expressionFromString('2 ^ 2').result
-      let type = checker.getExpressionReturnType(exp)
-      type.result.should.equal('entero')
-    }
-
-    {
-      let exp = expressionFromString('2 + verdadero').result
-      let type = checker.getExpressionReturnType(exp)
-      type.error.should.equal(true)
-    }
-  })
-
-  it('1 entero y un real en operadores matematicos', () => {
-    {
-      let exp = expressionFromString('2 + 2.3').result
-      let type = checker.getExpressionReturnType(exp)
-      type.result.should.equal('real')
-    }
-
-    {
-      let exp = expressionFromString('2 * 2.3').result
-      let type = checker.getExpressionReturnType(exp)
-      type.result.should.equal('real')
-    }
-
-    {
-      let exp = expressionFromString('2 - 2.3').result
-      let type = checker.getExpressionReturnType(exp)
-      type.result.should.equal('real')
-    }
-
-    {
-      let exp = expressionFromString('2 ^ 2.3').result
-      let type = checker.getExpressionReturnType(exp)
-      type.result.should.equal('real')
-    }
-  })
-
-  it('operadores de comparasion', () => {
-    {
-      let exp = expressionFromString('2 = 2.3').result
-      let type = checker.getExpressionReturnType(exp)
-      type.result.should.equal('logico')
-    }
-
-    {
-      let exp = expressionFromString('2 + 2 = 4').result
-      let type = checker.getExpressionReturnType(exp)
-      type.result.should.equal('logico')
-    }
-
-    {
-      let exp = expressionFromString('2 <> 2.3').result
-      let type = checker.getExpressionReturnType(exp)
-      type.result.should.equal('logico')
-    }
-
-    {
-      let exp = expressionFromString('2 < 2.3').result
-      let type = checker.getExpressionReturnType(exp)
-      type.result.should.equal('logico')
-    }
-
-    {
-      let exp = expressionFromString('2 > 2.3').result
-      let type = checker.getExpressionReturnType(exp)
-      type.result.should.equal('logico')
-    }
-
-    {
-      let exp = expressionFromString('2 <= 2.3').result
-      let type = checker.getExpressionReturnType(exp)
-      type.result.should.equal('logico')
-    }
-
-    {
-      let exp = expressionFromString('2 >= 2.3').result
-      let type = checker.getExpressionReturnType(exp)
-      type.result.should.equal('logico')
-    }
-  })
-
-  it('operadores que solo toman enteros', () => {
-    {
-      let exp = expressionFromString('2 div 2').result
-      let type = checker.getExpressionReturnType(exp)
-      type.result.should.equal('entero')
-    }
-
-    {
-      let exp = expressionFromString('2 mod 2').result
-      let type = checker.getExpressionReturnType(exp)
-      type.result.should.equal('entero')
-    }
-  })
-
-  it('operador de division', () => {
-    {
-      let exp = expressionFromString('2.0 / 2.0').result
-      let type = checker.getExpressionReturnType(exp)
-      type.result.should.equal('real')
-    }
-  })
-
-  it('operadores logicos', () => {
-    {
-      let exp = expressionFromString('verdadero AND falso').result
-      let type = checker.getExpressionReturnType(exp)
-      type.result.should.equal('logico')
-    }
-
-    {
-      let exp = expressionFromString('verdadero OR falso').result
-      let type = checker.getExpressionReturnType(exp)
-      type.result.should.equal('logico')
-    }
-
-    // TODO: ver por que esta expresion devuelve undefined
-    // {
-    //   let exp = expressionFromString('NOT verdadero').result
-    //   let type = checker.getExpressionReturnType(exp)
-    //   type.result.should.equal('logico')
-    // }
-  })
-})
-
-describe.skip('TypeChecker', () => {
 
   it('checkAssigmentNodes', () => {
     let compiler = new Compiler()
