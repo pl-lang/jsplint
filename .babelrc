@@ -1,8 +1,3 @@
 {
-  "presets": ["es2015"],
-  "env": {
-    "coverage": {
-      "plugins": ["__coverage__", {"only":"src/"}]
-    }
-  }
+  "presets": ["es2015"]
 }
