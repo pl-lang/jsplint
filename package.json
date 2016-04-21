@@ -7,7 +7,7 @@
     "test": "mocha",
     "m_watch": "mocha -w",
     "coverage": "istanbul cover node_modules/mocha/bin/_mocha",
-    "nyc": "nyc --reporter=lcov --reporter=text mocha"
+    "nyc": "nyc --cache --reporter=lcov --reporter=text mocha"
   },
   "nyc": {},
   "author": "Rodrigo Maximiliano Bellusci",
