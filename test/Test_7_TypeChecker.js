@@ -325,14 +325,6 @@ describe.only('TypeChecker', () => {
   })
 
   it('verificar que no haya errores en un bucle repetir', () => {
-    let compiler = new Compiler()
-
-    let condition_error = false
-
-    compiler.on('type-error', (ev, reason) => {
-      console.log(reason)
-      if (reason === 'incorrect-type-at-condition') condition_error = true;
-    })
 
     let code = `
     variables
@@ -347,9 +339,32 @@ describe.only('TypeChecker', () => {
     fin
     `
 
-    let compilation_report = compiler.compile(code, RUN_TYPE_CHECKER)
+    let parser = new Parser()
 
-    compilation_report.error.should.equal(false)
+    let parsing_report = parser.parse(code)
+
+    parsing_report.error.should.equal(false)
+
+    let program = Interpretable(Checkable(parsing_report.result).result)
+
+    let module_root = program.modules.main.root
+    let globals = program.modules.main.locals, locals = globals
+    let module_info = {main:{return_data_type:'none'}}
+
+    let checker = new TypeChecker(module_root, module_info, globals, locals)
+
+    let condition_error = false
+
+    checker.on('type-error', (reason) => {
+      console.log('error>>', reason)
+      if (reason === 'incorrect-type-at-condition') condition_error = true;
+    })
+
+    checker.on('any', (...arg) => {
+      console.log('evento:', ...arg)
+    })
+
+    checker.lookForErrors()
 
     condition_error.should.equal(false)
   })
