@@ -207,7 +207,7 @@ describe.only('TypeChecker', () => {
     })
   })
 
-  it('checkAssigmentNodes', () => {
+  it('verificar enunciados de asignacion', () => {
     let parser = new Parser()
 
     let code = `
@@ -245,7 +245,7 @@ describe.only('TypeChecker', () => {
     error_list[1].cause.should.equal('incompatible-types-at-assignment')
   })
 
-  it('lookForErrors', () => {
+  it('verificar un programa con un enunciado si..sino', (done) => {
     let parser = new Parser()
 
     let code = `
@@ -274,17 +274,19 @@ describe.only('TypeChecker', () => {
 
     let condition_error = false
 
-    checker.on('type-error', (cause) => {
-      console.log(cause)
-      if (cause === 'incorrect-type-at-condition') condition_error = true;
+    checker.on('type-error', (ev, error) => {
+      if (error.cause === 'invalid-type-at-condition') condition_error = true;
+    })
+
+    checker.on('type-check-finished', () => {
+      condition_error.should.equal(false)
+      done()
     })
 
     checker.lookForErrors()
-
-    condition_error.should.equal(false)
   })
 
-  it('verificar que se revise bien un program con bucle mientras', () => {
+  it('verificar un programa con bucle mientras', (done) => {
 
     let code = `
     variables
@@ -315,13 +317,16 @@ describe.only('TypeChecker', () => {
 
     let condition_error = false
 
-    checker.on('type-error', (cause) => {
-      if (cause === 'incorrect-type-at-condition') condition_error = true;
+    checker.on('type-error', (ev, error) => {
+      if (error.cause === 'invalid-type-at-condition') condition_error = true;
+    })
+
+    checker.on('type-check-finished', () => {
+      condition_error.should.equal(false)
+      done()
     })
 
     checker.lookForErrors()
-
-    condition_error.should.equal(false)
   })
 
   it('verificar que no haya errores en un bucle repetir', (done) => {
