@@ -28,7 +28,7 @@ let globals = {
 }
 let checker = new TypeChecker(null, null, globals, {})
 
-describe.only('TypeChecker', () => {
+describe('TypeChecker', () => {
 
   describe('#getExpressionReturnType', () => {
     it('literal', () => {
@@ -198,12 +198,11 @@ describe.only('TypeChecker', () => {
         type.result.should.equal('logico')
       }
 
-      // TODO: ver por que esta expresion devuelve undefined
-      // {
-      //   let exp = expressionFromString('NOT verdadero').result
-      //   let type = checker.getExpressionReturnType(exp)
-      //   type.result.should.equal('logico')
-      // }
+      {
+        let exp = expressionFromString('NOT verdadero').result
+        let type = checker.getExpressionReturnType(exp)
+        type.result.should.equal('logico')
+      }
     })
   })
 

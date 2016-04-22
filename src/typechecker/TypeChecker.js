@@ -72,7 +72,7 @@ let logico_operators = [
 ]
 
 function isLogicOperator(token_name) {
-  return token_name === 'and' || token_name === 'or' || token_name === 'or' ? true: false
+  return token_name === 'and' || token_name === 'or' || token_name === 'not' ? true: false
 }
 
 let type_data_by_category = {
@@ -548,11 +548,11 @@ export default class TypeChecker extends Emitter {
     else if (expression.expression_type === 'expression') {
       return this.getExpressionReturnType(expression.expression)
     }
-    else if (expression.expression_type === 'operation') {
+    else if (expression.expression_type === 'operation' || expression.expression_type === 'unary-operation') {
       let operator_info = getOperatorInfo(expression.op)
 
-      if (expression.op === 'unary-minus') {
-        let type_report = getExpressionReturnType(expression.operand)
+      if (expression.op === 'unary-minus' || expression.op === 'not') {
+        let type_report = this.getExpressionReturnType(expression.operand)
 
         if (type_report.error) {
           return type_report
@@ -561,7 +561,7 @@ export default class TypeChecker extends Emitter {
           let operand_type = type_report.result
           if (includes(operator_info.supported_types, operand_type)) {
             let error = false
-            let result = operator_info.calculate_return_type(operand_type)
+            let result = operator_info.calculate_return_type(operand_type).result
             return {error, result}
           }
           else {
