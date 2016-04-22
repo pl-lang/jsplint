@@ -91,7 +91,7 @@ function transformWhile(while_statement) {
 
   let while_node = new WhileNode({action:'while', condition:while_statement.condition})
 
-  while_node._loop_body_root = temp_list.firstNode
+  while_node.loop_body_root = temp_list.firstNode
 
   return while_node
 }
