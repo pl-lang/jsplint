@@ -30,7 +30,7 @@ let checker = new TypeChecker(null, null, globals, {})
 
 describe.only('TypeChecker', () => {
 
-  describe.skip('#getExpressionReturnType', () => {
+  describe('#getExpressionReturnType', () => {
     it('literal', () => {
       let exp = expressionFromString('2').result
       let type = checker.getExpressionReturnType(exp)
