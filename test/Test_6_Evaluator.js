@@ -324,19 +324,3 @@ describe('StatementCollector', () => {
     statements.error.should.equal(false)
   })
 })
-
-describe.skip('Interpreter', () => {
-  it('ejecuta las acciones de un programa', () => {
-    let programa = 'variables\nentero a, b\ninicio\na<-48\nb <- -32\nfin\n'
-    let q = queueFromSource(programa)
-
-    let mod_data = MainModuleScanner.capture(q)
-
-    let int = new Interpreter(mod_data.result)
-
-    int.run()
-
-    int.current_program.variables.a.value.should.equal(48)
-    int.current_program.variables.b.value.should.equal(-32)
-  })
-})
