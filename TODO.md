@@ -1,10 +1,20 @@
-- [ ] Revisar que las variables hayan sido inicializadas al momento invocar su valor
+# TAREA ACTUAL: Implementar cadenas
+  - [ ] hacer que StringToken devuelva un token de tipo string si su
+  captura es de longitud > 1, de otra manera que devuelta un token de tipo char
+    - [ ] actualizar las pruebas afectadas
 
-- [ ] En las asignaciones, revisar que la carga y la variable objetivo sean del mismo tipo
+  - [ ] hacer que Patterns.Expression capture las cadenas
+
+  - [ ] hacer que TypeChecker verifique asignaciones de cadenas a arreglos
+    - [ ] verificar que la expresion del lado izquierdo es un vector
+    - [ ] verificar que el arreglo tiene tantas celdas como letras la cadena
+
+  - [ ] transformar la asignacion de una cadena a un arreglo a las asignaciones
+  de las letras de la cadena a las celdas del arreglo
+
+
 
 - [ ] Implementar el rango especificado por el libro al tipo entero y al tipo real.
-
-- [x] Verificar que `'(2 - 2 - 2)'` de -2
 
 - [ ] Agregar sugerencias cuando una palabra clave esta mal escrita
   - Revisar -> http://norvig.com/spell-correct.html
