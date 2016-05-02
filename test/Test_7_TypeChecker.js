@@ -287,7 +287,7 @@ describe.only('TypeChecker', () => {
     checker.check(program)
   })
 
-  it.skip('verificar un programa con un enunciado si..sino', (done) => {
+  it('verificar un programa con un enunciado si..sino', (done) => {
     let parser = new Parser()
 
     let code = `
@@ -306,13 +306,9 @@ describe.only('TypeChecker', () => {
 
     parsing_report.error.should.equal(false)
 
-    let program = Interpretable(Checkable(parsing_report.result).result)
+    let program = parsing_report.result
 
-    let module_root = program.modules.main.root
-    let globals = program.modules.main.locals, locals = globals
-    let module_info = {main:{return_data_type:'none'}}
-
-    let checker = new TypeChecker(module_root, module_info, globals, locals)
+    let checker = new TypeChecker()
 
     let condition_error = false
 
@@ -325,7 +321,7 @@ describe.only('TypeChecker', () => {
       done()
     })
 
-    checker.lookForErrors()
+    checker.check(program)
   })
 
   it.skip('verificar un programa con bucle mientras', (done) => {
