@@ -28,9 +28,9 @@ let globals = {
 }
 let checker = new TypeChecker(null, null, globals, {})
 
-describe.skip('TypeChecker', () => {
+describe.only('TypeChecker', () => {
 
-  describe('#getExpressionReturnType', () => {
+  describe.skip('#getExpressionReturnType', () => {
     it('literal', () => {
       let exp = expressionFromString('2').result
       let type = checker.getExpressionReturnType(exp)
@@ -206,7 +206,51 @@ describe.skip('TypeChecker', () => {
     })
   })
 
-  it('verificar enunciados de asignacion', () => {
+  it.only('encontrar variables duplicadas', (done) => {
+    let parser = new Parser()
+
+    let code = `
+    variables
+      real var_uno
+      entero var_uno
+    inicio
+    fin
+    `
+
+    let parsing_report = parser.parse(code)
+
+    let program = parsing_report.result
+
+    let checker = new TypeChecker()
+
+    let repeated_vars_found = false
+
+    checker.on('repeated-variable', (ev, error_info) => {
+      let original = {
+        name:'var_uno',
+        type:'real',
+        isArray:false,
+        dimension:null
+      }
+
+      let repeated = {
+        name:'var_uno',
+        type:'entero',
+        isArray:false,
+        dimension:null
+      }
+      repeated_vars_found = true
+    })
+
+    checker.on('type-check-finished', () => {
+      repeated_vars_found.should.equal(true)
+      done()
+    })
+
+    checker.check(program)
+  })
+
+  it.skip('verificar enunciados de asignacion', () => {
     let parser = new Parser()
 
     let code = `
@@ -223,15 +267,11 @@ describe.skip('TypeChecker', () => {
 
     parsing_report.error.should.equal(false)
 
-    let program = Interpretable(Checkable(parsing_report.result).result)
-
-    let module_root = program.modules.main.root
-    let globals = program.modules.main.locals, locals = globals
-    let module_info = {main:{return_data_type:'none'}}
+    let program = parsing_report.result
 
     let error_list = []
 
-    let checker = new TypeChecker(module_root, module_info, globals, locals)
+    let checker = new TypeChecker()
 
     checker.on('type-error', (ev_info, error) => {
       error_list.push(error)
@@ -244,7 +284,7 @@ describe.skip('TypeChecker', () => {
     error_list[1].cause.should.equal('incompatible-types-at-assignment')
   })
 
-  it('verificar un programa con un enunciado si..sino', (done) => {
+  it.skip('verificar un programa con un enunciado si..sino', (done) => {
     let parser = new Parser()
 
     let code = `
@@ -285,7 +325,7 @@ describe.skip('TypeChecker', () => {
     checker.lookForErrors()
   })
 
-  it('verificar un programa con bucle mientras', (done) => {
+  it.skip('verificar un programa con bucle mientras', (done) => {
 
     let code = `
     variables
@@ -328,7 +368,7 @@ describe.skip('TypeChecker', () => {
     checker.lookForErrors()
   })
 
-  it('verificar que no haya errores en un bucle repetir', (done) => {
+  it.skip('verificar que no haya errores en un bucle repetir', (done) => {
 
     let code = `
     variables
@@ -371,7 +411,7 @@ describe.skip('TypeChecker', () => {
     checker.lookForErrors()
   })
 
-  it('checkCondition', () => {
+  it.skip('checkCondition', () => {
     {
       let exp = expressionFromString('2 + verdadero').result
 
@@ -393,7 +433,7 @@ describe.skip('TypeChecker', () => {
     }
   })
 
-  it('checkArrayInvocation', () => {
+  it.skip('checkArrayInvocation', () => {
     {
       // invalid index
 

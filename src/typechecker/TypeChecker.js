@@ -148,12 +148,13 @@ function includes(array, target_value) {
 }
 
 export default class TypeChecker extends Emitter {
-  constructor(module_root, module_info, globals, locals) {
+  constructor() {
     super(['type-check-started', 'type-error', 'type-check-finished'])
-    this.module_info = module_info
-    this.globals = globals
-    this.locals = locals
-    this.module_root = module_root
+    this.locals_by_module = {
+      main : {}
+    }
+    this.globals = this.locals_by_module.main
+    this.current_module_name = ''
   }
 
   variableExists(varname) {
@@ -199,17 +200,45 @@ export default class TypeChecker extends Emitter {
    * @emits TypeChecker#type-check-finished
    * @return {Report} Si se encontró algun error la propiedad "error" será true
    */
-  lookForErrors() {
-    let current_node = this.module_root
-
+  check(program) {
     this.emit('type-check-started')
 
-    while (current_node !== null) {
-      this.checkNode(current_node)
-      current_node = current_node.getNext()
+    for (let module of program.modules) {
+      this.current_module_name = module.name
+      for (let statement of module.body) {
+        this.checkStatement(statement)
+      }
     }
 
     this.emit('type-check-finished')
+  }
+
+  checkStatement(statement) {
+    switch (statement.type) {
+      case 'declaration':
+        this.DeclareVariable(statement)
+        break
+      case 'assignment':
+      case 'if':
+      case 'while':
+      case 'until':
+      case 'call':
+      default:
+        break
+    }
+  }
+
+  DeclareVariable(declaration) {
+    for (let variable of declaration.variables) {
+      if (variable.name in this.locals_by_module[this.current_module_name]) {
+        let original = this.locals_by_module[this.current_module_name][variable.name]
+        let repeated = variable
+        this.emit('repeated-variable', {original, repeated})
+      }
+      else {
+        this.locals_by_module[this.current_module_name][variable.name] = variable
+      }
+    }
   }
 
   /**
