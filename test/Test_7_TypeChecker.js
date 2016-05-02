@@ -28,7 +28,7 @@ let globals = {
 }
 let checker = new TypeChecker(null, null, globals, {})
 
-describe.only('TypeChecker', () => {
+describe('TypeChecker', () => {
 
   let checker = new TypeChecker()
 
