@@ -226,7 +226,10 @@ export default class TypeChecker extends Emitter {
         break
       case 'while':
         this.checkWhile(statement)
+        break
       case 'until':
+        this.checkUntil(statement)
+        break
       case 'call':
       default:
         break
@@ -313,14 +316,16 @@ export default class TypeChecker extends Emitter {
    * @param {UntilNode} node El nodo en cuestion
    * @return {Report} Si se encontró algun error la propiedad "error" será true
    */
-  checkUntilNode (node) {
-    let condition_report = this.checkCondition(node.data.condition)
+  checkUntil (until_statement) {
+    let condition_report = this.checkCondition(until_statement.condition)
 
     if (condition_report.error === true) {
       this.emit('type-error', condition_report.result)
     }
 
-    node.setCurrentBranchTo('program_body')
+    for (let statement of until_statement.body) {
+      this.checkStatement(statement)
+    }
   }
 
   /**
