@@ -206,7 +206,7 @@ describe.only('TypeChecker', () => {
     })
   })
 
-  it.only('encontrar variables duplicadas', (done) => {
+  it('encontrar variables duplicadas', (done) => {
     let parser = new Parser()
 
     let code = `
@@ -250,7 +250,7 @@ describe.only('TypeChecker', () => {
     checker.check(program)
   })
 
-  it.skip('verificar enunciados de asignacion', () => {
+  it('verificar enunciados de asignacion', (done) => {
     let parser = new Parser()
 
     let code = `
@@ -277,11 +277,14 @@ describe.only('TypeChecker', () => {
       error_list.push(error)
     })
 
-    checker.checkAssigmentNodes(module_root)
+    checker.on('type-check-finished', () => {
+      error_list.length.should.equal(2)
+      error_list[0].cause.should.equal('incompatible-operator-types')
+      error_list[1].cause.should.equal('incompatible-types-at-assignment')
+      done()
+    })
 
-    error_list.length.should.equal(2)
-    error_list[0].cause.should.equal('incompatible-operator-types')
-    error_list[1].cause.should.equal('incompatible-types-at-assignment')
+    checker.check(program)
   })
 
   it.skip('verificar un programa con un enunciado si..sino', (done) => {

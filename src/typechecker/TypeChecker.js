@@ -158,12 +158,10 @@ export default class TypeChecker extends Emitter {
   }
 
   variableExists(varname) {
-    let local_variable = varname in this.locals
-    let global_variable = varname in this.globals
+    let is_local_variable = varname in this.locals_by_module[this.current_module_name]
+    let is_global_variable = varname in this.globals
 
-    if (local_variable === false && global_variable === false) return false;
-
-    return true
+    return is_local_variable || is_global_variable
   }
 
   /**
@@ -172,10 +170,12 @@ export default class TypeChecker extends Emitter {
    * @return {object}         el objeto que representa a la variable
    */
   getVariable(varname) {
-    let variable
-
-    if (varname in this.locals) return this.locals[varname];
-    else return this.globals[varname];
+    if (varname in this.locals_by_module[this.current_module_name]) {
+      return this.locals_by_module[this.current_module_name][varname]
+    }
+    else {
+      return this.globals[varname]
+    }
   }
 
   /**
@@ -219,6 +219,8 @@ export default class TypeChecker extends Emitter {
         this.DeclareVariable(statement)
         break
       case 'assignment':
+        this.checkAssignment(statement)
+        break
       case 'if':
       case 'while':
       case 'until':
@@ -368,19 +370,19 @@ export default class TypeChecker extends Emitter {
    * @param  {object} assignment_data propiedad data de un nodo de asignacion
    * @return {void}
    */
-  checkAssignment(assignment_data) {
-    if (this.variableExists(assignment_data.target.name) === true) {
-      let target = this.getVariable(assignment_data.target.name)
+  checkAssignment(assignment) {
+    if (this.variableExists(assignment.left.name) === true) {
+      let target = this.getVariable(assignment.left.name)
 
-      if (target.isArray === true || assignment_data.target.isArray === true) {
-        let report = this.checkArrayInvocation(target, assignment_data.target)
+      if (target.isArray === true || assignment.left.isArray === true) {
+        let report = this.checkArrayInvocation(target, assignment.left)
 
         if (report.error === true) {
           this.emit('type-error', report.result)
         }
       }
 
-      let expression_type_report = this.getExpressionReturnType(assignment_data.payload)
+      let expression_type_report = this.getExpressionReturnType(assignment.right)
 
       if (expression_type_report.error === true) {
         this.emit('type-error', expression_type_report.result)
@@ -400,7 +402,7 @@ export default class TypeChecker extends Emitter {
     else {
       this.emit('type-error', {
         cause:'undeclared-variable',
-        name:assignment_data.target.name
+        name:assignment.left.name
       })
     }
   }
