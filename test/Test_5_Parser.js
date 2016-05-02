@@ -92,7 +92,7 @@ describe('Parser', () => {
   })
 })
 
-describe('Checkable transformer', () => {
+describe.only('Checkable transformer', () => {
   it('transforma correctamente un modulo', () => {
     let code = `variables
     entero a, b
@@ -105,13 +105,9 @@ describe('Checkable transformer', () => {
 
     report.error.should.equal(false)
 
-    let transformation_report = Checkable(report.result)
+    let transformed_module = Checkable(report.result).modules[0]
 
-    transformation_report.error.should.equal(false)
-
-    let module = transformation_report.result.modules[0]
-
-    module.should.deepEqual({
+    transformed_module.should.deepEqual({
       type:'module',
       name:'main',
       body:[],
@@ -120,56 +116,16 @@ describe('Checkable transformer', () => {
           name:'a',
           type:'entero',
           isArray:false,
-          dimension:null,
-          bounds_checked:false
+          dimension:null
         },
         b:{
           name:'b',
           type:'entero',
           isArray:false,
-          dimension:null,
-          bounds_checked:false
+          dimension:null
         }
       }
     })
-  })
-
-  it('detecta variables repetidas', () => {
-    let code = `variables
-    entero a, real a
-    inicio
-    fin`
-
-    let parser = new Parser()
-
-    let report =  parser.parse(code)
-
-    report.error.should.equal(false)
-
-    let transformation_report = Checkable(report.result)
-
-    transformation_report.error.should.equal(true)
-
-    let repeated_pairs = transformation_report.result
-
-    repeated_pairs.should.deepEqual([
-      [
-        {
-          first:{
-            name:'a',
-            type:'entero',
-            isArray:false,
-            dimension:null
-          },
-          second:{
-            name:'a',
-            type:'real',
-            isArray:false,
-            dimension:null
-          }
-        }
-      ]
-    ])
   })
 })
 
