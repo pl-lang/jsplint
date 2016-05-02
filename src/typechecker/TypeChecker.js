@@ -223,7 +223,9 @@ export default class TypeChecker extends Emitter {
         break
       case 'if':
         this.checkIf(statement)
+        break
       case 'while':
+        this.checkWhile(statement)
       case 'until':
       case 'call':
       default:
@@ -293,24 +295,16 @@ export default class TypeChecker extends Emitter {
    * @param {WhileNode} node El nodo en cuestion
    * @return {Report} Si se encontró algun error la propiedad "error" será true
    */
-  checkWhileNode (node) {
-    let condition_report = this.checkCondition(node.data.condition)
+  checkWhile (while_statement) {
+    let condition_report = this.checkCondition(while_statement.condition)
 
     if (condition_report.error === true) {
       this.emit('type-error', condition_report.result)
     }
 
-    let current_node = node.loop_body_root
-
-    let next_statement = node.getNextStatementNode()
-
-    while (current_node !== next_statement && current_node !== node) {
-      this.checkNode(current_node)
-      current_node = current_node.getNext()
+    for (let statement of while_statement.body) {
+      this.checkStatement(statement)
     }
-
-    node.setCurrentBranchTo('program_body')
-
   }
 
   /**

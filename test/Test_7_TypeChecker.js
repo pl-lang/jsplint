@@ -324,7 +324,7 @@ describe.only('TypeChecker', () => {
     checker.check(program)
   })
 
-  it.skip('verificar un programa con bucle mientras', (done) => {
+  it('verificar condicion de un bucle mientras', (done) => {
 
     let code = `
     variables
@@ -345,13 +345,9 @@ describe.only('TypeChecker', () => {
 
     parsing_report.error.should.equal(false)
 
-    let program = Interpretable(Checkable(parsing_report.result).result)
+    let program = parsing_report.result
 
-    let module_root = program.modules.main.root
-    let globals = program.modules.main.locals, locals = globals
-    let module_info = {main:{return_data_type:'none'}}
-
-    let checker = new TypeChecker(module_root, module_info, globals, locals)
+    let checker = new TypeChecker()
 
     let condition_error = false
 
@@ -364,7 +360,45 @@ describe.only('TypeChecker', () => {
       done()
     })
 
-    checker.lookForErrors()
+    checker.check(program)
+  })
+
+  it('verificar enunciados de un bucle mientras', (done) => {
+
+    let code = `
+    variables
+      logico a
+    inicio
+      a <- verdadero
+      mientras (a)
+        a <- 34
+        a <- falso
+      finmientras
+    fin
+    `
+
+    let parser = new Parser()
+
+    let parsing_report = parser.parse(code)
+
+    parsing_report.error.should.equal(false)
+
+    let program = parsing_report.result
+
+    let checker = new TypeChecker()
+
+    let assigment_error = false
+
+    checker.on('type-error', (ev, error) => {
+      if (error.cause === 'incompatible-types-at-assignment') assigment_error = true;
+    })
+
+    checker.on('type-check-finished', () => {
+      assigment_error.should.equal(true)
+      done()
+    })
+
+    checker.check(program)
   })
 
   it.skip('verificar que no haya errores en un bucle repetir', (done) => {
