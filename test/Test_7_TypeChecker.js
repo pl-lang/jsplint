@@ -30,7 +30,21 @@ let checker = new TypeChecker(null, null, globals, {})
 
 describe.only('TypeChecker', () => {
 
-  describe.skip('#getExpressionReturnType', () => {
+  let checker = new TypeChecker()
+
+  // este programa solo sirve para que checker tenga las variables q necesita
+  let code = `
+  variables
+    entero a, b[3, 4]
+  inicio
+  fin
+  `
+
+  let parser = new Parser()
+
+  checker.check(parser.parse(code).result)
+
+  describe('#getExpressionReturnType', () => {
     it('literal', () => {
       let exp = expressionFromString('2').result
       let type = checker.getExpressionReturnType(exp)
@@ -440,7 +454,9 @@ describe.only('TypeChecker', () => {
     checker.check(program)
   })
 
-  it.skip('checkCondition', () => {
+  it('checkCondition', () => {
+    let checker = new TypeChecker()
+
     {
       let exp = expressionFromString('2 + verdadero').result
 
@@ -462,7 +478,7 @@ describe.only('TypeChecker', () => {
     }
   })
 
-  it.skip('checkArrayInvocation', () => {
+  it('checkArrayInvocation', () => {
     {
       // invalid index
 
