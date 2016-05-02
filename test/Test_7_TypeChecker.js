@@ -28,7 +28,7 @@ let globals = {
 }
 let checker = new TypeChecker(null, null, globals, {})
 
-describe('TypeChecker', () => {
+describe.skip('TypeChecker', () => {
 
   describe('#getExpressionReturnType', () => {
     it('literal', () => {

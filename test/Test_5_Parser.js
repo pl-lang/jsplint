@@ -92,7 +92,7 @@ describe('Parser', () => {
   })
 })
 
-describe.only('Checkable transformer', () => {
+describe('Checkable transformer', () => {
   it('transforma correctamente un modulo', () => {
     let code = `variables
     entero a, b
@@ -142,11 +142,7 @@ describe('Interpretable', () => {
 
     parsing_report.error.should.equal(false)
 
-    let checkable_report = Checkable(parsing_report.result)
-
-    checkable_report.error.should.equal(false)
-
-    let transformed_program = Interpretable(checkable_report.result)
+    let transformed_program = Interpretable(Checkable(parsing_report.result))
 
     transformed_program.should.deepEqual(
       {
@@ -157,15 +153,13 @@ describe('Interpretable', () => {
                 name : 'a',
                 isArray : false,
                 dimension : null,
-                type : 'entero',
-                bounds_checked : false
+                type : 'entero'
               },
               b : {
                 name : 'b',
                 isArray : false,
                 dimension : null,
-                type : 'real',
-                bounds_checked : false
+                type : 'real'
               }
             },
             root : null
@@ -188,11 +182,7 @@ describe('Interpretable', () => {
 
     parsing_report.error.should.equal(false)
 
-    let checkable_report = Checkable(parsing_report.result)
-
-    checkable_report.error.should.equal(false)
-
-    let transformed_program = Interpretable(checkable_report.result)
+    let transformed_program = Interpretable(Checkable(parsing_report.result))
 
     transformed_program.modules.main.root.data.should.deepEqual({
       action : 'assignment',
@@ -227,11 +217,7 @@ describe('Interpretable', () => {
 
     parsing_report.error.should.equal(false)
 
-    let checkable_report = Checkable(parsing_report.result)
-
-    checkable_report.error.should.equal(false)
-
-    let transformed_program = Interpretable(checkable_report.result)
+    let transformed_program = Interpretable(Checkable(parsing_report.result))
 
     transformed_program.modules.main.root.data.should.deepEqual({
       action:'if',
@@ -284,11 +270,7 @@ describe('Interpretable', () => {
 
     parsing_report.error.should.equal(false)
 
-    let checkable_report = Checkable(parsing_report.result)
-
-    checkable_report.error.should.equal(false)
-
-    let transformed_program = Interpretable(checkable_report.result)
+    let transformed_program = Interpretable(Checkable(parsing_report.result))
 
     transformed_program.modules.main.root.data.should.deepEqual({
       action:'while',
@@ -326,11 +308,7 @@ describe('Interpretable', () => {
 
     parsing_report.error.should.equal(false)
 
-    let checkable_report = Checkable(parsing_report.result)
-
-    checkable_report.error.should.equal(false)
-
-    let transformed_program = Interpretable(checkable_report.result)
+    let transformed_program = Interpretable(Checkable(parsing_report.result))
 
     transformed_program.modules.main.root.data.should.deepEqual({
       action:'until',
