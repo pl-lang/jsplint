@@ -27,7 +27,7 @@ export default class Interpreter extends Emitter {
   set current_program(program_modules) {
     this._current_program = program_modules
     let main = program_modules.main
-    let main_evaluator = new Evaluator(main.variables, main.variables, main.statements, {})
+    let main_evaluator = new Evaluator(main.locals, main.locals, main.root, {})
     // NOTE: exposeChildrenEvents va a ser reemplazada mas adelante
     this.bindEvaluatorEvents(main_evaluator)
     this.stack = []
