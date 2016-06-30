@@ -9,12 +9,7 @@ import { match, MainModule as MainModulePattern, skipWhiteSpace } from './Patter
 
 export default class Parser extends Emitter {
   constructor() {
-    super([
-      'parsing-started',
-      'lexical-error',
-      'syntax-error',
-      'parsing-finished'
-    ])
+    super(['parsing-started', 'lexical-error', 'syntax-error', 'parsing-finished'])
   }
 
   parse(code) {
@@ -29,6 +24,7 @@ export default class Parser extends Emitter {
 
     let lexer_report = lexer.tokenize(source)
 
+    // emitir eventos de error si hubo alguno y finalizar parseo
     if (lexer_report.error) {
       for (let error_report of lexer_report.result) {
         this.emit('lexical-error', error_report)
@@ -39,6 +35,7 @@ export default class Parser extends Emitter {
 
     let token_queue = new TokenQueue(lexer_report.result)
 
+    // parsear los modulos del programa, empezando por el principal
     while (token_queue.current().kind !== 'eof') {
       skipWhiteSpace(token_queue)
 
@@ -52,6 +49,7 @@ export default class Parser extends Emitter {
           throw new TypeError(`${token_queue.current().kind} no coincide con el encabezado de ninguna clase de modulo`)
       }
 
+      // si hubo un error emitir un error de sintaxis y finalizar parseo
       if (module_match.error) {
         this.emit('syntax-error', module_match.result)
         return {error:true, result:'syntax-error'}
@@ -61,7 +59,7 @@ export default class Parser extends Emitter {
       }
     }
 
-    this.emit('parsing-finished')
+    this.emit('parsing-finished', {error:false})
 
     return {error:false, result}
   }
