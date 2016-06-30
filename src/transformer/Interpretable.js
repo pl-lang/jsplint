@@ -97,13 +97,21 @@ function transformWhile(while_statement) {
 }
 
 function transformUntil(until_statement) {
+  let until_node = new UntilNode({action:'until', condition:until_statement.condition})
+
+  let body_statement_nodes = until_statement.body.map(transformStatement)
+
   let temp_list = new LinkedList()
 
-  for (let statement of until_statement.body) {
-    temp_list.addNode(transformStatement(statement))
-  }
+  for (let i = 0; i < body_statement_nodes.length; i++) {
+    let current_node = body_statement_nodes[i]
 
-  let until_node = new UntilNode({action:'until', condition:until_statement.condition})
+    if (i == body_statement_nodes.length - 1) {
+      current_node.setNext(until_node)
+    }
+
+    temp_list.addNode(current_node)
+  }
 
   until_node.loop_body_root = temp_list.firstNode
 

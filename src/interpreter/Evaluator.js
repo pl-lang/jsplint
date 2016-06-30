@@ -65,7 +65,7 @@ export default class Evaluator extends Emitter {
         }
         break
 
-        case 'repeat': {
+        case 'until': {
           let branch_name = !this.evaluateExp(statement.condition) ? 'loop_body':'program_body'
           this.current_node.setCurrentBranchTo(branch_name)
         }
