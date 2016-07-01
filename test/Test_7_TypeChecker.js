@@ -239,7 +239,7 @@ describe.only('TypeChecker', () => {
 
     let repeated_vars_found = false
 
-    checker.on('repeated-variable', (ev, error_info) => {
+    checker.on('type-error', (ev, error_info) => {
       let original = {
         name:'var_uno',
         type:'real',
