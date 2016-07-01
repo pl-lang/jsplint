@@ -253,6 +253,10 @@ describe.only('TypeChecker', () => {
         isArray:false,
         dimension:null
       }
+
+      error_info.original.should.deepEqual(original)
+      error_info.repeated.should.deepEqual(repeated)
+
       repeated_vars_found = true
     })
 
@@ -301,157 +305,163 @@ describe.only('TypeChecker', () => {
     checker.check(program)
   })
 
-  it('verificar un programa con un enunciado si..sino', (done) => {
-    let parser = new Parser()
+  describe('Estructura si', () => {
+    it('verificar un programa con un enunciado si..sino', (done) => {
+      let parser = new Parser()
 
-    let code = `
-    variables
-    inicio
-      si (2 + 2 = 4) entonces
-        escribir("hola")
-      sino
-        escribir("error")
-      finsi
-      escribir("chau")
-    fin
-    `
+      let code = `
+      variables
+      inicio
+        si (2 + 2 = 4) entonces
+          escribir("hola")
+        sino
+          escribir("error")
+        finsi
+        escribir("chau")
+      fin
+      `
 
-    let parsing_report = parser.parse(code)
+      let parsing_report = parser.parse(code)
 
-    parsing_report.error.should.equal(false)
+      parsing_report.error.should.equal(false)
 
-    let program = parsing_report.result
+      let program = parsing_report.result
 
-    let checker = new TypeChecker()
+      let checker = new TypeChecker()
 
-    let condition_error = false
+      let condition_error = false
 
-    checker.on('type-error', (ev, error) => {
-      if (error.cause === 'invalid-type-at-condition') condition_error = true;
+      checker.on('type-error', (ev, error) => {
+        if (error.cause === 'invalid-type-at-condition') condition_error = true;
+      })
+
+      checker.on('type-check-finished', () => {
+        condition_error.should.equal(false)
+        done()
+      })
+
+      checker.check(program)
     })
-
-    checker.on('type-check-finished', () => {
-      condition_error.should.equal(false)
-      done()
-    })
-
-    checker.check(program)
   })
 
-  it('verificar condicion de un bucle mientras', (done) => {
+  describe('Bucles mientras', () => {
+    it('verificar condicion de un bucle mientras', (done) => {
 
-    let code = `
-    variables
-      logico a
-    inicio
-      a <- verdadero
-      mientras (a)
-        escribir("dentro del bucle")
-        a <- falso
-      finmientras
-      escribir("fuera del bucle")
-    fin
-    `
+      let code = `
+      variables
+        logico a
+      inicio
+        a <- verdadero
+        mientras (a)
+          escribir("dentro del bucle")
+          a <- falso
+        finmientras
+        escribir("fuera del bucle")
+      fin
+      `
 
-    let parser = new Parser()
+      let parser = new Parser()
 
-    let parsing_report = parser.parse(code)
+      let parsing_report = parser.parse(code)
 
-    parsing_report.error.should.equal(false)
+      parsing_report.error.should.equal(false)
 
-    let program = parsing_report.result
+      let program = parsing_report.result
 
-    let checker = new TypeChecker()
+      let checker = new TypeChecker()
 
-    let condition_error = false
+      let condition_error = false
 
-    checker.on('type-error', (ev, error) => {
-      if (error.cause === 'invalid-type-at-condition') condition_error = true;
+      checker.on('type-error', (ev, error) => {
+        if (error.cause === 'invalid-type-at-condition') condition_error = true;
+      })
+
+      checker.on('type-check-finished', () => {
+        condition_error.should.equal(false)
+        done()
+      })
+
+      checker.check(program)
     })
 
-    checker.on('type-check-finished', () => {
-      condition_error.should.equal(false)
-      done()
-    })
+    it('verificar enunciados de un bucle mientras', (done) => {
 
-    checker.check(program)
+      let code = `
+      variables
+        logico a
+      inicio
+        a <- verdadero
+        mientras (a)
+          a <- 34
+          a <- falso
+        finmientras
+      fin
+      `
+
+      let parser = new Parser()
+
+      let parsing_report = parser.parse(code)
+
+      parsing_report.error.should.equal(false)
+
+      let program = parsing_report.result
+
+      let checker = new TypeChecker()
+
+      let assigment_error = false
+
+      checker.on('type-error', (ev, error) => {
+        if (error.cause === 'incompatible-types-at-assignment') assigment_error = true;
+      })
+
+      checker.on('type-check-finished', () => {
+        assigment_error.should.equal(true)
+        done()
+      })
+
+      checker.check(program)
+    })
   })
 
-  it('verificar enunciados de un bucle mientras', (done) => {
+  describe('Bucles repetir', () => {
+    it('verificar que no haya errores en un bucle repetir', (done) => {
 
-    let code = `
-    variables
-      logico a
-    inicio
-      a <- verdadero
-      mientras (a)
-        a <- 34
-        a <- falso
-      finmientras
-    fin
-    `
+      let code = `
+      variables
+        logico a
+      inicio
+        a <- verdadero
+        repetir
+          escribir("dentro del bucle")
+          a <- falso
+        hasta que (a = falso)
+        escribir("fuera del bucle")
+      fin
+      `
 
-    let parser = new Parser()
+      let parser = new Parser()
 
-    let parsing_report = parser.parse(code)
+      let parsing_report = parser.parse(code)
 
-    parsing_report.error.should.equal(false)
+      parsing_report.error.should.equal(false)
 
-    let program = parsing_report.result
+      let program = parsing_report.result
 
-    let checker = new TypeChecker()
+      let checker = new TypeChecker()
 
-    let assigment_error = false
+      let condition_error = false
 
-    checker.on('type-error', (ev, error) => {
-      if (error.cause === 'incompatible-types-at-assignment') assigment_error = true;
+      checker.on('type-error', (ev, error) => {
+        if (error.cause === 'invalid-type-at-condition') condition_error = true;
+      })
+
+      checker.on('type-check-finished', () => {
+        condition_error.should.equal(false)
+        done()
+      })
+
+      checker.check(program)
     })
-
-    checker.on('type-check-finished', () => {
-      assigment_error.should.equal(true)
-      done()
-    })
-
-    checker.check(program)
-  })
-
-  it('verificar que no haya errores en un bucle repetir', (done) => {
-
-    let code = `
-    variables
-      logico a
-    inicio
-      a <- verdadero
-      repetir
-        escribir("dentro del bucle")
-        a <- falso
-      hasta que (a = falso)
-      escribir("fuera del bucle")
-    fin
-    `
-
-    let parser = new Parser()
-
-    let parsing_report = parser.parse(code)
-
-    parsing_report.error.should.equal(false)
-
-    let program = parsing_report.result
-
-    let checker = new TypeChecker()
-
-    let condition_error = false
-
-    checker.on('type-error', (ev, error) => {
-      if (error.cause === 'invalid-type-at-condition') condition_error = true;
-    })
-
-    checker.on('type-check-finished', () => {
-      condition_error.should.equal(false)
-      done()
-    })
-
-    checker.check(program)
   })
 
   describe('Bucles para', () => {
