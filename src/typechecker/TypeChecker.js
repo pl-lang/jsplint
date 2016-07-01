@@ -230,6 +230,9 @@ export default class TypeChecker extends Emitter {
       case 'until':
         this.checkUntil(statement)
         break
+      case 'for':
+        // this.checkFor(statement)
+        break
       case 'call':
       default:
         break
