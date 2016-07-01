@@ -945,6 +945,33 @@ describe('Until', () => {
   })
 })
 
+describe('For', () => {
+  it('para bien escrito', () => {
+    let code = `para i <- 1 hasta 10
+    j <- 2
+    finpara
+    `
+    let q = queueFromSource(code)
+    let report = match(Patterns.For).from(q)
+
+    report.error.should.equal(false)
+    report.result.should.deepEqual({
+      type: 'for',
+      counter_init: {
+        type:'assignment',
+        left:{name:'i', isArray:false, indexes:null},
+        right:{expression_type:'literal', type:'entero', value:1}
+      },
+      last_value: {expression_type:'literal', type:'entero', value:10},
+      body: [{
+        type:'assignment',
+        left:{name:'j', isArray:false, indexes:null},
+        right:{expression_type:'literal', type:'entero', value:2}
+      }]
+    })
+  })
+})
+
 describe('Statement', () => {
   it('captura un si', () => {
     let code = `si (falso) entonces
