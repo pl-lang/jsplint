@@ -231,7 +231,7 @@ export default class TypeChecker extends Emitter {
         this.checkUntil(statement)
         break
       case 'for':
-        // this.checkFor(statement)
+        this.checkFor(statement)
         break
       case 'call':
       default:
@@ -327,6 +327,52 @@ export default class TypeChecker extends Emitter {
     }
 
     for (let statement of until_statement.body) {
+      this.checkStatement(statement)
+    }
+  }
+
+  checkFor (for_statement) {
+    let counter_var = for_statement.counter_init.left
+
+    let fake_exp = {expression_type: 'invocation', name:counter_var.name, indexes:counter_var.indexes, isArray:counter_var.indexes}
+
+    let type_report = this.getExpressionReturnType(fake_exp)
+    // comprobar que el tipo del contador sea 'entero'
+    if (type_report.error) {
+      this.emit('type-error', type_report.result)
+    }
+    else {
+      if (type_report.result !== 'entero') {
+        this.emit('type-error', '@for-counter-must-be-entero')
+      }
+    }
+
+    let init_value_type = this.getExpressionReturnType(for_statement.counter_init.right)
+
+    // comprobar que el valor que inicializa al contador sea 'entero'
+    if (init_value_type.error) {
+      this.emit('type-error', init_value_type.result)
+    }
+    else {
+      if (init_value_type.result !== 'entero') {
+        this.emit('type-error', '@for-init-value-must-be-entero')
+      }
+    }
+
+    let last_value_type = this.getExpressionReturnType(for_statement.last_value)
+
+    // comprobar que el valor que debe alcanzar el contador sea 'entero'
+    if (last_value_type.error) {
+      this.emit('type-error', last_value_type.result)
+    }
+    else {
+      if (last_value_type.result !== 'entero') {
+        this.emit('type-error', '@for-last-value-must-be-entero')
+      }
+    }
+
+    // buscar errores en el cuerpo del bucle
+    for (let statement of for_statement.body) {
       this.checkStatement(statement)
     }
   }
