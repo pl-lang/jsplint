@@ -43,6 +43,8 @@ function transformStatement(statement) {
     return transformWhile(statement)
     case 'until':
     return transformUntil(statement)
+    case 'for':
+    return transformFor(statement)
     case 'call':
     return transformCall(statement)
     default:
@@ -116,6 +118,70 @@ function transformUntil(until_statement) {
   until_node.loop_body_root = temp_list.firstNode
 
   return until_node
+}
+
+// 'para' <variable> <- <expresion> 'hasta' <expresion.entera>
+//    [<enunciado>]
+// 'finpara'
+//
+/*
+  Lo de arriba se transfora en....
+ */
+// <variable> <- <expresion>
+// mientras (<variable> <= <expresion.entera>)
+//  [<enunciado>]
+// finmientras
+function transformFor(for_statement) {
+  let counter_variable = for_statement.counter_init.left
+  let counter_init_statement = for_statement.counter_init
+  let counter_init_node = transformAssigment(counter_init_statement)
+
+  let condition = {
+    expression_type: 'operation',
+    op: 'minor-equal',
+    operands: [
+      {expression_type:'invocation', name:counter_variable.name, isArray:counter_variable.isArray, indexes:counter_variable.indexes},
+      for_statement.last_value
+    ]
+  }
+
+  let while_node = new WhileNode({action:'while', condition})
+
+  let body_statement_nodes = for_statement.body.map(transformStatement)
+
+  let temp_list = new LinkedList()
+
+  for (let statement of body_statement_nodes) {
+    temp_list.addNode(statement)
+  }
+
+  let increment_statement = {
+    action: 'assignment',
+    left: counter_variable,
+    right: {
+      expression_type: 'operation',
+      op: 'plus',
+      operands: [
+        {
+          expression_type: 'invocation',
+          indexes: counter_variable.indexes,
+          isArray: counter_variable.isArray,
+          name: counter_variable.name
+        },
+        { expression_type: 'literal', type: 'entero', value: 1 }
+      ]
+    }
+  }
+
+  let increment_node = transformAssigment(increment_statement)
+
+  temp_list.addNode(increment_node)
+
+  while_node.loop_body_root = temp_list.firstNode
+
+  counter_init_node.setNext(while_node)
+
+  return counter_init_node
 }
 
 function transformCall(call_statement) {
