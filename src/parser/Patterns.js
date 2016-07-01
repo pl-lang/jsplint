@@ -934,6 +934,21 @@ export function For(source) {
     skipWhiteSpace(source)
   }
 
+  if (source.current().kind === 'finpara') {
+    source.next()
+  }
+  else {
+    let current = source.current()
+    let unexpected = current.kind
+    let expected = 'finpara'
+    let line = current.lineNumber
+    let column = current.columnNumber
+    let reason = 'missing-finpara'
+    return new Report(true, {unexpected, expected, line, column, reason})
+  }
+
+  skipWhiteSpace(source)
+
   return new Report(false, result)
 }
 
@@ -1064,6 +1079,8 @@ export function Statement(source) {
       return While(source)
     case 'repetir':
       return Until(source)
+    case 'para':
+      return For(source)
     default: {
       let current = source.current()
       let reason = 'missing-statement'
