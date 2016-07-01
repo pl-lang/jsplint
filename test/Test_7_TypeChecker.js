@@ -28,7 +28,7 @@ let globals = {
 }
 let checker = new TypeChecker(null, null, globals, {})
 
-describe('TypeChecker', () => {
+describe.only('TypeChecker', () => {
 
   let checker = new TypeChecker()
 
@@ -452,6 +452,152 @@ describe('TypeChecker', () => {
     })
 
     checker.check(program)
+  })
+
+  describe('Bucles para', () => {
+    it('verificar que no haya errores en un bucle para', (done) => {
+      let code = `
+      variables
+        entero i
+      inicio
+        para i <- 1 hasta 10
+          escribir(i)
+        finpara
+      fin
+      `
+
+      let parser = new Parser()
+
+      let parser_report = parser.parse(code)
+
+      parser_report.error.should.equal(false)
+
+      let program = parser_report.result
+
+      let checker = new TypeChecker()
+
+      let error_found = false
+
+      checker.on('type-error', () => {error_found = true})
+
+      checker.on('type-check-finished', () => {
+        error_found.should.equal(false)
+        done()
+      })
+
+      checker.check(program)
+    })
+
+    it('se detecta un error cuando el contador no es de tipo entero', (done) => {
+      let code = `
+      variables
+        real i
+      inicio
+        para i <- 1 hasta 10
+          escribir(i)
+        finpara
+      fin
+      `
+
+      let parser = new Parser()
+
+      let parser_report = parser.parse(code)
+
+      parser_report.error.should.equal(false)
+
+      let program = parser_report.result
+
+      let checker = new TypeChecker()
+
+      let error_found = false
+
+      checker.on('type-error', (ev_name, error_name) => {
+        if (error_name === '@for-counter-must-be-entero') {
+          error_found = true
+        }
+      })
+
+      checker.on('type-check-finished', () => {
+        error_found.should.equal(true)
+        done()
+      })
+
+      checker.check(program)
+    })
+
+    it('emite un error si el primer valor no es de tipo entero', (done) => {
+      let code = `
+      variables
+        entero i
+      inicio
+        para i <- 2.8 hasta 10
+          escribir(i)
+        finpara
+      fin
+      `
+
+      let parser = new Parser()
+
+      let parser_report = parser.parse(code)
+
+      parser_report.error.should.equal(false)
+
+      let program = parser_report.result
+
+      let checker = new TypeChecker()
+
+      let error_found = false
+
+      checker.on('type-error', (ev_name, error_name) => {
+        if (error_name === '@for-init-value-must-be-entero') {
+          error_found = true
+        }
+      })
+
+      checker.on('type-check-finished', () => {
+        error_found.should.equal(true)
+        done()
+      })
+
+      checker.check(program)
+    })
+
+    it('se detecta un error cuando el ultimo valor no es entero', (done) => {
+      let code = `
+      variables
+        entero i
+      inicio
+        para i <- 1 hasta 12.4
+          escribir(i)
+        finpara
+      fin
+      `
+
+      let parser = new Parser()
+
+      let parser_report = parser.parse(code)
+
+      parser_report.error.should.equal(false)
+
+      let program = parser_report.result
+
+      let checker = new TypeChecker()
+
+      let error_found = false
+
+      checker.on('type-error', (ev_name, error_name) => {
+        if (error_name === '@for-last-value-must-be-entero') {
+          error_found = true
+        }
+      })
+
+      checker.on('type-check-finished', () => {
+        error_found.should.equal(true)
+        done()
+      })
+
+      checker.check(program)
+    })
   })
 
   it('checkCondition', () => {
