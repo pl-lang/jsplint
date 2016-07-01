@@ -855,6 +855,88 @@ export function While(source) {
   return new Report(false, result)
 }
 
+
+// para i <- 0 hasta 5
+//  ...
+// finpara
+//
+// 'para' <expresion> 'hasta' <expresion.entera>
+//    [<enunciado>]
+// 'finpara'
+export function For(source) {
+  let result = {
+    type: 'for',
+    counter_init: null,
+    last_value: null,
+    body: []
+  }
+
+  if (source.current().kind === 'para') {
+    source.next()
+  }
+  else {
+    let current = source.current()
+    let unexpected = current.kind
+    let expected = 'para'
+    let line = current.lineNumber
+    let column = current.columnNumber
+    let reason = 'missing-para'
+    return new Report(true, {unexpected, expected, line, column, reason})
+  }
+
+  let queue = []
+  while (source.current().kind !== 'hasta') {
+    queue.push(source.current())
+    source.next()
+  }
+
+  let init_statement = NewAssignment(new TokenQueue(queue))
+
+  if (init_statement.error) {
+    return counter_exp
+  }
+
+  result.counter_init = init_statement.result
+
+  if (source.current().kind === 'hasta') {
+    source.next()
+  }
+  else {
+    let current = source.current()
+    let unexpected = current.kind
+    let expected = 'hasta'
+    let line = current.lineNumber
+    let column = current.columnNumber
+    let reason = 'missing-hasta'
+    return new Report(true, {unexpected, expected, line, column, reason})
+  }
+
+  let last_val_exp = Expression(source)
+
+  if (last_val_exp.error) {
+    return last_val_exp
+  }
+  else {
+    result.last_value = last_val_exp.result
+  }
+
+  skipWhiteSpace(source)
+
+  while ( /finpara|eof/.test(source.current().kind) === false ) {
+    let statement_match = Statement(source)
+
+    if (statement_match.error) {
+      return statement_match.result
+    }
+
+    result.body.push(statement_match.result)
+
+    skipWhiteSpace(source)
+  }
+
+  return new Report(false, result)
+}
+
 export function Until(source) {
   let result = {
     type : 'until',
