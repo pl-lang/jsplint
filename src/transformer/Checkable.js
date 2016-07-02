@@ -61,6 +61,9 @@ function getVariables(declaration_statements) {
 
   for (let declaration of declaration_statements) {
     for (let variable of declaration.variables) {
+      if (variable.isArray) {
+        variable.values = new Array(variable.dimension.reduce((a, b) => a * b))
+      }
       result.push(variable)
     }
   }
