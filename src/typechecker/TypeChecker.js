@@ -239,6 +239,10 @@ export default class TypeChecker extends Emitter {
         this.checkFor(statement)
         break
       case 'call':
+        if (statement.name === 'leer') {
+          this.checkLeer(statement)
+        }
+        break
       default:
         break
     }
@@ -379,6 +383,30 @@ export default class TypeChecker extends Emitter {
     // buscar errores en el cuerpo del bucle
     for (let statement of for_statement.body) {
       this.checkStatement(statement)
+    }
+  }
+
+  checkLeer(leer_call) {
+    for (let argument of leer_call.args) {
+      if (argument.expression_type !== 'invocation') {
+        let report = {
+          cause: '@leer-non-invocation-argument'
+          // column
+          // line
+        }
+        this.emit('type-error', report)
+      }
+      else {
+        if (this.variableExists(argument.name) === false) {
+          let report = {
+            cause: '@leer-variable-doesnt-exist',
+            name: argument.name
+            // column
+            // line
+          }
+          this.emit('type-error', report)
+        }
+      }
     }
   }
 
