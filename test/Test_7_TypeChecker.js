@@ -7,13 +7,6 @@ import TypeChecker from '../src/typechecker/TypeChecker.js'
 
 import Parser from '../src/parser/Parser.js'
 
-import Checkable from '../src/transformer/Checkable.js'
-
-import Interpretable from '../src/transformer/Interpretable.js'
-
-const RUN_TYPE_CHECKER = true
-const DO_NOT_RUN_TYPE_CHECKER = false
-
 describe('TypeChecker', () => {
 
   let globals = {
