@@ -211,6 +211,11 @@ export default class TypeChecker extends Emitter {
     }
 
     this.emit('type-check-finished')
+
+    // esto elimina todas las variables que fueron registradas
+    this.locals_by_module = {main : {}}
+    this.globals = this.locals_by_module.main
+    this.current_module_name = ''
   }
 
   checkStatement(statement) {
