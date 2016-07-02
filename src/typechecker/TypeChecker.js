@@ -253,7 +253,7 @@ export default class TypeChecker extends Emitter {
       if (variable.name in this.locals_by_module[this.current_module_name]) {
         let original = this.locals_by_module[this.current_module_name][variable.name]
         let repeated = variable
-        this.emit('type-error', {cause:'repeated-variable', original, repeated})
+        this.emit('type-error', {reason:'repeated-variable', original, repeated})
       }
       else {
         this.locals_by_module[this.current_module_name][variable.name] = variable
@@ -390,7 +390,7 @@ export default class TypeChecker extends Emitter {
     for (let argument of leer_call.args) {
       if (argument.expression_type !== 'invocation') {
         let report = {
-          cause: '@leer-non-invocation-argument'
+          reason: '@leer-non-invocation-argument'
           // column
           // line
         }
@@ -399,7 +399,7 @@ export default class TypeChecker extends Emitter {
       else {
         if (this.variableExists(argument.name) === false) {
           let report = {
-            cause: '@leer-variable-doesnt-exist',
+            reason: '@leer-variable-doesnt-exist',
             name: argument.name
             // column
             // line
@@ -424,11 +424,11 @@ export default class TypeChecker extends Emitter {
     }
     else {
       if (condition_type.result !== 'logico') {
-        let cause = 'invalid-type-at-condition'
+        let reason = 'invalid-type-at-condition'
         let expected = 'logico'
         let unexpected = condition_type.result
 
-        return {error:true, result:{cause, expected, unexpected}}
+        return {error:true, result:{reason, expected, unexpected}}
       }
       else {
         return {error:false}
@@ -462,9 +462,9 @@ export default class TypeChecker extends Emitter {
         let payload_data_type = expression_type_report.result
 
         if (this.typesAreCompatible(target.type, payload_data_type) === false) {
-          let cause = 'incompatible-types-at-assignment'
+          let reason = 'incompatible-types-at-assignment'
           let target_type = target.type, payload_type = payload_data_type
-          let error_info = {cause, target_type, payload_type}
+          let error_info = {reason, target_type, payload_type}
           this.emit('type-error', error_info)
         }
       }
@@ -472,7 +472,7 @@ export default class TypeChecker extends Emitter {
     }
     else {
       this.emit('type-error', {
-        cause:'undeclared-variable',
+        reason:'undeclared-variable',
         name:assignment.left.name
       })
     }
@@ -501,8 +501,8 @@ export default class TypeChecker extends Emitter {
         }
 
         if (invalid_type_found === true) {
-          let cause = 'non-integer-index', bad_index = i
-          return {error:true, result:{cause, bad_index}}
+          let reason = 'non-integer-index', bad_index = i
+          return {error:true, result:{reason, bad_index}}
         }
         else {
           if (this.canCheckBounds(invocation_info.indexes) === true) {
@@ -511,15 +511,15 @@ export default class TypeChecker extends Emitter {
 
             while (i < index_values.length && !out_of_bounds_index) {
               if (index_values[i] < 1) {
-                let cause = 'index-less-than-one'
+                let reason = 'index-less-than-one'
                 let bad_index = i
-                return {error:true, result:{cause, bad_index}}
+                return {error:true, result:{reason, bad_index}}
               }
               else if (index_values[i] > variable.dimension[i]) {
-                let cause = 'index-out-of-bounds'
+                let reason = 'index-out-of-bounds'
                 let bad_index = i
                 let expected = variable.dimension[i]
-                return {error:true, result:{cause, bad_index, expected}}
+                return {error:true, result:{reason, bad_index, expected}}
               }
               i++
             }
@@ -533,24 +533,24 @@ export default class TypeChecker extends Emitter {
         }
       }
       else {
-        let cause = 'dimension-length-diff-than-indexes-length'
+        let reason = 'dimension-length-diff-than-indexes-length'
         let dimensions = variable.dimension.length
         let indexes = invocation_info.indexes.length
 
-        return {error:true, result:{cause, dimensions, indexes}}
+        return {error:true, result:{reason, dimensions, indexes}}
       }
     }
     else {
       let name = invocation_info.name
       if (variable.isArray === true) {
-        let cause = 'missing-index'
+        let reason = 'missing-index'
 
-        return {error:true, result:{cause, name}}
+        return {error:true, result:{reason, name}}
       }
       else {
-        let cause = 'var-isnt-array'
+        let reason = 'var-isnt-array'
 
-        return {error:true, result:{cause, name}}
+        return {error:true, result:{reason, name}}
       }
     }
   }
@@ -594,8 +594,8 @@ export default class TypeChecker extends Emitter {
         let payload_type = payload_type_report.result
         if (!this.typesAreCompatible(target_type, payload_type)) {
           let error = true
-          let cause = 'incompatible-types-at-assignment'
-          let result = {cause, target_type, payload_type}
+          let reason = 'incompatible-types-at-assignment'
+          let result = {reason, target_type, payload_type}
           return {error, result}
         }
         else {
@@ -605,7 +605,7 @@ export default class TypeChecker extends Emitter {
     }
     else {
       let error = true
-      let cause = 'undefined-variable', result = cause
+      let reason = 'undefined-variable', result = reason
       return {error, result}
     }
   }
@@ -643,7 +643,7 @@ export default class TypeChecker extends Emitter {
         return {error, result}
       } else {
         let error = true
-        let cause = 'undefined-variable', result = cause
+        let reason = 'undefined-variable', result = reason
         return {error, result}
       }
     }
@@ -669,7 +669,7 @@ export default class TypeChecker extends Emitter {
           else {
             let error = true
             let result = {
-              cause:'incompatible-operator-types',
+              reason:'incompatible-operator-types',
               expected:operator_info.supported_types,
               unexpected:operand_type,
               operator:expression.op
@@ -705,7 +705,7 @@ export default class TypeChecker extends Emitter {
             else {
               let error = true
               let result = {
-                cause:'incompatible-operator-types',
+                reason:'incompatible-operator-types',
                 expected:operator_info.supported_types,
                 unexpected:op_b_type,
                 operator:expression.op
@@ -716,7 +716,7 @@ export default class TypeChecker extends Emitter {
           else {
             let error = true
             let result = {
-              cause:'incompatible-operator-types',
+              reason:'incompatible-operator-types',
               expected:operator_info.supported_types,
               unexpected:op_a_type,
               operator:expression.op

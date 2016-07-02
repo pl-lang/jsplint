@@ -283,8 +283,8 @@ describe('TypeChecker', () => {
 
     checker.on('type-check-finished', () => {
       error_list.length.should.equal(2)
-      error_list[0].cause.should.equal('incompatible-operator-types')
-      error_list[1].cause.should.equal('incompatible-types-at-assignment')
+      error_list[0].reason.should.equal('incompatible-operator-types')
+      error_list[1].reason.should.equal('incompatible-types-at-assignment')
       done()
     })
 
@@ -318,7 +318,7 @@ describe('TypeChecker', () => {
       let condition_error = false
 
       checker.on('type-error', (ev, error) => {
-        if (error.cause === 'invalid-type-at-condition') condition_error = true;
+        if (error.reason === 'invalid-type-at-condition') condition_error = true;
       })
 
       checker.on('type-check-finished', () => {
@@ -359,7 +359,7 @@ describe('TypeChecker', () => {
       let condition_error = false
 
       checker.on('type-error', (ev, error) => {
-        if (error.cause === 'invalid-type-at-condition') condition_error = true;
+        if (error.reason === 'invalid-type-at-condition') condition_error = true;
       })
 
       checker.on('type-check-finished', () => {
@@ -397,7 +397,7 @@ describe('TypeChecker', () => {
       let assigment_error = false
 
       checker.on('type-error', (ev, error) => {
-        if (error.cause === 'incompatible-types-at-assignment') assigment_error = true;
+        if (error.reason === 'incompatible-types-at-assignment') assigment_error = true;
       })
 
       checker.on('type-check-finished', () => {
@@ -438,7 +438,7 @@ describe('TypeChecker', () => {
       let condition_error = false
 
       checker.on('type-error', (ev, error) => {
-        if (error.cause === 'invalid-type-at-condition') condition_error = true;
+        if (error.reason === 'invalid-type-at-condition') condition_error = true;
       })
 
       checker.on('type-check-finished', () => {
@@ -605,7 +605,7 @@ describe('TypeChecker', () => {
       let condition_check = checker.checkCondition(exp)
 
       condition_check.error.should.equal(true)
-      condition_check.result.cause.should.equal('incompatible-operator-types')
+      condition_check.result.reason.should.equal('incompatible-operator-types')
     }
 
     {
@@ -614,7 +614,7 @@ describe('TypeChecker', () => {
       let condition_check = checker.checkCondition(exp)
 
       condition_check.error.should.equal(true)
-      condition_check.result.cause.should.equal('invalid-type-at-condition')
+      condition_check.result.reason.should.equal('invalid-type-at-condition')
       condition_check.result.expected.should.equal('logico')
       condition_check.result.unexpected.should.equal('real')
     }
@@ -647,7 +647,7 @@ describe('TypeChecker', () => {
       let report = checker.checkArrayInvocation(target, invocation)
 
       report.error.should.equal(true)
-      report.result.cause.should.equal('non-integer-index')
+      report.result.reason.should.equal('non-integer-index')
       report.result.bad_index.should.equal(1)
     }
 
@@ -664,7 +664,7 @@ describe('TypeChecker', () => {
       let report = checker.checkArrayInvocation(target, invocation)
 
       report.error.should.equal(true)
-      report.result.cause.should.equal('dimension-length-diff-than-indexes-length')
+      report.result.reason.should.equal('dimension-length-diff-than-indexes-length')
       report.result.dimensions.should.equal(2)
       report.result.indexes.should.equal(1)
     }
@@ -686,7 +686,7 @@ describe('TypeChecker', () => {
       let report = checker.checkArrayInvocation(target, invocation)
 
       report.error.should.equal(true)
-      report.result.cause.should.equal('dimension-length-diff-than-indexes-length')
+      report.result.reason.should.equal('dimension-length-diff-than-indexes-length')
       report.result.dimensions.should.equal(2)
       report.result.indexes.should.equal(3)
     }
@@ -708,7 +708,7 @@ describe('TypeChecker', () => {
       let report = checker.checkArrayInvocation(target, invocation)
 
       report.error.should.equal(true)
-      report.result.cause.should.equal('var-isnt-array')
+      report.result.reason.should.equal('var-isnt-array')
       report.result.name.should.equal('a')
     }
 
@@ -725,7 +725,7 @@ describe('TypeChecker', () => {
       let report = checker.checkArrayInvocation(target, invocation)
 
       report.error.should.equal(true)
-      report.result.cause.should.equal('missing-index')
+      report.result.reason.should.equal('missing-index')
       report.result.name.should.equal('b')
     }
 
@@ -745,7 +745,7 @@ describe('TypeChecker', () => {
       let report = checker.checkArrayInvocation(target, invocation)
 
       report.error.should.equal(true)
-      report.result.cause.should.equal('index-out-of-bounds')
+      report.result.reason.should.equal('index-out-of-bounds')
       report.result.bad_index.should.equal(1)
       report.result.expected.should.equal(4)
     }
@@ -766,7 +766,7 @@ describe('TypeChecker', () => {
       let report = checker.checkArrayInvocation(target, invocation)
 
       report.error.should.equal(true)
-      report.result.cause.should.equal('index-less-than-one')
+      report.result.reason.should.equal('index-less-than-one')
       report.result.bad_index.should.equal(0)
     }
 
