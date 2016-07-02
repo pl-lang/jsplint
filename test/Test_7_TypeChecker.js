@@ -14,35 +14,28 @@ import Interpretable from '../src/transformer/Interpretable.js'
 const RUN_TYPE_CHECKER = true
 const DO_NOT_RUN_TYPE_CHECKER = false
 
-let globals = {
-  a:{
-    type:'entero',
-    isArray:false,
-    dimension:null
-  },
-  b:{
-    type:'entero',
-    isArray:true,
-    dimension:[3, 4]
-  }
-}
-let checker = new TypeChecker(null, null, globals, {})
-
 describe('TypeChecker', () => {
+
+  let globals = {
+    a:{
+      type:'entero',
+      isArray:false,
+      dimension:null
+    },
+    b:{
+      type:'entero',
+      isArray:true,
+      dimension:[3, 4]
+    }
+  }
 
   let checker = new TypeChecker()
 
-  // este programa solo sirve para que checker tenga las variables q necesita
-  let code = `
-  variables
-    entero a, b[3, 4]
-  inicio
-  fin
-  `
-
-  let parser = new Parser()
-
-  checker.check(parser.parse(code).result)
+  // este 'hack' establece 'a mano' las variables globales y las locales del
+  // modulo main. Ademas establece el nombre del modulo que se esta 'analizando'
+  checker.locals_by_module.main = globals
+  checker.globals = globals
+  checker.current_module_name = 'main'
 
   describe('#getExpressionReturnType', () => {
     it('literal', () => {
@@ -635,6 +628,19 @@ describe('TypeChecker', () => {
   })
 
   it('checkArrayInvocation', () => {
+    let globals = {
+      a:{
+        type:'entero',
+        isArray:false,
+        dimension:null
+      },
+      b:{
+        type:'entero',
+        isArray:true,
+        dimension:[3, 4]
+      }
+    }
+
     {
       // invalid index
 
