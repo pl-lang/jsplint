@@ -85,7 +85,13 @@ export default class TestableEvaluator {
 
       if (assignment.target.bounds_checked || this.indexWithinBounds(index_list, variable.dimension) ) {
         let index = this.calculateIndex(index_list, variable.dimension)
-        variable.values[index] = this.evaluateExpression(assignment.payload)
+        let expression_report = this.evaluateExpression(assignment.payload)
+        if (expression_report.error) {
+          return {error:true, result:expression_report.result}
+        }
+        else {
+          variable.values[index] = expression_report.result
+        }
       }
       else {
         let result = {
