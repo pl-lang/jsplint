@@ -106,7 +106,13 @@ export default class TestableEvaluator {
       }
     }
     else {
-      variable.value = this.evaluateExpression(assignment.payload)
+      let expression_report = this.evaluateExpression(assignment.payload)
+      if (expression_report.error) {
+        return {error:true, result:expression_report.result}
+      }
+      else {
+        variable.value = expression_report.result
+      }
     }
 
     return {error:false, result:null}
