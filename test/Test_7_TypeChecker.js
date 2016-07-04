@@ -226,22 +226,28 @@ describe('TypeChecker', () => {
     let repeated_vars_found = false
 
     checker.on('type-error', (ev, error_info) => {
-      let original = {
-        name:'var_uno',
-        type:'real',
-        isArray:false,
-        dimension:null
-      }
 
-      let repeated = {
-        name:'var_uno',
-        type:'entero',
-        isArray:false,
-        dimension:null
-      }
+      // NOTE: antes de cambiar esta prueba, error_info contenia las siguientes
+      // props:
+      // let original = {
+      //   name:'var_uno',
+      //   type:'real',
+      //   isArray:false,
+      //   dimension:null
+      // }
+      //
+      // let repeated = {
+      //   name:'var_uno',
+      //   type:'entero',
+      //   isArray:false,
+      //   dimension:null
+      // }
+      //
+      // Ahora contiene {name, original_type, repeated_type}
 
-      error_info.original.should.deepEqual(original)
-      error_info.repeated.should.deepEqual(repeated)
+      error_info.name.should.equal('var_uno')
+      error_info.original_type.should.equal('real')
+      error_info.repeated_type.should.equal('entero')
 
       repeated_vars_found = true
     })

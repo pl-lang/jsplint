@@ -253,7 +253,7 @@ export default class TypeChecker extends Emitter {
       if (variable.name in this.locals_by_module[this.current_module_name]) {
         let original = this.locals_by_module[this.current_module_name][variable.name]
         let repeated = variable
-        this.emit('type-error', {reason:'repeated-variable', original, repeated})
+        this.emit('type-error', {reason:'repeated-variable', name:variable.name, original_type:original.type, repeated_type:repeated.type})
       }
       else {
         this.locals_by_module[this.current_module_name][variable.name] = variable
