@@ -129,7 +129,15 @@ export default class TestableEvaluator {
   runCall (call_statement) {
     if (call_statement.name === 'escribir') {
       // TODO: esto podria devolver un error cuando se implementen las funciones
-      let values = call_statement.args.map(this.evaluateExpression)
+      let evaluated_arguments = call_statement.args.map(this.evaluateExpression)
+
+      for (let report of evaluated_arguments) {
+        if (report.error) {
+          return {error:true, result:report.result}
+        }
+      }
+
+      let values = evaluated_arguments.map(report => report.result)
 
       return {error:false, result:{action:'write', values}}
     }
