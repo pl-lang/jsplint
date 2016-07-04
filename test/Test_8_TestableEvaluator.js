@@ -47,4 +47,62 @@ describe('TestableEvaluator', () => {
       output:null
     })
   })
+
+  it('programa con una asignacion a una variable', () => {
+    let code = `variables
+      entero a
+    inicio
+      a <- 2
+    fin`
+
+    let modules = programFromSource(code).modules
+
+    let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+
+    let output = evaluator.step()
+
+    output.should.deepEqual({done:true, error:false, output:null})
+
+    evaluator._locals.a.value.should.equal(2)
+  })
+
+  it('programa con un llamado a escribir de un solo argumento', () => {
+    let code = `variables
+    inicio
+      escribir(4)
+    fin`
+
+    let modules = programFromSource(code).modules
+
+    let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+
+    let output = evaluator.step()
+
+    output.should.deepEqual({done:true, error:false, output:{action:'write', values:[4]}})
+  })
+
+  it('programa con 2 enunciados de asignacion', () => {
+    let code = `variables
+      entero a, b
+    inicio
+      a <- 25
+      b <- 89
+    fin`
+
+    let modules = programFromSource(code).modules
+
+    let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+
+    let output = evaluator.step()
+
+    output.should.deepEqual({done:false, error:false, output:null})
+
+    evaluator._locals.a.value.should.equal(25)
+
+    output = evaluator.step()
+
+    output.should.deepEqual({done:true, error:false, output:null})
+
+    evaluator._locals.b.value.should.equal(89)
+  })
 })
