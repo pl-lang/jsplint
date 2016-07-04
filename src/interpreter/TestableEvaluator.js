@@ -148,4 +148,106 @@ export default class TestableEvaluator {
   runIf (if_statement) {
     return {error:false, result:null}
   }
+
+  getVariable(varname) {
+    return varname in this._locals ? this._locals[varname]:this._globals[varname]
+  }
+
+  evaluateExpression (expression) {
+    switch (expression.expression_type) {
+      case 'invocation':
+        return this.getVariableValue(expression)
+      case 'literal':
+        return {error:false, result:expression.value}
+      case  'operation':
+        // return this.evaluateOperation(exp)
+      case  'unary-operation':
+        // return this.evaluateUnaryOperation(exp)
+      case  'expression':
+        // return this.evaluateExpression(exp.expression)
+      default:
+        break
+    }
+  }
+
+  getVariableValue (info) {
+    let variable = this.getVariable(info.name)
+
+    if (variable.isArray) {
+      let index_values = info.indexes.map(expression => this.evaluateExpression(expression) - 1)
+
+      if (info.bounds_checked || this.indexWithinBounds(index_values, variable.dimension)) {
+        let index = this.calculateIndex(index_values, variable.dimension)
+        return {error:false, result:variable.values[index]}
+      }
+      else {
+        let out_of_bunds_info = this.getBoundsError(index_values, variable.dimension)
+        return {error:true, result:out_of_bunds_info}
+      }
+    }
+    else {
+      return variable.value
+    }
+  }
+
+  indexWithinBounds (index_values, dimension_lengths) {
+    let i = 0
+
+    // NOTE: en las condiciones de abajo sumo 1 porque en index_values se le
+    // restó 1 a cada elemento para que sea un indice válido en JS
+
+    while (i < index_values.length) {
+      if ((index_values[i] + 1) < 1) {
+        return false
+      }
+      else if ((index_values[i] + 1) > dimension_lengths[i]) {
+        return false
+      }
+      else {
+        i++
+      }
+    }
+    return true
+  }
+
+  getBoundsError (index_values, dimension_lengths) {
+    let i = 0
+    while (i < index_values.length) {
+      if ((index_values[i] + 1) < 1) {
+        this.running = false
+        let reason = 'index-less-than-one'
+        let bad_index = i
+        return {error:true, result:{reason, bad_index}}
+      }
+      else if ((index_values[i] + 1) > dimension_lengths[i]) {
+        out_of_bounds_index = true
+        let reason = 'index-out-of-bounds'
+        let bad_index = i
+        let expected = variable.dimension[i]
+        return {error:true, result:{reason, bad_index, expected}}
+      }
+      else {
+        i++
+      }
+    }
+  }
+
+  calculateIndex(index_array, dimensions) {
+    let result = 0
+    let index_amount = index_array.length
+    let i = 0
+
+    while (i < index_amount) {
+      let term = 1
+      let j = i + 1
+      while (j < index_amount) {
+        term *= dimensions[j]
+        j++
+      }
+      term *= index_array[i]
+      result += term
+      i++
+    }
+    return result
+  }
 }
