@@ -324,7 +324,7 @@ describe('TypeChecker', () => {
       let condition_error = false
 
       checker.on('type-error', (ev, error) => {
-        if (error.reason === 'invalid-type-at-condition') condition_error = true;
+        if (error.reason === '@condition-invalid-expression') condition_error = true;
       })
 
       checker.on('type-check-finished', () => {
@@ -365,7 +365,7 @@ describe('TypeChecker', () => {
       let condition_error = false
 
       checker.on('type-error', (ev, error) => {
-        if (error.reason === 'invalid-type-at-condition') condition_error = true;
+        if (error.reason === '@condition-invalid-expression') condition_error = true;
       })
 
       checker.on('type-check-finished', () => {
@@ -444,7 +444,7 @@ describe('TypeChecker', () => {
       let condition_error = false
 
       checker.on('type-error', (ev, error) => {
-        if (error.reason === 'invalid-type-at-condition') condition_error = true;
+        if (error.reason === '@condition-invalid-expression') condition_error = true;
       })
 
       checker.on('type-check-finished', () => {
@@ -620,7 +620,7 @@ describe('TypeChecker', () => {
       let condition_check = checker.checkCondition(exp)
 
       condition_check.error.should.equal(true)
-      condition_check.result.reason.should.equal('invalid-type-at-condition')
+      condition_check.result.reason.should.equal('@condition-invalid-expression')
       condition_check.result.expected.should.equal('logico')
       condition_check.result.unexpected.should.equal('real')
     }

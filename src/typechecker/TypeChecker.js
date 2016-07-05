@@ -424,7 +424,7 @@ export default class TypeChecker extends Emitter {
     }
     else {
       if (condition_type.result !== 'logico') {
-        let reason = 'invalid-type-at-condition'
+        let reason = '@condition-invalid-expression'
         let expected = 'logico'
         let unexpected = condition_type.result
 
