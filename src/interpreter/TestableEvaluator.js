@@ -28,7 +28,8 @@ export default class TestableEvaluator {
       done: root_statement === null ? true:false,
       error: false,
       output: null,
-      variables_awaiting_data: []
+      variables_awaiting_data: [],
+      stack: [],
     }
   }
 
@@ -64,7 +65,9 @@ export default class TestableEvaluator {
       this._state.error = output.error
       this._state.output = output.result
 
-      this._current_node = this._current_node.getNext()
+      if (output.finished) {
+        this._current_node = this._current_node.getNext()
+      }
 
       if (this._current_node === null) {
         this._state.done = true
@@ -78,19 +81,31 @@ export default class TestableEvaluator {
     let variable = this.getVariable(assignment.target.name)
 
     if (variable.isArray) {
-      // TODO: faltaria revisar si hubo un error al calcular un indice...
-      // Eso solo podria ocurrir si uno de los indices fuera el resultado de
-      // un llamado a una funcion y hubiera un error durante la evaluacion de esta
-      let index_list = assignment.target.indexes.map(expression => this.evaluateExpression(expression) - 1)
+
+      for (let index of assignment.target.indexes) this.evaluateExpression(index)
+
+      let index_list = new Array(assignment.target.indexes.length)
+
+      for (let i = 0; i < index_list.length; i++) {
+        let evaluation_report = this._stack.pop()
+        if (evaluation_report.error) {
+          return {error:true, finished:true, result:evaluation_report.result}
+        }
+        else {
+          let index = evaluation_report.result - 1
+          index_list[i] = index
+        }
+      }
 
       if (assignment.target.bounds_checked || this.indexWithinBounds(index_list, variable.dimension) ) {
         let index = this.calculateIndex(index_list, variable.dimension)
-        let expression_report = this.evaluateExpression(assignment.payload)
-        if (expression_report.error) {
-          return {error:true, result:expression_report.result}
+        this.evaluateExpression(assignment.payload)
+        let evaluation_report = this._stack.pop()
+        if (evaluation_report.error) {
+          return {error:true, finished:true, result:evaluation_report.result}
         }
         else {
-          variable.values[index] = expression_report.result
+          variable.values[index] = evaluation_report.result
         }
       }
       else {
@@ -102,20 +117,21 @@ export default class TestableEvaluator {
           // line
           // column
         }
-        return {error:true, result}
+        return {error:true, finished:true, result}
       }
     }
     else {
-      let expression_report = this.evaluateExpression(assignment.payload)
-      if (expression_report.error) {
-        return {error:true, result:expression_report.result}
+      this.evaluateExpression(assignment.payload)
+      let evaluation_report = this._stack.pop()
+      if (evaluation_report.error) {
+        return {error:true, finished:true, result:evaluation_report.result}
       }
       else {
-        variable.value = expression_report.result
+        variable.value = evaluation_report.result
       }
     }
 
-    return {error:false, result:null}
+    return {error:false, finished:true, result:null}
   }
 
   runWhile (while_statement) {
