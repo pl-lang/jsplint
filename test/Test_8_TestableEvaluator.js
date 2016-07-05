@@ -66,6 +66,82 @@ describe('TestableEvaluator', () => {
     evaluator._locals.a.value.should.equal(2)
   })
 
+  it('programa con una asignacion a un vector', () => {
+    let code = `variables
+      entero v[5]
+    inicio
+      v[1] <- 5
+      v[2] <- 8
+      v[3] <- 7
+      v[4] <- 9
+      v[5] <- 3
+    fin`
+
+    let modules = programFromSource(code).modules
+
+    let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+
+    let output = evaluator.step()
+
+    output.should.deepEqual({done:false, error:false, output:null})
+    evaluator._locals.v.values[0].should.equal(5)
+
+    output = evaluator.step()
+
+    output.should.deepEqual({done:false, error:false, output:null})
+    evaluator._locals.v.values[1].should.equal(8)
+
+    output = evaluator.step()
+
+    output.should.deepEqual({done:false, error:false, output:null})
+    evaluator._locals.v.values[2].should.equal(7)
+
+    output = evaluator.step()
+
+    output.should.deepEqual({done:false, error:false, output:null})
+    evaluator._locals.v.values[3].should.equal(9)
+
+    output = evaluator.step()
+
+    output.should.deepEqual({done:true, error:false, output:null})
+    evaluator._locals.v.values[4].should.equal(3)
+  })
+
+  it('programa con una asignacion a una matriz', () => {
+    let code = `variables
+      entero m[2, 2]
+    inicio
+      m[1, 1] <- 5
+      m[1, 2] <- 8
+      m[2, 1] <- 7
+      m[2, 2] <- 9
+    fin`
+
+    let modules = programFromSource(code).modules
+
+    let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+
+    let output = evaluator.step()
+
+    output.should.deepEqual({done:false, error:false, output:null})
+    evaluator._locals.m.values[0].should.equal(5)
+
+    output = evaluator.step()
+
+    output.should.deepEqual({done:false, error:false, output:null})
+    evaluator._locals.m.values[1].should.equal(8)
+
+    output = evaluator.step()
+
+    output.should.deepEqual({done:false, error:false, output:null})
+    evaluator._locals.m.values[2].should.equal(7)
+
+    output = evaluator.step()
+
+    output.should.deepEqual({done:true, error:false, output:null})
+    evaluator._locals.m.values[3].should.equal(9)
+  })
+
   it('programa con un llamado a escribir de un solo argumento', () => {
     let code = `variables
     inicio

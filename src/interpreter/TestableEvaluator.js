@@ -97,7 +97,7 @@ export default class TestableEvaluator {
       let index_list = new Array(index_amount)
 
       // calcular indices
-      for (let i = 0; i < index_amount; i++) {
+      for (let i = index_amount - 1; i >= 0; i--) {
         let evaluation_report = this._state.stack.pop()
         if (evaluation_report.error) {
           yield {error:true, finished: true, result:evaluation_report.result}
@@ -111,11 +111,11 @@ export default class TestableEvaluator {
             yield {error:true, finished:true, result:evaluation_report.result}
           }
           else {
-            index_list[i] = evaluation_report.result.value
+            index_list[i] = evaluation_report.result.value - 1
           }
         }
         else {
-          index_list[i] = evaluation_report.result.value
+          index_list[i] = evaluation_report.result.value - 1
         }
       }
 
@@ -141,6 +141,7 @@ export default class TestableEvaluator {
         }
         else {
           variable.values[index] = evaluation_report.result.value
+          yield {error:false, finished:true, result:null}
         }
       }
       else {
@@ -187,7 +188,7 @@ export default class TestableEvaluator {
 
     for (let arg of call_statement.args) this.evaluateExpression(arg)
 
-    for (let i = 0; i < argument_amount; i++) {
+    for (let i = argument_amount - 1; i >= 0; i--) {
       let evaluation_report = this._state.stack.pop()
       if (evaluation_report.error) {
         yield {error:true, finished: true, result:evaluation_report.result}
