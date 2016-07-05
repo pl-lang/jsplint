@@ -22,6 +22,7 @@
 export default class TestableEvaluator {
   constructor(root_statement, locals, globals) {
     this._current_node = root_statement
+    this._current_statement = null
     this._locals = locals
     this._globals = globals
     this._state = {
@@ -38,42 +39,124 @@ export default class TestableEvaluator {
       return {done:this._state.done, error:this._state.error, output:this._state.output}
     }
     else {
-      let statement = this._current_node.data
-      let output = null
-
-      switch (statement.action) {
-        case 'assignment':
-          output = this.runAssignment(statement)
-          break;
-        case 'module_call':
-          output = this.runCall(statement)
-          break
-        case 'if':
-          output = this.runIf(statement)
-          break
-        case 'while':
-          output = this.runWhile(statement)
-          break
-        case 'until':
-          output = this.runUntil(statement)
-          break
-        default:
-          throw new Error(`En TestableEvaluator: no se reconoce el enunciado ${statement.action}`)
-          break
+      if (this._current_statement === null) {
+        this._current_statement = this.getStatementIterator(this._current_node.data)
       }
 
-      this._state.error = output.error
-      this._state.output = output.result
+      let output = this.runStatement(this._current_statement)
 
-      if (output.finished) {
+      this._state.error = output.value.error
+      this._state.output = output.value.result
+
+      if (output.value.finished) {
         this._current_node = this._current_node.getNext()
+        this._current_statement = null
       }
 
       if (this._current_node === null) {
         this._state.done = true
       }
 
-      return {done:this._state.done, error:this._state.error, output:output.result}
+      return {done:this._state.done, error:this._state.error, output:output.value.result}
+    }
+  }
+
+  *getStatementIterator (statement) {
+    switch (statement.action) {
+      case 'assignment':
+        return this.AssignmentIterator(statement)
+      case 'module_call':
+        return this.CallIterator(statement)
+      case 'if':
+        return this.IfIterator(statement)
+      case 'while':
+        return this.WhileIterator(statement)
+      case 'until':
+        return this.UntilIterator(statement)
+      default:
+        throw new Error(`En TestableEvaluator::getStatementIterator --> no se reconoce el enunciado ${statement.action}`)
+    }
+  }
+
+  *AssignmentIterator (assignment) {
+    let variable = this.getVariable(assignment.target.name)
+
+    if (variable.isArray) {
+      let index_amount = assignment.target.indexes.length
+
+      for (let index of assignment.target.indexes) this.evaluateExpression(index)
+
+      let index_list = new Array(index_amount)
+
+      // calcular indices
+      for (let i = 0; i < index_amount; i++) {
+        let evaluation_report = this._state.stack.pop()
+        if (evaluation_report.error) {
+          yield {error:true, finished: true, result:evaluation_report.result}
+        }
+        else if (evaluation_report.result.type === 'call') {
+          yield {error:false, finished: false, result:evaluation_report.result}
+
+          let evaluation_report = this._state.stack.pop()
+
+          if (evaluation_report.error) {
+            yield {error:true, finished:true, result:evaluation_report.result}
+          }
+          else {
+            index_list[i] = evaluation_report.result
+          }
+        }
+        else {
+          index_list[i] = evaluation_report.result
+        }
+      }
+
+      if (assignment.target.bounds_checked || this.indexWithinBounds(index_list, variable.dimension) ) {
+        let index = this.calculateIndex(index_list, variable.dimension)
+        this.evaluateExpression(assignment.payload)
+        let evaluation_report = this._state.stack.pop()
+        if (evaluation_report.error) {
+          yield {error:true, finished:true, result:evaluation_report.result}
+        }
+        else {
+          variable.values[index] = evaluation_report.result
+        }
+      }
+      else {
+        let result = {
+          reason: '@assignment-index-out-of-bounds',
+          index: index_list,
+          name: assignment.target.name,
+          dimension: variable.dimension
+          // line
+          // column
+        }
+        yield {error:true, finished:true, result}
+      }
+    }
+    else {
+      this.evaluateExpression(assignment.payload)
+      let evaluation_report = this._state.stack.pop()
+      if (evaluation_report.error) {
+        yield {error:true, finished:true, result:evaluation_report.result}
+      }
+      else if (evaluation_report.result.type === 'call') {
+        yield {error:false, finished: false, result:evaluation_report.result}
+
+        let evaluation_report = this._state.stack.pop()
+
+        if (evaluation_report.error) {
+          yield {error:true, finished:true, result:evaluation_report.result}
+        }
+        else {
+          variable.value = evaluation_report.result
+          yield {error:false, finished:true, result:null}
+        }
+      }
+      else {
+        variable.value = evaluation_report.result
+        yield {error:false, finished:true, result:null}
+      }
     }
   }
 
@@ -87,7 +170,7 @@ export default class TestableEvaluator {
       let index_list = new Array(assignment.target.indexes.length)
 
       for (let i = 0; i < index_list.length; i++) {
-        let evaluation_report = this._stack.pop()
+        let evaluation_report = this._state.stack.pop()
         if (evaluation_report.error) {
           return {error:true, finished:true, result:evaluation_report.result}
         }
@@ -100,7 +183,7 @@ export default class TestableEvaluator {
       if (assignment.target.bounds_checked || this.indexWithinBounds(index_list, variable.dimension) ) {
         let index = this.calculateIndex(index_list, variable.dimension)
         this.evaluateExpression(assignment.payload)
-        let evaluation_report = this._stack.pop()
+        let evaluation_report = this._state.stack.pop()
         if (evaluation_report.error) {
           return {error:true, finished:true, result:evaluation_report.result}
         }
@@ -122,7 +205,7 @@ export default class TestableEvaluator {
     }
     else {
       this.evaluateExpression(assignment.payload)
-      let evaluation_report = this._stack.pop()
+      let evaluation_report = this._state.stack.pop()
       if (evaluation_report.error) {
         return {error:true, finished:true, result:evaluation_report.result}
       }
@@ -174,7 +257,8 @@ export default class TestableEvaluator {
       case 'invocation':
         return this.getVariableValue(expression)
       case 'literal':
-        return {error:false, result:expression.value}
+        this._state.stack.push({error:false, result:{type:'literal', value:expression.value}})
+        break
       case  'operation':
         // return this.evaluateOperation(exp)
       case  'unary-operation':

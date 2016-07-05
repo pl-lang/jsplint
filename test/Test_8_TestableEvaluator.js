@@ -66,7 +66,7 @@ describe('TestableEvaluator', () => {
     evaluator._locals.a.value.should.equal(2)
   })
 
-  it('programa con un llamado a escribir de un solo argumento', () => {
+  it.skip('programa con un llamado a escribir de un solo argumento', () => {
     let code = `variables
     inicio
       escribir(4)
