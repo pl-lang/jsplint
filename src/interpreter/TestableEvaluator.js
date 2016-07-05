@@ -182,6 +182,39 @@ export default class TestableEvaluator {
     }
   }
 
+  *CallIterator (call_statement) {
+    let argument_amount = call_statement.args.length
+    let args = new Array(argument_amount)
+
+    for (let arg of call_statement.args) this.evaluateExpression(arg)
+
+    for (let i = 0; i < argument_amount; i++) {
+      let evaluation_report = this._state.stack.pop()
+      if (evaluation_report.error) {
+        yield {error:true, finished: true, result:evaluation_report.result}
+      }
+      else if (evaluation_report.result.type === 'call') {
+        yield {error:false, finished: false, result:evaluation_report.result}
+
+        let evaluation_report = this._state.stack.pop()
+
+        if (evaluation_report.error) {
+          yield {error:true, finished:true, result:evaluation_report.result}
+        }
+        else {
+          args[i] = evaluation_report.result.value
+        }
+      }
+      else {
+        args[i] = evaluation_report.result.value
+      }
+    }
+
+    if (call_statement.name === 'escribir') {
+      yield {error:false, finished:true, result:{action:'write', values:args}}
+    }
+  }
+
   runAssignment (assignment) {
     let variable = this.getVariable(assignment.target.name)
 
