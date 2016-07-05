@@ -81,7 +81,6 @@ export default class TestableEvaluator {
   runStatement (statement) {
     let output = statement.next()
     while (output.value.finished === false && output.value.error === false) {
-      console.log(output)
       output = statement.next()
     }
     return output.value
