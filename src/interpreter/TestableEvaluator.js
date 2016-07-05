@@ -45,10 +45,10 @@ export default class TestableEvaluator {
 
       let output = this.runStatement(this._current_statement)
 
-      this._state.error = output.value.error
-      this._state.output = output.value.result
+      this._state.error = output.error
+      this._state.output = output.result
 
-      if (output.value.finished) {
+      if (output.finished) {
         this._current_node = this._current_node.getNext()
         this._current_statement = null
       }
@@ -57,11 +57,11 @@ export default class TestableEvaluator {
         this._state.done = true
       }
 
-      return {done:this._state.done, error:this._state.error, output:output.value.result}
+      return {done:this._state.done, error:this._state.error, output:output.result}
     }
   }
 
-  *getStatementIterator (statement) {
+  getStatementIterator (statement) {
     switch (statement.action) {
       case 'assignment':
         return this.AssignmentIterator(statement)
@@ -76,6 +76,15 @@ export default class TestableEvaluator {
       default:
         throw new Error(`En TestableEvaluator::getStatementIterator --> no se reconoce el enunciado ${statement.action}`)
     }
+  }
+
+  runStatement (statement) {
+    let output = statement.next()
+    while (output.value.finished === false && output.value.error === false) {
+      console.log(output)
+      output = statement.next()
+    }
+    return output.value
   }
 
   *AssignmentIterator (assignment) {
@@ -103,11 +112,11 @@ export default class TestableEvaluator {
             yield {error:true, finished:true, result:evaluation_report.result}
           }
           else {
-            index_list[i] = evaluation_report.result
+            index_list[i] = evaluation_report.result.value
           }
         }
         else {
-          index_list[i] = evaluation_report.result
+          index_list[i] = evaluation_report.result.value
         }
       }
 
@@ -118,8 +127,21 @@ export default class TestableEvaluator {
         if (evaluation_report.error) {
           yield {error:true, finished:true, result:evaluation_report.result}
         }
+        else if (evaluation_report.result.type === 'call') {
+          yield {error:false, finished: false, result:evaluation_report.result}
+
+          let evaluation_report = this._state.stack.pop()
+
+          if (evaluation_report.error) {
+            yield {error:true, finished:true, result:evaluation_report.result}
+          }
+          else {
+            variable.values[index] = evaluation_report.result.value
+            yield {error:false, finished:true, result:null}
+          }
+        }
         else {
-          variable.values[index] = evaluation_report.result
+          variable.values[index] = evaluation_report.result.value
         }
       }
       else {
@@ -149,12 +171,12 @@ export default class TestableEvaluator {
           yield {error:true, finished:true, result:evaluation_report.result}
         }
         else {
-          variable.value = evaluation_report.result
+          variable.value = evaluation_report.result.value
           yield {error:false, finished:true, result:null}
         }
       }
       else {
-        variable.value = evaluation_report.result
+        variable.value = evaluation_report.result.value
         yield {error:false, finished:true, result:null}
       }
     }
