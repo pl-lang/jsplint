@@ -142,21 +142,6 @@ describe('TestableEvaluator', () => {
     evaluator._locals.m.values[3].should.equal(9)
   })
 
-  it('programa con un llamado a escribir de un solo argumento', () => {
-    let code = `variables
-    inicio
-      escribir(4)
-    fin`
-
-    let modules = programFromSource(code).modules
-
-    let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
-
-    let output = evaluator.step()
-
-    output.should.deepEqual({done:true, error:false, output:{action:'write', values:[4]}})
-  })
-
   it('programa con 2 enunciados de asignacion', () => {
     let code = `variables
       entero a, b
@@ -180,5 +165,35 @@ describe('TestableEvaluator', () => {
     output.should.deepEqual({done:true, error:false, output:null})
 
     evaluator._locals.b.value.should.equal(89)
+  })
+
+  it('programa con un llamado a escribir de un solo argumento', () => {
+    let code = `variables
+    inicio
+      escribir(4)
+    fin`
+
+    let modules = programFromSource(code).modules
+
+    let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+
+    let output = evaluator.step()
+
+    output.should.deepEqual({done:true, error:false, output:{action:'write', values:[4]}})
+  })
+
+  it('programa con un llamado a escribir con varios argumentos', () => {
+    let code = `variables
+    inicio
+      escribir(4, 3, 2, 1)
+    fin`
+
+    let modules = programFromSource(code).modules
+
+    let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+
+    let output = evaluator.step()
+
+    output.should.deepEqual({done:true, error:false, output:{action:'write', values:[4, 3, 2, 1]}})
   })
 })
