@@ -237,6 +237,81 @@ export default class TestableEvaluator {
   //       break
   //   }
   // }
+  *evaluateExpression2 (expression_stack) {
+    for (let token of expression_stack) {
+      switch (expression) {
+        case 'operator':
+          switch (token.operator) {
+            case 'times':
+              yield* times()
+              break
+            case 'unary-minus':
+              yield* uminus()
+              break
+            default:
+              throw new Error(`Operador "${token.operator}" no reconocido`)
+          }
+        case 'literal':
+          this._state.stack.push({error:false, result:{type:'literal', value:token.value}})
+          break
+        case 'invocation':
+          this._state.stack.push(this.getVariableValue(token))
+          break
+        default:
+          throw new Error(`Tipo de expresion "${token.kind}" no reconocido`)
+      }
+    }
+    let output = this._stack.pop()
+    let result = {finished:true, output}
+    yield result
+  }
+
+  *times() {
+    let b_evaluator = this.evaluateExpression2(this._state.stack.pop())
+    b_report = b._evaluator.next()
+    while (b_report.finished === false) {
+      b_report = b._evaluator.next()
+
+      if (b_report.output.type === 'call') {
+        yield b_report.output
+      }
+    }
+
+    let a_evaluator = this.evaluateExpression2(this._state.stack.pop())
+    a_report = a._evaluator.next()
+    while (a_report.finished === false) {
+      a_report = a._evaluator.next()
+
+      if (a_report.output.type === 'call') {
+        yield a_report.output
+      }
+    }
+
+    // TODO: revisar que no haya ocurrido algun error durante la evaluacion de
+    // a y b
+    let a = a_report.output.value
+    let b = b_report.output.value
+
+    this._state.stack.push({error:false, result:{type:'literal', value:a*b}})
+  }
+
+  *uminus() {
+    let a_evaluator = this.evaluateExpression2(this._state.stack.pop())
+    a_report = a._evaluator.next()
+    while (a_report.finished === false) {
+      a_report = a._evaluator.next()
+
+      if (a_report.output.type === 'call') {
+        yield a_report.output
+      }
+    }
+
+    // TODO: revisar que no haya ocurrido algun error durante la evaluacion de
+    // a
+    let a = a_report.output.value
+
+    this._state.stack.push({error:false, result:{type:'literal', value:-a}})
+  }
 
   evaluateExpression (expression_stack) {
     for (let token of expression_stack) {
