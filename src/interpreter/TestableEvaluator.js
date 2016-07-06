@@ -222,7 +222,8 @@ export default class TestableEvaluator {
   evaluateExpression (expression) {
     switch (expression.expression_type) {
       case 'invocation':
-        return this.getVariableValue(expression)
+        this._state.stack.push(this.getVariableValue(expression))
+        break
       case 'literal':
         this._state.stack.push({error:false, result:{type:'literal', value:expression.value}})
         break
@@ -241,11 +242,22 @@ export default class TestableEvaluator {
     let variable = this.getVariable(info.name)
 
     if (variable.isArray) {
-      let index_values = info.indexes.map(expression => this.evaluateExpression(expression) - 1)
+      for (let index of info.indexes) this.evaluateExpression(index)
+
+      let index_amount = info.indexes.length
+
+      let index_values = new Array(index_amount)
+
+      // TODO: aca falta contemplar los casos donde el indice es una llamada
+      // a una funcion y donde haya ocurrido un error en la evaluacion de dicho
+      // indice
+      for (let i = index_amount - 1; i >= 0; i--) {
+        index_values[i] = this._state.stack.pop().result.value - 1
+      }
 
       if (info.bounds_checked || this.indexWithinBounds(index_values, variable.dimension)) {
         let index = this.calculateIndex(index_values, variable.dimension)
-        return {error:false, result:variable.values[index]}
+        return {error:false, result:{type:'literal', value:variable.values[index]}}
       }
       else {
         let out_of_bunds_info = this.getBoundsError(index_values, variable.dimension)
@@ -253,7 +265,7 @@ export default class TestableEvaluator {
       }
     }
     else {
-      return variable.value
+      return {error:false, result:{type:'literal', value:variable.value}}
     }
   }
 
