@@ -242,6 +242,23 @@ export default class TestableEvaluator {
     for (let token of expression_stack) {
       switch (token.kind) {
         case 'operator':
+          switch (token.operator) {
+            case 'times':
+              {
+                let b = this._state.stack.pop().result.value
+                let a = this._state.stack.pop().result.value
+                this._state.stack.push({error:false, result:{type:'literal', value:a*b}})
+              }
+              break
+            case 'unary-minus':
+              {
+                let a = this._state.stack.pop().result.value
+                this._state.stack.push({error:false, result:{type:'literal', value:-a}})
+              }
+              break
+            default:
+              throw new Error(`Operador "${token.operator}" no reconocido`)
+          }
           break
         case 'literal':
           this._state.stack.push({error:false, result:{type:'literal', value:token.value}})
