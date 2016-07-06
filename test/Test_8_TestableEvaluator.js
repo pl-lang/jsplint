@@ -7,6 +7,7 @@ import StaticChecker from '../src/typechecker/TypeChecker.js'
 
 import DeclarationTransform from '../src/transformer/Checkable.js'
 import EvaluatorTransform from '../src/transformer/Interpretable.js'
+import TreeToRPNTransform from '../src/transformer/TreeToRPN.js'
 
 
 import TestableEvaluator from '../src/interpreter/TestableEvaluator.js'
@@ -23,7 +24,7 @@ function programFromSource(string) {
 
   let parser_output = parser.parse(string).result
 
-  let executable_ast = EvaluatorTransform(DeclarationTransform(parser_output))
+  let executable_ast = EvaluatorTransform(DeclarationTransform(TreeToRPNTransform(parser_output)))
 
   return executable_ast
 }
