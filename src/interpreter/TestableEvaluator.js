@@ -219,22 +219,39 @@ export default class TestableEvaluator {
     return varname in this._locals ? this._locals[varname]:this._globals[varname]
   }
 
-  evaluateExpression (expression) {
-    switch (expression.expression_type) {
-      case 'invocation':
-        this._state.stack.push(this.getVariableValue(expression))
-        break
-      case 'literal':
-        this._state.stack.push({error:false, result:{type:'literal', value:expression.value}})
-        break
-      case  'operation':
-        // return this.evaluateOperation(exp)
-      case  'unary-operation':
-        // return this.evaluateUnaryOperation(exp)
-      case  'expression':
-        // return this.evaluateExpression(exp.expression)
-      default:
-        break
+  // evaluateExpression (expression) {
+  //   switch (expression.expression_type) {
+  //     case 'invocation':
+  //       this._state.stack.push(this.getVariableValue(expression))
+  //       break
+  //     case 'literal':
+  //       this._state.stack.push({error:false, result:{type:'literal', value:expression.value}})
+  //       break
+  //     case  'operation':
+  //       // return this.evaluateOperation(exp)
+  //     case  'unary-operation':
+  //       // return this.evaluateUnaryOperation(exp)
+  //     case  'expression':
+  //       // return this.evaluateExpression(exp.expression)
+  //     default:
+  //       break
+  //   }
+  // }
+
+  evaluateExpression (expression_stack) {
+    for (let token of expression_stack) {
+      switch (token.kind) {
+        case 'operator':
+          break
+        case 'literal':
+          this._state.stack.push({error:false, result:{type:'literal', value:token.value}})
+          break
+        case 'invocation':
+          this._state.stack.push(this.getVariableValue(token))
+          break
+        default:
+          throw new Error(`Tipo de expresion "${token.kind}" no reconocido`)
+      }
     }
   }
 
