@@ -195,7 +195,7 @@ function treeToRPN (exp_root) {
   let stack = []
 
   if (exp_root.expression_type === 'operation') {
-    let op = {type:'operator', operator:exp_root.op}
+    let op = {kind:'operator', operator:exp_root.op}
     let left_operand = treeToRPN(exp_root.operands[0])
     let right_operand = treeToRPN(exp_root.operands[1])
     stack.push(...left_operand, ...right_operand, op)
