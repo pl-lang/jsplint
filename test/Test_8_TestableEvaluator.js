@@ -294,4 +294,369 @@ describe('TestableEvaluator', () => {
     output = evaluator.step()
     output.should.deepEqual({done:true, error:false, output:{action:'write', values:[9]}})
   })
+
+  describe.only('Evaluacion de expresiones', () => {
+    it('multiplicacion', () => {
+      // 2*3
+      {
+        let code = `variables
+          entero a
+        inicio
+          a <- 2*3
+        fin`
+
+        let modules = programFromSource(code).modules
+
+        let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+
+        let output = evaluator.step()
+
+        output.should.deepEqual({done:true, error:false, output:null})
+
+        evaluator._locals.a.value.should.equal(2*3)
+      }
+
+      // -2*-3
+      {
+        let code = `variables
+          entero a
+        inicio
+          a <- -2*-3
+        fin`
+
+        let modules = programFromSource(code).modules
+
+        let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+
+        let output = evaluator.step()
+
+        output.should.deepEqual({done:true, error:false, output:null})
+
+        evaluator._locals.a.value.should.equal(-2*-3)
+      }
+
+      // 2*2*2
+      {
+        let code = `variables
+          entero a
+        inicio
+          a <- 2*2*2
+        fin`
+
+        let modules = programFromSource(code).modules
+
+        let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+
+        let output = evaluator.step()
+
+        output.should.deepEqual({done:true, error:false, output:null})
+
+        evaluator._locals.a.value.should.equal(2*2*2)
+      }
+
+      {
+        let code = `variables
+          entero a, b, c
+        inicio
+          a <- 2
+          b <- 6
+          c <- a * b
+        fin`
+
+        let modules = programFromSource(code).modules
+
+        let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+
+        let output
+
+        output = evaluator.step()
+
+        output.should.deepEqual({done:false, error:false, output:null})
+
+        output = evaluator.step()
+
+        output.should.deepEqual({done:false, error:false, output:null})
+
+        output = evaluator.step()
+
+        output.should.deepEqual({done:true, error:false, output:null})
+
+        evaluator._locals.c.value.should.equal(12)
+      }
+
+      {
+        let code = `variables
+          entero v[3]
+        inicio
+          v[1] <- 2
+          v[2] <- 6
+          v[3] <- v[1] * v[2]
+        fin`
+
+        let modules = programFromSource(code).modules
+
+        let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+
+        let output
+
+        output = evaluator.step()
+
+        output.should.deepEqual({done:false, error:false, output:null})
+
+        output = evaluator.step()
+
+        output.should.deepEqual({done:false, error:false, output:null})
+
+        output = evaluator.step()
+
+        output.should.deepEqual({done:true, error:false, output:null})
+
+        evaluator._locals.v.values[2].should.equal(12)
+      }
+    })
+
+    it('division', () => {
+      {
+        let code = `variables
+          entero a
+        inicio
+          a <- 3/2
+        fin`
+
+        let modules = programFromSource(code).modules
+
+        let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+
+        let output = evaluator.step()
+
+        output.should.deepEqual({done:true, error:false, output:null})
+
+        evaluator._locals.a.value.should.equal(3/2)
+      }
+
+      {
+        let a = '-3/-2'
+        let q = queueFromSource(a)
+        let exp = match(Patterns.Expression).from(q)
+        exp.error.should.equal(false)
+        let resultado = evaluator.evaluateExp(exp.result)
+        resultado.should.equal(1.5)
+      }
+
+      {
+        let a = '2+3/3+4'
+        let q = queueFromSource(a)
+        let exp = match(Patterns.Expression).from(q)
+        exp.error.should.equal(false)
+        let resultado = evaluator.evaluateExp(exp.result)
+        resultado.should.equal(2+3/3+4)
+      }
+
+      {
+        let a = '3/2/2'
+        let q = queueFromSource(a)
+        let exp = match(Patterns.Expression).from(q)
+        exp.error.should.equal(false)
+        let resultado = evaluator.evaluateExp(exp.result)
+        resultado.should.equal(3/2/2)
+      }
+
+      {
+        let a = '2/2/2/2'
+        let q = queueFromSource(a)
+        let exp = match(Patterns.Expression).from(q)
+        exp.error.should.equal(false)
+        let resultado = evaluator.evaluateExp(exp.result)
+        resultado.should.equal(2/2/2/2)
+      }
+
+      {
+        let a = '4/2/2/2'
+        let q = queueFromSource(a)
+        let exp = match(Patterns.Expression).from(q)
+        exp.error.should.equal(false)
+        let resultado = evaluator.evaluateExp(exp.result)
+        resultado.should.equal(4/2/2/2)
+      }
+
+      {
+        let a = '2/2/2/4'
+        let q = queueFromSource(a)
+        let exp = match(Patterns.Expression).from(q)
+        exp.error.should.equal(false)
+        let resultado = evaluator.evaluateExp(exp.result)
+        resultado.should.equal(2/2/2/4)
+      }
+    })
+
+    it('resta', () => {
+      {
+        let a = '3-3-3'
+        let q = queueFromSource(a)
+        let exp = match(Patterns.Expression).from(q)
+        exp.error.should.equal(false)
+        let resultado = evaluator.evaluateExp(exp.result)
+        resultado.should.equal(-3)
+      }
+
+      {
+        let a = '(3-3-3)'
+        let q = queueFromSource(a)
+        let exp = match(Patterns.Expression).from(q)
+        exp.error.should.equal(false)
+        let resultado = evaluator.evaluateExp(exp.result)
+        resultado.should.equal(-3)
+      }
+    })
+
+    it('suma', () => {
+      {
+        let a = '2+43'
+        let q = queueFromSource(a)
+        let exp = match(Patterns.Expression).from(q)
+        exp.error.should.equal(false)
+        let resultado = evaluator.evaluateExp(exp.result)
+        resultado.should.equal(45)
+      }
+    })
+
+    it('operaciones combinadas', () => {
+      {
+        let a = '2-(2-3)'
+        let q = queueFromSource(a)
+        let exp = match(Patterns.Expression).from(q)
+        exp.error.should.equal(false)
+        let resultado = evaluator.evaluateExp(exp.result)
+        resultado.should.equal(2-(2-3))
+      }
+
+      {
+        let a = '2+(2+3)'
+        let q = queueFromSource(a)
+        let exp = match(Patterns.Expression).from(q)
+        exp.error.should.equal(false)
+        let resultado = evaluator.evaluateExp(exp.result)
+        resultado.should.equal(7)
+      }
+
+      {
+        let a = '2+(2+3*4)'
+        let q = queueFromSource(a)
+        let exp = match(Patterns.Expression).from(q)
+        exp.error.should.equal(false)
+        let resultado = evaluator.evaluateExp(exp.result)
+        resultado.should.equal(16)
+      }
+
+      {
+        let a = '(3*2)-6'
+        let q = queueFromSource(a)
+        let exp = match(Patterns.Expression).from(q)
+        exp.error.should.equal(false)
+        let resultado = evaluator.evaluateExp(exp.result)
+        resultado.should.equal(0)
+      }
+
+      {
+        let a = '(-(-(2+2)))'
+        let q = queueFromSource(a)
+        let exp = match(Patterns.Expression).from(q)
+        exp.error.should.equal(false)
+        let resultado = evaluator.evaluateExp(exp.result)
+        resultado.should.equal(4)
+      }
+
+      {
+        let a = '2+8/2'
+        let q = queueFromSource(a)
+        let exp = match(Patterns.Expression).from(q)
+        exp.error.should.equal(false)
+        let resultado = evaluator.evaluateExp(exp.result)
+        resultado.should.equal(2+8/2)
+      }
+    })
+
+    it('relacionales', () => {
+      {
+        let a = '2 = 2'
+        let q = queueFromSource(a)
+        let exp = match(Patterns.Expression).from(q)
+        exp.error.should.equal(false)
+        let resultado = evaluator.evaluateExp(exp.result)
+        resultado.should.equal(true)
+      }
+
+      {
+        let a = '2 <> 2'
+        let q = queueFromSource(a)
+        let exp = match(Patterns.Expression).from(q)
+        exp.error.should.equal(false)
+        let resultado = evaluator.evaluateExp(exp.result)
+        resultado.should.equal(false)
+      }
+
+      {
+        let a = '2 >= 2'
+        let q = queueFromSource(a)
+        let exp = match(Patterns.Expression).from(q)
+        exp.error.should.equal(false)
+        let resultado = evaluator.evaluateExp(exp.result)
+        resultado.should.equal(true)
+      }
+
+      {
+        let a = '2 <= 2'
+        let q = queueFromSource(a)
+        let exp = match(Patterns.Expression).from(q)
+        exp.error.should.equal(false)
+        let resultado = evaluator.evaluateExp(exp.result)
+        resultado.should.equal(true)
+      }
+
+      {
+        let a = '5 > 4'
+        let q = queueFromSource(a)
+        let exp = match(Patterns.Expression).from(q)
+        exp.error.should.equal(false)
+        let resultado = evaluator.evaluateExp(exp.result)
+        resultado.should.equal(true)
+      }
+
+      {
+        let a = '2 < 4'
+        let q = queueFromSource(a)
+        let exp = match(Patterns.Expression).from(q)
+        exp.error.should.equal(false)
+        let resultado = evaluator.evaluateExp(exp.result)
+        resultado.should.equal(true)
+      }
+
+      {
+        let a = 'verdadero or falso'
+        let q = queueFromSource(a)
+        let exp = match(Patterns.Expression).from(q)
+        exp.error.should.equal(false)
+        let resultado = evaluator.evaluateExp(exp.result)
+        resultado.should.equal(true)
+      }
+
+      {
+        let a = 'verdadero and falso'
+        let q = queueFromSource(a)
+        let exp = match(Patterns.Expression).from(q)
+        exp.error.should.equal(false)
+        let resultado = evaluator.evaluateExp(exp.result)
+        resultado.should.equal(false)
+      }
+    })
+
+    it('prueba que no deberia fallar', () => {
+      let a = '2 + 2 = 4'
+      let q = queueFromSource(a)
+      let exp = match(Patterns.Expression).from(q)
+      exp.error.should.equal(false)
+      let resultado = evaluator.evaluateExp(exp.result)
+      resultado.should.equal(true)
+    })
+  })
 })
