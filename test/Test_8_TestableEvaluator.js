@@ -29,7 +29,7 @@ function programFromSource(string) {
 }
 
 
-describe('TestableEvaluator', () => {
+describe.only('TestableEvaluator', () => {
   it('programa sin enunciados', () => {
     let code = `variables
     inicio
@@ -195,5 +195,102 @@ describe('TestableEvaluator', () => {
     let output = evaluator.step()
 
     output.should.deepEqual({done:true, error:false, output:{action:'write', values:[4, 3, 2, 1]}})
+  })
+
+  it('programa que escribe el valor de una variable', () => {
+    let code = `variables
+      entero a
+    inicio
+      a <- 32
+      escribir(a)
+    fin`
+
+    let modules = programFromSource(code).modules
+
+    let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+
+    let output = evaluator.step()
+
+    output = evaluator.step()
+
+    output.should.deepEqual({done:true, error:false, output:{action:'write', values:[32]}})
+  })
+
+  it('programa que escribe los valores de un vector', () => {
+    let code = `variables
+      entero v[5]
+    inicio
+      v[1] <- 5
+      v[2] <- 8
+      v[3] <- 7
+      v[4] <- 9
+      v[5] <- 3
+      escribir(v[1])
+      escribir(v[2])
+      escribir(v[3])
+      escribir(v[4])
+      escribir(v[5])
+    fin`
+
+    let modules = programFromSource(code).modules
+
+    let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+
+    let output = evaluator.step()
+    output = evaluator.step()
+    output = evaluator.step()
+    output = evaluator.step()
+    output = evaluator.step()
+
+    output = evaluator.step()
+    output.should.deepEqual({done:false, error:false, output:{action:'write', values:[5]}})
+
+    output = evaluator.step()
+    output.should.deepEqual({done:false, error:false, output:{action:'write', values:[8]}})
+
+    output = evaluator.step()
+    output.should.deepEqual({done:false, error:false, output:{action:'write', values:[7]}})
+
+    output = evaluator.step()
+    output.should.deepEqual({done:false, error:false, output:{action:'write', values:[9]}})
+
+    output = evaluator.step()
+    output.should.deepEqual({done:true, error:false, output:{action:'write', values:[3]}})
+  })
+
+  it('programa que escribe los valores de una matriz', () => {
+    let code = `variables
+      entero m[2, 2]
+    inicio
+      m[1, 1] <- 5
+      m[1, 2] <- 8
+      m[2, 1] <- 7
+      m[2, 2] <- 9
+      escribir(m[1, 1])
+      escribir(m[1, 2])
+      escribir(m[2, 1])
+      escribir(m[2, 2])
+    fin`
+
+    let modules = programFromSource(code).modules
+
+    let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+
+    let output = evaluator.step()
+    output = evaluator.step()
+    output = evaluator.step()
+    output = evaluator.step()
+
+    output = evaluator.step()
+    output.should.deepEqual({done:false, error:false, output:{action:'write', values:[5]}})
+
+    output = evaluator.step()
+    output.should.deepEqual({done:false, error:false, output:{action:'write', values:[8]}})
+
+    output = evaluator.step()
+    output.should.deepEqual({done:false, error:false, output:{action:'write', values:[7]}})
+
+    output = evaluator.step()
+    output.should.deepEqual({done:true, error:false, output:{action:'write', values:[9]}})
   })
 })
