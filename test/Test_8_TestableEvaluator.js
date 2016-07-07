@@ -858,12 +858,21 @@ describe.only('TestableEvaluator', () => {
     })
 
     it('prueba que no deberia fallar', () => {
-      let a = '2 + 2 = 4'
-      let q = queueFromSource(a)
-      let exp = match(Patterns.Expression).from(q)
-      exp.error.should.equal(false)
-      let resultado = evaluator.evaluateExp(exp.result)
-      resultado.should.equal(true)
+      let code = `variables
+        entero a
+      inicio
+        a <- 2 + 2 = 4
+      fin`
+
+      let modules = programFromSource(code).modules
+
+      let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+
+      let output = evaluator.step()
+
+      output.should.deepEqual({done:true, error:false, output:null})
+
+      evaluator._locals.a.value.should.equal(true)
     })
   })
 })
