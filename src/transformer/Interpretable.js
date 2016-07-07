@@ -117,7 +117,8 @@ function transformUntil(until_statement) {
 
   until_node.loop_body_root = temp_list.firstNode
 
-  return until_node
+  // return until_node
+  return temp_list.firstNode
 }
 
 // 'para' <variable> <- <expresion> 'hasta' <expresion.entera>
