@@ -6,7 +6,7 @@ import Parser from '../src/parser/Parser.js'
 import StaticChecker from '../src/typechecker/TypeChecker.js'
 
 import DeclarationTransform from '../src/transformer/Checkable.js'
-import EvaluatorTransform from '../src/transformer/Interpretable.js'
+import EvaluatorTransform from '../src/transformer/Interpretable2.js'
 import TreeToRPNTransform from '../src/transformer/TreeToRPN.js'
 
 
@@ -344,6 +344,55 @@ describe.only('TestableEvaluator', () => {
         escribir(i)
         i <- i + 1
       finmientras
+      escribir(i)
+    fin`
+
+    let modules = programFromSource(code).modules
+
+    let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+
+    let output = evaluator.step() // i <- 0
+
+    evaluator._locals.i.value.should.equal(0)
+
+    output = evaluator.step() // evalua la condicion del bucle
+
+    output = evaluator.step() // escribir(i)
+
+    output.should.deepEqual({done:false, error:false, output:{action:'write', values:[0]}})
+
+    output = evaluator.step() // i <- i + 1
+
+    output.should.deepEqual({done:false, error:false, output:null})
+
+    evaluator._locals.i.value.should.equal(1)
+
+    output = evaluator.step() // evalua la condicion del bucle
+
+    output = evaluator.step() // escribir(i)
+
+    output.should.deepEqual({done:false, error:false, output:{action:'write', values:[1]}})
+
+    output = evaluator.step() // i <- i + 1
+
+    output.should.deepEqual({done:false, error:false, output:null})
+
+    evaluator._locals.i.value.should.equal(2)
+
+    output = evaluator.step() // evalua la condicion del bucle
+
+    output = evaluator.step() // escribir(i)
+
+    output.should.deepEqual({done:true, error:false, output:{action:'write', values:[2]}})
+  })
+
+  it('programa con un bucle para', () => {
+    let code = `variables
+      entero i
+    inicio
+      para i <- 0 hasta 1
+        escribir(i)
+      finpara
       escribir(i)
     fin`
 
