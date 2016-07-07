@@ -30,7 +30,7 @@ function programFromSource(string) {
 }
 
 
-describe('TestableEvaluator', () => {
+describe.only('TestableEvaluator', () => {
   it('programa sin enunciados', () => {
     let code = `variables
     inicio
@@ -295,7 +295,7 @@ describe('TestableEvaluator', () => {
     output.should.deepEqual({done:true, error:false, output:{action:'write', values:[9]}})
   })
 
-  describe.only('Evaluacion de expresiones', () => {
+  describe.skip('Evaluacion de expresiones', () => {
     it('multiplicacion', () => {
       // 2*3
       {
