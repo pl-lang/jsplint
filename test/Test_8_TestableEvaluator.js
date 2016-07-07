@@ -30,7 +30,7 @@ function programFromSource(string) {
 }
 
 
-describe.only('TestableEvaluator', () => {
+describe('TestableEvaluator', () => {
   it('programa sin enunciados', () => {
     let code = `variables
     inicio
@@ -301,6 +301,31 @@ describe.only('TestableEvaluator', () => {
     inicio
       leer(m)
       escribir(m)
+    fin`
+
+    let modules = programFromSource(code).modules
+
+    let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+
+    let output = evaluator.step()
+
+    output.should.deepEqual({done:false, error:false, output:{action:'read', amount:1, types:['entero']}})
+
+    evaluator.input(9)
+
+    output = evaluator.step() // de momento hay que hacer esto, por algun motivo...
+
+    output = evaluator.step()
+
+    output.should.deepEqual({done:true, error:false, output:{action:'write', values:[9]}})
+  })
+
+  it('programa con una llamada a leer una celda de un vector', () => {
+    let code = `variables
+      entero v[2]
+    inicio
+      leer(v[1])
+      escribir(v[1])
     fin`
 
     let modules = programFromSource(code).modules

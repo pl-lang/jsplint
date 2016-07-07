@@ -179,14 +179,14 @@ export default class TestableEvaluator {
 
       yield {error:false, paused:true, finished:false, result:{action:'read', amount, types}}
 
-      for (let variable of variables) {
+      for (let i = 0; i < amount; i++) {
         let value = this._state.stack.pop()
-        if (variable.isArray) {
+        if (variables[i].isArray) {
           // TODO: revisar si arg.bounds_checked existe...
-          yield* this.Assign(variable, payload, arg.indexes, false)
+          yield* this.Assign(variables[i], value, call_statement.args[i][0].indexes, false)
         }
         else {
-          yield* this.Assign(variable, value)
+          yield* this.Assign(variables[i], value)
         }
       }
 
