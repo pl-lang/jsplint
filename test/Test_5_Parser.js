@@ -293,7 +293,7 @@ describe('Interpretable', () => {
     })
   })
 
-  it('prueba para un programa con una estructura mientras', () => {
+  it.skip('prueba para un programa con una estructura mientras', () => {
     let code = `variables
     entero variable
     inicio
