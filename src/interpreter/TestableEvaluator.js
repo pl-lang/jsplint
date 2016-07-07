@@ -93,7 +93,7 @@ export default class TestableEvaluator {
       let index_values = []
 
       for (let index of assignment.target.indexes) {
-        let exp_evaluator = this.evaluateExpression2(index)
+        let exp_evaluator = this.evaluateExpression(index)
         let evaluation_report = exp_evaluator.next()
         let actual_index = evaluation_report.value
 
@@ -117,7 +117,7 @@ export default class TestableEvaluator {
       if (assignment.target.bounds_checked || this.indexWithinBounds(index_values, variable.dimension) ) {
         let index = this.calculateIndex(index_values, variable.dimension)
 
-        let exp_evaluator = this.evaluateExpression2(assignment.payload)
+        let exp_evaluator = this.evaluateExpression(assignment.payload)
         let evaluation_report = exp_evaluator.next()
         let payload = evaluation_report.value
 
@@ -151,7 +151,7 @@ export default class TestableEvaluator {
       }
     }
     else {
-      let exp_evaluator = this.evaluateExpression2(assignment.payload)
+      let exp_evaluator = this.evaluateExpression(assignment.payload)
       let evaluation_report = exp_evaluator.next()
       let payload = evaluation_report.value
 
@@ -177,7 +177,7 @@ export default class TestableEvaluator {
     let args = []
 
     for (let argument of call_statement.args) {
-      let exp_evaluator = this.evaluateExpression2(argument)
+      let exp_evaluator = this.evaluateExpression(argument)
       let evaluation_report = exp_evaluator.next()
       let actual_argument = evaluation_report.value
 
@@ -207,25 +207,7 @@ export default class TestableEvaluator {
     return varname in this._locals ? this._locals[varname]:this._globals[varname]
   }
 
-  // evaluateExpression (expression) {
-  //   switch (expression.expression_type) {
-  //     case 'invocation':
-  //       this._state.stack.push(this.getVariableValue(expression))
-  //       break
-  //     case 'literal':
-  //       this._state.stack.push({error:false, result:{type:'literal', value:expression.value}})
-  //       break
-  //     case  'operation':
-  //       // return this.evaluateOperation(exp)
-  //     case  'unary-operation':
-  //       // return this.evaluateUnaryOperation(exp)
-  //     case  'expression':
-  //       // return this.evaluateExpression(exp.expression)
-  //     default:
-  //       break
-  //   }
-  // }
-  *evaluateExpression2 (expression_stack) {
+  *evaluateExpression (expression_stack) {
     for (let token of expression_stack) {
       switch (token.kind) {
         case 'operator':
@@ -266,40 +248,6 @@ export default class TestableEvaluator {
     this._state.stack.push(-a)
   }
 
-  evaluateExpression (expression_stack) {
-    for (let token of expression_stack) {
-      switch (token.kind) {
-        case 'operator':
-          switch (token.operator) {
-            case 'times':
-              {
-                let b = this._state.stack.pop().result.value
-                let a = this._state.stack.pop().result.value
-                this._state.stack.push({error:false, result:{type:'literal', value:a*b}})
-              }
-              break
-            case 'unary-minus':
-              {
-                let a = this._state.stack.pop().result.value
-                this._state.stack.push({error:false, result:{type:'literal', value:-a}})
-              }
-              break
-            default:
-              throw new Error(`Operador "${token.operator}" no reconocido`)
-          }
-          break
-        case 'literal':
-          this._state.stack.push({error:false, result:{type:'literal', value:token.value}})
-          break
-        case 'invocation':
-          this._state.stack.push(this.getVariableValue(token))
-          break
-        default:
-          throw new Error(`Tipo de expresion "${token.kind}" no reconocido`)
-      }
-    }
-  }
-
   *pushVariableValue (info) {
     let variable = this.getVariable(info.name)
 
@@ -307,7 +255,7 @@ export default class TestableEvaluator {
       let index_values = []
 
       for (let index of info.indexes) {
-        let exp_evaluator = this.evaluateExpression2(index)
+        let exp_evaluator = this.evaluateExpression(index)
         let evaluation_report = exp_evaluator.next()
         let actual_index = evaluation_report.value
 
