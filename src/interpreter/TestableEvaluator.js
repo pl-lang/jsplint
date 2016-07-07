@@ -174,31 +174,28 @@ export default class TestableEvaluator {
   }
 
   *CallIterator (call_statement) {
-    let argument_amount = call_statement.args.length
-    let args = new Array(argument_amount)
+    let args = []
 
-    for (let arg of call_statement.args) this.evaluateExpression(arg)
+    for (let argument of call_statement.args) {
+      let exp_evaluator = this.evaluateExpression2(argument)
+      let evaluation_report = exp_evaluator.next()
+      let actual_argument = evaluation_report.value
 
-    for (let i = argument_amount - 1; i >= 0; i--) {
-      let evaluation_report = this._state.stack.pop()
-      if (evaluation_report.error) {
-        yield {error:true, finished: true, result:evaluation_report.result}
-      }
-      else if (evaluation_report.result.type === 'call') {
-        yield {error:false, finished: false, result:evaluation_report.result}
+      while (evaluation_report.done === false) {
+        actual_argument = evaluation_report.value
 
-        let evaluation_report = this._state.stack.pop()
+        if (typeof actual_argument === 'object' && 'type' in actual_argument) {
+          // it turns out 'actual_index' is not a number but an that
+          // represents a function call...
+          yield actual_argument
 
-        if (evaluation_report.error) {
-          yield {error:true, finished:true, result:evaluation_report.result}
+          payload = this._state.stack.pop()
         }
-        else {
-          args[i] = evaluation_report.result.value
-        }
+
+        evaluation_report = exp_evaluator.next()
       }
-      else {
-        args[i] = evaluation_report.result.value
-      }
+
+      args.push(actual_argument)
     }
 
     if (call_statement.name === 'escribir') {
