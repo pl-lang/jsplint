@@ -344,26 +344,37 @@ export default class TestableEvaluator {
     }
   }
 
-  getVariableValue (info) {
+  *pushVariableValue (info) {
     let variable = this.getVariable(info.name)
 
     if (variable.isArray) {
-      for (let index of info.indexes) this.evaluateExpression(index)
+      let index_values = []
 
-      let index_amount = info.indexes.length
+      for (let index of info.indexes) {
+        let exp_evaluator = this.evaluateExpression2(index)
+        let evaluation_report = exp_evaluator.next()
+        let actual_index = evaluation_report.output
 
-      let index_values = new Array(index_amount)
+        while (evaluation_report.done === false) {
+          actual_index = evaluation_report.output
 
-      // TODO: aca falta contemplar los casos donde el indice es una llamada
-      // a una funcion y donde haya ocurrido un error en la evaluacion de dicho
-      // indice
-      for (let i = index_amount - 1; i >= 0; i--) {
-        index_values[i] = this._state.stack.pop().result.value - 1
+          if (typeof actual_index === 'object' && 'type' in actual_index) {
+            // it turns out 'actual_index' is not a number but an that
+            // represents a function call...
+            yield actual_index
+
+            payload = this._state.stack.pop()
+          }
+
+          evaluation_report = exp_evaluator.next()
+        }
+
+        index_values.push(actual_index - 1)
       }
 
       if (info.bounds_checked || this.indexWithinBounds(index_values, variable.dimension)) {
         let index = this.calculateIndex(index_values, variable.dimension)
-        return {error:false, result:{type:'literal', value:variable.values[index]}}
+        return this._state.stack.push(variable.values[index])
       }
       else {
         let out_of_bunds_info = this.getBoundsError(index_values, variable.dimension)
@@ -371,7 +382,7 @@ export default class TestableEvaluator {
       }
     }
     else {
-      return {error:false, result:{type:'literal', value:variable.value}}
+      this._state.stack.push(variable.value)
     }
   }
 
