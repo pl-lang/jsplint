@@ -98,8 +98,16 @@ function transformIf (statement) {
   let result = {
     type : 'if',
     condition : null,
-    true_branch : statement.true_branch,
-    false_branch: statement.false_branch
+    true_branch : [],
+    false_branch: []
+  }
+
+  for (let s of statement.true_branch) {
+    result.true_branch.push(transformStatement(s))
+  }
+
+  for (let s of statement.false_branch) {
+    result.false_branch.push(transformStatement(s))
   }
 
   result.condition = treeToRPN(statement.condition)
