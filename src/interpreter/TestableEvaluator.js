@@ -157,28 +157,25 @@ export default class TestableEvaluator {
       }
     }
     else {
-      this.evaluateExpression(assignment.payload)
-      let evaluation_report = this._state.stack.pop()
-      if (evaluation_report.error) {
-        yield {error:true, finished:true, result:evaluation_report.result}
-      }
-      else if (evaluation_report.result.type === 'call') {
-        yield {error:false, finished: false, result:evaluation_report.result}
+      let exp_evaluator = this.evaluateExpression2(assignment.payload)
+      let evaluation_report = exp_evaluator.next()
+      let payload = evaluation_report.value
 
-        let evaluation_report = this._state.stack.pop()
+      while (evaluation_report.done === false) {
+        payload = evaluation_report.value
+        if (typeof payload === 'object' && 'type' in payload) {
+          // the payload is actually a function calll
+          yield payload
 
-        if (evaluation_report.error) {
-          yield {error:true, finished:true, result:evaluation_report.result}
+          // if execution reaches this point then the function was evaluated
+          // succesfully and its return value is at the top of the stack
+          payload = this._state.stack.pop()
         }
-        else {
-          variable.value = evaluation_report.result.value
-          yield {error:false, finished:true, result:null}
-        }
+        evaluation_report = exp_evaluator.next()
       }
-      else {
-        variable.value = evaluation_report.result.value
-        yield {error:false, finished:true, result:null}
-      }
+      variable.value = payload
+
+      yield {error:false, finished:true, result:null}
     }
   }
 
