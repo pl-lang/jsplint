@@ -335,6 +335,106 @@ describe.only('TestableEvaluator', () => {
     output.should.deepEqual({done:true, error:false, output:{action:'write', values:[4]}})
   })
 
+  it('programa con un bucle mientras', () => {
+    let code = `variables
+      entero i
+    inicio
+      i <- 0
+      mientras (i < 2) entonces
+        escribir(i)
+        i <- i + 1
+      finmientras
+      escribir(i)
+    fin`
+
+    let modules = programFromSource(code).modules
+
+    let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+
+    let output = evaluator.step()
+
+    evaluator._locals.i.value.should.equal(0)
+
+    output = evaluator.step() // evalua la condicion del bucle
+
+    output = evaluator.step()
+    output.should.deepEqual({done:false, error:false, output:{action:'write', values:[0]}})
+
+    output = evaluator.step()
+    output.should.deepEqual({done:false, error:false, output:null})
+    evaluator._locals.i.value.should.equal(1)
+
+    output = evaluator.step() // evalua la condicion del bucle
+
+    output = evaluator.step()
+    output.should.deepEqual({done:false, error:false, output:{action:'write', values:[1]}})
+
+    output = evaluator.step()
+    output.should.deepEqual({done:false, error:false, output:null})
+    evaluator._locals.i.value.should.equal(2)
+
+    output = evaluator.step() // evalua la condicion del bucle
+
+    output.should.deepEqual({done:true, error:false, output:{action:'write', values:[2]}})
+  })
+
+  it('programa con un bucle repetir', () => {
+    let code = `variables
+      entero i
+    inicio
+      i <- 0
+      repetir
+        escribir(i)
+        i <- i + 1
+      hasta que (i = 2)
+      escribir(i)
+    fin`
+
+    let modules = programFromSource(code).modules
+
+    let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+
+    let output = evaluator.step() // asigna 0 a i
+
+    evaluator._locals.i.value.should.equal(0)
+
+    output.should.deepEqual({done:false, error:false, output:null})
+
+    output = evaluator.step()
+
+    console.log('WKAKAK', output)
+
+    // output.should.deepEqual({done:false, error:false, output:{action:'write', values:[0]}})
+
+    output = evaluator.step() // i <- i + 1
+
+    console.log(output)
+
+    evaluator._locals.i.value.should.equal(1)
+
+    output.should.deepEqual({done:false, error:false, output:null})
+
+    output = evaluator.step() // evalua la condicion del bucle
+
+    output = evaluator.step() // escribir(i)
+
+    output.should.deepEqual({done:false, error:false, output:{action:'write', values:[1]}})
+
+    output = evaluator.step() // i <- i + 1
+
+    evaluator._locals.i.value.should.equal(2)
+
+    output.should.deepEqual({done:false, error:false, output:null})
+
+    output = evaluator.step() // evalua la condicion del bucle
+
+    output.should.deepEqual({done:false, error:false, output:null})
+
+    output = evaluator.step() // escribir(i)
+
+    output.should.deepEqual({done:true, error:false, output:{action:'write', values:[2]}})
+  })
+
   describe('Evaluacion de expresiones', () => {
     it('multiplicacion', () => {
       // 2*3
