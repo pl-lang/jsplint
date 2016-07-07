@@ -89,10 +89,37 @@ export default class TestableEvaluator {
   *AssignmentIterator (assignment) {
     let variable = this.getVariable(assignment.target.name)
 
+    let exp_evaluator = this.evaluateExpression(assignment.payload)
+    let evaluation_report = exp_evaluator.next()
+    let payload = evaluation_report.value
+
+    while (evaluation_report.done === false) {
+      payload = evaluation_report.value
+      if (typeof payload === 'object' && 'type' in payload) {
+        // the payload is actually a function calll
+        yield payload
+
+        // if execution reaches this point then the function was evaluated
+        // succesfully and its return value is at the top of the stack
+        payload = this._state.stack.pop()
+      }
+      evaluation_report = exp_evaluator.next()
+    }
+    // at this point 'payload' has been evaluated to a value
+    if (variable.isArray) {
+      yield* this.Assign(variable, payload, assignment.target.indexes, assignment.target.bounds_checked)
+    }
+    else {
+      yield* this.Assign(variable, payload)
+    }
+    return {error:false, finished:true, result:null}
+  }
+
+  *Assign(variable, payload, indexes, bounds_checked) {
     if (variable.isArray) {
       let index_values = []
 
-      for (let index of assignment.target.indexes) {
+      for (let index of indexes) {
         let exp_evaluator = this.evaluateExpression(index)
         let evaluation_report = exp_evaluator.next()
         let actual_index = evaluation_report.value
@@ -105,7 +132,7 @@ export default class TestableEvaluator {
             // represents a function call...
             yield actual_index
 
-            payload = this._state.stack.pop()
+            actual_index = this._state.stack.pop()
           }
 
           evaluation_report = exp_evaluator.next()
@@ -114,62 +141,26 @@ export default class TestableEvaluator {
         index_values.push(actual_index - 1)
       }
 
-      if (assignment.target.bounds_checked || this.indexWithinBounds(index_values, variable.dimension) ) {
+      if (bounds_checked || this.indexWithinBounds(index_values, variable.dimension) ) {
         let index = this.calculateIndex(index_values, variable.dimension)
-
-        let exp_evaluator = this.evaluateExpression(assignment.payload)
-        let evaluation_report = exp_evaluator.next()
-        let payload = evaluation_report.value
-
-        while (evaluation_report.done === false) {
-          payload = evaluation_report.value
-          if (typeof payload === 'object' && 'type' in payload) {
-            // the payload is actually a function calll
-            yield payload
-
-            // if execution reaches this point then the function was evaluated
-            // succesfully and its return value is at the top of the stack
-            payload = this._state.stack.pop()
-          }
-          evaluation_report = exp_evaluator.next()
-        }
-
         variable.values[index] = payload
-
-        yield {error:false, finished:true, result:null}
+        return {error:false, finished:true, result:null}
       }
       else {
         let result = {
           reason: '@assignment-index-out-of-bounds',
           index: index_list,
-          name: assignment.target.name,
+          name: variable.name,
           dimension: variable.dimension
           // line
           // column
         }
-        yield {error:true, finished:true, result}
+        return {error:true, finished:true, result}
       }
     }
     else {
-      let exp_evaluator = this.evaluateExpression(assignment.payload)
-      let evaluation_report = exp_evaluator.next()
-      let payload = evaluation_report.value
-
-      while (evaluation_report.done === false) {
-        payload = evaluation_report.value
-        if (typeof payload === 'object' && 'type' in payload) {
-          // the payload is actually a function calll
-          yield payload
-
-          // if execution reaches this point then the function was evaluated
-          // succesfully and its return value is at the top of the stack
-          payload = this._state.stack.pop()
-        }
-        evaluation_report = exp_evaluator.next()
-      }
       variable.value = payload
-
-      yield {error:false, finished:true, result:null}
+      return {error:false, finished:true, result:null}
     }
   }
 
