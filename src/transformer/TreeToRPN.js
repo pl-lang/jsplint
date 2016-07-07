@@ -205,6 +205,10 @@ function treeToRPN (exp_root) {
     let operand = treeToRPN(exp_root.operand)
     stack.push(...operand, op)
   }
+  else if (exp_root.expression_type === 'expression') {
+    let rpn_contents = treeToRPN(exp_root.expression)
+    stack.push(...rpn_contents)
+  }
   else {
     if (exp_root.isArray) {
       exp_root = transformArrayInvocation(exp_root)
