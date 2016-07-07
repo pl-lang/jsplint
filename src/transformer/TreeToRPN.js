@@ -155,7 +155,7 @@ function transformFor (statement) {
     body: []
   }
 
-  result.counter_init = treeToRPN(statement.counter_init)
+  result.counter_init = transformAssigment(statement.counter_init)
 
   result.last_value = treeToRPN(statement.last_value)
 
