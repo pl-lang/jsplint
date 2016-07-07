@@ -227,6 +227,54 @@ export default class TestableEvaluator {
     return {error:false, finished:true, result:null}
   }
 
+  *WhileIterator (while_statement) {
+    let exp_evaluator = this.evaluateExpression(while_statement.condition)
+    let evaluation_report = exp_evaluator.next()
+    let condition_result = evaluation_report.value
+
+    while (evaluation_report.done === false) {
+      condition_result = evaluation_report.value
+
+      if (typeof condition_result === 'object' && 'type' in condition_result) {
+        // it turns out 'condition_result' is not a number but an that
+        // represents a function call...
+        yield condition_result
+
+        condition_result = this._state.stack.pop()
+      }
+
+      evaluation_report = exp_evaluator.next()
+    }
+
+    this._current_node.setCurrentBranchTo(condition_result ? 'loop_body':'program_body')
+
+    return {error:false, finished:true, result:null}
+  }
+
+  *UntilIterator (until_statement) {
+    let exp_evaluator = this.evaluateExpression(until_statement.condition)
+    let evaluation_report = exp_evaluator.next()
+    let condition_result = evaluation_report.value
+
+    while (evaluation_report.done === false) {
+      condition_result = evaluation_report.value
+
+      if (typeof condition_result === 'object' && 'type' in condition_result) {
+        // it turns out 'condition_result' is not a number but an that
+        // represents a function call...
+        yield condition_result
+
+        condition_result = this._state.stack.pop()
+      }
+
+      evaluation_report = exp_evaluator.next()
+    }
+
+    this._current_node.setCurrentBranchTo(!condition_result ? 'loop_body':'program_body')
+
+    return {error:false, finished:true, result:null}
+  }
+
   getVariable(varname) {
     return varname in this._locals ? this._locals[varname]:this._globals[varname]
   }
