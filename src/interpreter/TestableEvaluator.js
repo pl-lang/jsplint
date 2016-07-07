@@ -34,6 +34,10 @@ export default class TestableEvaluator {
     }
   }
 
+  input(value) {
+    this._state.stack.push(value)
+  }
+
   step() {
     if (this._state.done || this._state.error || this._state.variables_awaiting_data.length > 0) {
       return {done:this._state.done, error:this._state.error, output:this._state.output}
@@ -165,32 +169,55 @@ export default class TestableEvaluator {
   }
 
   *CallIterator (call_statement) {
-    let args = []
+    if (call_statement.name === 'leer') {
+      let amount = call_statement.args.length
+      let types = call_statement.args.map(arg => arg.type)
+      
+      yield {error:false, finished:false, result:{action:'read', amount, types}}
 
-    for (let argument of call_statement.args) {
-      let exp_evaluator = this.evaluateExpression(argument)
-      let evaluation_report = exp_evaluator.next()
-      let actual_argument = evaluation_report.value
-
-      while (evaluation_report.done === false) {
-        actual_argument = evaluation_report.value
-
-        if (typeof actual_argument === 'object' && 'type' in actual_argument) {
-          // it turns out 'actual_index' is not a number but an that
-          // represents a function call...
-          yield actual_argument
-
-          actual_argument = this._state.stack.pop()
+      for (let arg of call_statement.args) {
+        let invocation_exp = arg.pop()
+        let variable = this.getVariable(invocation_exp.name)
+        let value = this._state.stack.pop()
+        if (variable.isArray) {
+          // TODO: revisar si arg.bounds_checked existe...
+          yield* this.Assign(variable, payload, arg.indexes, false)
         }
-
-        evaluation_report = exp_evaluator.next()
+        else {
+          yield* this.Assign(variable, value)
+        }
       }
 
-      args.push(actual_argument)
+      return {error:false, finished:true, result:null}
     }
+    else {
+      let args = []
 
-    if (call_statement.name === 'escribir') {
-      yield {error:false, finished:true, result:{action:'write', values:args}}
+      for (let argument of call_statement.args) {
+        let exp_evaluator = this.evaluateExpression(argument)
+        let evaluation_report = exp_evaluator.next()
+        let actual_argument = evaluation_report.value
+
+        while (evaluation_report.done === false) {
+          actual_argument = evaluation_report.value
+
+          if (typeof actual_argument === 'object' && 'type' in actual_argument) {
+            // it turns out 'actual_index' is not a number but an that
+            // represents a function call...
+            yield actual_argument
+
+            actual_argument = this._state.stack.pop()
+          }
+
+          evaluation_report = exp_evaluator.next()
+        }
+
+        args.push(actual_argument)
+      }
+
+      if (call_statement.name === 'escribir') {
+        return {error:false, finished:true, result:{action:'write', values:args}}
+      }
     }
   }
 

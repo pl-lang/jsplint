@@ -30,7 +30,7 @@ function programFromSource(string) {
 }
 
 
-describe('TestableEvaluator', () => {
+describe.only('TestableEvaluator', () => {
   it('programa sin enunciados', () => {
     let code = `variables
     inicio
@@ -293,6 +293,33 @@ describe('TestableEvaluator', () => {
 
     output = evaluator.step()
     output.should.deepEqual({done:true, error:false, output:{action:'write', values:[9]}})
+  })
+
+  it('programa con una llamada a leer y otra a escribir', () => {
+    let code = `variables
+      entero m
+    inicio
+      leer(m)
+      escribir(m)
+    fin`
+
+    let modules = programFromSource(code).modules
+
+    let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+
+    let output = evaluator.step()
+
+    console.log(output)
+
+    // evaluator.step()
+
+    // output.should.deepEqual({done:false, error:false, output:{action:'read', amount:1, types:['entero']}})
+
+    // evaluator.input(9)
+
+    // output = evaluator.step()
+
+    // output.should.deepEqual({done:true, error:false, output:{action:'write', values:[9]}})
   })
 
   it('programa con un enunciado si', () => {
