@@ -340,7 +340,7 @@ describe.only('TestableEvaluator', () => {
       entero i
     inicio
       i <- 0
-      mientras (i < 2) entonces
+      mientras (i < 2)
         escribir(i)
         i <- i + 1
       finmientras
@@ -351,29 +351,37 @@ describe.only('TestableEvaluator', () => {
 
     let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
-    let output = evaluator.step()
+    let output = evaluator.step() // i <- 0
 
     evaluator._locals.i.value.should.equal(0)
 
     output = evaluator.step() // evalua la condicion del bucle
 
-    output = evaluator.step()
+    output = evaluator.step() // escribir(i)
+
     output.should.deepEqual({done:false, error:false, output:{action:'write', values:[0]}})
 
-    output = evaluator.step()
+    output = evaluator.step() // i <- i + 1
+
     output.should.deepEqual({done:false, error:false, output:null})
+
     evaluator._locals.i.value.should.equal(1)
 
     output = evaluator.step() // evalua la condicion del bucle
 
-    output = evaluator.step()
+    output = evaluator.step() // escribir(i)
+
     output.should.deepEqual({done:false, error:false, output:{action:'write', values:[1]}})
 
-    output = evaluator.step()
+    output = evaluator.step() // i <- i + 1
+
     output.should.deepEqual({done:false, error:false, output:null})
+
     evaluator._locals.i.value.should.equal(2)
 
     output = evaluator.step() // evalua la condicion del bucle
+
+    output = evaluator.step() // escribir(i)
 
     output.should.deepEqual({done:true, error:false, output:{action:'write', values:[2]}})
   })
