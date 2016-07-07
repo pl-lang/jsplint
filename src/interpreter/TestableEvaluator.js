@@ -85,6 +85,9 @@ export default class TestableEvaluator {
   runStatement (statement) {
     let output = statement.next()
     while (output.value.finished === false && output.value.error === false) {
+      if ('paused' in output.value && output.value.paused === true) {
+        return output.value
+      }
       output = statement.next()
     }
     return output.value
@@ -171,13 +174,12 @@ export default class TestableEvaluator {
   *CallIterator (call_statement) {
     if (call_statement.name === 'leer') {
       let amount = call_statement.args.length
-      let types = call_statement.args.map(arg => arg.type)
-      
-      yield {error:false, finished:false, result:{action:'read', amount, types}}
+      let variables = call_statement.args.map(arg => arg[0].name).map(name => this.getVariable(name))
+      let types = variables.map(variable => variable.type)
 
-      for (let arg of call_statement.args) {
-        let invocation_exp = arg.pop()
-        let variable = this.getVariable(invocation_exp.name)
+      yield {error:false, paused:true, finished:false, result:{action:'read', amount, types}}
+
+      for (let variable of variables) {
         let value = this._state.stack.pop()
         if (variable.isArray) {
           // TODO: revisar si arg.bounds_checked existe...

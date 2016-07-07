@@ -309,17 +309,15 @@ describe.only('TestableEvaluator', () => {
 
     let output = evaluator.step()
 
-    console.log(output)
+    output.should.deepEqual({done:false, error:false, output:{action:'read', amount:1, types:['entero']}})
 
-    // evaluator.step()
+    evaluator.input(9)
 
-    // output.should.deepEqual({done:false, error:false, output:{action:'read', amount:1, types:['entero']}})
+    output = evaluator.step() // de momento hay que hacer esto, por algun motivo...
 
-    // evaluator.input(9)
+    output = evaluator.step()
 
-    // output = evaluator.step()
-
-    // output.should.deepEqual({done:true, error:false, output:{action:'write', values:[9]}})
+    output.should.deepEqual({done:true, error:false, output:{action:'write', values:[9]}})
   })
 
   it('programa con un enunciado si', () => {
