@@ -312,10 +312,10 @@ export default class TestableEvaluator {
       for (let index of info.indexes) {
         let exp_evaluator = this.evaluateExpression2(index)
         let evaluation_report = exp_evaluator.next()
-        let actual_index = evaluation_report.output
+        let actual_index = evaluation_report.value
 
         while (evaluation_report.done === false) {
-          actual_index = evaluation_report.output
+          actual_index = evaluation_report.value
 
           if (typeof actual_index === 'object' && 'type' in actual_index) {
             // it turns out 'actual_index' is not a number but an that
