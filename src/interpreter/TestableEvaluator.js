@@ -218,6 +218,54 @@ export default class TestableEvaluator {
             case 'unary-minus':
               this.uminus()
               break
+            case 'division':
+              this.division()
+              break
+            case 'power':
+              this.power()
+              break
+            case 'div':
+              this.div()
+              break
+            case 'mod':
+              this.mod()
+              break
+            case 'divide':
+              this.divide()
+              break
+            case 'minus':
+              this.minus()
+              break
+            case 'plus':
+              this.plus()
+              break
+            case 'minor-than':
+              this.less()
+              break
+            case 'minor-equal':
+              this.less_o_equal()
+              break
+            case 'major-than':
+              this.greater()
+              break
+            case 'major-equal':
+              this.greate_or_equal()
+              break
+            case 'equal':
+              this.equal()
+              break
+            case 'not':
+              this.not()
+              break
+            case 'diff-than':
+              this.different()
+              break
+            case 'and':
+              this.and()
+              break
+            case 'or':
+              this.or()
+              break
             default:
               throw new Error(`Operador "${token.operator}" no reconocido`)
           }
@@ -229,7 +277,8 @@ export default class TestableEvaluator {
           yield* this.pushVariableValue(token)
           break
         default:
-          throw new Error(`Tipo de expresion "${token.kind}" no reconocido`)
+          console.log(token)
+          throw new Error(`Tipo de expresion "${token.kind}" no reconocido.`)
       }
     }
     yield this._state.stack.pop()
@@ -246,6 +295,110 @@ export default class TestableEvaluator {
     let a = this._state.stack.pop()
 
     this._state.stack.push(-a)
+  }
+
+  power () {
+    let b = this._state.stack.pop()
+    let a = this._state.stack.pop()
+
+    this._state.stack.push(Math.pow(a, b))
+  }
+
+  div () {
+    let b = this._state.stack.pop()
+    let a = this._state.stack.pop()
+
+    this._state.stack.push((a - (a % b)) / b)
+  }
+
+  mod () {
+    let b = this._state.stack.pop()
+    let a = this._state.stack.pop()
+
+    this._state.stack.push(a % b)
+  }
+
+  divide () {
+    let b = this._state.stack.pop()
+    let a = this._state.stack.pop()
+
+    this._state.stack.push(a/b)
+  }
+
+  minus () {
+    let b = this._state.stack.pop()
+    let a = this._state.stack.pop()
+
+    this._state.stack.push(a - b)
+  }
+
+  plus () {
+    let b = this._state.stack.pop()
+    let a = this._state.stack.pop()
+
+    this._state.stack.push(a + b)
+  }
+
+  less () {
+    let b = this._state.stack.pop()
+    let a = this._state.stack.pop()
+
+    this._state.stack.push(a < b)
+  }
+
+  less_o_equal () {
+    let b = this._state.stack.pop()
+    let a = this._state.stack.pop()
+
+    this._state.stack.push(a <= b)
+  }
+
+  greater () {
+    let b = this._state.stack.pop()
+    let a = this._state.stack.pop()
+
+    this._state.stack.push(a > b)
+  }
+
+  greate_or_equal () {
+    let b = this._state.stack.pop()
+    let a = this._state.stack.pop()
+
+    this._state.stack.push(a >= b)
+  }
+
+  equal () {
+    let b = this._state.stack.pop()
+    let a = this._state.stack.pop()
+
+    this._state.stack.push(a == b)
+  }
+
+  not () {
+    let a = this._state.stack.pop()
+
+    this._state.stack.push(!a)
+  }
+
+  different () {
+    let b = this._state.stack.pop()
+    let a = this._state.stack.pop()
+
+    this._state.stack.push(a != b)
+  }
+
+  and () {
+    let b = this._state.stack.pop()
+    let a = this._state.stack.pop()
+
+    this._state.stack.push(a && b)
+  }
+
+  or () {
+    let b = this._state.stack.pop()
+    let a = this._state.stack.pop()
+
+    this._state.stack.push(a || b)
   }
 
   *pushVariableValue (info) {
