@@ -295,6 +295,46 @@ describe.only('TestableEvaluator', () => {
     output.should.deepEqual({done:true, error:false, output:{action:'write', values:[9]}})
   })
 
+  it('programa con un enunciado si', () => {
+    let code = `variables
+    inicio
+      si (verdadero) entonces
+        escribir(3)
+      finsi
+    fin`
+
+    let modules = programFromSource(code).modules
+
+    let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+
+    let output = evaluator.step() // evalua la condicion
+
+    output = evaluator.step()
+
+    output.should.deepEqual({done:true, error:false, output:{action:'write', values:[3]}})
+  })
+
+  it('programa con un enunciado si/sino', () => {
+    let code = `variables
+    inicio
+      si (verdadero = falso) entonces
+        escribir(3)
+      sino
+        escribir(4)
+      finsi
+    fin`
+
+    let modules = programFromSource(code).modules
+
+    let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+
+    let output = evaluator.step()
+
+    output = evaluator.step()
+
+    output.should.deepEqual({done:true, error:false, output:{action:'write', values:[4]}})
+  })
+
   describe('Evaluacion de expresiones', () => {
     it('multiplicacion', () => {
       // 2*3

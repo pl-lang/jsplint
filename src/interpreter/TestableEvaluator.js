@@ -189,7 +189,7 @@ export default class TestableEvaluator {
           // represents a function call...
           yield actual_argument
 
-          payload = this._state.stack.pop()
+          actual_argument = this._state.stack.pop()
         }
 
         evaluation_report = exp_evaluator.next()
@@ -201,6 +201,30 @@ export default class TestableEvaluator {
     if (call_statement.name === 'escribir') {
       yield {error:false, finished:true, result:{action:'write', values:args}}
     }
+  }
+
+  *IfIterator (if_statement) {
+    let exp_evaluator = this.evaluateExpression(if_statement.condition)
+    let evaluation_report = exp_evaluator.next()
+    let condition_result = evaluation_report.value
+
+    while (evaluation_report.done === false) {
+      condition_result = evaluation_report.value
+
+      if (typeof condition_result === 'object' && 'type' in condition_result) {
+        // it turns out 'condition_result' is not a number but an that
+        // represents a function call...
+        yield condition_result
+
+        condition_result = this._state.stack.pop()
+      }
+
+      evaluation_report = exp_evaluator.next()
+    }
+
+    this._current_node.setCurrentBranchTo(condition_result ? 'true_branch':'false_branch')
+
+    return {error:false, finished:true, result:null}
   }
 
   getVariable(varname) {
