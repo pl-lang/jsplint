@@ -30,7 +30,7 @@ function programFromSource(string) {
 }
 
 
-describe.only('TestableEvaluator', () => {
+describe('TestableEvaluator', () => {
   it('programa sin enunciados', () => {
     let code = `variables
     inicio
