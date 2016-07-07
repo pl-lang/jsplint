@@ -402,13 +402,9 @@ describe.only('TestableEvaluator', () => {
 
     output = evaluator.step()
 
-    console.log('WKAKAK', output)
-
-    // output.should.deepEqual({done:false, error:false, output:{action:'write', values:[0]}})
+    output.should.deepEqual({done:false, error:false, output:{action:'write', values:[0]}})
 
     output = evaluator.step() // i <- i + 1
-
-    console.log(output)
 
     evaluator._locals.i.value.should.equal(1)
 
