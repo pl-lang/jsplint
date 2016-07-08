@@ -3,7 +3,6 @@
 import Emitter from '../utility/Emitter.js'
 import SourceWrapper from './SourceWrapper.js'
 import Lexer from './Lexer.js'
-import Scanner from './Scanner.js'
 import TokenQueue from './TokenQueue.js'
 import { match, MainModule as MainModulePattern, skipWhiteSpace } from './Patterns.js'
 
