@@ -15,7 +15,7 @@
  * 	- evaluation-error (repite el de un Evaluator)
  */
 
-import Evaluator from './Evaluator.js'
+import Evaluator from './TestableEvaluator.js'
 import Emitter from '../utility/Emitter.js'
 
 export default class Interpreter extends Emitter {
@@ -27,9 +27,7 @@ export default class Interpreter extends Emitter {
   set current_program(program_modules) {
     this._current_program = program_modules
     let main = program_modules.main
-    let main_evaluator = new Evaluator(main.locals, main.locals, main.root, {})
-    // NOTE: exposeChildrenEvents va a ser reemplazada mas adelante
-    this.bindEvaluatorEvents(main_evaluator)
+    let main_evaluator = new Evaluator(main.root, main.locals, main.locals)
     this.stack = []
     this.stack.push(main_evaluator)
     this.running = true
@@ -54,15 +52,30 @@ export default class Interpreter extends Emitter {
       this.emit('program-started')
     }
 
-    let evaluation_report
+    let done = false
+    this.current_module = this.stack.pop()
 
-    while (this.stack.length > 0 && this.running) {
-      this.current_module = this.stack.pop()
-      evaluation_report = this.current_module.run()
-      // if 'module_return' in evaluation_report.result
-      // pasar el valor al modulo que realizó la llamada
-      if (!this.paused) {
-        this.running = !evaluation_report.error
+    while (this.running && done == false) {
+
+      let evaluation_report = this.current_module.step()
+
+      if (evaluation_report.done || evaluation_report.error) {
+        done = true
+      }
+
+      if (evaluation_report.error === false) {
+        if (evaluation_report.output !== null) {
+          if (evaluation_report.output.action === 'write') {
+            this.emit('write', evaluation_report.output.values)
+          }
+          else if (evaluation_report.output.action === 'read') {
+            this.paused = true
+            this.running = false
+            // de momento, tengo que mandar un arreglo en los eventos de lectura
+            this.emit('read', evaluation_report.output.types)
+            this.stack.push(this.current_module)
+          }
+        }
       }
     }
 
@@ -72,39 +85,11 @@ export default class Interpreter extends Emitter {
     else {
       this.emit('program-finished')
     }
-
-    return evaluation_report
-  }
-
-  bindEvaluatorEvents(evaluator) {
-    this.repeat('write', evaluator, false)
-
-    // Las llamadas a leer pausan la ejecucion para poder realizar la lectura
-    evaluator.on('read', () => {
-      this.running = false
-      this.paused = true
-      this.stack.push(this.current_module)
-    })
-
-    this.repeat('read', evaluator, false)
-    evaluator.on('evaluation-error', this.evaluationErrorHandler)
-    evaluator.on('module_call', this.moduleCallHandler)
-  }
-
-  moduleCallHandler() {
-    // Poner el modulo (A) que realizó la llamada en la pila
-    this.stack.push(this.current_module)
-    // Poner el nuevo modulo (B) en la pila
-    this.stack.push()
-    // Luego dentro del bucle de run (cuando se reanude A ) se envía el retorno
-    // de B a A
-  }
-
-  evaluationErrorHandler() {
-    // Repetir este evento ?
   }
 
   sendReadData(varname_list, data) {
-    this.current_module.assignReadData(varname_list, data)
+    for (let value of data) {
+      this.current_module.input(value)
+    }
   }
 }
