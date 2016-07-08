@@ -15,7 +15,7 @@
  * 	- evaluation-error (repite el de un Evaluator)
  */
 
-import Evaluator from './TestableEvaluator.js'
+import Evaluator from './Evaluator.js'
 import Emitter from '../utility/Emitter.js'
 
 export default class Interpreter extends Emitter {

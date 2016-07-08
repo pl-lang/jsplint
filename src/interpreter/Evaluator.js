@@ -19,7 +19,7 @@
  * 	- module-call
  */
 
-export default class TestableEvaluator {
+export default class Evaluator {
   constructor(root_statement, locals, globals) {
     this._current_node = root_statement
     this._current_statement = null
@@ -78,7 +78,7 @@ export default class TestableEvaluator {
       case 'until':
         return this.UntilIterator(statement)
       default:
-        throw new Error(`En TestableEvaluator::getStatementIterator --> no se reconoce el enunciado ${statement.action}`)
+        throw new Error(`En Evaluator::getStatementIterator --> no se reconoce el enunciado ${statement.action}`)
     }
   }
 
