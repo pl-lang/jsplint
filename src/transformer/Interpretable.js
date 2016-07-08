@@ -137,14 +137,11 @@ function transformFor(for_statement) {
   let counter_init_statement = for_statement.counter_init
   let counter_init_node = transformAssigment(counter_init_statement)
 
-  let condition = {
-    expression_type: 'operation',
-    op: 'minor-equal',
-    operands: [
-      {expression_type:'invocation', name:counter_variable.name, isArray:counter_variable.isArray, indexes:counter_variable.indexes},
-      for_statement.last_value
-    ]
-  }
+  let condition = [
+    {kind:'invocation', name:counter_variable.name, isArray:counter_variable.isArray, indexes:counter_variable.indexes},
+    ...for_statement.last_value,
+    {kind:'operator', operator:'minor-equal'}
+  ]
 
   let while_node = new WhileNode({action:'while', condition})
 
@@ -159,19 +156,16 @@ function transformFor(for_statement) {
   let increment_statement = {
     action: 'assignment',
     left: counter_variable,
-    right: {
-      expression_type: 'operation',
-      op: 'plus',
-      operands: [
-        {
-          expression_type: 'invocation',
-          indexes: counter_variable.indexes,
-          isArray: counter_variable.isArray,
-          name: counter_variable.name
-        },
-        { expression_type: 'literal', type: 'entero', value: 1 }
-      ]
-    }
+    right: [
+      {
+        kind: 'invocation',
+        indexes: counter_variable.indexes,
+        isArray: counter_variable.isArray,
+        name: counter_variable.name
+      },
+      {kind:'literal', type:'entero', value:1},
+      {kind:'operator', operator:'plus'}
+    ]
   }
 
   let increment_node = transformAssigment(increment_statement)

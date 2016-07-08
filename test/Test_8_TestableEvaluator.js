@@ -6,7 +6,7 @@ import Parser from '../src/parser/Parser.js'
 import StaticChecker from '../src/typechecker/TypeChecker.js'
 
 import DeclarationTransform from '../src/transformer/Checkable.js'
-import EvaluatorTransform from '../src/transformer/Interpretable2.js'
+import EvaluatorTransform from '../src/transformer/Interpretable.js'
 import TreeToRPNTransform from '../src/transformer/TreeToRPN.js'
 
 
