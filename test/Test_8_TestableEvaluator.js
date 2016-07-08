@@ -10,7 +10,7 @@ import EvaluatorTransform from '../src/transformer/Interpretable2.js'
 import TreeToRPNTransform from '../src/transformer/TreeToRPN.js'
 
 
-import TestableEvaluator from '../src/interpreter/TestableEvaluator.js'
+import Evaluator from '../src/interpreter/Evaluator.js'
 
 function programFromSource(string) {
   let parser = new Parser()
@@ -30,7 +30,7 @@ function programFromSource(string) {
 }
 
 
-describe('TestableEvaluator', () => {
+describe('Evaluator', () => {
   it('programa sin enunciados', () => {
     let code = `variables
     inicio
@@ -38,7 +38,7 @@ describe('TestableEvaluator', () => {
     `
     let modules = programFromSource(code).modules
 
-    let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+    let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
     let output = evaluator.step()
 
@@ -58,7 +58,7 @@ describe('TestableEvaluator', () => {
 
     let modules = programFromSource(code).modules
 
-    let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+    let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
     let output = evaluator.step()
 
@@ -80,7 +80,7 @@ describe('TestableEvaluator', () => {
 
     let modules = programFromSource(code).modules
 
-    let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+    let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
     let output = evaluator.step()
 
@@ -120,7 +120,7 @@ describe('TestableEvaluator', () => {
 
     let modules = programFromSource(code).modules
 
-    let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+    let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
     let output = evaluator.step()
 
@@ -153,7 +153,7 @@ describe('TestableEvaluator', () => {
 
     let modules = programFromSource(code).modules
 
-    let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+    let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
     let output = evaluator.step()
 
@@ -176,7 +176,7 @@ describe('TestableEvaluator', () => {
 
     let modules = programFromSource(code).modules
 
-    let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+    let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
     let output = evaluator.step()
 
@@ -191,7 +191,7 @@ describe('TestableEvaluator', () => {
 
     let modules = programFromSource(code).modules
 
-    let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+    let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
     let output = evaluator.step()
 
@@ -208,7 +208,7 @@ describe('TestableEvaluator', () => {
 
     let modules = programFromSource(code).modules
 
-    let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+    let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
     let output = evaluator.step()
 
@@ -235,7 +235,7 @@ describe('TestableEvaluator', () => {
 
     let modules = programFromSource(code).modules
 
-    let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+    let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
     let output = evaluator.step()
     output = evaluator.step()
@@ -275,7 +275,7 @@ describe('TestableEvaluator', () => {
 
     let modules = programFromSource(code).modules
 
-    let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+    let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
     let output = evaluator.step()
     output = evaluator.step()
@@ -305,7 +305,7 @@ describe('TestableEvaluator', () => {
 
     let modules = programFromSource(code).modules
 
-    let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+    let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
     let output = evaluator.step()
 
@@ -330,7 +330,7 @@ describe('TestableEvaluator', () => {
 
     let modules = programFromSource(code).modules
 
-    let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+    let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
     let output = evaluator.step()
 
@@ -355,7 +355,7 @@ describe('TestableEvaluator', () => {
 
     let modules = programFromSource(code).modules
 
-    let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+    let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
     let output = evaluator.step() // evalua la condicion
 
@@ -376,7 +376,7 @@ describe('TestableEvaluator', () => {
 
     let modules = programFromSource(code).modules
 
-    let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+    let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
     let output = evaluator.step()
 
@@ -399,7 +399,7 @@ describe('TestableEvaluator', () => {
 
     let modules = programFromSource(code).modules
 
-    let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+    let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
     let output = evaluator.step() // i <- 0
 
@@ -448,7 +448,7 @@ describe('TestableEvaluator', () => {
 
     let modules = programFromSource(code).modules
 
-    let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+    let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
     let output = evaluator.step() // i <- 0
 
@@ -499,7 +499,7 @@ describe('TestableEvaluator', () => {
 
     let modules = programFromSource(code).modules
 
-    let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+    let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
     let output = evaluator.step() // asigna 0 a i
 
@@ -550,7 +550,7 @@ describe('TestableEvaluator', () => {
 
         let modules = programFromSource(code).modules
 
-        let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+        let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
         let output = evaluator.step()
 
@@ -569,7 +569,7 @@ describe('TestableEvaluator', () => {
 
         let modules = programFromSource(code).modules
 
-        let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+        let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
         let output = evaluator.step()
 
@@ -588,7 +588,7 @@ describe('TestableEvaluator', () => {
 
         let modules = programFromSource(code).modules
 
-        let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+        let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
         let output = evaluator.step()
 
@@ -608,7 +608,7 @@ describe('TestableEvaluator', () => {
 
         let modules = programFromSource(code).modules
 
-        let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+        let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
         let output
 
@@ -638,7 +638,7 @@ describe('TestableEvaluator', () => {
 
         let modules = programFromSource(code).modules
 
-        let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+        let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
         let output
 
@@ -668,7 +668,7 @@ describe('TestableEvaluator', () => {
 
         let modules = programFromSource(code).modules
 
-        let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+        let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
         let output = evaluator.step()
 
@@ -686,7 +686,7 @@ describe('TestableEvaluator', () => {
 
         let modules = programFromSource(code).modules
 
-        let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+        let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
         let output = evaluator.step()
 
@@ -704,7 +704,7 @@ describe('TestableEvaluator', () => {
 
         let modules = programFromSource(code).modules
 
-        let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+        let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
         let output = evaluator.step()
 
@@ -722,7 +722,7 @@ describe('TestableEvaluator', () => {
 
         let modules = programFromSource(code).modules
 
-        let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+        let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
         let output = evaluator.step()
 
@@ -740,7 +740,7 @@ describe('TestableEvaluator', () => {
 
         let modules = programFromSource(code).modules
 
-        let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+        let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
         let output = evaluator.step()
 
@@ -758,7 +758,7 @@ describe('TestableEvaluator', () => {
 
         let modules = programFromSource(code).modules
 
-        let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+        let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
         let output = evaluator.step()
 
@@ -776,7 +776,7 @@ describe('TestableEvaluator', () => {
 
         let modules = programFromSource(code).modules
 
-        let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+        let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
         let output = evaluator.step()
 
@@ -796,7 +796,7 @@ describe('TestableEvaluator', () => {
 
         let modules = programFromSource(code).modules
 
-        let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+        let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
         let output = evaluator.step()
 
@@ -814,7 +814,7 @@ describe('TestableEvaluator', () => {
 
         let modules = programFromSource(code).modules
 
-        let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+        let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
         let output = evaluator.step()
 
@@ -834,7 +834,7 @@ describe('TestableEvaluator', () => {
 
         let modules = programFromSource(code).modules
 
-        let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+        let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
         let output = evaluator.step()
 
@@ -854,7 +854,7 @@ describe('TestableEvaluator', () => {
 
         let modules = programFromSource(code).modules
 
-        let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+        let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
         let output = evaluator.step()
 
@@ -872,7 +872,7 @@ describe('TestableEvaluator', () => {
 
         let modules = programFromSource(code).modules
 
-        let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+        let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
         let output = evaluator.step()
 
@@ -890,7 +890,7 @@ describe('TestableEvaluator', () => {
 
         let modules = programFromSource(code).modules
 
-        let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+        let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
         let output = evaluator.step()
 
@@ -908,7 +908,7 @@ describe('TestableEvaluator', () => {
 
         let modules = programFromSource(code).modules
 
-        let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+        let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
         let output = evaluator.step()
 
@@ -926,7 +926,7 @@ describe('TestableEvaluator', () => {
 
         let modules = programFromSource(code).modules
 
-        let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+        let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
         let output = evaluator.step()
 
@@ -944,7 +944,7 @@ describe('TestableEvaluator', () => {
 
         let modules = programFromSource(code).modules
 
-        let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+        let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
         let output = evaluator.step()
 
@@ -964,7 +964,7 @@ describe('TestableEvaluator', () => {
 
         let modules = programFromSource(code).modules
 
-        let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+        let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
         let output = evaluator.step()
 
@@ -982,7 +982,7 @@ describe('TestableEvaluator', () => {
 
         let modules = programFromSource(code).modules
 
-        let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+        let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
         let output = evaluator.step()
 
@@ -1000,7 +1000,7 @@ describe('TestableEvaluator', () => {
 
         let modules = programFromSource(code).modules
 
-        let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+        let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
         let output = evaluator.step()
 
@@ -1018,7 +1018,7 @@ describe('TestableEvaluator', () => {
 
         let modules = programFromSource(code).modules
 
-        let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+        let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
         let output = evaluator.step()
 
@@ -1036,7 +1036,7 @@ describe('TestableEvaluator', () => {
 
         let modules = programFromSource(code).modules
 
-        let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+        let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
         let output = evaluator.step()
 
@@ -1054,7 +1054,7 @@ describe('TestableEvaluator', () => {
 
         let modules = programFromSource(code).modules
 
-        let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+        let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
         let output = evaluator.step()
 
@@ -1072,7 +1072,7 @@ describe('TestableEvaluator', () => {
 
         let modules = programFromSource(code).modules
 
-        let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+        let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
         let output = evaluator.step()
 
@@ -1090,7 +1090,7 @@ describe('TestableEvaluator', () => {
 
         let modules = programFromSource(code).modules
 
-        let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+        let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
         let output = evaluator.step()
 
@@ -1109,7 +1109,7 @@ describe('TestableEvaluator', () => {
 
       let modules = programFromSource(code).modules
 
-      let evaluator = new TestableEvaluator(modules.main.root, modules.main.locals, modules.main.locals)
+      let evaluator = new Evaluator(modules.main.root, modules.main.locals, modules.main.locals)
 
       let output = evaluator.step()
 

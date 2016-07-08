@@ -1,9 +1,5 @@
 'use strict'
 
-import Emitter from '../utility/Emitter.js'
-
-import expressionFromString from '../parser/expressionFromString.js'
-
 /*
   Un evaluador sirve para ejecutar las acciones/enunciados de un modulo.
   Se crea con la info necesaria para dicha tarea. El retorno de su modulo se
@@ -23,298 +19,523 @@ import expressionFromString from '../parser/expressionFromString.js'
  * 	- module-call
  */
 
-export default class Evaluator extends Emitter {
-  constructor(globals, locals, body_root_node, modules_info ) {
-    super(['read', 'write', 'evaluation-error'])
-    this.globals = globals
-    this.locals = locals
-    this.current_node = body_root_node
-    this.modules_info = modules_info
-    this.error = false
-    this.return_value = null // para mas adelante
-    this.running = true
-  }
-
-  /**
-   * Funcion que ejecuta un programa
-   * @return {[type]} [description]
-   */
-  run() {
-
-    while (this.current_node !== null && this.running) {
-
-      let statement = this.current_node.data
-
-      switch (statement.action) {
-        case  'assignment':
-        this.assignToVar(statement.target, statement.payload)
-        break
-
-        case  'module_call':
-        if (statement.name == 'escribir') {
-          this.writeCall(statement)
-        }
-        else if (statement.name == 'leer') {
-          this.sendReadEvent(statement)
-        }
-        break
-
-        case 'if':{
-          let branch_name = this.evaluateExp(statement.condition) ? 'true_branch':'false_branch'
-          this.current_node.setCurrentBranchTo(branch_name)
-        }
-        break
-
-        case 'until': {
-          let branch_name = !this.evaluateExp(statement.condition) ? 'loop_body':'program_body'
-          this.current_node.setCurrentBranchTo(branch_name)
-        }
-        break
-
-        case 'while': {
-          let branch_name = this.evaluateExp(statement.condition) ? 'loop_body':'program_body'
-          this.current_node.setCurrentBranchTo(branch_name)
-        }
-        break
-      }
-
-      this.current_node = this.current_node.getNext()
+export default class TestableEvaluator {
+  constructor(root_statement, locals, globals) {
+    this._current_node = root_statement
+    this._current_statement = null
+    this._locals = locals
+    this._globals = globals
+    this._state = {
+      done: root_statement === null ? true:false,
+      error: false,
+      output: null,
+      variables_awaiting_data: [],
+      stack: [],
     }
-
-    // TODO: hacer que esta funcion reporte error:true cuando ocurran errores de evaluacion
-    return {error:this.error}
   }
 
-  writeCall(call) {
-    let value_list = call.args.map((expression) => {
-      return this.evaluateExp(expression, expression.expression_type)
-    })
-
-    this.emit('write', value_list)
+  input(value) {
+    this._state.stack.push(value)
   }
 
-  sendReadEvent(call) {
-    let varname_list = call.args
-
-    this.emit('read', varname_list)
-
-    // pausar la ejecucion (hasta q se reciban los datos de la lectura)
-    this.running = false
-  }
-
-  /**
-   * Asigna el resultado de una expresión a una variable o a un elemento de un
-   * arreglo.
-   * @param  {[type]} target_info [description]
-   * @param  {[type]} expression  [description]
-   * @return {[type]}             [description]
-   */
-  assignToVar(target_info, expression) {
-    let target_variable = this.getVariable(target_info.name)
-
-    if (target_info.isArray === true) {
-      let index_list = target_info.indexes.map(expression => this.evaluateExp(expression) - 1)
-
-      if (target_info.bounds_checked === false)  {
-        let bound_check = this.indexWithinBounds(index_list, target_variable.dimension)
-        if (bound_check.error === true) {
-          this.running = false
-          this.emit('evaluation-error', bound_check.result)
-          return
-        }
-      }
-      // NOTE: Por ahora, no se revisa si hay un error al evaluar un indice
-
-      let index = this.calculateIndex(target_info.indexes.map(a => this.evaluateExp(a) - 1), target_variable.dimension)
-      target_variable.values[index] = this.evaluateExp(expression)
+  step() {
+    if (this._state.done || this._state.error || this._state.variables_awaiting_data.length > 0) {
+      return {done:this._state.done, error:this._state.error, output:this._state.output}
     }
     else {
-      target_variable.value = this.evaluateExp(expression)
-    }
+      if (this._current_statement === null) {
+        this._current_statement = this.getStatementIterator(this._current_node.data)
+      }
 
-    // Por ahora...
-    return {error:false}
+      let output = this.runStatement(this._current_statement)
+
+      this._state.error = output.error
+      this._state.output = output.result
+
+      if (output.finished) {
+        this._current_node = this._current_node.getNext()
+        this._current_statement = null
+      }
+
+      if (this._current_node === null) {
+        this._state.done = true
+      }
+
+      return {done:this._state.done, error:this._state.error, output:output.result}
+    }
   }
 
-  /**
-   * Crea expresiones con los resultados de una lectura, las evalua, y las asigna
-   * a la variable/elemento de arreglo correspondiente.
-   * @param  {[type]} varname_list [description]
-   * @param  {[type]} data_list    [description]
-   * @return {[type]}              [description]
-   */
-  assignReadData(varname_list, data_list) {
-    let error = 0
-    let i = 0
-    while (i < varname_list.length && !error) {
-      // TODO: mover el parseo de la expreson al compilador
-      let exp = expressionFromString(data_list[i])
+  getStatementIterator (statement) {
+    switch (statement.action) {
+      case 'assignment':
+        return this.AssignmentIterator(statement)
+      case 'module_call':
+        return this.CallIterator(statement)
+      case 'if':
+        return this.IfIterator(statement)
+      case 'while':
+        return this.WhileIterator(statement)
+      case 'until':
+        return this.UntilIterator(statement)
+      default:
+        throw new Error(`En TestableEvaluator::getStatementIterator --> no se reconoce el enunciado ${statement.action}`)
+    }
+  }
 
-      if (exp.error) {
-        // TODO
+  runStatement (statement) {
+    let output = statement.next()
+    while (output.value.finished === false && output.value.error === false) {
+      if ('paused' in output.value && output.value.paused === true) {
+        return output.value
+      }
+      output = statement.next()
+    }
+    return output.value
+  }
+
+  *AssignmentIterator (assignment) {
+    let variable = this.getVariable(assignment.target.name)
+
+    let exp_evaluator = this.evaluateExpression(assignment.payload)
+    let evaluation_report = exp_evaluator.next()
+    let payload = evaluation_report.value
+
+    while (evaluation_report.done === false) {
+      payload = evaluation_report.value
+      if (typeof payload === 'object' && 'type' in payload) {
+        // the payload is actually a function calll
+        yield payload
+
+        // if execution reaches this point then the function was evaluated
+        // succesfully and its return value is at the top of the stack
+        payload = this._state.stack.pop()
+      }
+      evaluation_report = exp_evaluator.next()
+    }
+    // at this point 'payload' has been evaluated to a value
+    if (variable.isArray) {
+      yield* this.Assign(variable, payload, assignment.target.indexes, assignment.target.bounds_checked)
+    }
+    else {
+      yield* this.Assign(variable, payload)
+    }
+    return {error:false, finished:true, result:null}
+  }
+
+  *Assign(variable, payload, indexes, bounds_checked) {
+    if (variable.isArray) {
+      let index_values = []
+
+      for (let index of indexes) {
+        let exp_evaluator = this.evaluateExpression(index)
+        let evaluation_report = exp_evaluator.next()
+        let actual_index = evaluation_report.value
+
+        while (evaluation_report.done === false) {
+          actual_index = evaluation_report.value
+
+          if (typeof actual_index === 'object' && 'type' in actual_index) {
+            // it turns out 'actual_index' is not a number but an that
+            // represents a function call...
+            yield actual_index
+
+            actual_index = this._state.stack.pop()
+          }
+
+          evaluation_report = exp_evaluator.next()
+        }
+
+        index_values.push(actual_index - 1)
+      }
+
+      if (bounds_checked || this.indexWithinBounds(index_values, variable.dimension) ) {
+        let index = this.calculateIndex(index_values, variable.dimension)
+        variable.values[index] = payload
+        return {error:false, finished:true, result:null}
       }
       else {
-        // NOTE: assignToVar debe chequear los tipos
-        let assignment_report = this.assignToVar(varname_list[i], exp.result)
+        let result = {
+          reason: '@assignment-index-out-of-bounds',
+          index: index_list,
+          name: variable.name,
+          dimension: variable.dimension
+          // line
+          // column
+        }
+        return {error:true, finished:true, result}
       }
-
-      i++
     }
-
-    // Si no hubo un error durante la lectura poner running en verdadero
-    // para que el evaluador pueda ser reanudado
-    if (!error) {
-      this.running = true
+    else {
+      variable.value = payload
+      return {error:false, finished:true, result:null}
     }
   }
 
-  /**
-   * Delega la evaluación de una expresión a la función apropiada según el tipo
-   * de dicha expresión
-   * @param  {object} exp una expresión
-   * @return {bool|number|string}     el resultado de la evaluación de la expresión
-   */
-  evaluateExp(exp) {
-    switch (exp.expression_type) {
-      case 'invocation':{
-        let invocation = exp
-        return this.getValue(invocation)
+  *CallIterator (call_statement) {
+    if (call_statement.name === 'leer') {
+      let amount = call_statement.args.length
+      let variables = call_statement.args.map(arg => arg[0].name).map(name => this.getVariable(name))
+      let types = variables.map(variable => variable.type)
+
+      yield {error:false, paused:true, finished:false, result:{action:'read', amount, types}}
+
+      for (let i = 0; i < amount; i++) {
+        let value = this._state.stack.pop()
+        if (variables[i].isArray) {
+          // TODO: revisar si arg.bounds_checked existe...
+          yield* this.Assign(variables[i], value, call_statement.args[i][0].indexes, false)
+        }
+        else {
+          yield* this.Assign(variables[i], value)
+        }
       }
-      case  'literal':
-        return exp.value
-      case  'operation':
-        return this.evaluateOperation(exp)
-      case  'unary-operation':
-        return this.evaluateUnaryOperation(exp)
-      case  'expression':
-        return this.evaluateExp(exp.expression)
+
+      return {error:false, finished:true, result:null}
+    }
+    else {
+      let args = []
+
+      for (let argument of call_statement.args) {
+        let exp_evaluator = this.evaluateExpression(argument)
+        let evaluation_report = exp_evaluator.next()
+        let actual_argument = evaluation_report.value
+
+        while (evaluation_report.done === false) {
+          actual_argument = evaluation_report.value
+
+          if (typeof actual_argument === 'object' && 'type' in actual_argument) {
+            // it turns out 'actual_index' is not a number but an that
+            // represents a function call...
+            yield actual_argument
+
+            actual_argument = this._state.stack.pop()
+          }
+
+          evaluation_report = exp_evaluator.next()
+        }
+
+        args.push(actual_argument)
+      }
+
+      if (call_statement.name === 'escribir') {
+        return {error:false, finished:true, result:{action:'write', values:args}}
+      }
     }
   }
 
-  /**
-   * Obtiene y devuelve el valor de una variable
-   * @param  {invocation}  info una expresión de invocación con los datos necesarios para acceder a la variable
-   * @return {number|string|boolean}          valor de la variable
-   */
-  getValue(info) {
+  *IfIterator (if_statement) {
+    let exp_evaluator = this.evaluateExpression(if_statement.condition)
+    let evaluation_report = exp_evaluator.next()
+    let condition_result = evaluation_report.value
+
+    while (evaluation_report.done === false) {
+      condition_result = evaluation_report.value
+
+      if (typeof condition_result === 'object' && 'type' in condition_result) {
+        // it turns out 'condition_result' is not a number but an that
+        // represents a function call...
+        yield condition_result
+
+        condition_result = this._state.stack.pop()
+      }
+
+      evaluation_report = exp_evaluator.next()
+    }
+
+    this._current_node.setCurrentBranchTo(condition_result ? 'true_branch':'false_branch')
+
+    return {error:false, finished:true, result:null}
+  }
+
+  *WhileIterator (while_statement) {
+    let exp_evaluator = this.evaluateExpression(while_statement.condition)
+    let evaluation_report = exp_evaluator.next()
+    let condition_result = evaluation_report.value
+
+    while (evaluation_report.done === false) {
+      condition_result = evaluation_report.value
+
+      if (typeof condition_result === 'object' && 'type' in condition_result) {
+        // it turns out 'condition_result' is not a number but an that
+        // represents a function call...
+        yield condition_result
+
+        condition_result = this._state.stack.pop()
+      }
+
+      evaluation_report = exp_evaluator.next()
+    }
+
+    this._current_node.setCurrentBranchTo(condition_result ? 'loop_body':'program_body')
+
+    return {error:false, finished:true, result:null}
+  }
+
+  *UntilIterator (until_statement) {
+    let exp_evaluator = this.evaluateExpression(until_statement.condition)
+    let evaluation_report = exp_evaluator.next()
+    let condition_result = evaluation_report.value
+
+    while (evaluation_report.done === false) {
+      condition_result = evaluation_report.value
+
+      if (typeof condition_result === 'object' && 'type' in condition_result) {
+        // it turns out 'condition_result' is not a number but an that
+        // represents a function call...
+        yield condition_result
+
+        condition_result = this._state.stack.pop()
+      }
+
+      evaluation_report = exp_evaluator.next()
+    }
+
+    this._current_node.setCurrentBranchTo(!condition_result ? 'loop_body':'program_body')
+
+    return {error:false, finished:true, result:null}
+  }
+
+  getVariable(varname) {
+    return varname in this._locals ? this._locals[varname]:this._globals[varname]
+  }
+
+  *evaluateExpression (expression_stack) {
+    for (let token of expression_stack) {
+      switch (token.kind) {
+        case 'operator':
+          switch (token.operator) {
+            case 'times':
+              this.times()
+              break
+            case 'unary-minus':
+              this.uminus()
+              break
+            case 'division':
+              this.division()
+              break
+            case 'power':
+              this.power()
+              break
+            case 'div':
+              this.div()
+              break
+            case 'mod':
+              this.mod()
+              break
+            case 'divide':
+              this.divide()
+              break
+            case 'minus':
+              this.minus()
+              break
+            case 'plus':
+              this.plus()
+              break
+            case 'minor-than':
+              this.less()
+              break
+            case 'minor-equal':
+              this.less_o_equal()
+              break
+            case 'major-than':
+              this.greater()
+              break
+            case 'major-equal':
+              this.greate_or_equal()
+              break
+            case 'equal':
+              this.equal()
+              break
+            case 'not':
+              this.not()
+              break
+            case 'diff-than':
+              this.different()
+              break
+            case 'and':
+              this.and()
+              break
+            case 'or':
+              this.or()
+              break
+            default:
+              throw new Error(`Operador "${token.operator}" no reconocido`)
+          }
+          break
+        case 'literal':
+          this._state.stack.push(token.value)
+          break
+        case 'invocation':
+          yield* this.pushVariableValue(token)
+          break
+        default:
+          console.log(token)
+          throw new Error(`Tipo de expresion "${token.kind}" no reconocido.`)
+      }
+    }
+    yield this._state.stack.pop()
+  }
+
+  times() {
+    let b = this._state.stack.pop()
+    let a = this._state.stack.pop()
+
+    this._state.stack.push(a*b)
+  }
+
+  uminus() {
+    let a = this._state.stack.pop()
+
+    this._state.stack.push(-a)
+  }
+
+  power () {
+    let b = this._state.stack.pop()
+    let a = this._state.stack.pop()
+
+    this._state.stack.push(Math.pow(a, b))
+  }
+
+  div () {
+    let b = this._state.stack.pop()
+    let a = this._state.stack.pop()
+
+    this._state.stack.push((a - (a % b)) / b)
+  }
+
+  mod () {
+    let b = this._state.stack.pop()
+    let a = this._state.stack.pop()
+
+    this._state.stack.push(a % b)
+  }
+
+  divide () {
+    let b = this._state.stack.pop()
+    let a = this._state.stack.pop()
+
+    this._state.stack.push(a/b)
+  }
+
+  minus () {
+    let b = this._state.stack.pop()
+    let a = this._state.stack.pop()
+
+    this._state.stack.push(a - b)
+  }
+
+  plus () {
+    let b = this._state.stack.pop()
+    let a = this._state.stack.pop()
+
+    this._state.stack.push(a + b)
+  }
+
+  less () {
+    let b = this._state.stack.pop()
+    let a = this._state.stack.pop()
+
+    this._state.stack.push(a < b)
+  }
+
+  less_o_equal () {
+    let b = this._state.stack.pop()
+    let a = this._state.stack.pop()
+
+    this._state.stack.push(a <= b)
+  }
+
+  greater () {
+    let b = this._state.stack.pop()
+    let a = this._state.stack.pop()
+
+    this._state.stack.push(a > b)
+  }
+
+  greate_or_equal () {
+    let b = this._state.stack.pop()
+    let a = this._state.stack.pop()
+
+    this._state.stack.push(a >= b)
+  }
+
+  equal () {
+    let b = this._state.stack.pop()
+    let a = this._state.stack.pop()
+
+    this._state.stack.push(a == b)
+  }
+
+  not () {
+    let a = this._state.stack.pop()
+
+    this._state.stack.push(!a)
+  }
+
+  different () {
+    let b = this._state.stack.pop()
+    let a = this._state.stack.pop()
+
+    this._state.stack.push(a != b)
+  }
+
+  and () {
+    let b = this._state.stack.pop()
+    let a = this._state.stack.pop()
+
+    this._state.stack.push(a && b)
+  }
+
+  or () {
+    let b = this._state.stack.pop()
+    let a = this._state.stack.pop()
+
+    this._state.stack.push(a || b)
+  }
+
+  *pushVariableValue (info) {
     let variable = this.getVariable(info.name)
 
-    // NOTE: No se chequea que indexes exista porque si no existiera (si el usuario
-    // no lo hubiera escrito) no se hubiera llegado a este punto ya que el
-    // TypeChecker se hubiera dado cuenta.
-
     if (variable.isArray) {
-      let index_values = info.indexes.map(expression => this.evaluateExp(expression) - 1)
+      let index_values = []
 
-      if (info.bounds_checked === false) {
-        let bound_check = this.indexWithinBounds(index_values, variable.dimension)
+      for (let index of info.indexes) {
+        let exp_evaluator = this.evaluateExpression(index)
+        let evaluation_report = exp_evaluator.next()
+        let actual_index = evaluation_report.value
 
-        if (bound_check.error === true) {
-          this.running = false
-          this.emit('evaluation-error', bound_check.result)
+        while (evaluation_report.done === false) {
+          actual_index = evaluation_report.value
+
+          if (typeof actual_index === 'object' && 'type' in actual_index) {
+            // it turns out 'actual_index' is not a number but an that
+            // represents a function call...
+            yield actual_index
+
+            payload = this._state.stack.pop()
+          }
+
+          evaluation_report = exp_evaluator.next()
         }
+
+        index_values.push(actual_index - 1)
       }
 
-      let index = this.calculateIndex(index_values, variable.dimension)
-      if (variable.values[index] === undefined) {
-        this.running = false
-        this.emit('evaluation-error')
+      if (info.bounds_checked || this.indexWithinBounds(index_values, variable.dimension)) {
+        let index = this.calculateIndex(index_values, variable.dimension)
+        return this._state.stack.push(variable.values[index])
       }
       else {
-        return variable.values[index]
+        let out_of_bunds_info = this.getBoundsError(index_values, variable.dimension)
+        return {error:true, result:out_of_bunds_info}
       }
     }
     else {
-      if (variable.value === null) {
-        this.running = false
-        this.emit('evaluation-error')
-      }
-      else {
-        return variable.value
-      }
+      this._state.stack.push(variable.value)
     }
   }
 
-  /**
-   * Evalua operaciones binarias
-   * @param  {object} exp una expresión de tipo 'operation'
-   * @return {number|bool|string}     el resultado de la evaluación de la expresión
-   */
-  evaluateOperation(exp) {
-    let operand_a = this.evaluateExp(exp.operands[0])
-    let operand_b = this.evaluateExp(exp.operands[1])
-    switch (exp.op) {
-      case  'plus':
-      return operand_a + operand_b
-
-      case  'minus':
-      return operand_a - operand_b
-
-      case  'times':
-      return operand_a * operand_b
-
-      case  'divide':
-      return operand_a / operand_b
-
-      case  'div':
-      return (operand_a - (operand_a % operand_b)) / operand_b
-
-      case  'mod':
-      return operand_a % operand_b
-
-      case  'power':
-      return Math.pow(operand_a, operand_b)
-
-      case 'equal':
-        return operand_a === operand_b
-
-      case 'diff-than':
-        return operand_a != operand_b
-
-      case 'minor-than':
-        return operand_a < operand_b
-
-      case 'major-than':
-        return operand_a > operand_b
-
-      case 'minor-equal':
-        return operand_a <= operand_b
-
-      case 'major-equal':
-        return operand_a >= operand_b
-
-      case 'and':
-        return operand_a && operand_b
-
-      case 'or':
-        return operand_a || operand_b
-    }
-  }
-
-  /**
-   * Evalúa una expresión unaria
-   * @param  {object} exp una expresión de tipo 'unary-operation'
-   * @return {number|bool}     El resultado de la evaluación de la expresión
-   */
-  evaluateUnaryOperation(exp) {
-    let operand = this.evaluateExp(exp.operand)
-
-    switch (exp.op) {
-      case 'unary-minus':
-      return (-1)*operand
-
-      case 'not':
-      return !operand
-    }
-  }
-
-  /**
-   * Dice si un juego de indices dados se encuentra dentro de los límites de un arreglo
-   * @param  {[int]} index_values       indices para acceder al arreglo
-   * @param  {[int]} dimensions_lengths longitud de cada dimensión del arreglo
-   * @return {bool}                    true si ningún índice está fuera de límite, si no falso
-   */
-  indexWithinBounds(index_values, dimensions_lengths) {
+  indexWithinBounds (index_values, dimension_lengths) {
     let i = 0
 
     // NOTE: en las condiciones de abajo sumo 1 porque en index_values se le
@@ -322,12 +543,28 @@ export default class Evaluator extends Emitter {
 
     while (i < index_values.length) {
       if ((index_values[i] + 1) < 1) {
+        return false
+      }
+      else if ((index_values[i] + 1) > dimension_lengths[i]) {
+        return false
+      }
+      else {
+        i++
+      }
+    }
+    return true
+  }
+
+  getBoundsError (index_values, dimension_lengths) {
+    let i = 0
+    while (i < index_values.length) {
+      if ((index_values[i] + 1) < 1) {
         this.running = false
         let reason = 'index-less-than-one'
         let bad_index = i
         return {error:true, result:{reason, bad_index}}
       }
-      else if ((index_values[i] + 1) > dimensions_lengths[i]) {
+      else if ((index_values[i] + 1) > dimension_lengths[i]) {
         out_of_bounds_index = true
         let reason = 'index-out-of-bounds'
         let bad_index = i
@@ -338,28 +575,8 @@ export default class Evaluator extends Emitter {
         i++
       }
     }
-
-    return {error:false}
   }
 
-  /**
-   * Busca y devuelve el objeto que representa a una variable especifica
-   * @param  {string} varname el nombre de la variable deseada
-   * @return {object}         el objeto que representa a la variable
-   */
-  getVariable(varname) {
-    let variable
-
-    if (varname in this.locals) return this.locals[varname];
-    else return this.globals[varname];
-  }
-
-  /**
-   * Calcula el indice en un vector que representa a un arreglo multi-dimensional
-   * @param  {int[]} index_array indice del elemento en el arreglo
-   * @param  {int[]} dimensions  tamaño de las dimensiones del arreglo
-   * @return {int}             indice del elemento del arreglo en el vector
-   */
   calculateIndex(index_array, dimensions) {
     let result = 0
     let index_amount = index_array.length
@@ -376,7 +593,6 @@ export default class Evaluator extends Emitter {
       result += term
       i++
     }
-
     return result
   }
 }
