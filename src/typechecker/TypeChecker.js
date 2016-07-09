@@ -643,7 +643,8 @@ export default class TypeChecker extends Emitter {
         return {error, result}
       } else {
         let error = true
-        let reason = 'undefined-variable', result = reason
+        let reason = '@expression-undefined-variable'
+        let result = {reason, name:expression.name}
         return {error, result}
       }
     }
@@ -669,7 +670,7 @@ export default class TypeChecker extends Emitter {
           else {
             let error = true
             let result = {
-              reason:'incompatible-operator-types',
+              reason:'@expression-incompatible-operator-types',
               expected:operator_info.supported_types,
               unexpected:operand_type,
               operator:expression.op
@@ -705,7 +706,7 @@ export default class TypeChecker extends Emitter {
             else {
               let error = true
               let result = {
-                reason:'incompatible-operator-types',
+                reason:'@expression-incompatible-operator-types',
                 expected:operator_info.supported_types,
                 unexpected:op_b_type,
                 operator:expression.op
@@ -716,7 +717,7 @@ export default class TypeChecker extends Emitter {
           else {
             let error = true
             let result = {
-              reason:'incompatible-operator-types',
+              reason:'@expression-incompatible-operator-types',
               expected:operator_info.supported_types,
               unexpected:op_a_type,
               operator:expression.op
