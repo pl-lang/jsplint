@@ -544,9 +544,9 @@ export default class TypeChecker extends Emitter {
     else {
       let name = invocation_info.name
       if (variable.isArray === true) {
-        let reason = 'missing-index'
+        let reason = '@array-missing-index'
 
-        return {error:true, result:{reason, name}}
+        return {error:true, result:{reason, name, expected:variable.dimension.length}}
       }
       else {
         let reason = 'var-isnt-array'
