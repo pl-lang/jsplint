@@ -528,11 +528,17 @@ export default class TypeChecker extends Emitter {
         }
       }
       else {
-        let reason = 'dimension-length-diff-than-indexes-length'
+        let reason
+        if (variable.dimension.length > invocation_info.indexes.length) {
+          reason = '@array-not-enough-indexes'
+        }
+        else {
+          reason = '@array-too-many-indexes'
+        }
         let dimensions = variable.dimension.length
         let indexes = invocation_info.indexes.length
 
-        return {error:true, result:{reason, dimensions, indexes}}
+        return {error:true, result:{reason, dimensions, indexes, name:variable.name}}
       }
     }
     else {
