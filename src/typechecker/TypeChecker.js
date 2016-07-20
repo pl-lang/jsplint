@@ -471,10 +471,25 @@ export default class TypeChecker extends Emitter {
 
     }
     else {
-      this.emit('type-error', {
-        reason:'undeclared-variable',
-        name:assignment.left.name
-      })
+      let payload_type_report = this.getExpressionReturnType(assignment.right)
+
+      if (payload_type_report.error) {
+        this.emit('type-error', payload_type_report.result)
+      }
+
+      let error_info
+      let name = assignment.left.name
+      if (payload_type_report.error) {
+        let reason = '@assignment-undefined-variable'
+        error_info = {reason, name}
+      }
+      else {
+        let reason = '@assignment-undefined-variable-with-type'
+        let type = payload_type_report.result
+        error_info = {reason, name, type}
+      }
+
+      this.emit('type-error', error_info)
     }
   }
 
@@ -606,7 +621,21 @@ export default class TypeChecker extends Emitter {
     }
     else {
       let error = true
-      let reason = 'undefined-variable', result = reason
+
+      let payload_type_report = this.getExpressionReturnType(assignment.payload)
+
+      let result
+      let name = assignment.target.name
+      if (payload_type_report.error) {
+        let reason = 'undefined-variable'
+        result = {reason, name}
+      }
+      else {
+        let reason = 'undefined-variable-with-type'
+        let type = payload_type_report.result
+        result = {reason, name, type}
+      }
+
       return {error, result}
     }
   }
