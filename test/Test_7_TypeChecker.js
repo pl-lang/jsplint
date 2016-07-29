@@ -289,7 +289,7 @@ describe('TypeChecker', () => {
 
     checker.on('type-check-finished', () => {
       error_list.length.should.equal(2)
-      error_list[0].reason.should.equal('incompatible-operator-types')
+      error_list[0].reason.should.equal('@expression-incompatible-operator-types')
       error_list[1].reason.should.equal('incompatible-types-at-assignment')
       done()
     })
@@ -611,7 +611,7 @@ describe('TypeChecker', () => {
       let condition_check = checker.checkCondition(exp)
 
       condition_check.error.should.equal(true)
-      condition_check.result.reason.should.equal('incompatible-operator-types')
+      condition_check.result.reason.should.equal('@expression-incompatible-operator-types')
     }
 
     {
@@ -670,7 +670,7 @@ describe('TypeChecker', () => {
       let report = checker.checkArrayInvocation(target, invocation)
 
       report.error.should.equal(true)
-      report.result.reason.should.equal('dimension-length-diff-than-indexes-length')
+      report.result.reason.should.equal('@array-not-enough-indexes')
       report.result.dimensions.should.equal(2)
       report.result.indexes.should.equal(1)
     }
@@ -692,7 +692,7 @@ describe('TypeChecker', () => {
       let report = checker.checkArrayInvocation(target, invocation)
 
       report.error.should.equal(true)
-      report.result.reason.should.equal('dimension-length-diff-than-indexes-length')
+      report.result.reason.should.equal('@array-too-many-indexes')
       report.result.dimensions.should.equal(2)
       report.result.indexes.should.equal(3)
     }
@@ -731,7 +731,7 @@ describe('TypeChecker', () => {
       let report = checker.checkArrayInvocation(target, invocation)
 
       report.error.should.equal(true)
-      report.result.reason.should.equal('missing-index')
+      report.result.reason.should.equal('@array-missing-index')
       report.result.name.should.equal('b')
     }
 
@@ -752,7 +752,7 @@ describe('TypeChecker', () => {
 
       report.error.should.equal(true)
       report.result.reason.should.equal('index-out-of-bounds')
-      report.result.bad_index.should.equal(1)
+      report.result.bad_index.should.equal(2)
       report.result.expected.should.equal(4)
     }
 
@@ -772,8 +772,8 @@ describe('TypeChecker', () => {
       let report = checker.checkArrayInvocation(target, invocation)
 
       report.error.should.equal(true)
-      report.result.reason.should.equal('index-less-than-one')
-      report.result.bad_index.should.equal(0)
+      report.result.reason.should.equal('index-out-of-bounds')
+      report.result.bad_index.should.equal(1)
     }
 
     {
