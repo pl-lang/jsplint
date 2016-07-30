@@ -2,6 +2,8 @@
 
 import Report from '../utility/Report.js'
 
+import {take, zipObj} from '../utility/helpers.js'
+
 import TokenQueue from './TokenQueue.js'
 
 /**
@@ -1268,4 +1270,36 @@ export function match(pattern_matcher) {
       return pattern_matcher(source)
     }
   }
+}
+
+// concat es una funcion que toma una lista de "patrones" y produce uno nuevo.
+// El patron que produce concat falla cuando el primero de sus componentes lo hace
+// y devuelve el reporte de dicha falla. Si ninguno de los patrones componentes
+// produce un error, se devuelve una lista de los resultados
+
+// match(concat([TypeName, "funcion", Word, ParameterList])).from(source).to([
+// 'return_type',
+// '_',
+// 'name',
+// 'parameter_list'
+// ])
+
+function concat (func_list) {
+
+  function new_pattern (source) {
+    let functions = func_list
+    let result = []
+    for (let f of functions) {
+      let report = f(source)
+      if (report.error) {
+        return report
+      }
+      else {
+        result.push(report.result)
+      }
+    }
+    return {error:false, result}
+  }
+
+  return new_pattern
 }
