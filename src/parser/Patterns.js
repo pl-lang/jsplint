@@ -108,7 +108,7 @@ export function Kind(kind) {
     let expected_kind = kind
     if (source.current().kind == expected_kind) {
       source.next()
-      return {error:false}
+      return {error:false, result:expected_kind}
     }
     else {
       return {error:true, result:{reason:"unexpected-token", expected:expected_kind, unexpected:source.current().kind}}
@@ -1189,6 +1189,16 @@ export function MainModule(source) {
   }
 
   return new Report(false, result)
+}
+
+export function FunctionModule (source) {
+  let header = concat([
+    TypeName,
+    Kind('funcion'),
+    Word
+  ])
+
+  return header(source)
 }
 
 export function DeclarationStatement(source) {
