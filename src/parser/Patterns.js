@@ -101,6 +101,22 @@ export function Word(source) {
   }
 }
 
+// crea un patron que busca un token de tipo "kind"
+// esta funcion no es una patron, si no que devuelve una funcion que lo es
+export function Kind(kind) {
+  function KindMatcher (source) {
+    let expected_kind = kind
+    if (source.current().kind == expected_kind) {
+      source.next()
+      return {error:false}
+    }
+    else {
+      return {error:true, result:{reason:"unexpected-token", expected:expected_kind, unexpected:source.current().kind}}
+    }
+  }
+  return KindMatcher
+}
+
 export function VariableDeclaration(source) {
   let variable = {
     name    : '',
