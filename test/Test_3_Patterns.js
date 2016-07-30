@@ -1264,8 +1264,18 @@ describe('MainModule', () => {
   })
 })
 
-// describe('FunctionModule', () => {
-//   it('capturar encabezado concatenando patrones', () => {
-//
-//   })
-// })
+describe('FunctionModule', () => {
+  it('prueba temporal: capturar encabezado concatenando patrones', () => {
+    let code = 'entero funcion mi_funcion'
+    let q = queueFromSource(code)
+
+    let report = match(Patterns.FunctionModule).from(q)
+
+    report.error.should.equal(false)
+    report.result.should.deepEqual([
+      'entero',
+      'funcion',
+      'mi_funcion'
+    ])
+  })
+})
