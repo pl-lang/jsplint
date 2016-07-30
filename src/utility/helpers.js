@@ -5,10 +5,10 @@
 // corta
 
 export function zipObj (values, names) {
-  if (values.length > names) {
+  if (values.length > names.length) {
     values = take(names.length, values)
   }
-  else {
+  else if (values.length < names.length) {
     names = take(values.length, name)
   }
 
@@ -27,10 +27,10 @@ export function zipObj (values, names) {
 // pertenece a "a" y el segundo a "b". La lista tendra tantos elementos
 // como la mas corta entre a y b
 export function zip (a, b) {
-  if (a.length > b) {
+  if (a.length > b.length) {
     a = take(b.length, a)
   }
-  else {
+  else if (a.length < b.length) {
     b = take(a.length, b)
   }
 
@@ -39,6 +39,8 @@ export function zip (a, b) {
   for (let i = 0; i < a.length; i++) {
     result.push([a[i], b[i]])
   }
+
+  return result
 }
 
 // toma los primeros n elementos de un arreglo
