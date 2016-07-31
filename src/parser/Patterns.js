@@ -1329,3 +1329,24 @@ function concat (func_list) {
 
   return new_pattern
 }
+
+export function until (pattern, predicate) {
+  function new_pattern (source) {
+    let result = []
+
+    let current_kind = source.current().kind
+
+    while (!predicate(current_kind)) {
+      let report = pattern(source)
+
+      if (report.error) return report;
+      else result.push(report.result);
+
+      current_kind = source.current().kind
+    }
+
+    return {error:false, result}
+  }
+
+  return new_pattern
+}

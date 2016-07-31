@@ -28,6 +28,23 @@ function queueFromSource(string) {
   return q
 }
 
+describe('Funciones que agrupan patrones', () => {
+  describe('until', () => {
+    it('recolecta palabras hasta encontrar fin', () => {
+      let code = 'uno dos una_variable otra_variable fin'
+
+      let q = queueFromSource(code)
+
+      let pattern = Patterns.until(Patterns.Word, tk => tk == 'fin')
+
+      let report = match(pattern).from(q)
+
+      report.error.should.equal(false)
+      report.result.should.deepEqual(['uno', 'dos', 'una_variable', 'otra_variable'])
+    })
+  })
+})
+
 describe('IntegerPattern', () => {
   it('captura token entero', () => {
     let q = queueFromSource('36 a')
