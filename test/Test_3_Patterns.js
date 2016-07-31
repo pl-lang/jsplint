@@ -43,6 +43,21 @@ describe('Funciones que agrupan patrones', () => {
       report.result.should.deepEqual(['uno', 'dos', 'una_variable', 'otra_variable'])
     })
   })
+
+  describe('concat', () => {
+    it('crea un patron que busca una palabra seguida de un numero', () => {
+      let code = 'un_nombre 25'
+
+      let q = queueFromSource(code)
+
+      let pattern = Patterns.concat([Patterns.Word, Patterns.Integer])
+
+      let report = match(pattern).from(q)
+
+      report.error.should.equal(false)
+      report.result.should.deepEqual(['un_nombre', 25])
+    })
+  })
 })
 
 describe('IntegerPattern', () => {
@@ -1282,17 +1297,5 @@ describe('MainModule', () => {
 })
 
 describe('FunctionModule', () => {
-  it('prueba temporal: capturar encabezado concatenando patrones', () => {
-    let code = 'entero funcion mi_funcion'
-    let q = queueFromSource(code)
-
-    let report = match(Patterns.FunctionModule).from(q)
-
-    report.error.should.equal(false)
-    report.result.should.deepEqual([
-      'entero',
-      'funcion',
-      'mi_funcion'
-    ])
-  })
+  it.skip('captura una funcion correctamente', () => {})
 })

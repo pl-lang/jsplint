@@ -1310,7 +1310,7 @@ export function match(pattern_matcher) {
 // 'parameter_list'
 // ])
 
-function concat (func_list) {
+export function concat (func_list) {
 
   function new_pattern (source) {
     let functions = func_list
