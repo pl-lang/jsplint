@@ -1,3 +1,21 @@
+// toma dos objetos y devuelve uno nuevo que contiene las propiedades (y valores)
+// de los dos anteriores. Si hay propiedades repetidas entre a y b, se toman las
+// de b
+export function mergeObjs (a, b) {
+  let r = {}
+
+  for (let prop in a) {
+    r[prop] = a[prop]
+  }
+
+  for (let prop in b) {
+    r[prop] = b[prop]
+  }
+
+  return r
+}
+
+
 // take, zip y zipObj estan basadas en funciones de haskell
 
 // crea un nuevo objeto dadas una lista de valores y una lista de cadenas.
