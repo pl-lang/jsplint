@@ -2,6 +2,8 @@
 
 import Report from '../utility/Report.js'
 
+import {take, zipObj} from '../utility/helpers.js'
+
 import TokenQueue from './TokenQueue.js'
 
 /**
@@ -97,6 +99,22 @@ export function Word(source) {
 
     return new Report(true, {unexpected, expected, column, line})
   }
+}
+
+// crea un patron que busca un token de tipo "kind"
+// esta funcion no es una patron, si no que devuelve una funcion que lo es
+export function Kind(kind) {
+  function KindMatcher (source) {
+    let expected_kind = kind
+    if (source.current().kind == expected_kind) {
+      source.next()
+      return {error:false, result:expected_kind}
+    }
+    else {
+      return {error:true, result:{reason:"unexpected-token", expected:expected_kind, unexpected:source.current().kind}}
+    }
+  }
+  return KindMatcher
 }
 
 export function VariableDeclaration(source) {
@@ -1173,6 +1191,16 @@ export function MainModule(source) {
   return new Report(false, result)
 }
 
+export function FunctionModule (source) {
+  let header = concat([
+    TypeName,
+    Kind('funcion'),
+    Word
+  ])
+
+  return header(source)
+}
+
 export function DeclarationStatement(source) {
   let result = {
     type:'declaration',
@@ -1268,4 +1296,36 @@ export function match(pattern_matcher) {
       return pattern_matcher(source)
     }
   }
+}
+
+// concat es una funcion que toma una lista de "patrones" y produce uno nuevo.
+// El patron que produce concat falla cuando el primero de sus componentes lo hace
+// y devuelve el reporte de dicha falla. Si ninguno de los patrones componentes
+// produce un error, se devuelve una lista de los resultados
+
+// match(concat([TypeName, "funcion", Word, ParameterList])).from(source).to([
+// 'return_type',
+// '_',
+// 'name',
+// 'parameter_list'
+// ])
+
+function concat (func_list) {
+
+  function new_pattern (source) {
+    let functions = func_list
+    let result = []
+    for (let f of functions) {
+      let report = f(source)
+      if (report.error) {
+        return report
+      }
+      else {
+        result.push(report.result)
+      }
+    }
+    return {error:false, result}
+  }
+
+  return new_pattern
 }

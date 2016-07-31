@@ -117,6 +117,39 @@ describe('WordPattern', () => {
   })
 })
 
+describe('Kind', () => {
+  it('captura distintos tipos de token', () => {
+    {
+      let q = queueFromSource('rmb')
+
+      let captura = match(Patterns.Kind("word")).from(q)
+
+      captura.error.should.equal(false)
+    }
+
+    {
+      let q = queueFromSource('123')
+
+      let captura = match(Patterns.Kind("entero")).from(q)
+
+      captura.error.should.equal(false)
+    }
+  })
+
+  it('devuelve un error al encontrar un token inesperado', () => {
+    let q = queueFromSource('rmb')
+
+    let captura = match(Patterns.Kind("entero")).from(q)
+
+    captura.error.should.equal(true)
+    captura.result.should.deepEqual({
+      reason:'unexpected-token',
+      unexpected:'word',
+      expected:'entero'
+    })
+  })
+})
+
 describe('VariableDeclaration', () => {
 
   it('captura el nombre de una variable', () => {
@@ -1228,5 +1261,21 @@ describe('MainModule', () => {
       column : 7,
       reason : 'missing-fin'
     })
+  })
+})
+
+describe('FunctionModule', () => {
+  it('prueba temporal: capturar encabezado concatenando patrones', () => {
+    let code = 'entero funcion mi_funcion'
+    let q = queueFromSource(code)
+
+    let report = match(Patterns.FunctionModule).from(q)
+
+    report.error.should.equal(false)
+    report.result.should.deepEqual([
+      'entero',
+      'funcion',
+      'mi_funcion'
+    ])
   })
 })
