@@ -554,6 +554,58 @@ export function ArgumentList(source) {
   }
 }
 
+export function ParameterList (source) {
+  let result = []
+
+  let parameter_report = Parameter(source)
+
+  if (parameter_report.error) return parameter_report;
+
+  result.push(parameter_report.result)
+
+  if (source.current().kind == 'comma') {
+    source.next()
+
+    let other_parameters = ParameterList(source)
+
+    if (other_parameters.error) return other_parameters;
+
+    result = [...result, ...other_parameters.result]
+
+    return {error:false, result}
+  }
+  else {
+    return {error:false, result}
+  }
+}
+
+export function Parameter (source) {
+  let result = {
+    name:null,
+    by_ref:false,
+    type:null
+  }
+
+  let type_r = TypeName(source)
+
+  if (type_r.error) return type_r;
+
+  result.type = type_r.result
+
+  if (source.current().kind === 'ref') {
+    result.by_ref = true
+    source.next() // consumir 'ref'
+  }
+
+  let name = Word(source)
+
+  if (name.error) return name;
+
+  result.name = name.result
+
+  return {error:false, result}
+}
+
 export function ModuleCall(source) {
   let name = Word(source)
 
