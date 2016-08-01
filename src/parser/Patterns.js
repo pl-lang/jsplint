@@ -1314,6 +1314,56 @@ export function FunctionModule (source) {
   return {error:false, result}
 }
 
+export function ProcedureModule (source) {
+  let header = concat([Kind('procedimiento'), Word, Kind('left-par'), ParameterList, Kind('right-par')])
+
+  let h_report = header(source)
+
+  if (h_report.error) return h_report;
+
+  let header_tokens = h_report.result.filter(t => (typeof t == 'string' && (t == 'procedimiento' || t == 'left-par' || t == 'right-par') ? false:true))
+
+  let header_data = zipObj(header_tokens, ['name', 'parameters'])
+
+  let result = header_data
+
+  skipWhiteSpace(source)
+
+  let variable_declarations = until(concat([DeclarationStatement, skipWhiteSpace]), tk => tk == 'inicio')
+
+  let d_report = variable_declarations(source)
+
+  if (source.current().kind != 'inicio') return UnexpectedTokenReport(source.current(), 'inicio', 'missing-inicio')
+
+  source.next() // consumir inicio
+
+  if (d_report.error) return d_report;
+
+  let declarations = d_report.result.reduce(flatten, []).filter(tk => tk == undefined ? false:true)
+
+  result.body = [...declarations]
+
+  skipWhiteSpace(source)
+
+  let statements = until(concat([Statement, skipWhiteSpace]), tk => tk == 'finprocedimiento')
+
+  let s_report = match(statements).from(source)
+
+  if (s_report.error) return s_report;
+
+  let statement_objs = s_report.result.reduce(flatten, []).filter(tk => tk == undefined ? false:true)
+
+  result.body = [...result.body, ...statement_objs]
+
+  if (source.current().kind != 'finprocedimiento') return UnexpectedTokenReport(source.current(), 'finprocedimiento', 'missing-finprocedimiento')
+
+  source.next() // consumir 'finprocedimiento'
+
+  result.type = 'module'
+
+  return {error:false, result}
+}
+
 export function DeclarationStatement(source) {
   let result = {
     type:'declaration',

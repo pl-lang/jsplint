@@ -1370,3 +1370,41 @@ describe('FunctionModule', () => {
     })
   })
 })
+
+describe('ProcedureModule', () => {
+  it('captura un procedimiento correctamente', () => {
+    let code = `procedimiento mi_proc (entero a, entero ref b)
+    entero a, b, c
+    inicio
+      escribir(42)
+    finprocedimiento
+    `
+
+    let q = queueFromSource(code)
+
+    let report = match(Patterns.ProcedureModule).from(q)
+
+    report.error.should.equal(false)
+    report.result.should.deepEqual({
+      type:'module',
+      name:'mi_proc',
+      parameters:[{name:'a', type:'entero', by_ref:false}, {name:'b', type:'entero', by_ref:true}],
+      body:[
+        {
+          type:'declaration',
+          variables:[
+            {type:'entero', name:'a', isArray:false, dimension:null},
+            {type:'entero', name:'b', isArray:false, dimension:null},
+            {type:'entero', name:'c', isArray:false, dimension:null}
+          ]
+        },
+        {
+          type:'call',
+          args:[{expression_type:'literal', type:'entero', value:42}],
+          name:'escribir',
+          expression_type:'module_call'
+        }
+      ]
+    })
+  })
+})
