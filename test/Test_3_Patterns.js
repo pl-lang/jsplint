@@ -1196,6 +1196,7 @@ describe('MainModule', () => {
     report.error.should.equal(false)
     report.result.should.deepEqual({
       type:'module',
+      module_type:'main',
       name:'main',
       body:[
         {
@@ -1235,6 +1236,7 @@ describe('MainModule', () => {
     report.error.should.equal(false)
     report.result.should.deepEqual({
       type:'module',
+      module_type:'main',
       name:'main',
       body:[{
         type:'assignment',
@@ -1344,6 +1346,7 @@ describe('FunctionModule', () => {
     report.error.should.equal(false)
     report.result.should.deepEqual({
       type:'module',
+      module_type:'function',
       name:'mi_funcion',
       return_type:'entero',
       parameters:[{name:'a', type:'entero', by_ref:false}, {name:'b', type:'entero', by_ref:true}],
@@ -1387,6 +1390,7 @@ describe('ProcedureModule', () => {
     report.error.should.equal(false)
     report.result.should.deepEqual({
       type:'module',
+      module_type:'procedure',
       name:'mi_proc',
       parameters:[{name:'a', type:'entero', by_ref:false}, {name:'b', type:'entero', by_ref:true}],
       body:[

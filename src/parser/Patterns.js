@@ -1185,6 +1185,7 @@ export function MainModule(source) {
   let result = {
     type:'module',
     name:'main',
+    module_type:'main',
     body:[]
   }
 
@@ -1311,6 +1312,8 @@ export function FunctionModule (source) {
 
   result.type = 'module'
 
+  result.module_type = 'function'
+
   return {error:false, result}
 }
 
@@ -1360,6 +1363,8 @@ export function ProcedureModule (source) {
   source.next() // consumir 'finprocedimiento'
 
   result.type = 'module'
+
+  result.module_type = 'procedure'
 
   return {error:false, result}
 }
