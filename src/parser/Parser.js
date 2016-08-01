@@ -34,6 +34,8 @@ export default class Parser extends Emitter {
 
     let token_queue = new TokenQueue(lexer_report.result)
 
+    skipWhiteSpace(token_queue)
+
     // buscar el modulo principal
     let main_match = match(MainModulePattern).from(token_queue)
 
