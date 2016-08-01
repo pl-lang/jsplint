@@ -223,6 +223,7 @@ function isReservedWord(word) {
         case 'and':
         case 'not':
         case 'mod':
+        case 'ref':
           return true
         default:
           return false
