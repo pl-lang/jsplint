@@ -1313,7 +1313,7 @@ describe('MainModule', () => {
   })
 })
 
-describe.only('FunctionModule', () => {
+describe('FunctionModule', () => {
   it('captura parte de una funcion correctamente', () => {
     let code = `entero funcion mi_funcion (entero a, entero ref b)
     entero a, b, c

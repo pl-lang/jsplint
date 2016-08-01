@@ -1244,14 +1244,7 @@ export function MainModule(source) {
 }
 
 export function FunctionModule (source) {
-  let header = concat([
-    TypeName,
-    Kind('funcion'),
-    Word,
-    Kind('left-par'),
-    ParameterList,
-    Kind('right-par')
-  ])
+  let header = concat([TypeName, Kind('funcion'), Word, Kind('left-par'), ParameterList, Kind('right-par')])
 
   let h_report = header(source)
 
@@ -1265,19 +1258,11 @@ export function FunctionModule (source) {
 
   skipWhiteSpace(source)
 
-  let variable_declarations = until(concat([DeclarationStatement, skipWhiteSpace]), tk => tk == 'inicio' || tk == 'eof')
+  let variable_declarations = until(concat([DeclarationStatement, skipWhiteSpace]), tk => tk == 'inicio')
 
   let d_report = variable_declarations(source)
 
-  if (source.current().kind != 'inicio') {
-    let current = source.current()
-    let unexpected = current.kind
-    let expected = 'inicio'
-    let line = current.lineNumber
-    let column = current.columnNumber
-    let reason = 'missing-inicio'
-    return new Report(true, {unexpected, expected, line, column, reason})
-  }
+  if (source.current().kind != 'inicio') return UnexpectedTokenReport(source.current(), 'inicio', 'missing-inicio')
 
   source.next() // consumir inicio
 
@@ -1289,7 +1274,7 @@ export function FunctionModule (source) {
 
   skipWhiteSpace(source)
 
-  let statements = until(concat([Statement, skipWhiteSpace]), tk => tk == 'finfuncion' || tk == 'eof')
+  let statements = until(concat([Statement, skipWhiteSpace]), tk => tk == 'finfuncion')
 
   let s_report = match(statements).from(source)
 
@@ -1299,26 +1284,9 @@ export function FunctionModule (source) {
 
   result.body = [...result.body, ...statement_objs]
 
-  skipWhiteSpace(source)
-
-  if (source.current().kind != 'finfuncion') {
-    let current = source.current()
-    let unexpected = current.kind
-    let expected = 'finfuncion'
-    let line = current.lineNumber
-    let column = current.columnNumber
-    let reason = 'missing-finfuncion'
-    return new Report(true, {unexpected, expected, line, column, reason})
-  }
+  if (source.current().kind != 'finfuncion') return UnexpectedTokenReport(source.current(), 'finfuncion', 'missing-finfuncion')
 
   source.next() // consumir 'finfuncion'
-
-  // a esta altura result deberia ser:
-  // {
-  //  return_type :: cadena
-  //  name :: cadena
-  //  body :: []
-  // }
 
   result.type = 'module'
 
@@ -1463,7 +1431,7 @@ export function until (pattern, predicate) {
 
     let current_kind = source.current().kind
 
-    while (!predicate(current_kind)) {
+    while (current_kind != 'eof' && !predicate(current_kind)) {
       let report = pattern(source)
 
       if (report.error) return report;
