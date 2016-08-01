@@ -1208,21 +1208,27 @@ export function FunctionModule (source) {
 
   result = header_data
 
-  let variable_declarations = until(DeclarationStatement, tk => tk == 'inicio' || tk == 'eof')
+  skipWhiteSpace(source)
 
-  let d_report = match(statements).from(source)
+  let variable_declarations = until(concat([DeclarationStatement, skipWhiteSpace]), tk => tk == 'inicio' || tk == 'eof')
+
+  let d_report = variable_declarations(source)
 
   if (d_report.error) return d_report;
 
-  result.body = [...d_report.result]
+  let declarations = d_report.filter(tk => tk == undefined ? false:true)
 
-  let statements = until(Statement, tk => tk == 'finfuncion' || tk == 'eof')
+  result.body = [...declarations]
+
+  let statements = until(concat([Statement, skipWhiteSpace]), tk => tk == 'finfuncion' || tk == 'eof')
 
   let s_report = match(statements).from(source)
 
   if (s_report.error) return s_report;
 
-  result.body = [...result.body, ...s_report.result]
+  let statement_objs = s_report.result.filter(tk => tk == undefined ? false:true)
+
+  result.body = [...result.body, ...statement_objs]
 
   skipWhiteSpace(source)
 
