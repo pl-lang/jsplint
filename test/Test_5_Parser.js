@@ -121,6 +121,37 @@ describe('Parser', () => {
     report.result.modules[1].name.should.equal('sumar')
     report.result.modules[2].name.should.equal('restar')
   })
+
+  it('lee un programa con procedimientos', () => {
+    let code = `variables
+    inicio
+    fin
+
+    procedimiento sumar(entero a, entero b)
+      entero resultado
+    inicio
+      resultado <- a + b
+    finprocedimiento
+
+    procedimiento restar(entero a, entero b)
+      entero resultado
+    inicio
+      resultado <- a - b
+    finprocedimiento
+    `
+
+    let parser = new Parser()
+
+    parser.on('syntax-error', console.log)
+
+    let report = parser.parse(code)
+
+    report.error.should.equal(false)
+    report.result.modules.length.should.equal(3)
+    report.result.modules[0].name.should.equal('main')
+    report.result.modules[1].name.should.equal('sumar')
+    report.result.modules[2].name.should.equal('restar')
+  })
 })
 
 describe('Checkable transformer', () => {

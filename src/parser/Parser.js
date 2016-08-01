@@ -4,7 +4,8 @@ import Emitter from '../utility/Emitter.js'
 import SourceWrapper from './SourceWrapper.js'
 import Lexer from './Lexer.js'
 import TokenQueue from './TokenQueue.js'
-import { match, MainModule as MainModulePattern, FunctionModule as FunctionPattern, skipWhiteSpace } from './Patterns.js'
+import { match, MainModule as MainModulePattern, skipWhiteSpace } from './Patterns.js'
+import { FunctionModule as FunctionPattern, ProcedureModule as ProcedurePattern } from './Patterns.js'
 
 export default class Parser extends Emitter {
   constructor() {
@@ -54,7 +55,7 @@ export default class Parser extends Emitter {
       let module_match
 
       if (token_queue.current().kind == 'procedimiento') {
-        // module_match = match(ProcedurePattern).from(token_queue)
+        module_match = match(ProcedurePattern).from(token_queue)
       }
       else {
         module_match = match(FunctionPattern).from(token_queue)
