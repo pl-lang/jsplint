@@ -1236,7 +1236,17 @@ export function FunctionModule (source) {
     return new Report(true, {unexpected, expected, line, column, reason})
   }
 
-  return header(source)
+  source.next() // consumir 'finfuncion'
+
+  // a esta altura result deberia ser:
+  // {
+  //  name :: cadena
+  //  body :: []
+  // }
+
+  result.type = 'module'
+
+  return result
 }
 
 export function DeclarationStatement(source) {
