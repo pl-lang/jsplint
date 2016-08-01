@@ -1,3 +1,4 @@
+
 'use strict'
 import should from 'should'
 import fs from 'fs'
@@ -1296,6 +1297,40 @@ describe('MainModule', () => {
   })
 })
 
-describe('FunctionModule', () => {
-  it.skip('captura una funcion correctamente', () => {})
+describe.only('FunctionModule', () => {
+  it('captura parte de una funcion correctamente', () => {
+    let code = `entero funcion mi_funcion
+    entero a, b, c
+    inicio
+      escribir(42)
+    finfuncion
+    `
+
+    let q = queueFromSource(code)
+
+    let report = match(Patterns.FunctionModule).from(q)
+
+    report.error.should.equal(false)
+    report.result.should.deepEqual({
+      type:'module',
+      name:'mi_funcion',
+      return_type:'entero',
+      body:[
+        {
+          type:'declaration',
+          variables:[
+            {type:'entero', name:'a', isArray:false, dimension:null},
+            {type:'entero', name:'b', isArray:false, dimension:null},
+            {type:'entero', name:'c', isArray:false, dimension:null}
+          ]
+        },
+        {
+          type:'call',
+          args:[{expression_type:'literal', type:'entero', value:42}],
+          name:'escribir',
+          expression_type:'module_call'
+        }
+      ]
+    })
+  })
 })

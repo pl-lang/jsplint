@@ -2,7 +2,7 @@
 
 import Report from '../utility/Report.js'
 
-import {take, zipObj} from '../utility/helpers.js'
+import {take, zipObj, flatten} from '../utility/helpers.js'
 
 import TokenQueue from './TokenQueue.js'
 
@@ -1202,11 +1202,11 @@ export function FunctionModule (source) {
 
   if (h_report.error) return h_report;
 
-  let header_tokens = h_report.filter(t => (typeof t == 'string' && t == 'funcion' ? false:true))
+  let header_tokens = h_report.result.filter(t => (typeof t == 'string' && t == 'funcion' ? false:true))
 
   let header_data = zipObj(header_tokens, ['return_type', 'name'/*, 'parameters'*/])
 
-  result = header_data
+  let result = header_data
 
   skipWhiteSpace(source)
 
@@ -1214,11 +1214,25 @@ export function FunctionModule (source) {
 
   let d_report = variable_declarations(source)
 
+  if (source.current().kind != 'inicio') {
+    let current = source.current()
+    let unexpected = current.kind
+    let expected = 'inicio'
+    let line = current.lineNumber
+    let column = current.columnNumber
+    let reason = 'missing-inicio'
+    return new Report(true, {unexpected, expected, line, column, reason})
+  }
+
+  source.next() // consumir inicio
+
   if (d_report.error) return d_report;
 
-  let declarations = d_report.filter(tk => tk == undefined ? false:true)
+  let declarations = d_report.result.reduce(flatten, []).filter(tk => tk == undefined ? false:true)
 
   result.body = [...declarations]
+
+  skipWhiteSpace(source)
 
   let statements = until(concat([Statement, skipWhiteSpace]), tk => tk == 'finfuncion' || tk == 'eof')
 
@@ -1226,7 +1240,7 @@ export function FunctionModule (source) {
 
   if (s_report.error) return s_report;
 
-  let statement_objs = s_report.result.filter(tk => tk == undefined ? false:true)
+  let statement_objs = s_report.result.reduce(flatten, []).filter(tk => tk == undefined ? false:true)
 
   result.body = [...result.body, ...statement_objs]
 
@@ -1253,7 +1267,7 @@ export function FunctionModule (source) {
 
   result.type = 'module'
 
-  return result
+  return {error:false, result}
 }
 
 export function DeclarationStatement(source) {
@@ -1321,6 +1335,9 @@ export function skipWhiteSpace(source) {
   while (current.kind === 'eol') {
     current = source.next()
   }
+
+  // HACK: Esto permite que skipWhiteSpace se comporte como un patron...
+  return {error:false}
 }
 
 function UnexpectedTokenReport(current_token, expected, reason) {
