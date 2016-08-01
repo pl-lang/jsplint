@@ -40,7 +40,45 @@ export default function transformAST(ast) {
   return program
 }
 
-function transform(module) {
+function transform (module) {
+  switch (module.module_type) {
+    case 'main':
+      return transformMain(module)
+    case 'procedure':
+      return transformProcedure(module)
+    case 'function':
+      throw Error(`@Checkable.js: la transformacion de funciones no esta implementada`)
+    default:
+      throw Error(`@Checkable.js: no se como transfor modulos de tipo ${module.module_type}`)
+  }
+}
+
+function transformProcedure (module) {
+  let parameter_variables = module.parameters.map(p => {return {type:p.type, name:p.name, isArray:false, dimension:null}})
+
+  // HACK: crear un enunciado declaracion con las variables estipuladas en los parametros
+  let parameters_declaration = {type:'declaration', variables:parameter_variables}
+
+  let declaration_statements = module.body.filter(statement => statement.type === 'declaration')
+
+  declaration_statements = [parameters_declaration, ...declaration_statements]
+
+  let regular_statements = module.body.filter(statement => statement.type !== 'declaration')
+
+  let variables_by_name = getVariables(declaration_statements).reduce((obj, element) => {obj[element.name] = element; return obj}, {})
+
+  let result = {
+    type : 'module',
+    module_type:'procedure',
+    name : module.name,
+    locals : variables_by_name,
+    body : regular_statements
+  }
+
+  return result
+}
+
+function transformMain(module) {
   let declaration_statements = module.body.filter(statement => statement.type === 'declaration')
   let regular_statements = module.body.filter(statement => statement.type !== 'declaration')
 
@@ -48,6 +86,7 @@ function transform(module) {
 
   let result = {
     type : 'module',
+    module_type:'main',
     name : module.name,
     locals : variables_by_name,
     body : regular_statements

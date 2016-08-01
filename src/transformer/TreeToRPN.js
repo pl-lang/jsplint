@@ -41,9 +41,11 @@ export default function transformAST(ast) {
 function transformModule(module) {
   let result = {
     type:'module',
+    module_type:module.module_type,
     name: module.name,
     body: []
   }
+
   for (let statement of module.body) {
     if (statement.type === 'declaration') {
       result.body.push(statement)
@@ -51,6 +53,10 @@ function transformModule(module) {
     else {
       result.body.push(transformStatement(statement))
     }
+  }
+
+  if ('parameters' in module) {
+    result.parameters = module.parameters
   }
 
   return result

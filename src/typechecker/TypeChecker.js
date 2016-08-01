@@ -205,6 +205,11 @@ export default class TypeChecker extends Emitter {
 
     for (let module of program.modules) {
       this.current_module_name = module.name
+
+      if (module.name != 'main') {
+        this.locals_by_module[module.name] = {}
+      }
+      
       for (let statement of module.body) {
         this.checkStatement(statement, module.module_type)
       }
