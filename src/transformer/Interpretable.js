@@ -10,15 +10,38 @@ export default function transform(ast) {
   }
 
   for (let module of ast.modules) {
-    program.modules[module.name] = transformModule(module)
+    if (module.module_type == 'main') {
+      program.modules[module.name] = transformMain(module)
+    }
+    else {
+      program.modules[module.name] = transformModule(module)
+    }
   }
 
   return program
 }
 
-function transformModule(module) {
+function transformMain (module) {
   let result = {
     locals : module.locals,
+    root : null
+  }
+
+  let temp_list = new LinkedList()
+
+  for (let statement of module.body) {
+    temp_list.addNode(transformStatement(statement))
+  }
+
+  result.root = temp_list.firstNode
+
+  return result
+}
+
+function transformModule (module) {
+  let result = {
+    locals : module.locals,
+    parameters : module.parameters.map(p => p.name),
     root : null
   }
 
