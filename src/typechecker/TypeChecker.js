@@ -206,7 +206,7 @@ export default class TypeChecker extends Emitter {
     for (let module of program.modules) {
       this.current_module_name = module.name
       for (let statement of module.body) {
-        this.checkStatement(statement)
+        this.checkStatement(statement, module.module_type)
       }
     }
 
@@ -218,7 +218,7 @@ export default class TypeChecker extends Emitter {
     this.current_module_name = ''
   }
 
-  checkStatement(statement) {
+  checkStatement(statement, module_type) {
     switch (statement.type) {
       case 'declaration':
         this.DeclareVariable(statement)
@@ -238,6 +238,13 @@ export default class TypeChecker extends Emitter {
       case 'for':
         this.checkFor(statement)
         break
+      case 'return':
+        if (module_type == 'function') {
+          //
+        }
+        else {
+          this.emit('type-error', {reason:'@procedure-return'})
+        }
       case 'call':
         if (statement.name === 'leer') {
           this.checkLeer(statement)
