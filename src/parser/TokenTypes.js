@@ -270,6 +270,7 @@ function isReservedWord(word) {
         case 'entonces':
         case 'mientras':
         case 'caracter':
+        case 'retornar':
           return true
         default:
           return false
