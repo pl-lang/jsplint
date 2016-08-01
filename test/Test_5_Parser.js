@@ -171,6 +171,7 @@ describe('Checkable transformer', () => {
 
     transformed_module.should.deepEqual({
       type:'module',
+      module_type:'main',
       name:'main',
       body:[],
       locals:{
