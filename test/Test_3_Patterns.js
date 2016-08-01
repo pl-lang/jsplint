@@ -1091,6 +1091,20 @@ describe('Statement', () => {
     report.result.type.should.equal('until')
   })
 
+  it('captura un retornar', () => {
+    let code = `retornar 25`
+
+    let q = queueFromSource(code)
+
+    let report = match(Patterns.Statement).from(q)
+
+    report.error.should.equal(false)
+    report.result.should.deepEqual({
+      type:'return',
+      expression:{expression_type:'literal', type:'entero', value:25}
+    })
+  })
+
   it('devuelve un error cuando no encuentra un enunciado', () => {
     let code = `2 + 3`
     let q = queueFromSource(code)
@@ -1319,6 +1333,7 @@ describe('FunctionModule', () => {
     entero a, b, c
     inicio
       escribir(42)
+      retornar 2
     finfuncion
     `
 
@@ -1346,6 +1361,10 @@ describe('FunctionModule', () => {
           args:[{expression_type:'literal', type:'entero', value:42}],
           name:'escribir',
           expression_type:'module_call'
+        },
+        {
+          type:'return',
+          expression:{expression_type:'literal', type:'entero', value:2}
         }
       ]
     })

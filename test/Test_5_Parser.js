@@ -100,20 +100,20 @@ describe('Parser', () => {
       entero resultado
     inicio
       resultado <- a + b
+      retornar resultado
     finfuncion
 
     entero funcion restar(entero a, entero b)
       entero resultado
     inicio
       resultado <- a - b
+      retornar resultado
     finfuncion
     `
 
     let parser = new Parser()
 
     let report = parser.parse(code)
-
-    console.log(report)
 
     report.error.should.equal(false)
     report.result.modules.length.should.equal(3)
