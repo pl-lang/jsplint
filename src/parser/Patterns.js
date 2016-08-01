@@ -1133,6 +1133,25 @@ export function Until(source) {
   return new Report(false, result)
 }
 
+export function Return (source) {
+  let result = {
+    type:'return',
+    expression:null
+  }
+
+  if (source.current().kind != 'retornar') return UnexpectedTokenReport(source.current(), 'retornar', 'missing-retornar')
+
+  source.next() // consumir 'retornar'
+
+  let exp = Expression(source)
+
+  if (exp.error) return exp;
+
+  result.expression = exp.result
+
+  return {error:false, result}
+}
+
 export function Statement(source) {
   switch (source.current().kind) {
     case 'word':
@@ -1151,6 +1170,8 @@ export function Statement(source) {
       return Until(source)
     case 'para':
       return For(source)
+    case 'retornar':
+      return Return(source)
     default: {
       let current = source.current()
       let reason = 'missing-statement'
