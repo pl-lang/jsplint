@@ -602,6 +602,43 @@ describe('TypeChecker', () => {
     })
   })
 
+  describe('Modulos', () => {
+    it('detecta un retornar utilizado fuera de una funcion', (done) => {
+      let code = `
+      variables
+        entero i
+      inicio
+        retornar i
+      fin
+      `
+
+      let parser = new Parser()
+
+      let parser_report = parser.parse(code)
+
+      parser_report.error.should.equal(false)
+
+      let program = parser_report.result
+
+      let checker = new TypeChecker()
+
+      let error_found = false
+
+      checker.on('type-error', (ev_name, error_info) => {
+        if (error_info.reason === '@procedure-return') {
+          error_found = true
+        }
+      })
+
+      checker.on('type-check-finished', () => {
+        error_found.should.equal(true)
+        done()
+      })
+
+      checker.check(program)
+    })
+  })
+
   it('checkCondition', () => {
     let checker = new TypeChecker()
 
