@@ -1198,6 +1198,44 @@ export function FunctionModule (source) {
     Word
   ])
 
+  let h_report = header(source)
+
+  if (h_report.error) return h_report;
+
+  let header_tokens = h_report.filter(t => (typeof t == 'string' && t == 'funcion' ? false:true))
+
+  let header_data = zipObj(header_tokens, ['return_type', 'name'/*, 'parameters'*/])
+
+  result = header_data
+
+  let variable_declarations = until(DeclarationStatement, tk => tk == 'inicio' || tk == 'eof')
+
+  let d_report = match(statements).from(source)
+
+  if (d_report.error) return d_report;
+
+  result.body = [...d_report.result]
+
+  let statements = until(Statement, tk => tk == 'finfuncion' || tk == 'eof')
+
+  let s_report = match(statements).from(source)
+
+  if (s_report.error) return s_report;
+
+  result.body = [...result.body, ...s_report.result]
+
+  skipWhiteSpace(source)
+
+  if (source.current().kind != 'finfuncion') {
+    let current = source.current()
+    let unexpected = current.kind
+    let expected = 'finfuncion'
+    let line = current.lineNumber
+    let column = current.columnNumber
+    let reason = 'missing-finfuncion'
+    return new Report(true, {unexpected, expected, line, column, reason})
+  }
+
   return header(source)
 }
 
