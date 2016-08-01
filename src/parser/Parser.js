@@ -4,7 +4,7 @@ import Emitter from '../utility/Emitter.js'
 import SourceWrapper from './SourceWrapper.js'
 import Lexer from './Lexer.js'
 import TokenQueue from './TokenQueue.js'
-import { match, MainModule as MainModulePattern, skipWhiteSpace } from './Patterns.js'
+import { match, MainModule as MainModulePattern, FunctionModule as FunctionPattern, skipWhiteSpace } from './Patterns.js'
 
 export default class Parser extends Emitter {
   constructor() {
@@ -34,19 +34,31 @@ export default class Parser extends Emitter {
 
     let token_queue = new TokenQueue(lexer_report.result)
 
-    // parsear los modulos del programa, empezando por el principal
+    // buscar el modulo principal
+    let main_match = match(MainModulePattern).from(token_queue)
+
+    if (main_match.error) {
+      this.emit('syntax-error', main_match.result)
+      return {error:true, result:'syntax-error'}
+    }
+    else {
+      result.modules.push(main_match.result)
+    }
+
+    // parsear el resto de los modulos del programa
     while (token_queue.current().kind !== 'eof') {
       skipWhiteSpace(token_queue)
 
       let module_match
 
-      switch (token_queue.current().kind) {
-        case 'variables':
-          module_match = match(MainModulePattern).from(token_queue)
-          break
-        default:
-          throw new TypeError(`${token_queue.current().kind} no coincide con el encabezado de ninguna clase de modulo`)
+      if (token_queue.current().kind == 'procedimiento') {
+        // module_match = match(ProcedurePattern).from(token_queue)
       }
+      else {
+        module_match = match(FunctionPattern).from(token_queue)
+      }
+
+      skipWhiteSpace(token_queue)
 
       // si hubo un error emitir un error de sintaxis y finalizar parseo
       if (module_match.error) {
