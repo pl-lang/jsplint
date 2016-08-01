@@ -293,6 +293,22 @@ describe('Argument list pattern', () => {
   })
 })
 
+describe('ParameterList', () => {
+  it('captura varios parametros', () => {
+    let list = 'entero a, entero ref b'
+
+    let q = queueFromSource(list)
+
+    let report =  match(Patterns.ParameterList).from(q)
+
+    report.error.should.equal(false)
+    report.result.should.deepEqual([
+      {name:'a', type:'entero', by_ref:false},
+      {name:'b', type:'entero', by_ref:true}
+    ])
+  })
+})
+
 describe('ModuleCall pattern', () => {
   it('captura la llamada a un modulo', () => {
     let asignacion = 'escribir(42)'
@@ -1297,7 +1313,7 @@ describe('MainModule', () => {
   })
 })
 
-describe.only('FunctionModule', () => {
+describe('FunctionModule', () => {
   it('captura parte de una funcion correctamente', () => {
     let code = `entero funcion mi_funcion
     entero a, b, c
