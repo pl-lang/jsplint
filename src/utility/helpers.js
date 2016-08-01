@@ -1,3 +1,9 @@
+// flatten :: [any] -> [[any]] -> [any]
+export function flatten (accumulator, arr) {
+  return [...accumulator, ...arr]
+}
+
+
 // toma dos objetos y devuelve uno nuevo que contiene las propiedades (y valores)
 // de los dos anteriores. Si hay propiedades repetidas entre a y b, se toman las
 // de b
