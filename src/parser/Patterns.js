@@ -1240,6 +1240,7 @@ export function FunctionModule (source) {
 
   // a esta altura result deberia ser:
   // {
+  //  return_type :: cadena
   //  name :: cadena
   //  body :: []
   // }
