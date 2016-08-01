@@ -1313,9 +1313,9 @@ describe('MainModule', () => {
   })
 })
 
-describe('FunctionModule', () => {
+describe.only('FunctionModule', () => {
   it('captura parte de una funcion correctamente', () => {
-    let code = `entero funcion mi_funcion
+    let code = `entero funcion mi_funcion (entero a, entero ref b)
     entero a, b, c
     inicio
       escribir(42)
@@ -1331,6 +1331,7 @@ describe('FunctionModule', () => {
       type:'module',
       name:'mi_funcion',
       return_type:'entero',
+      parameters:[{name:'a', type:'entero', by_ref:false}, {name:'b', type:'entero', by_ref:true}],
       body:[
         {
           type:'declaration',

@@ -1247,16 +1247,19 @@ export function FunctionModule (source) {
   let header = concat([
     TypeName,
     Kind('funcion'),
-    Word
+    Word,
+    Kind('left-par'),
+    ParameterList,
+    Kind('right-par')
   ])
 
   let h_report = header(source)
 
   if (h_report.error) return h_report;
 
-  let header_tokens = h_report.result.filter(t => (typeof t == 'string' && t == 'funcion' ? false:true))
+  let header_tokens = h_report.result.filter(t => (typeof t == 'string' && (t == 'funcion' || t == 'left-par' || t == 'right-par') ? false:true))
 
-  let header_data = zipObj(header_tokens, ['return_type', 'name'/*, 'parameters'*/])
+  let header_data = zipObj(header_tokens, ['return_type', 'name', 'parameters'])
 
   let result = header_data
 
