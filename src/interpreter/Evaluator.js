@@ -20,15 +20,18 @@
  */
 
 export default class Evaluator {
-  constructor(root_statement, locals, globals) {
+  constructor(module_info, root_statement, locals, globals) {
     this._current_node = root_statement
     this._current_statement = null
+    this._module_type = module_info.type
+    this._parameters = module_info.parameters
     this._locals = locals
     this._globals = globals
     this._state = {
       done: root_statement === null ? true:false,
       error: false,
       output: null,
+      parameters_copied: false,
       variables_awaiting_data: [],
       stack: [],
     }
@@ -43,6 +46,15 @@ export default class Evaluator {
       return {done:this._state.done, error:this._state.error, output:this._state.output}
     }
     else {
+      if (this._state.parameters_copied == false) {
+        for (let p of this._parameters) {
+          let value = this._state.stack.pop()
+          let variable = getVariable(p.name)
+          variable.value = value
+        }
+        this._state.parameters_copied = true
+      }
+
       if (this._current_statement === null) {
         this._current_statement = this.getStatementIterator(this._current_node.data)
       }
@@ -219,6 +231,9 @@ export default class Evaluator {
 
       if (call_statement.name === 'escribir') {
         return {error:false, finished:true, result:{action:'write', values:args}}
+      }
+      else {
+        return {error:false, finished:true, result:{action:'call', name:call_statement.name, args}}
       }
     }
   }
