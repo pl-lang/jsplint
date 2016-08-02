@@ -21,13 +21,18 @@
 
 export default class Evaluator {
   constructor(modules) {
-    this._current_node = root_statement
-    this._current_statement = null
     this._modules = modules
-    this._locals = modules.main.locals
+
+    this._current_node = modules.main.root
+    this._current_statement = null
+    this._current_module = 'main'
+
+    this._locals = () => {return this._modules[this._current_module].locals}
+
     this._globals = modules.main.locals
+
     this._state = {
-      done: root_statement === null ? true:false,
+      done: modules.main.root === null ? true:false,
       error: false,
       output: null,
       parameters_copied: false,
