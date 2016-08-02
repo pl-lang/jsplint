@@ -24,6 +24,7 @@ export default function transform(ast) {
 function transformMain (module) {
   let result = {
     locals : module.locals,
+    parameters: [],
     module_type : 'main',
     root : null
   }
