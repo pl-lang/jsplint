@@ -24,6 +24,7 @@ export default function transform(ast) {
 function transformMain (module) {
   let result = {
     locals : module.locals,
+    module_type : 'main',
     root : null
   }
 
@@ -42,6 +43,7 @@ function transformModule (module) {
   let result = {
     locals : module.locals,
     parameters : module.parameters.map(p => p.name),
+    module_type : module.module_type,
     root : null
   }
 
