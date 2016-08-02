@@ -20,25 +20,26 @@
  */
 
 export default class Evaluator {
-  constructor(module_info, root_statement, locals, globals) {
+  constructor(modules) {
     this._current_node = root_statement
     this._current_statement = null
-    this._module_type = module_info.type
-    this._parameters = module_info.parameters
-    this._locals = locals
-    this._globals = globals
+    this._modules = modules
+    this._locals = modules.main.locals
+    this._globals = modules.main.locals
     this._state = {
       done: root_statement === null ? true:false,
       error: false,
       output: null,
       parameters_copied: false,
-      variables_awaiting_data: [],
-      stack: [],
+      expression_stack: [],
+      module_stack: [],
+      node_stack: [],
+      statement_iterator_stack: [],
     }
   }
 
   input(value) {
-    this._state.stack.push(value)
+    this._state.expression_stack.push(value)
   }
 
   step() {
@@ -48,7 +49,7 @@ export default class Evaluator {
     else {
       if (this._state.parameters_copied == false) {
         for (let p of this._parameters) {
-          let value = this._state.stack.pop()
+          let value = this._state.expression_stack.pop()
           let variable = getVariable(p.name)
           variable.value = value
         }
@@ -119,8 +120,8 @@ export default class Evaluator {
         yield payload
 
         // if execution reaches this point then the function was evaluated
-        // succesfully and its return value is at the top of the stack
-        payload = this._state.stack.pop()
+        // succesfully and its return value is at the top of the expression_stack
+        payload = this._state.expression_stack.pop()
       }
       evaluation_report = exp_evaluator.next()
     }
@@ -151,7 +152,7 @@ export default class Evaluator {
             // represents a function call...
             yield actual_index
 
-            actual_index = this._state.stack.pop()
+            actual_index = this._state.expression_stack.pop()
           }
 
           evaluation_report = exp_evaluator.next()
@@ -192,7 +193,7 @@ export default class Evaluator {
       yield {error:false, paused:true, finished:false, result:{action:'read', amount, types}}
 
       for (let i = 0; i < amount; i++) {
-        let value = this._state.stack.pop()
+        let value = this._state.expression_stack.pop()
         if (variables[i].isArray) {
           // TODO: revisar si arg.bounds_checked existe...
           yield* this.Assign(variables[i], value, call_statement.args[i][0].indexes, false)
@@ -220,7 +221,7 @@ export default class Evaluator {
             // represents a function call...
             yield actual_argument
 
-            actual_argument = this._state.stack.pop()
+            actual_argument = this._state.expression_stack.pop()
           }
 
           evaluation_report = exp_evaluator.next()
@@ -251,7 +252,7 @@ export default class Evaluator {
         // represents a function call...
         yield condition_result
 
-        condition_result = this._state.stack.pop()
+        condition_result = this._state.expression_stack.pop()
       }
 
       evaluation_report = exp_evaluator.next()
@@ -275,7 +276,7 @@ export default class Evaluator {
         // represents a function call...
         yield condition_result
 
-        condition_result = this._state.stack.pop()
+        condition_result = this._state.expression_stack.pop()
       }
 
       evaluation_report = exp_evaluator.next()
@@ -299,7 +300,7 @@ export default class Evaluator {
         // represents a function call...
         yield condition_result
 
-        condition_result = this._state.stack.pop()
+        condition_result = this._state.expression_stack.pop()
       }
 
       evaluation_report = exp_evaluator.next()
@@ -378,7 +379,7 @@ export default class Evaluator {
           }
           break
         case 'literal':
-          this._state.stack.push(token.value)
+          this._state.expression_stack.push(token.value)
           break
         case 'invocation':
           yield* this.pushVariableValue(token)
@@ -388,124 +389,124 @@ export default class Evaluator {
           throw new Error(`Tipo de expresion "${token.kind}" no reconocido.`)
       }
     }
-    yield this._state.stack.pop()
+    yield this._state.expression_stack.pop()
   }
 
   times() {
-    let b = this._state.stack.pop()
-    let a = this._state.stack.pop()
+    let b = this._state.expression_stack.pop()
+    let a = this._state.expression_stack.pop()
 
-    this._state.stack.push(a*b)
+    this._state.expression_stack.push(a*b)
   }
 
   uminus() {
-    let a = this._state.stack.pop()
+    let a = this._state.expression_stack.pop()
 
-    this._state.stack.push(-a)
+    this._state.expression_stack.push(-a)
   }
 
   power () {
-    let b = this._state.stack.pop()
-    let a = this._state.stack.pop()
+    let b = this._state.expression_stack.pop()
+    let a = this._state.expression_stack.pop()
 
-    this._state.stack.push(Math.pow(a, b))
+    this._state.expression_stack.push(Math.pow(a, b))
   }
 
   div () {
-    let b = this._state.stack.pop()
-    let a = this._state.stack.pop()
+    let b = this._state.expression_stack.pop()
+    let a = this._state.expression_stack.pop()
 
-    this._state.stack.push((a - (a % b)) / b)
+    this._state.expression_stack.push((a - (a % b)) / b)
   }
 
   mod () {
-    let b = this._state.stack.pop()
-    let a = this._state.stack.pop()
+    let b = this._state.expression_stack.pop()
+    let a = this._state.expression_stack.pop()
 
-    this._state.stack.push(a % b)
+    this._state.expression_stack.push(a % b)
   }
 
   divide () {
-    let b = this._state.stack.pop()
-    let a = this._state.stack.pop()
+    let b = this._state.expression_stack.pop()
+    let a = this._state.expression_stack.pop()
 
-    this._state.stack.push(a/b)
+    this._state.expression_stack.push(a/b)
   }
 
   minus () {
-    let b = this._state.stack.pop()
-    let a = this._state.stack.pop()
+    let b = this._state.expression_stack.pop()
+    let a = this._state.expression_stack.pop()
 
-    this._state.stack.push(a - b)
+    this._state.expression_stack.push(a - b)
   }
 
   plus () {
-    let b = this._state.stack.pop()
-    let a = this._state.stack.pop()
+    let b = this._state.expression_stack.pop()
+    let a = this._state.expression_stack.pop()
 
-    this._state.stack.push(a + b)
+    this._state.expression_stack.push(a + b)
   }
 
   less () {
-    let b = this._state.stack.pop()
-    let a = this._state.stack.pop()
+    let b = this._state.expression_stack.pop()
+    let a = this._state.expression_stack.pop()
 
-    this._state.stack.push(a < b)
+    this._state.expression_stack.push(a < b)
   }
 
   less_o_equal () {
-    let b = this._state.stack.pop()
-    let a = this._state.stack.pop()
+    let b = this._state.expression_stack.pop()
+    let a = this._state.expression_stack.pop()
 
-    this._state.stack.push(a <= b)
+    this._state.expression_stack.push(a <= b)
   }
 
   greater () {
-    let b = this._state.stack.pop()
-    let a = this._state.stack.pop()
+    let b = this._state.expression_stack.pop()
+    let a = this._state.expression_stack.pop()
 
-    this._state.stack.push(a > b)
+    this._state.expression_stack.push(a > b)
   }
 
   greate_or_equal () {
-    let b = this._state.stack.pop()
-    let a = this._state.stack.pop()
+    let b = this._state.expression_stack.pop()
+    let a = this._state.expression_stack.pop()
 
-    this._state.stack.push(a >= b)
+    this._state.expression_stack.push(a >= b)
   }
 
   equal () {
-    let b = this._state.stack.pop()
-    let a = this._state.stack.pop()
+    let b = this._state.expression_stack.pop()
+    let a = this._state.expression_stack.pop()
 
-    this._state.stack.push(a == b)
+    this._state.expression_stack.push(a == b)
   }
 
   not () {
-    let a = this._state.stack.pop()
+    let a = this._state.expression_stack.pop()
 
-    this._state.stack.push(!a)
+    this._state.expression_stack.push(!a)
   }
 
   different () {
-    let b = this._state.stack.pop()
-    let a = this._state.stack.pop()
+    let b = this._state.expression_stack.pop()
+    let a = this._state.expression_stack.pop()
 
-    this._state.stack.push(a != b)
+    this._state.expression_stack.push(a != b)
   }
 
   and () {
-    let b = this._state.stack.pop()
-    let a = this._state.stack.pop()
+    let b = this._state.expression_stack.pop()
+    let a = this._state.expression_stack.pop()
 
-    this._state.stack.push(a && b)
+    this._state.expression_stack.push(a && b)
   }
 
   or () {
-    let b = this._state.stack.pop()
-    let a = this._state.stack.pop()
+    let b = this._state.expression_stack.pop()
+    let a = this._state.expression_stack.pop()
 
-    this._state.stack.push(a || b)
+    this._state.expression_stack.push(a || b)
   }
 
   *pushVariableValue (info) {
@@ -527,7 +528,7 @@ export default class Evaluator {
             // represents a function call...
             yield actual_index
 
-            payload = this._state.stack.pop()
+            payload = this._state.expression_stack.pop()
           }
 
           evaluation_report = exp_evaluator.next()
@@ -538,7 +539,7 @@ export default class Evaluator {
 
       if (info.bounds_checked || this.indexWithinBounds(index_values, variable.dimension)) {
         let index = this.calculateIndex(index_values, variable.dimension)
-        return this._state.stack.push(variable.values[index])
+        return this._state.expression_stack.push(variable.values[index])
       }
       else {
         let out_of_bunds_info = this.getBoundsError(index_values, variable.dimension)
@@ -546,7 +547,7 @@ export default class Evaluator {
       }
     }
     else {
-      this._state.stack.push(variable.value)
+      this._state.expression_stack.push(variable.value)
     }
   }
 
