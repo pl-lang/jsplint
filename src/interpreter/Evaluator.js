@@ -25,9 +25,9 @@ export default class Evaluator {
 
     this._current_node = modules.main.root
     this._current_statement = null
-    this._current_module = 'main'
+    this._current_module = modules.main
 
-    this._locals = () => {return this._modules[this._current_module].locals}
+    this._locals = () => {return this._modules[this._current_module.name].locals}
 
     this._globals = modules.main.locals
 
@@ -48,12 +48,12 @@ export default class Evaluator {
   }
 
   step() {
-    if (this._state.done || this._state.error || this._state.variables_awaiting_data.length > 0) {
+    if (this._state.done || this._state.error) {
       return {done:this._state.done, error:this._state.error, output:this._state.output}
     }
     else {
       if (this._state.parameters_copied == false) {
-        for (let p of this._parameters) {
+        for (let p of this._current_module.parameters) {
           let value = this._state.expression_stack.pop()
           let variable = getVariable(p.name)
           variable.value = value
