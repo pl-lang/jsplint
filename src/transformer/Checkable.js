@@ -70,6 +70,7 @@ function transformProcedure (module) {
   let result = {
     type : 'module',
     module_type:'procedure',
+    parameters: module.parameters,
     name : module.name,
     locals : variables_by_name,
     body : regular_statements
