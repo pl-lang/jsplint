@@ -31,6 +31,14 @@ export default class Evaluator {
 
     this._globals = modules.main.locals
 
+    this.getLocals = (module_name) => {
+      return this._modules[module_name].locals
+    }
+
+    this.getGlobals = () => {
+      return this._globals
+    }
+
     this._state = {
       done: modules.main.root === null ? true:false,
       error: false,

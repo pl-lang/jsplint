@@ -64,7 +64,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
     output.should.deepEqual({done:true, error:false, output:null})
 
-    evaluator._locals.a.value.should.equal(2)
+    evaluator.getLocals('main').a.value.should.equal(2)
   })
 
   it('programa con una asignacion a un vector', () => {
@@ -85,27 +85,27 @@ describe.only('Evaluacion de programas y expresiones', () => {
     let output = evaluator.step()
 
     output.should.deepEqual({done:false, error:false, output:null})
-    evaluator._locals.v.values[0].should.equal(5)
+    evaluator.getLocals('main').v.values[0].should.equal(5)
 
     output = evaluator.step()
 
     output.should.deepEqual({done:false, error:false, output:null})
-    evaluator._locals.v.values[1].should.equal(8)
+    evaluator.getLocals('main').v.values[1].should.equal(8)
 
     output = evaluator.step()
 
     output.should.deepEqual({done:false, error:false, output:null})
-    evaluator._locals.v.values[2].should.equal(7)
+    evaluator.getLocals('main').v.values[2].should.equal(7)
 
     output = evaluator.step()
 
     output.should.deepEqual({done:false, error:false, output:null})
-    evaluator._locals.v.values[3].should.equal(9)
+    evaluator.getLocals('main').v.values[3].should.equal(9)
 
     output = evaluator.step()
 
     output.should.deepEqual({done:true, error:false, output:null})
-    evaluator._locals.v.values[4].should.equal(3)
+    evaluator.getLocals('main').v.values[4].should.equal(3)
   })
 
   it('programa con una asignacion a una matriz', () => {
@@ -125,22 +125,22 @@ describe.only('Evaluacion de programas y expresiones', () => {
     let output = evaluator.step()
 
     output.should.deepEqual({done:false, error:false, output:null})
-    evaluator._locals.m.values[0].should.equal(5)
+    evaluator.getLocals('main').m.values[0].should.equal(5)
 
     output = evaluator.step()
 
     output.should.deepEqual({done:false, error:false, output:null})
-    evaluator._locals.m.values[1].should.equal(8)
+    evaluator.getLocals('main').m.values[1].should.equal(8)
 
     output = evaluator.step()
 
     output.should.deepEqual({done:false, error:false, output:null})
-    evaluator._locals.m.values[2].should.equal(7)
+    evaluator.getLocals('main').m.values[2].should.equal(7)
 
     output = evaluator.step()
 
     output.should.deepEqual({done:true, error:false, output:null})
-    evaluator._locals.m.values[3].should.equal(9)
+    evaluator.getLocals('main').m.values[3].should.equal(9)
   })
 
   it('programa con 2 enunciados de asignacion', () => {
@@ -159,13 +159,13 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
     output.should.deepEqual({done:false, error:false, output:null})
 
-    evaluator._locals.a.value.should.equal(25)
+    evaluator.getLocals('main').a.value.should.equal(25)
 
     output = evaluator.step()
 
     output.should.deepEqual({done:true, error:false, output:null})
 
-    evaluator._locals.b.value.should.equal(89)
+    evaluator.getLocals('main').b.value.should.equal(89)
   })
 
   it('programa con un llamado a escribir de un solo argumento', () => {
@@ -403,7 +403,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
     let output = evaluator.step() // i <- 0
 
-    evaluator._locals.i.value.should.equal(0)
+    evaluator.getLocals('main').i.value.should.equal(0)
 
     output = evaluator.step() // evalua la condicion del bucle
 
@@ -415,7 +415,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
     output.should.deepEqual({done:false, error:false, output:null})
 
-    evaluator._locals.i.value.should.equal(1)
+    evaluator.getLocals('main').i.value.should.equal(1)
 
     output = evaluator.step() // evalua la condicion del bucle
 
@@ -427,7 +427,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
     output.should.deepEqual({done:false, error:false, output:null})
 
-    evaluator._locals.i.value.should.equal(2)
+    evaluator.getLocals('main').i.value.should.equal(2)
 
     output = evaluator.step() // evalua la condicion del bucle
 
@@ -452,7 +452,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
     let output = evaluator.step() // i <- 0
 
-    evaluator._locals.i.value.should.equal(0)
+    evaluator.getLocals('main').i.value.should.equal(0)
 
     output = evaluator.step() // evalua la condicion del bucle
 
@@ -464,7 +464,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
     output.should.deepEqual({done:false, error:false, output:null})
 
-    evaluator._locals.i.value.should.equal(1)
+    evaluator.getLocals('main').i.value.should.equal(1)
 
     output = evaluator.step() // evalua la condicion del bucle
 
@@ -476,7 +476,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
     output.should.deepEqual({done:false, error:false, output:null})
 
-    evaluator._locals.i.value.should.equal(2)
+    evaluator.getLocals('main').i.value.should.equal(2)
 
     output = evaluator.step() // evalua la condicion del bucle
 
@@ -503,7 +503,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
     let output = evaluator.step() // asigna 0 a i
 
-    evaluator._locals.i.value.should.equal(0)
+    evaluator.getLocals('main').i.value.should.equal(0)
 
     output.should.deepEqual({done:false, error:false, output:null})
 
@@ -513,7 +513,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
     output = evaluator.step() // i <- i + 1
 
-    evaluator._locals.i.value.should.equal(1)
+    evaluator.getLocals('main').i.value.should.equal(1)
 
     output.should.deepEqual({done:false, error:false, output:null})
 
@@ -525,7 +525,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
     output = evaluator.step() // i <- i + 1
 
-    evaluator._locals.i.value.should.equal(2)
+    evaluator.getLocals('main').i.value.should.equal(2)
 
     output.should.deepEqual({done:false, error:false, output:null})
 
@@ -556,7 +556,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         output.should.deepEqual({done:true, error:false, output:null})
 
-        evaluator._locals.a.value.should.equal(2*3)
+        evaluator.getLocals('main').a.value.should.equal(2*3)
       }
 
       // -2*-3
@@ -575,7 +575,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         output.should.deepEqual({done:true, error:false, output:null})
 
-        evaluator._locals.a.value.should.equal(-2*-3)
+        evaluator.getLocals('main').a.value.should.equal(-2*-3)
       }
 
       // 2*2*2
@@ -594,7 +594,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         output.should.deepEqual({done:true, error:false, output:null})
 
-        evaluator._locals.a.value.should.equal(2*2*2)
+        evaluator.getLocals('main').a.value.should.equal(2*2*2)
       }
 
       {
@@ -624,7 +624,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         output.should.deepEqual({done:true, error:false, output:null})
 
-        evaluator._locals.c.value.should.equal(12)
+        evaluator.getLocals('main').c.value.should.equal(12)
       }
 
       {
@@ -654,7 +654,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         output.should.deepEqual({done:true, error:false, output:null})
 
-        evaluator._locals.v.values[2].should.equal(12)
+        evaluator.getLocals('main').v.values[2].should.equal(12)
       }
     })
 
@@ -674,7 +674,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         output.should.deepEqual({done:true, error:false, output:null})
 
-        evaluator._locals.a.value.should.equal(3/2)
+        evaluator.getLocals('main').a.value.should.equal(3/2)
       }
 
       {
@@ -692,7 +692,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         output.should.deepEqual({done:true, error:false, output:null})
 
-        evaluator._locals.a.value.should.equal(-3/-2)
+        evaluator.getLocals('main').a.value.should.equal(-3/-2)
       }
 
       {
@@ -710,7 +710,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         output.should.deepEqual({done:true, error:false, output:null})
 
-        evaluator._locals.a.value.should.equal(2+3/3+4)
+        evaluator.getLocals('main').a.value.should.equal(2+3/3+4)
       }
 
       {
@@ -728,7 +728,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         output.should.deepEqual({done:true, error:false, output:null})
 
-        evaluator._locals.a.value.should.equal(3/2/2)
+        evaluator.getLocals('main').a.value.should.equal(3/2/2)
       }
 
       {
@@ -746,7 +746,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         output.should.deepEqual({done:true, error:false, output:null})
 
-        evaluator._locals.a.value.should.equal(2/2/2/2)
+        evaluator.getLocals('main').a.value.should.equal(2/2/2/2)
       }
 
       {
@@ -764,7 +764,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         output.should.deepEqual({done:true, error:false, output:null})
 
-        evaluator._locals.a.value.should.equal(4/2/2/2)
+        evaluator.getLocals('main').a.value.should.equal(4/2/2/2)
       }
 
       {
@@ -782,7 +782,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         output.should.deepEqual({done:true, error:false, output:null})
 
-        evaluator._locals.a.value.should.equal(2/2/2/4)
+        evaluator.getLocals('main').a.value.should.equal(2/2/2/4)
       }
     })
 
@@ -802,7 +802,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         output.should.deepEqual({done:true, error:false, output:null})
 
-        evaluator._locals.a.value.should.equal(3-3-3)
+        evaluator.getLocals('main').a.value.should.equal(3-3-3)
       }
 
       {
@@ -820,7 +820,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         output.should.deepEqual({done:true, error:false, output:null})
 
-        evaluator._locals.a.value.should.equal((3-3-3))
+        evaluator.getLocals('main').a.value.should.equal((3-3-3))
       }
     })
 
@@ -840,7 +840,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         output.should.deepEqual({done:true, error:false, output:null})
 
-        evaluator._locals.a.value.should.equal(2+43)
+        evaluator.getLocals('main').a.value.should.equal(2+43)
       }
     })
 
@@ -860,7 +860,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         output.should.deepEqual({done:true, error:false, output:null})
 
-        evaluator._locals.a.value.should.equal(2-(2-3))
+        evaluator.getLocals('main').a.value.should.equal(2-(2-3))
       }
 
       {
@@ -878,7 +878,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         output.should.deepEqual({done:true, error:false, output:null})
 
-        evaluator._locals.a.value.should.equal(2+(2+3))
+        evaluator.getLocals('main').a.value.should.equal(2+(2+3))
       }
 
       {
@@ -896,7 +896,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         output.should.deepEqual({done:true, error:false, output:null})
 
-        evaluator._locals.a.value.should.equal(2+(2+3*4))
+        evaluator.getLocals('main').a.value.should.equal(2+(2+3*4))
       }
 
       {
@@ -914,7 +914,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         output.should.deepEqual({done:true, error:false, output:null})
 
-        evaluator._locals.a.value.should.equal((3*2)-6)
+        evaluator.getLocals('main').a.value.should.equal((3*2)-6)
       }
 
       {
@@ -932,7 +932,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         output.should.deepEqual({done:true, error:false, output:null})
 
-        evaluator._locals.a.value.should.equal((-(-(2+2))))
+        evaluator.getLocals('main').a.value.should.equal((-(-(2+2))))
       }
 
       {
@@ -950,7 +950,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         output.should.deepEqual({done:true, error:false, output:null})
 
-        evaluator._locals.a.value.should.equal(2+8/2)
+        evaluator.getLocals('main').a.value.should.equal(2+8/2)
       }
     })
 
@@ -970,7 +970,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         output.should.deepEqual({done:true, error:false, output:null})
 
-        evaluator._locals.a.value.should.equal(true)
+        evaluator.getLocals('main').a.value.should.equal(true)
       }
 
       {
@@ -988,7 +988,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         output.should.deepEqual({done:true, error:false, output:null})
 
-        evaluator._locals.a.value.should.equal(false)
+        evaluator.getLocals('main').a.value.should.equal(false)
       }
 
       {
@@ -1006,7 +1006,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         output.should.deepEqual({done:true, error:false, output:null})
 
-        evaluator._locals.a.value.should.equal(true)
+        evaluator.getLocals('main').a.value.should.equal(true)
       }
 
       {
@@ -1024,7 +1024,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         output.should.deepEqual({done:true, error:false, output:null})
 
-        evaluator._locals.a.value.should.equal(true)
+        evaluator.getLocals('main').a.value.should.equal(true)
       }
 
       {
@@ -1042,7 +1042,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         output.should.deepEqual({done:true, error:false, output:null})
 
-        evaluator._locals.a.value.should.equal(true)
+        evaluator.getLocals('main').a.value.should.equal(true)
       }
 
       {
@@ -1060,7 +1060,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         output.should.deepEqual({done:true, error:false, output:null})
 
-        evaluator._locals.a.value.should.equal(true)
+        evaluator.getLocals('main').a.value.should.equal(true)
       }
 
       {
@@ -1078,7 +1078,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         output.should.deepEqual({done:true, error:false, output:null})
 
-        evaluator._locals.a.value.should.equal(true)
+        evaluator.getLocals('main').a.value.should.equal(true)
       }
 
       {
@@ -1096,7 +1096,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         output.should.deepEqual({done:true, error:false, output:null})
 
-        evaluator._locals.a.value.should.equal(false)
+        evaluator.getLocals('main').a.value.should.equal(false)
       }
     })
 
@@ -1115,7 +1115,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
       output.should.deepEqual({done:true, error:false, output:null})
 
-      evaluator._locals.a.value.should.equal(true)
+      evaluator.getLocals('main').a.value.should.equal(true)
     })
   })
 })
