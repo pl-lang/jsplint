@@ -27,7 +27,7 @@ export default class Interpreter extends Emitter {
   set current_program(program_modules) {
     this._current_program = program_modules
     let main = program_modules.main
-    let main_evaluator = new Evaluator(main.root, main.locals, main.locals)
+    let main_evaluator = new Evaluator({type:'entry_module', parameters:[]}, main.root, main.locals, main.locals)
     this.stack = []
     this.stack.push(main_evaluator)
     this.running = true
@@ -74,6 +74,19 @@ export default class Interpreter extends Emitter {
             // de momento, tengo que mandar un arreglo en los eventos de lectura
             this.emit('read', evaluation_report.output.types)
             this.stack.push(this.current_module)
+          }
+          else if (evaluation_report.output.action === 'call') {
+            this.stack.push(this.current_module)
+
+            let callee = this._current_program[evaluation_report.output.name]
+
+            let module_evaluator = new Evaluator({type:callee.module_type, parameters:callee.parameters}, callee.root, callee.locals, this._current_program.main.locals)
+
+            for (let p of evaluation_report.output.args) {
+              module_evaluator.input(p)
+            }
+
+            this.stack.push(module_evaluator)
           }
         }
       }
