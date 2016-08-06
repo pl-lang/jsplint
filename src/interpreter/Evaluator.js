@@ -130,7 +130,12 @@ export default class Evaluator {
     if (variable.isArray) {
       let bounds_checked = statement.variable.bounds_checked
 
-      let indexes = info.indexes.map(this.evaluateExpression).map(x => x - 1)
+      let indexes = []
+
+      for (let index_expression of statement.variable.indexes) {
+        let index_value = this.evaluateExpression(index_expression) - 1
+        indexes.push(index_value)
+      }
 
       if (bounds_checked || this.indexWithinBounds(indexes, variable.dimension) ) {
         let index = this.calculateIndex(indexes, variable.dimension)
@@ -486,7 +491,12 @@ export default class Evaluator {
     let variable = this.getVariable(info.name)
 
     if (variable.isArray) {
-      let indexes = info.indexes.map(this.evaluateExpression).map(x => x - 1)
+      let indexes = []
+
+      for (let index_expression of info.indexes) {
+        let index_value = this.evaluateExpression(index_expression) - 1
+        indexes.push(index_value)
+      }
 
       if (info.bounds_checked || this.indexWithinBounds(indexes, variable.dimension)) {
 
