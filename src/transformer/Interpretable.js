@@ -79,15 +79,24 @@ function transformStatement(statement) {
 }
 
 function transformAssigment(assignment) {
-  let result = {
-    action : 'assignment',
-    target : assignment.left,
-    payload : assignment.right
+  // las asignaciones se dividen en 2 acciones
+
+  let push = {
+    action: 'push',
+    expression: assignment.right
   }
 
-  result.target['bounds_checked'] = false
+  let pop = {
+    action: 'pop',
+    variable: assignment.left
+  }
 
-  return new GenericNode(result)
+  pop.variable.target['bounds_checked'] = false
+
+  let push_node = new GenericNode(push)
+  push_node.setNext(new GenericNode(pop))
+
+  return push_node
 }
 
 function transformIf(if_statement) {
