@@ -143,12 +143,10 @@ function transformUntil(until_statement) {
   for (let i = 0; i < body_statement_nodes.length; i++) {
     let current_node = body_statement_nodes[i]
 
-    if (i == body_statement_nodes.length - 1) {
-      current_node.setNext(until_node)
-    }
-
     temp_list.addNode(current_node)
   }
+
+  temp_list.addNode(until_node)
 
   until_node.loop_body_root = temp_list.firstNode
 

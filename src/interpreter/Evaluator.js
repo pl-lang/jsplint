@@ -112,8 +112,8 @@ export default class Evaluator {
         return this.ifStatement(statement)
       case 'while':
         return this.whileStatement(statement)
-      // case 'until':
-      //   return this.UntilIterator(statement)
+      case 'until':
+        return this.untilStatement(statement)
       default:
         throw new Error(`En Evaluator::getStatementIterator --> no se reconoce el enunciado ${statement.action}`)
     }
@@ -203,24 +203,8 @@ export default class Evaluator {
     return {error:false, finished:true, result:null}
   }
 
-  *UntilIterator (until_statement) {
-    let exp_evaluator = this.evaluateExpression(until_statement.condition)
-    let evaluation_report = exp_evaluator.next()
-    let condition_result = evaluation_report.value
-
-    while (evaluation_report.done === false) {
-      condition_result = evaluation_report.value
-
-      if (typeof condition_result === 'object' && 'type' in condition_result) {
-        // it turns out 'condition_result' is not a number but an that
-        // represents a function call...
-        yield condition_result
-
-        condition_result = this._state.expression_stack.pop()
-      }
-
-      evaluation_report = exp_evaluator.next()
-    }
+  untilStatement (statement) {
+    let condition_result = this.evaluateExpression(statement.condition)
 
     this._current_node.setCurrentBranchTo(!condition_result ? 'loop_body':'program_body')
 

@@ -563,7 +563,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
     output.should.deepEqual({done:true, error:false, output:{action:'write', values:[2]}})
   })
 
-  it.skip('programa con un bucle repetir', () => {
+  it('programa con un bucle repetir', () => {
     let code = `variables
       entero i
     inicio
@@ -579,37 +579,37 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
     let evaluator = new Evaluator(modules)
 
-    let output = evaluator.step() // asigna 0 a i
+    let output
+
+    evaluator.step() // apila 0 en la lista de expresiones
+
+    evaluator.step() // asigna 0 a i
 
     evaluator.getLocals('main').i.value.should.equal(0)
-
-    output.should.deepEqual({done:false, error:false, output:null})
 
     output = evaluator.step()
 
     output.should.deepEqual({done:false, error:false, output:{action:'write', values:[0]}})
 
-    output = evaluator.step() // i <- i + 1
+    evaluator.step() // apila i + 1
+
+    evaluator.step() // asigna a i el elemento al tope de la pila
 
     evaluator.getLocals('main').i.value.should.equal(1)
 
-    output.should.deepEqual({done:false, error:false, output:null})
-
-    output = evaluator.step() // evalua la condicion del bucle
+    evaluator.step() // evalua la condicion del bucle
 
     output = evaluator.step() // escribir(i)
 
     output.should.deepEqual({done:false, error:false, output:{action:'write', values:[1]}})
 
-    output = evaluator.step() // i <- i + 1
+    evaluator.step() // apila i + 1
+
+    evaluator.step() // asigna a i el elemento al tope de la pila
 
     evaluator.getLocals('main').i.value.should.equal(2)
 
-    output.should.deepEqual({done:false, error:false, output:null})
-
-    output = evaluator.step() // evalua la condicion del bucle
-
-    output.should.deepEqual({done:false, error:false, output:null})
+    evaluator.step() // evalua la condicion del bucle
 
     output = evaluator.step() // escribir(i)
 
