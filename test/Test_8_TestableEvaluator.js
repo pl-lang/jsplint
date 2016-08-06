@@ -71,7 +71,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
     evaluator.getLocals('main').a.value.should.equal(2)
   })
 
-  it.skip('programa con una asignacion a un vector', () => {
+  it('programa con una asignacion a un vector', () => {
     let code = `variables
       entero v[5]
     inicio
@@ -89,25 +89,41 @@ describe.only('Evaluacion de programas y expresiones', () => {
     let output = evaluator.step()
 
     output.should.deepEqual({done:false, error:false, output:null})
+
+    output = evaluator.step()
+
+    output.should.deepEqual({done:false, error:false, output:null})
     evaluator.getLocals('main').v.values[0].should.equal(5)
 
     output = evaluator.step()
 
+    output.should.deepEqual({done:false, error:false, output:null})
+
+    output = evaluator.step()
     output.should.deepEqual({done:false, error:false, output:null})
     evaluator.getLocals('main').v.values[1].should.equal(8)
 
     output = evaluator.step()
 
     output.should.deepEqual({done:false, error:false, output:null})
+
+    output = evaluator.step()
+    output.should.deepEqual({done:false, error:false, output:null})
     evaluator.getLocals('main').v.values[2].should.equal(7)
 
     output = evaluator.step()
 
     output.should.deepEqual({done:false, error:false, output:null})
+
+    output = evaluator.step()
+    output.should.deepEqual({done:false, error:false, output:null})
     evaluator.getLocals('main').v.values[3].should.equal(9)
 
     output = evaluator.step()
 
+    output.should.deepEqual({done:false, error:false, output:null})
+
+    output = evaluator.step()
     output.should.deepEqual({done:true, error:false, output:null})
     evaluator.getLocals('main').v.values[4].should.equal(3)
   })
