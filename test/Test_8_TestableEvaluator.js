@@ -212,7 +212,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
     evaluator.getLocals('main').b.value.should.equal(89)
   })
 
-  it.skip('programa con un llamado a escribir de un solo argumento', () => {
+  it('programa con un llamado a escribir de un solo argumento', () => {
     let code = `variables
     inicio
       escribir(4)
@@ -227,7 +227,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
     output.should.deepEqual({done:true, error:false, output:{action:'write', values:[4]}})
   })
 
-  it.skip('programa con un llamado a escribir con varios argumentos', () => {
+  it('programa con un llamado a escribir con varios argumentos', () => {
     let code = `variables
     inicio
       escribir(4, 3, 2, 1)
@@ -242,7 +242,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
     output.should.deepEqual({done:true, error:false, output:{action:'write', values:[4, 3, 2, 1]}})
   })
 
-  it.skip('programa que escribe el valor de una variable', () => {
+  it('programa que escribe el valor de una variable', () => {
     let code = `variables
       entero a
     inicio
@@ -258,10 +258,12 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
     output = evaluator.step()
 
+    output = evaluator.step()
+
     output.should.deepEqual({done:true, error:false, output:{action:'write', values:[32]}})
   })
 
-  it.skip('programa que escribe los valores de un vector', () => {
+  it('programa que escribe los valores de un vector', () => {
     let code = `variables
       entero v[5]
     inicio
@@ -281,13 +283,22 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
     let evaluator = new Evaluator(modules)
 
-    let output = evaluator.step()
-    output = evaluator.step()
-    output = evaluator.step()
-    output = evaluator.step()
-    output = evaluator.step()
+    evaluator.step()
+    evaluator.step()
 
-    output = evaluator.step()
+    evaluator.step()
+    evaluator.step()
+
+    evaluator.step()
+    evaluator.step()
+
+    evaluator.step()
+    evaluator.step()
+
+    evaluator.step()
+    evaluator.step()
+
+    let output = evaluator.step()
     output.should.deepEqual({done:false, error:false, output:{action:'write', values:[5]}})
 
     output = evaluator.step()
@@ -303,7 +314,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
     output.should.deepEqual({done:true, error:false, output:{action:'write', values:[3]}})
   })
 
-  it.skip('programa que escribe los valores de una matriz', () => {
+  it('programa que escribe los valores de una matriz', () => {
     let code = `variables
       entero m[2, 2]
     inicio
@@ -321,12 +332,19 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
     let evaluator = new Evaluator(modules)
 
-    let output = evaluator.step()
-    output = evaluator.step()
-    output = evaluator.step()
-    output = evaluator.step()
+    evaluator.step()
+    evaluator.step()
 
-    output = evaluator.step()
+    evaluator.step()
+    evaluator.step()
+
+    evaluator.step()
+    evaluator.step()
+
+    evaluator.step()
+    evaluator.step()
+
+    let output = evaluator.step()
     output.should.deepEqual({done:false, error:false, output:{action:'write', values:[5]}})
 
     output = evaluator.step()
