@@ -30,7 +30,7 @@ function programFromSource(string) {
 }
 
 
-describe.only('Evaluacion de programas y expresiones', () => {
+describe('Evaluacion de programas y expresiones', () => {
   it('programa sin enunciados', () => {
     let code = `variables
     inicio
@@ -1116,6 +1116,36 @@ describe.only('Evaluacion de programas y expresiones', () => {
       output.should.deepEqual({done:true, error:false, output:null})
 
       evaluator.getLocals('main').a.value.should.equal(true)
+    })
+  })
+
+  describe.skip('Programas con funciones o procedimientos', () => {
+    it('procedimiento sencillo', () => {
+      let code = `variables
+      inicio
+        informar(2)
+      fin
+
+      procedimiento informar(entero a)
+      inicio
+        escribir(a)
+      finprocedimiento
+      `
+      let modules = programFromSource(code).modules
+
+      let evaluator = new Evaluator(modules)
+
+      let output = evaluator.step()
+
+      output.should.deepEqual({done:false, error:false, output:null})
+
+      output = evaluator.step()
+
+      output.should.deepEqual({done:false, error:false, output:{action:'write', values:[2]}})
+
+      output = evaluator.step()
+
+      output.should.deepEqual({done:true, error:false, output:null})
     })
   })
 })
