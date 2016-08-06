@@ -617,7 +617,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
   })
 
   describe('Evaluacion de expresiones', () => {
-    it.skip('multiplicacion', () => {
+    it('multiplicacion', () => {
       // 2*3
       {
         let code = `variables
@@ -630,9 +630,9 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         let evaluator = new Evaluator(modules)
 
-        let output = evaluator.step()
+        evaluator.step()
 
-        output.should.deepEqual({done:true, error:false, output:null})
+        evaluator.step()
 
         evaluator.getLocals('main').a.value.should.equal(2*3)
       }
@@ -649,9 +649,9 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         let evaluator = new Evaluator(modules)
 
-        let output = evaluator.step()
+        evaluator.step()
 
-        output.should.deepEqual({done:true, error:false, output:null})
+        evaluator.step()
 
         evaluator.getLocals('main').a.value.should.equal(-2*-3)
       }
@@ -668,9 +668,9 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         let evaluator = new Evaluator(modules)
 
-        let output = evaluator.step()
+        evaluator.step()
 
-        output.should.deepEqual({done:true, error:false, output:null})
+        evaluator.step()
 
         evaluator.getLocals('main').a.value.should.equal(2*2*2)
       }
@@ -688,19 +688,17 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         let evaluator = new Evaluator(modules)
 
-        let output
+        evaluator.step()
 
-        output = evaluator.step()
+        evaluator.step()
 
-        output.should.deepEqual({done:false, error:false, output:null})
+        evaluator.step()
 
-        output = evaluator.step()
+        evaluator.step()
 
-        output.should.deepEqual({done:false, error:false, output:null})
+        evaluator.step()
 
-        output = evaluator.step()
-
-        output.should.deepEqual({done:true, error:false, output:null})
+        evaluator.step()
 
         evaluator.getLocals('main').c.value.should.equal(12)
       }
@@ -718,25 +716,23 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         let evaluator = new Evaluator(modules)
 
-        let output
+        evaluator.step()
 
-        output = evaluator.step()
+        evaluator.step()
 
-        output.should.deepEqual({done:false, error:false, output:null})
+        evaluator.step()
 
-        output = evaluator.step()
+        evaluator.step()
 
-        output.should.deepEqual({done:false, error:false, output:null})
+        evaluator.step()
 
-        output = evaluator.step()
-
-        output.should.deepEqual({done:true, error:false, output:null})
+        evaluator.step()
 
         evaluator.getLocals('main').v.values[2].should.equal(12)
       }
     })
 
-    it.skip('division', () => {
+    it('division', () => {
       {
         let code = `variables
           entero a
@@ -748,9 +744,9 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         let evaluator = new Evaluator(modules)
 
-        let output = evaluator.step()
+        evaluator.step()
 
-        output.should.deepEqual({done:true, error:false, output:null})
+        evaluator.step()
 
         evaluator.getLocals('main').a.value.should.equal(3/2)
       }
@@ -766,9 +762,9 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         let evaluator = new Evaluator(modules)
 
-        let output = evaluator.step()
+        evaluator.step()
 
-        output.should.deepEqual({done:true, error:false, output:null})
+        evaluator.step()
 
         evaluator.getLocals('main').a.value.should.equal(-3/-2)
       }
@@ -784,9 +780,9 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         let evaluator = new Evaluator(modules)
 
-        let output = evaluator.step()
+        evaluator.step()
 
-        output.should.deepEqual({done:true, error:false, output:null})
+        evaluator.step()
 
         evaluator.getLocals('main').a.value.should.equal(2+3/3+4)
       }
@@ -802,9 +798,9 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         let evaluator = new Evaluator(modules)
 
-        let output = evaluator.step()
+        evaluator.step()
 
-        output.should.deepEqual({done:true, error:false, output:null})
+        evaluator.step()
 
         evaluator.getLocals('main').a.value.should.equal(3/2/2)
       }
@@ -820,9 +816,9 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         let evaluator = new Evaluator(modules)
 
-        let output = evaluator.step()
+        evaluator.step()
 
-        output.should.deepEqual({done:true, error:false, output:null})
+        evaluator.step()
 
         evaluator.getLocals('main').a.value.should.equal(2/2/2/2)
       }
@@ -838,9 +834,9 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         let evaluator = new Evaluator(modules)
 
-        let output = evaluator.step()
+        evaluator.step()
 
-        output.should.deepEqual({done:true, error:false, output:null})
+        evaluator.step()
 
         evaluator.getLocals('main').a.value.should.equal(4/2/2/2)
       }
@@ -856,15 +852,15 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         let evaluator = new Evaluator(modules)
 
-        let output = evaluator.step()
+        evaluator.step()
 
-        output.should.deepEqual({done:true, error:false, output:null})
+        evaluator.step()
 
         evaluator.getLocals('main').a.value.should.equal(2/2/2/4)
       }
     })
 
-    it.skip('resta', () => {
+    it('resta', () => {
       {
         let code = `variables
           entero a
@@ -876,9 +872,9 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         let evaluator = new Evaluator(modules)
 
-        let output = evaluator.step()
+        evaluator.step()
 
-        output.should.deepEqual({done:true, error:false, output:null})
+        evaluator.step()
 
         evaluator.getLocals('main').a.value.should.equal(3-3-3)
       }
@@ -894,15 +890,15 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         let evaluator = new Evaluator(modules)
 
-        let output = evaluator.step()
+        evaluator.step()
 
-        output.should.deepEqual({done:true, error:false, output:null})
+        evaluator.step()
 
         evaluator.getLocals('main').a.value.should.equal((3-3-3))
       }
     })
 
-    it.skip('suma', () => {
+    it('suma', () => {
       {
         let code = `variables
           entero a
@@ -914,15 +910,15 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         let evaluator = new Evaluator(modules)
 
-        let output = evaluator.step()
+        evaluator.step()
 
-        output.should.deepEqual({done:true, error:false, output:null})
+        evaluator.step()
 
         evaluator.getLocals('main').a.value.should.equal(2+43)
       }
     })
 
-    it.skip('operaciones combinadas', () => {
+    it('operaciones combinadas', () => {
       {
         let code = `variables
           entero a
@@ -934,9 +930,9 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         let evaluator = new Evaluator(modules)
 
-        let output = evaluator.step()
+        evaluator.step()
 
-        output.should.deepEqual({done:true, error:false, output:null})
+        evaluator.step()
 
         evaluator.getLocals('main').a.value.should.equal(2-(2-3))
       }
@@ -952,9 +948,9 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         let evaluator = new Evaluator(modules)
 
-        let output = evaluator.step()
+        evaluator.step()
 
-        output.should.deepEqual({done:true, error:false, output:null})
+        evaluator.step()
 
         evaluator.getLocals('main').a.value.should.equal(2+(2+3))
       }
@@ -970,9 +966,9 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         let evaluator = new Evaluator(modules)
 
-        let output = evaluator.step()
+        evaluator.step()
 
-        output.should.deepEqual({done:true, error:false, output:null})
+        evaluator.step()
 
         evaluator.getLocals('main').a.value.should.equal(2+(2+3*4))
       }
@@ -988,9 +984,9 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         let evaluator = new Evaluator(modules)
 
-        let output = evaluator.step()
+        evaluator.step()
 
-        output.should.deepEqual({done:true, error:false, output:null})
+        evaluator.step()
 
         evaluator.getLocals('main').a.value.should.equal((3*2)-6)
       }
@@ -1006,9 +1002,9 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         let evaluator = new Evaluator(modules)
 
-        let output = evaluator.step()
+        evaluator.step()
 
-        output.should.deepEqual({done:true, error:false, output:null})
+        evaluator.step()
 
         evaluator.getLocals('main').a.value.should.equal((-(-(2+2))))
       }
@@ -1024,15 +1020,15 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         let evaluator = new Evaluator(modules)
 
-        let output = evaluator.step()
+        evaluator.step()
 
-        output.should.deepEqual({done:true, error:false, output:null})
+        evaluator.step()
 
         evaluator.getLocals('main').a.value.should.equal(2+8/2)
       }
     })
 
-    it.skip('relacionales', () => {
+    it('relacionales', () => {
       {
         let code = `variables
           entero a
@@ -1044,9 +1040,9 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         let evaluator = new Evaluator(modules)
 
-        let output = evaluator.step()
+        evaluator.step()
 
-        output.should.deepEqual({done:true, error:false, output:null})
+        evaluator.step()
 
         evaluator.getLocals('main').a.value.should.equal(true)
       }
@@ -1062,9 +1058,9 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         let evaluator = new Evaluator(modules)
 
-        let output = evaluator.step()
+        evaluator.step()
 
-        output.should.deepEqual({done:true, error:false, output:null})
+        evaluator.step()
 
         evaluator.getLocals('main').a.value.should.equal(false)
       }
@@ -1080,9 +1076,9 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         let evaluator = new Evaluator(modules)
 
-        let output = evaluator.step()
+        evaluator.step()
 
-        output.should.deepEqual({done:true, error:false, output:null})
+        evaluator.step()
 
         evaluator.getLocals('main').a.value.should.equal(true)
       }
@@ -1098,9 +1094,9 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         let evaluator = new Evaluator(modules)
 
-        let output = evaluator.step()
+        evaluator.step()
 
-        output.should.deepEqual({done:true, error:false, output:null})
+        evaluator.step()
 
         evaluator.getLocals('main').a.value.should.equal(true)
       }
@@ -1116,9 +1112,9 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         let evaluator = new Evaluator(modules)
 
-        let output = evaluator.step()
+        evaluator.step()
 
-        output.should.deepEqual({done:true, error:false, output:null})
+        evaluator.step()
 
         evaluator.getLocals('main').a.value.should.equal(true)
       }
@@ -1134,9 +1130,9 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         let evaluator = new Evaluator(modules)
 
-        let output = evaluator.step()
+        evaluator.step()
 
-        output.should.deepEqual({done:true, error:false, output:null})
+        evaluator.step()
 
         evaluator.getLocals('main').a.value.should.equal(true)
       }
@@ -1152,9 +1148,9 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         let evaluator = new Evaluator(modules)
 
-        let output = evaluator.step()
+        evaluator.step()
 
-        output.should.deepEqual({done:true, error:false, output:null})
+        evaluator.step()
 
         evaluator.getLocals('main').a.value.should.equal(true)
       }
@@ -1170,15 +1166,15 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
         let evaluator = new Evaluator(modules)
 
-        let output = evaluator.step()
+        evaluator.step()
 
-        output.should.deepEqual({done:true, error:false, output:null})
+        evaluator.step()
 
         evaluator.getLocals('main').a.value.should.equal(false)
       }
     })
 
-    it.skip('prueba que no deberia fallar', () => {
+    it('prueba que no deberia fallar', () => {
       let code = `variables
         entero a
       inicio
@@ -1189,16 +1185,16 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
       let evaluator = new Evaluator(modules)
 
-      let output = evaluator.step()
+      evaluator.step()
 
-      output.should.deepEqual({done:true, error:false, output:null})
+      evaluator.step()
 
       evaluator.getLocals('main').a.value.should.equal(true)
     })
   })
 
   describe.skip('Programas con funciones o procedimientos', () => {
-    it.skip('procedimiento sencillo', () => {
+    it('procedimiento sencillo', () => {
       let code = `variables
       inicio
         informar(2)
