@@ -140,7 +140,7 @@ export default class Evaluator {
       if (bounds_checked || this.indexWithinBounds(indexes, variable.dimension) ) {
         let index = this.calculateIndex(indexes, variable.dimension)
 
-        variable.values[index] = payload
+        variable.values[index] = this._state.expression_stack.pop()
       }
       else {
         let result = {
