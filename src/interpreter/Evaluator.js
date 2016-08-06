@@ -119,7 +119,7 @@ export default class Evaluator {
   }
 
   pushStatement (statement) {
-    this.evaluateExpression(statement.expression)
+    this._state.expression_stack.push(this.evaluateExpression(statement.expression))
 
     return {error:false, finished:true, result:null}
   }
@@ -130,15 +130,7 @@ export default class Evaluator {
     if (variable.isArray) {
       let bounds_checked = statement.variable.bounds_checked
 
-      let indexes = []
-
-      for (let index_expression of info.indexes) {
-        this.evaluateExpression(index_expression)
-
-        let index_value = this._state.expression_stack.pop() - 1
-
-        indexes.push(index_value)
-      }
+      let indexes = info.indexes.map(this.evaluateExpression).map(x => x - 1)
 
       if (bounds_checked || this.indexWithinBounds(indexes, variable.dimension) ) {
         let index = this.calculateIndex(indexes, variable.dimension)
@@ -494,15 +486,7 @@ export default class Evaluator {
     let variable = this.getVariable(info.name)
 
     if (variable.isArray) {
-      let indexes = []
-
-      for (let index_expression of info.indexes) {
-        this.evaluateExpression(index_expression)
-
-        let index_value = this._state.expression_stack.pop() - 1
-
-        indexes.push(index_value)
-      }
+      let indexes = info.indexes.map(this.evaluateExpression).map(x => x - 1)
 
       if (info.bounds_checked || this.indexWithinBounds(indexes, variable.dimension)) {
 
