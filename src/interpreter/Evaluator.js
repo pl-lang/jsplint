@@ -118,7 +118,7 @@ export default class Evaluator {
     if (variable.isArray) {
       let bounds_checked = statement.variable.bounds_checked
 
-      let indexes = statement.variable.map(this.evaluateExpression)
+      let indexes = statement.variable.map(this.evaluateExpression).map(x => x - 1)
 
       if (bounds_checked || this.indexWithinBounds(indexes, variable.dimension) ) {
         let index = this.calculateIndex(index_values, variable.dimension)
