@@ -106,6 +106,8 @@ export default class Evaluator {
         return this.pushStatement(statement)
       case 'pop':
         return this.popStatement(statement)
+      case 'module_call':
+        return this.callStatement(statement)
       // TODO: ...
       // case 'if':
       //   return this.IfIterator(statement)
@@ -161,6 +163,20 @@ export default class Evaluator {
     }
 
     return {error:false, finished:true, result:null}
+  }
+
+  callStatement (statement) {
+    let args = []
+
+    for (let argument of statement.args) {
+      let value = this.evaluateExpression(argument)
+
+      args.push(value)
+    }
+
+    if (statement.name == 'escribir') {
+      return {error:false, finished:true, result:{action:'write', values:args}}
+    }
   }
 
   *CallIterator (call_statement) {
