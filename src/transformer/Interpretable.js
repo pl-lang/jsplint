@@ -170,7 +170,7 @@ function transformUntil(until_statement) {
 function transformFor(for_statement) {
   let counter_variable = for_statement.counter_init.left
   let counter_init_statement = for_statement.counter_init
-  let counter_init_node = transformAssigment(counter_init_statement)
+  let counter_init_nodes = transformAssigment(counter_init_statement)
 
   let condition = [
     {kind:'invocation', name:counter_variable.name, isArray:counter_variable.isArray, indexes:counter_variable.indexes},
@@ -182,10 +182,10 @@ function transformFor(for_statement) {
 
   let body_statement_nodes = for_statement.body.map(transformStatement)
 
-  let temp_list = new LinkedList()
+  let while_body_list = new LinkedList()
 
   for (let statement of body_statement_nodes) {
-    temp_list.addNode(statement)
+    while_body_list.addNode(statement)
   }
 
   let increment_statement = {
@@ -205,13 +205,16 @@ function transformFor(for_statement) {
 
   let increment_node = transformAssigment(increment_statement)
 
-  temp_list.addNode(increment_node)
+  while_body_list.addNode(increment_node)
 
-  while_node.loop_body_root = temp_list.firstNode
+  while_node.loop_body_root = while_body_list.firstNode
 
-  counter_init_node.setNext(while_node)
+  let temp_list = new LinkedList()
 
-  return counter_init_node
+  temp_list.addNode(counter_init_nodes)
+  temp_list.addNode(while_node)
+
+  return temp_list.firstNode
 }
 
 function transformCall(call_statement) {

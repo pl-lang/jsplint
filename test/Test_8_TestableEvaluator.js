@@ -510,7 +510,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
     output.should.deepEqual({done:true, error:false, output:{action:'write', values:[2]}})
   })
 
-  it.skip('programa con un bucle para', () => {
+  it('programa con un bucle para', () => {
     let code = `variables
       entero i
     inicio
@@ -524,35 +524,39 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
     let evaluator = new Evaluator(modules)
 
-    let output = evaluator.step() // i <- 0
+    let output
+
+     evaluator.step()
+
+     evaluator.step()
 
     evaluator.getLocals('main').i.value.should.equal(0)
 
-    output = evaluator.step() // evalua la condicion del bucle
+    evaluator.step() // evalua la condicion del bucle
 
     output = evaluator.step() // escribir(i)
 
     output.should.deepEqual({done:false, error:false, output:{action:'write', values:[0]}})
 
-    output = evaluator.step() // i <- i + 1
+    evaluator.step()
 
-    output.should.deepEqual({done:false, error:false, output:null})
+    evaluator.step()
 
     evaluator.getLocals('main').i.value.should.equal(1)
 
-    output = evaluator.step() // evalua la condicion del bucle
+    evaluator.step() // evalua la condicion del bucle
 
     output = evaluator.step() // escribir(i)
 
     output.should.deepEqual({done:false, error:false, output:{action:'write', values:[1]}})
 
-    output = evaluator.step() // i <- i + 1
+    evaluator.step()
 
-    output.should.deepEqual({done:false, error:false, output:null})
+    evaluator.step()
 
     evaluator.getLocals('main').i.value.should.equal(2)
 
-    output = evaluator.step() // evalua la condicion del bucle
+    evaluator.step() // evalua la condicion del bucle
 
     output = evaluator.step() // escribir(i)
 
