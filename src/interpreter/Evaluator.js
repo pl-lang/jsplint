@@ -152,6 +152,7 @@ export default class Evaluator {
           // column
         }
         return {error:true, finished:true, result}
+      }
     }
     else {
       let value = this._state.expression_stack.pop()
