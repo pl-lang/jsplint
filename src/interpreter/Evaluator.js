@@ -166,16 +166,25 @@ export default class Evaluator {
   }
 
   callStatement (statement) {
-    let args = []
+    if (statement.name == 'leer') {
+      let targer_variable = this.getVariable(statement.variable_name)
 
-    for (let argument of statement.args) {
-      let value = this.evaluateExpression(argument)
+      let type = targer_variable.type
 
-      args.push(value)
+      return {error:false, finished:true, result:{action:'read', type}}
     }
+    else {
+      let args = []
 
-    if (statement.name == 'escribir') {
-      return {error:false, finished:true, result:{action:'write', values:args}}
+      for (let argument of statement.args) {
+        let value = this.evaluateExpression(argument)
+
+        args.push(value)
+      }
+
+      if (statement.name == 'escribir') {
+        return {error:false, finished:true, result:{action:'write', values:args}}
+      }
     }
   }
 

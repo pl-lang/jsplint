@@ -357,12 +357,11 @@ describe.only('Evaluacion de programas y expresiones', () => {
     output.should.deepEqual({done:true, error:false, output:{action:'write', values:[9]}})
   })
 
-  it.skip('programa con una llamada a leer y otra a escribir', () => {
+  it('programa con una llamada a leer', () => {
     let code = `variables
       entero m
     inicio
       leer(m)
-      escribir(m)
     fin`
 
     let modules = programFromSource(code).modules
@@ -371,15 +370,15 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
     let output = evaluator.step()
 
-    output.should.deepEqual({done:false, error:false, output:{action:'read', amount:1, types:['entero']}})
+    output.should.deepEqual({done:false, error:false, output:{action:'read', type:'entero'}})
 
     evaluator.input(9)
 
-    output = evaluator.step() // de momento hay que hacer esto, por algun motivo...
-
     output = evaluator.step()
 
-    output.should.deepEqual({done:true, error:false, output:{action:'write', values:[9]}})
+    output.should.deepEqual({done:true, error:false, output:null})
+
+    evaluator.getLocals('main').m.value.should.equal(9)
   })
 
   it.skip('programa con una llamada a leer una celda de un vector', () => {

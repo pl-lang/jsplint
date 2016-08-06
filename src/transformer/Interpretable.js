@@ -215,12 +215,28 @@ function transformFor(for_statement) {
 }
 
 function transformCall(call_statement) {
-  let call = {
-    name:call_statement.name,
-    action:'module_call',
-    expression_type:'module_call',
-    args:call_statement.args
-  }
+  if (call_statement.name == 'leer') {
+    let temp_list = new LinkedList()
 
-  return new GenericNode(call)
+    for (let arg of call_statement.args) {
+      let call = {name: 'leer', action: 'module_call', variable_name: arg[0].name}
+
+      let pop = {action:'pop', variable:arg[0]}
+
+      temp_list.addNode(new GenericNode(call))
+      temp_list.addNode(new GenericNode(pop))
+    }
+
+    return temp_list.firstNode
+  }
+  else {
+    let call = {
+      name:call_statement.name,
+      action:'module_call',
+      expression_type:'module_call',
+      args:call_statement.args
+    }
+
+    return new GenericNode(call)
+  }
 }
