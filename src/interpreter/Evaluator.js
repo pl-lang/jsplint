@@ -47,7 +47,6 @@ export default class Evaluator {
       expression_stack: [],
       module_stack: [],
       node_stack: [],
-      statement_iterator_stack: [],
     }
   }
 
@@ -69,132 +68,81 @@ export default class Evaluator {
         this._state.parameters_copied = true
       }
 
-      if (this._current_statement === null) {
-        this._current_statement = this.getStatementIterator(this._current_node.data)
-      }
-
-      let output = this.runStatement(this._current_statement)
+      let output = this.evaluate(this._current_node.data)
 
       this._state.error = output.error
       this._state.output = output.result
 
-      if (output.finished) {
-        this._current_node = this._current_node.getNext()
-        this._current_statement = null
+      this._current_node = this._current_node.getNext()
+
+      if (this._current_node == null) {
+        while (this._current_node == null && this._state.node_stack.length > 0 && this._state.module_stack.length > 0) {
+          this._current_node = this._state.node_stack.pop()
+          this._current_module = this._state.module_stack.pop()
+        }
       }
 
-      if (this._current_node === null) {
-        this._state.done = true
-      }
+      if (this._current_node == null) this._state.done = true;
 
       return {done:this._state.done, error:this._state.error, output:output.result}
     }
   }
 
-  getStatementIterator (statement) {
+  evaluate (statement) {
     switch (statement.action) {
-      case 'assignment':
-        return this.AssignmentIterator(statement)
-      case 'module_call':
-        return this.CallIterator(statement)
-      case 'if':
-        return this.IfIterator(statement)
-      case 'while':
-        return this.WhileIterator(statement)
-      case 'until':
-        return this.UntilIterator(statement)
+      case 'push':
+        return this.pushStatement(statement)
+      case 'pop':
+        return this.popStatement(statement)
+      // TODO: ...
+      // case 'if':
+      //   return this.IfIterator(statement)
+      // case 'while':
+      //   return this.WhileIterator(statement)
+      // case 'until':
+      //   return this.UntilIterator(statement)
       default:
         throw new Error(`En Evaluator::getStatementIterator --> no se reconoce el enunciado ${statement.action}`)
     }
   }
 
-  runStatement (statement) {
-    let output = statement.next()
-    while (output.value.finished === false && output.value.error === false) {
-      if ('paused' in output.value && output.value.paused === true) {
-        return output.value
-      }
-      output = statement.next()
-    }
-    return output.value
-  }
+  pushStatement (statement) {
+    this._state.push(this.evaluateExpression(statement.expression))
 
-  *AssignmentIterator (assignment) {
-    let variable = this.getVariable(assignment.target.name)
-
-    let exp_evaluator = this.evaluateExpression(assignment.payload)
-    let evaluation_report = exp_evaluator.next()
-    let payload = evaluation_report.value
-
-    while (evaluation_report.done === false) {
-      payload = evaluation_report.value
-      if (typeof payload === 'object' && 'type' in payload) {
-        // the payload is actually a function calll
-        yield payload
-
-        // if execution reaches this point then the function was evaluated
-        // succesfully and its return value is at the top of the expression_stack
-        payload = this._state.expression_stack.pop()
-      }
-      evaluation_report = exp_evaluator.next()
-    }
-    // at this point 'payload' has been evaluated to a value
-    if (variable.isArray) {
-      yield* this.Assign(variable, payload, assignment.target.indexes, assignment.target.bounds_checked)
-    }
-    else {
-      yield* this.Assign(variable, payload)
-    }
     return {error:false, finished:true, result:null}
   }
 
-  *Assign(variable, payload, indexes, bounds_checked) {
+  popStatement (statement) {
+    let variable = this.getVariable(statement.variable.name)
+
     if (variable.isArray) {
-      let index_values = []
+      let bounds_checked = statement.variable.bounds_checked
 
-      for (let index of indexes) {
-        let exp_evaluator = this.evaluateExpression(index)
-        let evaluation_report = exp_evaluator.next()
-        let actual_index = evaluation_report.value
+      let indexes = statement.variable.map(this.evaluateExpression)
 
-        while (evaluation_report.done === false) {
-          actual_index = evaluation_report.value
-
-          if (typeof actual_index === 'object' && 'type' in actual_index) {
-            // it turns out 'actual_index' is not a number but an that
-            // represents a function call...
-            yield actual_index
-
-            actual_index = this._state.expression_stack.pop()
-          }
-
-          evaluation_report = exp_evaluator.next()
-        }
-
-        index_values.push(actual_index - 1)
-      }
-
-      if (bounds_checked || this.indexWithinBounds(index_values, variable.dimension) ) {
+      if (bounds_checked || this.indexWithinBounds(indexes, variable.dimension) ) {
         let index = this.calculateIndex(index_values, variable.dimension)
+
         variable.values[index] = payload
-        return {error:false, finished:true, result:null}
       }
       else {
         let result = {
           reason: '@assignment-index-out-of-bounds',
-          index: index_list,
+          // index: index_list,
           name: variable.name,
           dimension: variable.dimension
           // line
           // column
         }
         return {error:true, finished:true, result}
-      }
     }
     else {
-      variable.value = payload
-      return {error:false, finished:true, result:null}
+      let value = this._state.expression_stack.pop()
+
+      variable.value = value
     }
+
+    return {error:false, finished:true, result:null}
   }
 
   *CallIterator (call_statement) {
