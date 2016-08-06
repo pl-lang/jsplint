@@ -67,7 +67,7 @@ describe('Evaluacion de programas y expresiones', () => {
     evaluator.getLocals('main').a.value.should.equal(2)
   })
 
-  it('programa con una asignacion a un vector', () => {
+  it.skip('programa con una asignacion a un vector', () => {
     let code = `variables
       entero v[5]
     inicio
@@ -108,7 +108,7 @@ describe('Evaluacion de programas y expresiones', () => {
     evaluator.getLocals('main').v.values[4].should.equal(3)
   })
 
-  it('programa con una asignacion a una matriz', () => {
+  it.skip('programa con una asignacion a una matriz', () => {
     let code = `variables
       entero m[2, 2]
     inicio
@@ -143,7 +143,7 @@ describe('Evaluacion de programas y expresiones', () => {
     evaluator.getLocals('main').m.values[3].should.equal(9)
   })
 
-  it('programa con 2 enunciados de asignacion', () => {
+  it.skip('programa con 2 enunciados de asignacion', () => {
     let code = `variables
       entero a, b
     inicio
@@ -168,7 +168,7 @@ describe('Evaluacion de programas y expresiones', () => {
     evaluator.getLocals('main').b.value.should.equal(89)
   })
 
-  it('programa con un llamado a escribir de un solo argumento', () => {
+  it.skip('programa con un llamado a escribir de un solo argumento', () => {
     let code = `variables
     inicio
       escribir(4)
@@ -183,7 +183,7 @@ describe('Evaluacion de programas y expresiones', () => {
     output.should.deepEqual({done:true, error:false, output:{action:'write', values:[4]}})
   })
 
-  it('programa con un llamado a escribir con varios argumentos', () => {
+  it.skip('programa con un llamado a escribir con varios argumentos', () => {
     let code = `variables
     inicio
       escribir(4, 3, 2, 1)
@@ -198,7 +198,7 @@ describe('Evaluacion de programas y expresiones', () => {
     output.should.deepEqual({done:true, error:false, output:{action:'write', values:[4, 3, 2, 1]}})
   })
 
-  it('programa que escribe el valor de una variable', () => {
+  it.skip('programa que escribe el valor de una variable', () => {
     let code = `variables
       entero a
     inicio
@@ -217,7 +217,7 @@ describe('Evaluacion de programas y expresiones', () => {
     output.should.deepEqual({done:true, error:false, output:{action:'write', values:[32]}})
   })
 
-  it('programa que escribe los valores de un vector', () => {
+  it.skip('programa que escribe los valores de un vector', () => {
     let code = `variables
       entero v[5]
     inicio
@@ -259,7 +259,7 @@ describe('Evaluacion de programas y expresiones', () => {
     output.should.deepEqual({done:true, error:false, output:{action:'write', values:[3]}})
   })
 
-  it('programa que escribe los valores de una matriz', () => {
+  it.skip('programa que escribe los valores de una matriz', () => {
     let code = `variables
       entero m[2, 2]
     inicio
@@ -295,7 +295,7 @@ describe('Evaluacion de programas y expresiones', () => {
     output.should.deepEqual({done:true, error:false, output:{action:'write', values:[9]}})
   })
 
-  it('programa con una llamada a leer y otra a escribir', () => {
+  it.skip('programa con una llamada a leer y otra a escribir', () => {
     let code = `variables
       entero m
     inicio
@@ -320,7 +320,7 @@ describe('Evaluacion de programas y expresiones', () => {
     output.should.deepEqual({done:true, error:false, output:{action:'write', values:[9]}})
   })
 
-  it('programa con una llamada a leer una celda de un vector', () => {
+  it.skip('programa con una llamada a leer una celda de un vector', () => {
     let code = `variables
       entero v[2]
     inicio
@@ -345,7 +345,7 @@ describe('Evaluacion de programas y expresiones', () => {
     output.should.deepEqual({done:true, error:false, output:{action:'write', values:[9]}})
   })
 
-  it('programa con un enunciado si', () => {
+  it.skip('programa con un enunciado si', () => {
     let code = `variables
     inicio
       si (verdadero) entonces
@@ -364,7 +364,7 @@ describe('Evaluacion de programas y expresiones', () => {
     output.should.deepEqual({done:true, error:false, output:{action:'write', values:[3]}})
   })
 
-  it('programa con un enunciado si/sino', () => {
+  it.skip('programa con un enunciado si/sino', () => {
     let code = `variables
     inicio
       si (verdadero = falso) entonces
@@ -385,7 +385,7 @@ describe('Evaluacion de programas y expresiones', () => {
     output.should.deepEqual({done:true, error:false, output:{action:'write', values:[4]}})
   })
 
-  it('programa con un bucle mientras', () => {
+  it.skip('programa con un bucle mientras', () => {
     let code = `variables
       entero i
     inicio
@@ -436,7 +436,7 @@ describe('Evaluacion de programas y expresiones', () => {
     output.should.deepEqual({done:true, error:false, output:{action:'write', values:[2]}})
   })
 
-  it('programa con un bucle para', () => {
+  it.skip('programa con un bucle para', () => {
     let code = `variables
       entero i
     inicio
@@ -485,7 +485,7 @@ describe('Evaluacion de programas y expresiones', () => {
     output.should.deepEqual({done:true, error:false, output:{action:'write', values:[2]}})
   })
 
-  it('programa con un bucle repetir', () => {
+  it.skip('programa con un bucle repetir', () => {
     let code = `variables
       entero i
     inicio
@@ -539,7 +539,7 @@ describe('Evaluacion de programas y expresiones', () => {
   })
 
   describe('Evaluacion de expresiones', () => {
-    it('multiplicacion', () => {
+    it.skip('multiplicacion', () => {
       // 2*3
       {
         let code = `variables
@@ -658,7 +658,7 @@ describe('Evaluacion de programas y expresiones', () => {
       }
     })
 
-    it('division', () => {
+    it.skip('division', () => {
       {
         let code = `variables
           entero a
@@ -786,7 +786,7 @@ describe('Evaluacion de programas y expresiones', () => {
       }
     })
 
-    it('resta', () => {
+    it.skip('resta', () => {
       {
         let code = `variables
           entero a
@@ -824,7 +824,7 @@ describe('Evaluacion de programas y expresiones', () => {
       }
     })
 
-    it('suma', () => {
+    it.skip('suma', () => {
       {
         let code = `variables
           entero a
@@ -844,7 +844,7 @@ describe('Evaluacion de programas y expresiones', () => {
       }
     })
 
-    it('operaciones combinadas', () => {
+    it.skip('operaciones combinadas', () => {
       {
         let code = `variables
           entero a
@@ -954,7 +954,7 @@ describe('Evaluacion de programas y expresiones', () => {
       }
     })
 
-    it('relacionales', () => {
+    it.skip('relacionales', () => {
       {
         let code = `variables
           entero a
@@ -1100,7 +1100,7 @@ describe('Evaluacion de programas y expresiones', () => {
       }
     })
 
-    it('prueba que no deberia fallar', () => {
+    it.skip('prueba que no deberia fallar', () => {
       let code = `variables
         entero a
       inicio
@@ -1120,7 +1120,7 @@ describe('Evaluacion de programas y expresiones', () => {
   })
 
   describe.skip('Programas con funciones o procedimientos', () => {
-    it('procedimiento sencillo', () => {
+    it.skip('procedimiento sencillo', () => {
       let code = `variables
       inicio
         informar(2)
