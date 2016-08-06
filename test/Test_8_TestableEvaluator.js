@@ -128,7 +128,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
     evaluator.getLocals('main').v.values[4].should.equal(3)
   })
 
-  it.skip('programa con una asignacion a una matriz', () => {
+  it('programa con una asignacion a una matriz', () => {
     let code = `variables
       entero m[2, 2]
     inicio
@@ -145,7 +145,15 @@ describe.only('Evaluacion de programas y expresiones', () => {
     let output = evaluator.step()
 
     output.should.deepEqual({done:false, error:false, output:null})
+
+    output = evaluator.step()
+
+    output.should.deepEqual({done:false, error:false, output:null})
     evaluator.getLocals('main').m.values[0].should.equal(5)
+
+    output = evaluator.step()
+
+    output.should.deepEqual({done:false, error:false, output:null})
 
     output = evaluator.step()
 
@@ -155,7 +163,15 @@ describe.only('Evaluacion de programas y expresiones', () => {
     output = evaluator.step()
 
     output.should.deepEqual({done:false, error:false, output:null})
+
+    output = evaluator.step()
+
+    output.should.deepEqual({done:false, error:false, output:null})
     evaluator.getLocals('main').m.values[2].should.equal(7)
+
+    output = evaluator.step()
+
+    output.should.deepEqual({done:false, error:false, output:null})
 
     output = evaluator.step()
 
