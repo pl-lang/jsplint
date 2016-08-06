@@ -62,6 +62,10 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
     let output = evaluator.step()
 
+    output.should.deepEqual({done:false, error:false, output:null})
+
+    output = evaluator.step()
+
     output.should.deepEqual({done:true, error:false, output:null})
 
     evaluator.getLocals('main').a.value.should.equal(2)

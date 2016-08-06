@@ -74,8 +74,11 @@ export default class Evaluator {
       try {
         output = this.evaluate(this._current_node.data)
       }
-      catch (error_info) {
-        output = {error:true, result:error_info}
+      catch (exception) {
+        if (exception.name == 'EvaluatorError') {
+          output = {error:true, result:exception.info}
+        }
+        else throw exception;
       }
       finally {}
 
@@ -116,7 +119,7 @@ export default class Evaluator {
   }
 
   pushStatement (statement) {
-    this._state.push(this.evaluateExpression(statement.expression))
+    this.evaluateExpression(statement.expression)
 
     return {error:false, finished:true, result:null}
   }
@@ -511,7 +514,9 @@ export default class Evaluator {
       else {
         let out_of_bunds_info = this.getBoundsError(index_values, variable.dimension)
 
-        throw out_of_bunds_info
+        let exception = {name:'EvaluatorError', info:out_of_bunds_info}
+
+        throw exception
       }
     }
     else {

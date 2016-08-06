@@ -91,7 +91,7 @@ function transformAssigment(assignment) {
     variable: assignment.left
   }
 
-  pop.variable.target['bounds_checked'] = false
+  pop.variable['bounds_checked'] = false
 
   let push_node = new GenericNode(push)
   push_node.setNext(new GenericNode(pop))
