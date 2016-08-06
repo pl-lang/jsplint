@@ -110,8 +110,8 @@ export default class Evaluator {
         return this.callStatement(statement)
       case 'if':
         return this.ifStatement(statement)
-      // case 'while':
-      //   return this.WhileIterator(statement)
+      case 'while':
+        return this.whileStatement(statement)
       // case 'until':
       //   return this.UntilIterator(statement)
       default:
@@ -195,24 +195,8 @@ export default class Evaluator {
     return {error:false, finished:true, result:null}
   }
 
-  *WhileIterator (while_statement) {
-    let exp_evaluator = this.evaluateExpression(while_statement.condition)
-    let evaluation_report = exp_evaluator.next()
-    let condition_result = evaluation_report.value
-
-    while (evaluation_report.done === false) {
-      condition_result = evaluation_report.value
-
-      if (typeof condition_result === 'object' && 'type' in condition_result) {
-        // it turns out 'condition_result' is not a number but an that
-        // represents a function call...
-        yield condition_result
-
-        condition_result = this._state.expression_stack.pop()
-      }
-
-      evaluation_report = exp_evaluator.next()
-    }
+  whileStatement (statement) {
+    let condition_result = this.evaluateExpression(statement.condition)
 
     this._current_node.setCurrentBranchTo(condition_result ? 'loop_body':'program_body')
 
