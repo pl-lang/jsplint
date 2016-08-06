@@ -68,7 +68,16 @@ export default class Evaluator {
         this._state.parameters_copied = true
       }
 
-      let output = this.evaluate(this._current_node.data)
+      let output
+
+
+      try {
+        output = this.evaluate(this._current_node.data)
+      }
+      catch (error_info) {
+        output = {error:true, result:error_info}
+      }
+      finally {}
 
       this._state.error = output.error
       this._state.output = output.result
@@ -276,7 +285,7 @@ export default class Evaluator {
     return varname in this._locals ? this._locals[varname]:this._globals[varname]
   }
 
-  *evaluateExpression (expression_stack) {
+  evaluateExpression (expression_stack) {
     for (let token of expression_stack) {
       switch (token.kind) {
         case 'operator':
@@ -343,14 +352,13 @@ export default class Evaluator {
           this._state.expression_stack.push(token.value)
           break
         case 'invocation':
-          yield* this.pushVariableValue(token)
+          this.pushVariableValue(token)
           break
         default:
-          console.log(token)
           throw new Error(`Tipo de expresion "${token.kind}" no reconocido.`)
       }
     }
-    yield this._state.expression_stack.pop()
+    return this._state.expression_stack.pop()
   }
 
   times() {
@@ -470,41 +478,23 @@ export default class Evaluator {
     this._state.expression_stack.push(a || b)
   }
 
-  *pushVariableValue (info) {
+  pushVariableValue (info) {
     let variable = this.getVariable(info.name)
 
     if (variable.isArray) {
-      let index_values = []
-
-      for (let index of info.indexes) {
-        let exp_evaluator = this.evaluateExpression(index)
-        let evaluation_report = exp_evaluator.next()
-        let actual_index = evaluation_report.value
-
-        while (evaluation_report.done === false) {
-          actual_index = evaluation_report.value
-
-          if (typeof actual_index === 'object' && 'type' in actual_index) {
-            // it turns out 'actual_index' is not a number but an that
-            // represents a function call...
-            yield actual_index
-
-            payload = this._state.expression_stack.pop()
-          }
-
-          evaluation_report = exp_evaluator.next()
-        }
-
-        index_values.push(actual_index - 1)
-      }
+      let index_values = info.indexes.map(this.evaluateExpression).map(x => x - 1)
 
       if (info.bounds_checked || this.indexWithinBounds(index_values, variable.dimension)) {
+
         let index = this.calculateIndex(index_values, variable.dimension)
-        return this._state.expression_stack.push(variable.values[index])
+
+        this._state.expression_stack.push(variable.values[index])
+
       }
       else {
         let out_of_bunds_info = this.getBoundsError(index_values, variable.dimension)
-        return {error:true, result:out_of_bunds_info}
+
+        throw out_of_bunds_info
       }
     }
     else {
