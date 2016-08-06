@@ -108,9 +108,8 @@ export default class Evaluator {
         return this.popStatement(statement)
       case 'module_call':
         return this.callStatement(statement)
-      // TODO: ...
-      // case 'if':
-      //   return this.IfIterator(statement)
+      case 'if':
+        return this.ifStatement(statement)
       // case 'while':
       //   return this.WhileIterator(statement)
       // case 'until':
@@ -188,79 +187,8 @@ export default class Evaluator {
     }
   }
 
-  *CallIterator (call_statement) {
-    if (call_statement.name === 'leer') {
-      let amount = call_statement.args.length
-      let variables = call_statement.args.map(arg => arg[0].name).map(name => this.getVariable(name))
-      let types = variables.map(variable => variable.type)
-
-      yield {error:false, paused:true, finished:false, result:{action:'read', amount, types}}
-
-      for (let i = 0; i < amount; i++) {
-        let value = this._state.expression_stack.pop()
-        if (variables[i].isArray) {
-          // TODO: revisar si arg.bounds_checked existe...
-          yield* this.Assign(variables[i], value, call_statement.args[i][0].indexes, false)
-        }
-        else {
-          yield* this.Assign(variables[i], value)
-        }
-      }
-
-      return {error:false, finished:true, result:null}
-    }
-    else {
-      let args = []
-
-      for (let argument of call_statement.args) {
-        let exp_evaluator = this.evaluateExpression(argument)
-        let evaluation_report = exp_evaluator.next()
-        let actual_argument = evaluation_report.value
-
-        while (evaluation_report.done === false) {
-          actual_argument = evaluation_report.value
-
-          if (typeof actual_argument === 'object' && 'type' in actual_argument) {
-            // it turns out 'actual_index' is not a number but an that
-            // represents a function call...
-            yield actual_argument
-
-            actual_argument = this._state.expression_stack.pop()
-          }
-
-          evaluation_report = exp_evaluator.next()
-        }
-
-        args.push(actual_argument)
-      }
-
-      if (call_statement.name === 'escribir') {
-        return {error:false, finished:true, result:{action:'write', values:args}}
-      }
-      else {
-        return {error:false, finished:true, result:{action:'call', name:call_statement.name, args}}
-      }
-    }
-  }
-
-  *IfIterator (if_statement) {
-    let exp_evaluator = this.evaluateExpression(if_statement.condition)
-    let evaluation_report = exp_evaluator.next()
-    let condition_result = evaluation_report.value
-
-    while (evaluation_report.done === false) {
-      condition_result = evaluation_report.value
-
-      if (typeof condition_result === 'object' && 'type' in condition_result) {
-        // it turns out 'condition_result' is not a number but an that
-        // represents a function call...
-        yield condition_result
-
-        condition_result = this._state.expression_stack.pop()
-      }
-
-      evaluation_report = exp_evaluator.next()
-    }
+  ifStatement (statement) {
+    let condition_result = this.evaluateExpression(statement.condition)
 
     this._current_node.setCurrentBranchTo(condition_result ? 'true_branch':'false_branch')
 

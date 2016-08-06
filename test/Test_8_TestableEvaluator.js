@@ -405,7 +405,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
     evaluator.getLocals('main').v.values[0].should.equal(9)
   })
 
-  it.skip('programa con un enunciado si', () => {
+  it('programa con un enunciado si', () => {
     let code = `variables
     inicio
       si (verdadero) entonces
@@ -419,12 +419,14 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
     let output = evaluator.step() // evalua la condicion
 
+    output.should.deepEqual({done:false, error:false, output:null})
+
     output = evaluator.step()
 
     output.should.deepEqual({done:true, error:false, output:{action:'write', values:[3]}})
   })
 
-  it.skip('programa con un enunciado si/sino', () => {
+  it('programa con un enunciado si/sino', () => {
     let code = `variables
     inicio
       si (verdadero = falso) entonces
@@ -439,6 +441,8 @@ describe.only('Evaluacion de programas y expresiones', () => {
     let evaluator = new Evaluator(modules)
 
     let output = evaluator.step()
+
+    output.should.deepEqual({done:false, error:false, output:null})
 
     output = evaluator.step()
 
