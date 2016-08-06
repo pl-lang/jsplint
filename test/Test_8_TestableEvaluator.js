@@ -179,7 +179,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
     evaluator.getLocals('main').m.values[3].should.equal(9)
   })
 
-  it.skip('programa con 2 enunciados de asignacion', () => {
+  it('programa con 2 enunciados de asignacion', () => {
     let code = `variables
       entero a, b
     inicio
@@ -195,7 +195,15 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
     output.should.deepEqual({done:false, error:false, output:null})
 
+    output = evaluator.step()
+
+    output.should.deepEqual({done:false, error:false, output:null})
+
     evaluator.getLocals('main').a.value.should.equal(25)
+
+    output = evaluator.step()
+
+    output.should.deepEqual({done:false, error:false, output:null})
 
     output = evaluator.step()
 
