@@ -212,6 +212,7 @@ describe('Interpretable', () => {
         modules : {
           main : {
             module_type : 'main',
+            parameters: [],
             locals : {
               a : {
                 name : 'a',
