@@ -27,8 +27,6 @@ export default class Evaluator {
     this._current_statement = null
     this._current_module = modules.main
 
-    this._locals = () => {return this._modules[this._current_module.name].locals}
-
     this._globals = modules.main.locals
 
     this.getLocals = (module_name) => {
@@ -43,7 +41,6 @@ export default class Evaluator {
       done: modules.main.root === null ? true:false,
       error: false,
       output: null,
-      parameters_copied: false,
       expression_stack: [],
       module_stack: [],
       node_stack: [],
@@ -59,14 +56,6 @@ export default class Evaluator {
       return {done:this._state.done, error:this._state.error, output:this._state.output}
     }
     else {
-      if (this._state.parameters_copied == false) {
-        for (let p of this._current_module.parameters) {
-          let value = this._state.expression_stack.pop()
-          let variable = getVariable(p.name)
-          variable.value = value
-        }
-        this._state.parameters_copied = true
-      }
 
       let output
 
@@ -114,6 +103,8 @@ export default class Evaluator {
         return this.whileStatement(statement)
       case 'until':
         return this.untilStatement(statement)
+      case 'dummy':
+        throw new Error('Esto no deberia ejecutarse')
       default:
         throw new Error(`En Evaluator::getStatementIterator --> no se reconoce el enunciado ${statement.action}`)
     }
@@ -172,7 +163,7 @@ export default class Evaluator {
 
       return {error:false, finished:true, result:{action:'read', type}}
     }
-    else {
+    else if (statement.name == 'escribir') {
       let args = []
 
       for (let argument of statement.args) {
@@ -181,9 +172,22 @@ export default class Evaluator {
         args.push(value)
       }
 
-      if (statement.name == 'escribir') {
-        return {error:false, finished:true, result:{action:'write', values:args}}
+      return {error:false, finished:true, result:{action:'write', values:args}}
+    }
+    else {
+      this._state.node_stack.push(this._current_node.getNext())
+      this._state.module_stack.push(this._current_module)
+
+      this._current_node = this._modules[statement.name].root
+      this._current_module = this._modules[statement.name]
+
+      for (let p of this._current_module.parameters) {
+        let value = this._state.expression_stack.pop()
+        let variable = this.getVariable(p)
+        variable.value = value
       }
+
+      return {error:false, finished:true, result:null}
     }
   }
 
@@ -212,7 +216,9 @@ export default class Evaluator {
   }
 
   getVariable(varname) {
-    return varname in this._locals ? this._locals[varname]:this._globals[varname]
+    let current_locals = this.getLocals(this._current_module.name)
+
+    return varname in current_locals ? current_locals[varname]:this._globals[varname]
   }
 
   evaluateExpression (expression_stack) {

@@ -23,6 +23,7 @@ export default function transform(ast) {
 
 function transformMain (module) {
   let result = {
+    name: 'main',
     locals : module.locals,
     parameters: [],
     module_type : 'main',
@@ -42,6 +43,7 @@ function transformMain (module) {
 
 function transformModule (module) {
   let result = {
+    name: module.name,
     locals : module.locals,
     parameters : module.parameters.map(p => p.name),
     module_type : module.module_type,
@@ -54,7 +56,14 @@ function transformModule (module) {
     temp_list.addNode(transformStatement(statement))
   }
 
-  result.root = temp_list.firstNode
+  // HACK: esto es necesario para que las llamadas a modulos funcionen como debe
+  // ser. Está relacionado con el funcionamiento de Evaluator.step()
+  // commit anterior: c5b0404e45574cd54b8188d68a8a283031c40902
+  let dummy_node = new GenericNode({action:'dummy'})
+
+  dummy_node.setNext(temp_list.firstNode)
+
+  result.root = dummy_node
 
   return result
 }
@@ -230,14 +239,28 @@ function transformCall(call_statement) {
 
     return temp_list.firstNode
   }
-  else {
+  else if (call_statement.name == 'escribir') {
     let call = {
-      name:call_statement.name,
+      name:'escribir',
       action:'module_call',
       expression_type:'module_call',
       args:call_statement.args
     }
 
     return new GenericNode(call)
+  }
+  else {
+    let temp_list = new LinkedList()
+
+    for (let arg of call_statement.args) {
+      let push = {action:'push', expression:arg}
+      temp_list.addNode(new GenericNode(push))
+    }
+
+    let call = {name: call_statement.name, action: 'module_call', total_parameters: call_statement.args.length}
+
+    temp_list.addNode(new GenericNode(call))
+
+    return temp_list.firstNode
   }
 }

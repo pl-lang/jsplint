@@ -1193,7 +1193,7 @@ describe.only('Evaluacion de programas y expresiones', () => {
     })
   })
 
-  describe.skip('Programas con funciones o procedimientos', () => {
+  describe('Programas con funciones o procedimientos', () => {
     it('procedimiento sencillo', () => {
       let code = `variables
       inicio
@@ -1215,11 +1215,11 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
       output = evaluator.step()
 
-      output.should.deepEqual({done:false, error:false, output:{action:'write', values:[2]}})
+      output.should.deepEqual({done:false, error:false, output:null})
 
       output = evaluator.step()
 
-      output.should.deepEqual({done:true, error:false, output:null})
+      output.should.deepEqual({done:true, error:false, output:{action:'write', values:[2]}})
     })
   })
 })
