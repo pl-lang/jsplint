@@ -21,22 +21,11 @@ import Emitter from '../utility/Emitter.js'
 export default class Interpreter extends Emitter {
   constructor(program_modules) {
     super(['program-started', 'program-resumed', 'program-paused', 'program-finished'])
-    this.current_program = program_modules
-  }
 
-  set current_program(program_modules) {
-    this._current_program = program_modules
-    let main = program_modules.main
-    let main_evaluator = new Evaluator({type:'entry_module', parameters:[]}, main.root, main.locals, main.locals)
-    this.stack = []
-    this.stack.push(main_evaluator)
+    this._evaluator = new Evaluator(program_modules)
     this.running = true
     this.paused = false
-    this.current_module = null
-  }
 
-  get current_program() {
-    return this._current_program
   }
 
   run() {
@@ -53,11 +42,10 @@ export default class Interpreter extends Emitter {
     }
 
     let done = false
-    this.current_module = this.stack.pop()
 
     while (this.running && done == false) {
 
-      let evaluation_report = this.current_module.step()
+      let evaluation_report = this._evaluator.step()
 
       if (evaluation_report.done || evaluation_report.error) {
         done = true
@@ -72,21 +60,7 @@ export default class Interpreter extends Emitter {
             this.paused = true
             this.running = false
             // de momento, tengo que mandar un arreglo en los eventos de lectura
-            this.emit('read', evaluation_report.output.types)
-            this.stack.push(this.current_module)
-          }
-          else if (evaluation_report.output.action === 'call') {
-            this.stack.push(this.current_module)
-
-            let callee = this._current_program[evaluation_report.output.name]
-
-            let module_evaluator = new Evaluator({type:callee.module_type, parameters:callee.parameters}, callee.root, callee.locals, this._current_program.main.locals)
-
-            for (let p of evaluation_report.output.args) {
-              module_evaluator.input(p)
-            }
-
-            this.stack.push(module_evaluator)
+            this.emit('read', [1])
           }
         }
       }
@@ -102,7 +76,7 @@ export default class Interpreter extends Emitter {
 
   sendReadData(varname_list, data) {
     for (let value of data) {
-      this.current_module.input(value)
+      this._evaluator.input(value)
     }
   }
 }
