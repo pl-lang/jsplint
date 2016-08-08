@@ -164,15 +164,9 @@ export default class Evaluator {
       return {error:false, finished:true, result:{action:'read', type}}
     }
     else if (statement.name == 'escribir') {
-      let args = []
+      let value = this._state.expression_stack.pop()
 
-      for (let argument of statement.args) {
-        let value = this.evaluateExpression(argument)
-
-        args.push(value)
-      }
-
-      return {error:false, finished:true, result:{action:'write', values:args}}
+      return {error:false, finished:true, result:{action:'write', value}}
     }
     else {
       this._state.node_stack.push(this._current_node.getNext())

@@ -54,7 +54,7 @@ export default class Interpreter extends Emitter {
       if (evaluation_report.error === false) {
         if (evaluation_report.output !== null) {
           if (evaluation_report.output.action === 'write') {
-            this.emit('write', evaluation_report.output.values)
+            this.emit('write', evaluation_report.output.value)
           }
           else if (evaluation_report.output.action === 'read') {
             this.paused = true

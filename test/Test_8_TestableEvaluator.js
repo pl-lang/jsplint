@@ -222,9 +222,11 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
     let evaluator = new Evaluator(modules)
 
+    evaluator.step()
+
     let output = evaluator.step()
 
-    output.should.deepEqual({done:true, error:false, output:{action:'write', values:[4]}})
+    output.should.deepEqual({done:true, error:false, output:{action:'write', value:4}})
   })
 
   it('programa con un llamado a escribir con varios argumentos', () => {
@@ -237,9 +239,31 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
     let evaluator = new Evaluator(modules)
 
-    let output = evaluator.step()
+    let output
 
-    output.should.deepEqual({done:true, error:false, output:{action:'write', values:[4, 3, 2, 1]}})
+    evaluator.step()
+
+    output = evaluator.step()
+
+    output.should.deepEqual({done:false, error:false, output:{action:'write', value:4}})
+
+    evaluator.step()
+
+    output = evaluator.step()
+
+    output.should.deepEqual({done:false, error:false, output:{action:'write', value:3}})
+
+    evaluator.step()
+
+    output = evaluator.step()
+
+    output.should.deepEqual({done:false, error:false, output:{action:'write', value:2}})
+
+    evaluator.step()
+
+    output = evaluator.step()
+
+    output.should.deepEqual({done:true, error:false, output:{action:'write', value:1}})
   })
 
   it('programa que escribe el valor de una variable', () => {
@@ -254,13 +278,17 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
     let evaluator = new Evaluator(modules)
 
-    let output = evaluator.step()
+    let output
+
+    evaluator.step()
+
+    evaluator.step()
+
+    evaluator.step()
 
     output = evaluator.step()
 
-    output = evaluator.step()
-
-    output.should.deepEqual({done:true, error:false, output:{action:'write', values:[32]}})
+    output.should.deepEqual({done:true, error:false, output:{action:'write', value:32}})
   })
 
   it('programa que escribe los valores de un vector', () => {
@@ -298,20 +326,25 @@ describe.only('Evaluacion de programas y expresiones', () => {
     evaluator.step()
     evaluator.step()
 
+    evaluator.step()
     let output = evaluator.step()
-    output.should.deepEqual({done:false, error:false, output:{action:'write', values:[5]}})
+    output.should.deepEqual({done:false, error:false, output:{action:'write', value:5}})
 
+    evaluator.step()
     output = evaluator.step()
-    output.should.deepEqual({done:false, error:false, output:{action:'write', values:[8]}})
+    output.should.deepEqual({done:false, error:false, output:{action:'write', value:8}})
 
+    evaluator.step()
     output = evaluator.step()
-    output.should.deepEqual({done:false, error:false, output:{action:'write', values:[7]}})
+    output.should.deepEqual({done:false, error:false, output:{action:'write', value:7}})
 
+    evaluator.step()
     output = evaluator.step()
-    output.should.deepEqual({done:false, error:false, output:{action:'write', values:[9]}})
+    output.should.deepEqual({done:false, error:false, output:{action:'write', value:9}})
 
+    evaluator.step()
     output = evaluator.step()
-    output.should.deepEqual({done:true, error:false, output:{action:'write', values:[3]}})
+    output.should.deepEqual({done:true, error:false, output:{action:'write', value:3}})
   })
 
   it('programa que escribe los valores de una matriz', () => {
@@ -344,17 +377,21 @@ describe.only('Evaluacion de programas y expresiones', () => {
     evaluator.step()
     evaluator.step()
 
+    evaluator.step()
     let output = evaluator.step()
-    output.should.deepEqual({done:false, error:false, output:{action:'write', values:[5]}})
+    output.should.deepEqual({done:false, error:false, output:{action:'write', value:5}})
 
+    evaluator.step()
     output = evaluator.step()
-    output.should.deepEqual({done:false, error:false, output:{action:'write', values:[8]}})
+    output.should.deepEqual({done:false, error:false, output:{action:'write', value:8}})
 
+    evaluator.step()
     output = evaluator.step()
-    output.should.deepEqual({done:false, error:false, output:{action:'write', values:[7]}})
+    output.should.deepEqual({done:false, error:false, output:{action:'write', value:7}})
 
+    evaluator.step()
     output = evaluator.step()
-    output.should.deepEqual({done:true, error:false, output:{action:'write', values:[9]}})
+    output.should.deepEqual({done:true, error:false, output:{action:'write', value:9}})
   })
 
   it('programa con una llamada a leer', () => {
@@ -421,9 +458,11 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
     output.should.deepEqual({done:false, error:false, output:null})
 
+    evaluator.step()
+
     output = evaluator.step()
 
-    output.should.deepEqual({done:true, error:false, output:{action:'write', values:[3]}})
+    output.should.deepEqual({done:true, error:false, output:{action:'write', value:3}})
   })
 
   it('programa con un enunciado si/sino', () => {
@@ -444,9 +483,11 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
     output.should.deepEqual({done:false, error:false, output:null})
 
+    evaluator.step()
+
     output = evaluator.step()
 
-    output.should.deepEqual({done:true, error:false, output:{action:'write', values:[4]}})
+    output.should.deepEqual({done:true, error:false, output:{action:'write', value:4}})
   })
 
   it('programa con un bucle mientras', () => {
@@ -477,9 +518,11 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
     output.should.deepEqual({done:false, error:false, output:null})
 
+    evaluator.step()
+
     output = evaluator.step() // escribir(i)
 
-    output.should.deepEqual({done:false, error:false, output:{action:'write', values:[0]}})
+    output.should.deepEqual({done:false, error:false, output:{action:'write', value:0}})
 
     evaluator.step() // push i + 1
 
@@ -491,9 +534,11 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
     evaluator.step() // evalua la condicion del bucle
 
+    evaluator.step()
+
     output = evaluator.step() // escribir(i)
 
-    output.should.deepEqual({done:false, error:false, output:{action:'write', values:[1]}})
+    output.should.deepEqual({done:false, error:false, output:{action:'write', value:1}})
 
     evaluator.step() // push i + 1
 
@@ -505,9 +550,11 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
     evaluator.step() // evalua la condicion del bucle
 
+    evaluator.step()
+
     output = evaluator.step() // escribir(i)
 
-    output.should.deepEqual({done:true, error:false, output:{action:'write', values:[2]}})
+    output.should.deepEqual({done:true, error:false, output:{action:'write', value:2}})
   })
 
   it('programa con un bucle para', () => {
@@ -534,9 +581,11 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
     evaluator.step() // evalua la condicion del bucle
 
+    evaluator.step()
+
     output = evaluator.step() // escribir(i)
 
-    output.should.deepEqual({done:false, error:false, output:{action:'write', values:[0]}})
+    output.should.deepEqual({done:false, error:false, output:{action:'write', value:0}})
 
     evaluator.step()
 
@@ -546,9 +595,11 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
     evaluator.step() // evalua la condicion del bucle
 
+    evaluator.step()
+
     output = evaluator.step() // escribir(i)
 
-    output.should.deepEqual({done:false, error:false, output:{action:'write', values:[1]}})
+    output.should.deepEqual({done:false, error:false, output:{action:'write', value:1}})
 
     evaluator.step()
 
@@ -558,9 +609,11 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
     evaluator.step() // evalua la condicion del bucle
 
+    evaluator.step()
+
     output = evaluator.step() // escribir(i)
 
-    output.should.deepEqual({done:true, error:false, output:{action:'write', values:[2]}})
+    output.should.deepEqual({done:true, error:false, output:{action:'write', value:2}})
   })
 
   it('programa con un bucle repetir', () => {
@@ -587,9 +640,11 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
     evaluator.getLocals('main').i.value.should.equal(0)
 
+    evaluator.step()
+
     output = evaluator.step()
 
-    output.should.deepEqual({done:false, error:false, output:{action:'write', values:[0]}})
+    output.should.deepEqual({done:false, error:false, output:{action:'write', value:0}})
 
     evaluator.step() // apila i + 1
 
@@ -599,9 +654,11 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
     evaluator.step() // evalua la condicion del bucle
 
+    evaluator.step()
+
     output = evaluator.step() // escribir(i)
 
-    output.should.deepEqual({done:false, error:false, output:{action:'write', values:[1]}})
+    output.should.deepEqual({done:false, error:false, output:{action:'write', value:1}})
 
     evaluator.step() // apila i + 1
 
@@ -611,9 +668,11 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
     evaluator.step() // evalua la condicion del bucle
 
+    evaluator.step()
+
     output = evaluator.step() // escribir(i)
 
-    output.should.deepEqual({done:true, error:false, output:{action:'write', values:[2]}})
+    output.should.deepEqual({done:true, error:false, output:{action:'write', value:2}})
   })
 
   describe('Evaluacion de expresiones', () => {
@@ -1217,9 +1276,11 @@ describe.only('Evaluacion de programas y expresiones', () => {
 
       output.should.deepEqual({done:false, error:false, output:null})
 
+      evaluator.step()
+
       output = evaluator.step()
 
-      output.should.deepEqual({done:true, error:false, output:{action:'write', values:[2]}})
+      output.should.deepEqual({done:true, error:false, output:{action:'write', value:2}})
     })
   })
 })

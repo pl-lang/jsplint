@@ -240,14 +240,18 @@ function transformCall(call_statement) {
     return temp_list.firstNode
   }
   else if (call_statement.name == 'escribir') {
-    let call = {
-      name:'escribir',
-      action:'module_call',
-      expression_type:'module_call',
-      args:call_statement.args
+    let temp_list = new LinkedList()
+
+    for (let arg of call_statement.args) {
+      let call = {name: 'escribir', action: 'module_call'}
+
+      let push = {action:'push', expression:arg}
+
+      temp_list.addNode(new GenericNode(push))
+      temp_list.addNode(new GenericNode(call))
     }
 
-    return new GenericNode(call)
+    return temp_list.firstNode
   }
   else {
     let temp_list = new LinkedList()
