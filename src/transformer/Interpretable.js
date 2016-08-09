@@ -115,37 +115,121 @@ function transformStatement(statement) {
   }
 }
 
-function transformAssigment(assignment) {
-  // las asignaciones se dividen en 2 acciones
-
-  let push = {
-    action: 'push',
-    expression: assignment.right
+function transformExpression (token) {
+  switch (token.kind) {
+    case 'operator':
+      switch (token.operator) {
+        case 'times':
+        case 'unary-minus':
+        case 'division':
+        case 'power':
+        case 'div':
+        case 'mod':
+        case 'divide':
+        case 'minus':
+        case 'plus':
+        case 'minor-than':
+        case 'minor-equal':
+        case 'major-than':
+        case 'major-equal':
+        case 'equal':
+        case 'not':
+        case 'diff-than':
+        case 'and':
+        case 'or':
+          return new GenericNode({action:token.operator})
+        default:
+          console.log(token);
+          throw new Error(`Operador "${token.operator}" no reconocido`)
+      }
+      break
+    case 'literal':
+      return new GenericNode({action:'push', value:token.value})
+    case 'invocation':
+      return transformInvocation(token)
+    default:
+      console.log(token);
+      throw new Error(`Tipo de expresion "${token.kind}" no reconocido.`)
   }
+}
 
-  let pop
+function transformInvocation (invocation) {
+  let action_list = new LinkedList()
 
-  if (assignment.left.isArray) {
-    pop = {
-      action: 'pop',
-      variable: assignment.left
+  if (invocation.isArray) {
+    let transformed_indexes = invocation.indexes.map(exp => exp.map(transformExpression))
+
+    let get_values = {action:'values', name:invocation.name}
+
+    action_list.addNode(new GenericNode(get_values))
+
+    for (let node_array of transformed_indexes) {
+      for (let node of node_array) {
+        action_list.addNode(node)
+      }
+      let access = {action:'subscript'}
+      action_list.addNode(new GenericNode(access))
     }
   }
   else {
-    pop = {
-      action: 'pop',
-      variable: {
-        name: assignment.left.name,
-        bounds_checked: true,
-        indexes: [1]
-      }
-    }
+    // actions
+    let get_values = {action:'values', name:invocation.name}
+    let push = {action:'push', value:1}
+    let access = {action:'subscript'}
+
+    action_list.addNode(new GenericNode(get_values))
+    action_list.addNode(new GenericNode(push))
+    action_list.addNode(new GenericNode(access))
   }
 
-  let push_node = new GenericNode(push)
-  push_node.setNext(new GenericNode(pop))
+  return action_list.firstNode
+}
 
-  return push_node
+function transformAssigment(assignment) {
+  // las asignaciones se dividen en 2 acciones
+
+  let expression_list = new LinkedList()
+
+  for (let node of assignment.right.map(transformExpression)) {
+    expression_list.addNode(node)
+  }
+
+
+  // TODO: cambiar 'pop' por 'assign'
+  // pop es una accion que (en el evaluador) desapila una expression de expression_stack y la mete en una variable
+
+  let assign
+
+  let indexes_list = new LinkedList()
+
+  if (assignment.left.isArray) {
+    for (let expression of assignment.left.indexes) {
+      let node_list = expression.map(transformExpression)
+
+      for (let node of node_list) {
+        indexes_list.addNode(node)
+      }
+    }
+
+    assign = {
+      action: '<-',
+      varname: assignment.left.name,
+      total_indexes: assignment.left.indexes.length,
+      bounds_checked: assignment.left.bounds_checked
+    }
+  }
+  else {
+    indexes_list.addNode({ action: 'push', value:1 })
+    assign = { action: '<-', varname: assignment.left.name, total_indexes:1, bounds_checked: true }
+  }
+
+  let assign_node = new GenericNode(assign)
+
+  indexes_list.addNode(expression_list.firstNode)
+
+  indexes_list.addNode(assign_node)
+
+  return indexes_list.firstNode
 }
 
 function transformIf(if_statement) {
@@ -160,12 +244,16 @@ function transformIf(if_statement) {
     left_branch.addNode(transformStatement(statement))
   }
 
-  let if_node = new IfNode({action:'if', condition:if_statement.condition})
+  let if_node = new IfNode({action:'if'})
 
   if_node.leftBranchNode = left_branch.firstNode
   if_node.rightBranchNode = right_branch.firstNode
 
-  return if_node
+  let expression_list = if_statement.condition.map(transformExpression).reduce((l, n) => { l.addNode(n); return l; }, new LinkedList())
+
+  expression_list.addNode(if_node)
+
+  return expression_list.firstNode
 }
 
 function transformWhile(while_statement) {
@@ -175,15 +263,19 @@ function transformWhile(while_statement) {
     temp_list.addNode(transformStatement(statement))
   }
 
-  let while_node = new WhileNode({action:'while', condition:while_statement.condition})
+  let while_node = new WhileNode({action:'while'})
 
   while_node.loop_body_root = temp_list.firstNode
 
-  return while_node
+  let expression_list = while_statement.condition.map(transformExpression).reduce((l, n) => { l.addNode(n); return l; }, new LinkedList())
+
+  expression_list.addNode(while_node)
+
+  return expression_list.firstNode
 }
 
 function transformUntil(until_statement) {
-  let until_node = new UntilNode({action:'until', condition:until_statement.condition})
+  let until_node = new UntilNode({action:'until'})
 
   let body_statement_nodes = until_statement.body.map(transformStatement)
 
@@ -194,6 +286,10 @@ function transformUntil(until_statement) {
 
     temp_list.addNode(current_node)
   }
+
+  let expression_list = until_statement.condition.map(transformExpression).reduce((l, n) => { l.addNode(n); return l; }, new LinkedList())
+
+  temp_list.addNode(expression_list.firstNode)
 
   temp_list.addNode(until_node)
 
@@ -225,7 +321,7 @@ function transformFor(for_statement) {
     {kind:'operator', operator:'minor-equal'}
   ]
 
-  let while_node = new WhileNode({action:'while', condition})
+  let while_node = new WhileNode({action:'while'})
 
   let body_statement_nodes = for_statement.body.map(transformStatement)
 
@@ -253,6 +349,10 @@ function transformFor(for_statement) {
   let increment_node = transformAssigment(increment_statement)
 
   while_body_list.addNode(increment_node)
+
+  let expression_list = condition.map(transformExpression).reduce((l, n) => { l.addNode(n); return l; }, new LinkedList())
+
+  while_body_list.addNode(expression_list.firstNode)
 
   while_node.loop_body_root = while_body_list.firstNode
 
@@ -282,12 +382,15 @@ function transformCall(call_statement) {
   else if (call_statement.name == 'escribir') {
     let temp_list = new LinkedList()
 
-    for (let arg of call_statement.args) {
-      let call = {name: 'escribir', action: 'module_call'}
+    for (let expression of call_statement.args) {
+      let node_list = expression.map(transformExpression)
 
-      let push = {action:'push', expression:arg}
+      for (let node of node_list) {
+        temp_list.addNode(node)
+      }
 
-      temp_list.addNode(new GenericNode(push))
+      let call = {action: 'module_call', name: 'escribir'}
+
       temp_list.addNode(new GenericNode(call))
     }
 
@@ -296,12 +399,15 @@ function transformCall(call_statement) {
   else {
     let temp_list = new LinkedList()
 
-    for (let arg of call_statement.args) {
-      let push = {action:'push', expression:arg}
-      temp_list.addNode(new GenericNode(push))
+    for (let expression of call_statement.args) {
+      let node_list = expression.map(transformExpression)
+
+      for (let node of node_list) {
+        temp_list.addNode(node)
+      }
     }
 
-    let call = {name: call_statement.name, action: 'module_call', total_parameters: call_statement.args.length}
+    let call = {action: 'module_call', name: call_statement.name, total_parameters: call_statement.args.length}
 
     temp_list.addNode(new GenericNode(call))
 
