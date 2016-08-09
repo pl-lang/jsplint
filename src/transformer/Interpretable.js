@@ -24,7 +24,7 @@ export default function transform(ast) {
 function transformMain (module) {
   let result = {
     name: 'main',
-    locals : module.locals,
+    locals : transformVariables(module.locals),
     parameters: [],
     module_type : 'main',
     root : null
@@ -41,10 +41,36 @@ function transformMain (module) {
   return result
 }
 
+function transformVariables (variables) {
+  let result = {}
+
+  for (let name in variables)  {
+    let variable = variables[name]
+
+    let transformed_var = {
+      name: variable.name,
+      type: variable.type
+    }
+
+    if (variable.isArray) {
+      transformed_var.dimension = variable.dimension
+      transformed_var.values = variable.values
+    }
+    else {
+      transformed_var.dimension = [1]
+      transformed_var.values = []
+    }
+
+    result[name] = transformed_var
+  }
+
+  return result
+}
+
 function transformModule (module) {
   let result = {
     name: module.name,
-    locals : module.locals,
+    locals : transformVariables(module.locals),
     parameters : module.parameters.map(p => p.name),
     module_type : module.module_type,
     root : null
@@ -97,12 +123,24 @@ function transformAssigment(assignment) {
     expression: assignment.right
   }
 
-  let pop = {
-    action: 'pop',
-    variable: assignment.left
-  }
+  let pop
 
-  pop.variable['bounds_checked'] = false
+  if (assignment.left.isArray) {
+    pop = {
+      action: 'pop',
+      variable: assignment.left
+    }
+  }
+  else {
+    pop = {
+      action: 'pop',
+      variable: {
+        name: assignment.left.name,
+        bounds_checked: true,
+        indexes: [1]
+      }
+    }
+  }
 
   let push_node = new GenericNode(push)
   push_node.setNext(new GenericNode(pop))

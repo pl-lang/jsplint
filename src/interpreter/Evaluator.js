@@ -411,31 +411,26 @@ export default class Evaluator {
   pushVariableValue (info) {
     let variable = this.getVariable(info.name)
 
-    if (variable.isArray) {
-      let indexes = []
+    let indexes = []
 
-      for (let index_expression of info.indexes) {
-        let index_value = this.evaluateExpression(index_expression) - 1
-        indexes.push(index_value)
-      }
+    for (let index_expression of info.indexes) {
+      let index_value = this.evaluateExpression(index_expression) - 1
+      indexes.push(index_value)
+    }
 
-      if (info.bounds_checked || this.indexWithinBounds(indexes, variable.dimension)) {
+    if (info.bounds_checked || this.indexWithinBounds(indexes, variable.dimension)) {
 
-        let index = this.calculateIndex(indexes, variable.dimension)
+      let index = this.calculateIndex(indexes, variable.dimension)
 
-        this._state.expression_stack.push(variable.values[index])
+      this._state.expression_stack.push(variable.values[index])
 
-      }
-      else {
-        let out_of_bunds_info = this.getBoundsError(index_values, variable.dimension)
-
-        let exception = {name:'EvaluatorError', info:out_of_bunds_info}
-
-        throw exception
-      }
     }
     else {
-      this._state.expression_stack.push(variable.value)
+      let out_of_bunds_info = this.getBoundsError(index_values, variable.dimension)
+
+      let exception = {name:'EvaluatorError', info:out_of_bunds_info}
+
+      throw exception
     }
   }
 
