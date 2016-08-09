@@ -82,6 +82,8 @@ function transformStatement(statement) {
     return transformFor(statement)
     case 'call':
     return transformCall(statement)
+    case 'return':
+    return transformReturn(statement)
     default:
     throw new TypeError(`'${statement.type}' no es un tipo de enunciado reconocido`)
   }
@@ -267,4 +269,12 @@ function transformCall(call_statement) {
 
     return temp_list.firstNode
   }
+}
+
+function transformReturn (return_statement) {
+  let temp_list = new LinkedList()
+
+  let push = {action:'push', expression:return_statement.expression}
+
+  return new GenericNode(push)
 }
