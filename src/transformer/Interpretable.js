@@ -410,7 +410,7 @@ function transformCall(call_statement) {
 function transformReturn (return_statement) {
   let temp_list = new LinkedList()
 
-  let push = {action:'push', expression:return_statement.expression}
+  let expression_list = return_statement.expression.map(transformExpression).reduce((l, n) => { l.addNode(n); return l; }, new LinkedList())
 
-  return new GenericNode(push)
+  return expression_list.firstNode
 }
