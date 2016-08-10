@@ -299,21 +299,8 @@ function transformUntil(until_statement) {
   return temp_list.firstNode
 }
 
-// 'para' <variable> <- <expresion> 'hasta' <expresion.entera>
-//    [<enunciado>]
-// 'finpara'
-//
-/*
-  Lo de arriba se transfora en....
- */
-// <variable> <- <expresion>
-// mientras (<variable> <= <expresion.entera>)
-//  [<enunciado>]
-// finmientras
 function transformFor(for_statement) {
   let counter_variable = for_statement.counter_init.left
-  let counter_init_statement = for_statement.counter_init
-  let counter_init_nodes = transformAssigment(counter_init_statement)
 
   let condition = [
     {kind:'invocation', name:counter_variable.name, isArray:counter_variable.isArray, indexes:counter_variable.indexes},
@@ -321,18 +308,8 @@ function transformFor(for_statement) {
     {kind:'operator', operator:'minor-equal'}
   ]
 
-  let while_node = new WhileNode({action:'while'})
-
-  let body_statement_nodes = for_statement.body.map(transformStatement)
-
-  let while_body_list = new LinkedList()
-
-  for (let statement of body_statement_nodes) {
-    while_body_list.addNode(statement)
-  }
-
   let increment_statement = {
-    action: 'assignment',
+    type: 'assignment',
     left: counter_variable,
     right: [
       {
@@ -346,20 +323,19 @@ function transformFor(for_statement) {
     ]
   }
 
-  let increment_node = transformAssigment(increment_statement)
+  let new_body = for_statement.body
 
-  while_body_list.addNode(increment_node)
+  new_body.push(increment_statement)
 
-  let expression_list = condition.map(transformExpression).reduce((l, n) => { l.addNode(n); return l; }, new LinkedList())
-
-  while_body_list.addNode(expression_list.firstNode)
-
-  while_node.loop_body_root = while_body_list.firstNode
+  let while_statement = {type:'while', condition, body:new_body}
 
   let temp_list = new LinkedList()
 
-  temp_list.addNode(counter_init_nodes)
-  temp_list.addNode(while_node)
+  let counter_initialization = transformAssigment(for_statement.counter_init)
+
+  temp_list.addNode(counter_initialization)
+
+  temp_list.addNode(transformWhile(while_statement))
 
   return temp_list.firstNode
 }

@@ -407,63 +407,50 @@ describe.only('Evaluacion de programas y expresiones', () => {
     output.should.deepEqual({done:true, error:false, output:{action:'write', value:2}})
   })
 
-  it.skip('programa con un bucle para', () => {
+  it('programa con un bucle para', () => {
     let code = `variables
       entero i
     inicio
-      para i <- 0 hasta 1
+      para i <- 0 hasta 2
         escribir(i)
       finpara
-      escribir(i)
     fin`
 
     let modules = programFromSource(code).modules
 
     let evaluator = new Evaluator(modules)
 
-    let output
+    let output = evaluator.step()
 
-     evaluator.step()
-
-     evaluator.step()
-
-    evaluator.getLocals('main').i.values[0].should.equal(0)
-
-    evaluator.step() // evalua la condicion del bucle
-
-    evaluator.step()
-
-    output = evaluator.step() // escribir(i)
+    while (output.done == false && output.output === null) {
+      output = evaluator.step()
+    }
 
     output.should.deepEqual({done:false, error:false, output:{action:'write', value:0}})
 
-    evaluator.step()
+    output = evaluator.step()
 
-    evaluator.step()
-
-    evaluator.getLocals('main').i.values[0].should.equal(1)
-
-    evaluator.step() // evalua la condicion del bucle
-
-    evaluator.step()
-
-    output = evaluator.step() // escribir(i)
+    while (output.done == false && output.output === null) {
+      output = evaluator.step()
+    }
 
     output.should.deepEqual({done:false, error:false, output:{action:'write', value:1}})
 
-    evaluator.step()
+    output = evaluator.step()
 
-    evaluator.step()
+    while (output.done == false && output.output === null) {
+      output = evaluator.step()
+    }
 
-    evaluator.getLocals('main').i.values[0].should.equal(2)
+    output.should.deepEqual({done:false, error:false, output:{action:'write', value:2}})
 
-    evaluator.step() // evalua la condicion del bucle
+    output = evaluator.step()
 
-    evaluator.step()
+    while (output.done == false && output.output === null) {
+      output = evaluator.step()
+    }
 
-    output = evaluator.step() // escribir(i)
-
-    output.should.deepEqual({done:true, error:false, output:{action:'write', value:2}})
+    output.should.deepEqual({done:true, error:false, output:null})
   })
 
   it.skip('programa con un bucle repetir', () => {
