@@ -275,28 +275,13 @@ function transformWhile(while_statement) {
 }
 
 function transformUntil(until_statement) {
-  let until_node = new UntilNode({action:'until'})
+  let new_condition = until_statement.condition
 
-  let body_statement_nodes = until_statement.body.map(transformStatement)
+  new_condition.push({kind:'operator', operator:'not'})
 
-  let temp_list = new LinkedList()
+  let while_statement = {type:'while', condition:new_condition, body:until_statement.body}
 
-  for (let i = 0; i < body_statement_nodes.length; i++) {
-    let current_node = body_statement_nodes[i]
-
-    temp_list.addNode(current_node)
-  }
-
-  let expression_list = until_statement.condition.map(transformExpression).reduce((l, n) => { l.addNode(n); return l; }, new LinkedList())
-
-  temp_list.addNode(expression_list.firstNode)
-
-  temp_list.addNode(until_node)
-
-  until_node.loop_body_root = temp_list.firstNode
-
-  // return until_node
-  return temp_list.firstNode
+  return transformWhile(while_statement)
 }
 
 function transformFor(for_statement) {
