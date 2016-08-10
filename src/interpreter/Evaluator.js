@@ -92,67 +92,153 @@ export default class Evaluator {
   evaluate (statement) {
     switch (statement.action) {
       case 'push':
-        return this.pushStatement(statement)
-      case 'pop':
-        return this.popStatement(statement)
+        this.pushStatement(statement)
+        break
+      case 'if':
+        this.ifStatement(statement)
+        break
+      case 'while':
+        this.whileStatement(statement)
+        break
       case 'module_call':
         return this.callStatement(statement)
-      case 'if':
-        return this.ifStatement(statement)
-      case 'while':
-        return this.whileStatement(statement)
-      case 'until':
-        return this.untilStatement(statement)
       case 'dummy':
         throw new Error('Esto no deberia ejecutarse')
+      case 'values':
+        this.values(statement)
+        break
+      case 'assign':
+        this.assign(statement)
+        break
+      case 'subscript':
+        this.subscript(statement)
+        break
+      case 'times':
+        this.times()
+        break
+      case 'unary-minus':
+        this.uminus()
+        break
+      case 'division':
+        this.division()
+        break
+      case 'power':
+        this.power()
+        break
+      case 'div':
+        this.div()
+        break
+      case 'mod':
+        this.mod()
+        break
+      case 'divide':
+        this.divide()
+        break
+      case 'minus':
+        this.minus()
+        break
+      case 'plus':
+        this.plus()
+        break
+      case 'minor-than':
+        this.less()
+        break
+      case 'minor-equal':
+        this.less_o_equal()
+        break
+      case 'major-than':
+        this.greater()
+        break
+      case 'major-equal':
+        this.greate_or_equal()
+        break
+      case 'equal':
+        this.equal()
+        break
+      case 'not':
+        this.not()
+        break
+      case 'diff-than':
+        this.different()
+        break
+      case 'and':
+        this.and()
+        break
+      case 'or':
+        this.or()
+        break
       default:
-        throw new Error(`En Evaluator::getStatementIterator --> no se reconoce el enunciado ${statement.action}`)
+        throw new Error(`En Evaluator.evaluate --> no se reconoce el enunciado ${statement.action}`)
     }
+    return {error:false, result:null}
   }
 
   pushStatement (statement) {
-    this._state.expression_stack.push(this.evaluateExpression(statement.expression))
-
-    return {error:false, finished:true, result:null}
+    this._state.expression_stack.push(statement.value)
   }
 
-  popStatement (statement) {
-    let variable = this.getVariable(statement.variable.name)
+  subscript (statement) {
+    let variable = this.getVariable(statement.name)
 
-    if (variable.isArray) {
-      let bounds_checked = statement.variable.bounds_checked
+    let indexes = []
 
-      let indexes = []
+    for (let i = 0; i < statement.total_indexes; i++) {
+      indexes.unshift(this._state.expression_stack.pop() - 1)
+    }
 
-      for (let index_expression of statement.variable.indexes) {
-        let index_value = this.evaluateExpression(index_expression) - 1
-        indexes.push(index_value)
-      }
-
-      if (bounds_checked || this.indexWithinBounds(indexes, variable.dimension) ) {
-        let index = this.calculateIndex(indexes, variable.dimension)
-
-        variable.values[index] = this._state.expression_stack.pop()
-      }
-      else {
-        let result = {
-          reason: '@assignment-index-out-of-bounds',
-          // index: index_list,
-          name: variable.name,
-          dimension: variable.dimension
-          // line
-          // column
-        }
-        return {error:true, finished:true, result}
-      }
+    if (this.indexWithinBounds(indexes, variable.dimension)) {
+      let index = this.calculateIndex(indexes, variable.dimension)
+      this._state.expression_stack.push(variable.values[index])
     }
     else {
-      let value = this._state.expression_stack.pop()
-
-      variable.value = value
+      let result = {
+        reason: '@invocation-index-out-of-bounds',
+        // index: index_list,
+        name: variable.name,
+        dimension: variable.dimension
+        // line
+        // column
+      }
+      return {error:true, finished:true, result}
     }
 
-    return {error:false, finished:true, result:null}
+    return {error:false, result:null}
+  }
+
+  assign (statement) {
+    let variable = this.getVariable(statement.varname)
+
+    let new_value = this._state.expression_stack.pop()
+
+    let indexes = []
+
+    for (let i = 0; i < statement.total_indexes; i++) {
+      indexes.unshift(this._state.expression_stack.pop() - 1)
+    }
+
+    if (statement.bounds_checked || this.indexWithinBounds(indexes, variable.dimension)) {
+      let index = this.calculateIndex(indexes, variable.dimension)
+      variable.values[index] = new_value
+    }
+    else {
+      let result = {
+        reason: '@assignment-index-out-of-bounds',
+        // index: index_list,
+        name: variable.name,
+        dimension: variable.dimension
+        // line
+        // column
+      }
+      return {error:true, finished:true, result}
+    }
+
+    return {error:false, result:null}
+  }
+
+  values (statement) {
+    let variable = this.getVariable(statement.name)
+
+    this._state.expression_stack.push(variable.values)
   }
 
   callStatement (statement) {
@@ -175,10 +261,20 @@ export default class Evaluator {
       this._current_node = this._modules[statement.name].root
       this._current_module = this._modules[statement.name]
 
-      for (let p of this._current_module.parameters) {
-        let value = this._state.expression_stack.pop()
-        let variable = this.getVariable(p)
-        variable.value = value
+      let args = []
+
+      for (let i = 0; i < statement.total_arguments; i++) {
+        args.unshift(this._state.expression_stack.pop())
+      }
+
+      for (let i = 0; i < statement.total_arguments; i++) {
+        let value = args[i]
+        let variable = this.getVariable(this._current_module.parameters[i])
+
+        // HACK: De momento, los parametros de las funciones/procedimientos NO pueden
+        // ser arreglos
+
+        variable.values[0] = value
       }
 
       return {error:false, finished:true, result:null}
@@ -186,7 +282,7 @@ export default class Evaluator {
   }
 
   ifStatement (statement) {
-    let condition_result = this.evaluateExpression(statement.condition)
+    let condition_result = this._state.expression_stack.pop()
 
     this._current_node.setCurrentBranchTo(condition_result ? 'true_branch':'false_branch')
 
@@ -194,7 +290,7 @@ export default class Evaluator {
   }
 
   whileStatement (statement) {
-    let condition_result = this.evaluateExpression(statement.condition)
+    let condition_result = this._state.expression_stack.pop()
 
     this._current_node.setCurrentBranchTo(condition_result ? 'loop_body':'program_body')
 
@@ -202,7 +298,7 @@ export default class Evaluator {
   }
 
   untilStatement (statement) {
-    let condition_result = this.evaluateExpression(statement.condition)
+    let condition_result = this._state.expression_stack.pop()
 
     this._current_node.setCurrentBranchTo(!condition_result ? 'loop_body':'program_body')
 
@@ -213,82 +309,6 @@ export default class Evaluator {
     let current_locals = this.getLocals(this._current_module.name)
 
     return varname in current_locals ? current_locals[varname]:this._globals[varname]
-  }
-
-  evaluateExpression (expression_stack) {
-    for (let token of expression_stack) {
-      switch (token.kind) {
-        case 'operator':
-          switch (token.operator) {
-            case 'times':
-              this.times()
-              break
-            case 'unary-minus':
-              this.uminus()
-              break
-            case 'division':
-              this.division()
-              break
-            case 'power':
-              this.power()
-              break
-            case 'div':
-              this.div()
-              break
-            case 'mod':
-              this.mod()
-              break
-            case 'divide':
-              this.divide()
-              break
-            case 'minus':
-              this.minus()
-              break
-            case 'plus':
-              this.plus()
-              break
-            case 'minor-than':
-              this.less()
-              break
-            case 'minor-equal':
-              this.less_o_equal()
-              break
-            case 'major-than':
-              this.greater()
-              break
-            case 'major-equal':
-              this.greate_or_equal()
-              break
-            case 'equal':
-              this.equal()
-              break
-            case 'not':
-              this.not()
-              break
-            case 'diff-than':
-              this.different()
-              break
-            case 'and':
-              this.and()
-              break
-            case 'or':
-              this.or()
-              break
-            default:
-              throw new Error(`Operador "${token.operator}" no reconocido`)
-          }
-          break
-        case 'literal':
-          this._state.expression_stack.push(token.value)
-          break
-        case 'invocation':
-          this.pushVariableValue(token)
-          break
-        default:
-          throw new Error(`Tipo de expresion "${token.kind}" no reconocido.`)
-      }
-    }
-    return this._state.expression_stack.pop()
   }
 
   times() {

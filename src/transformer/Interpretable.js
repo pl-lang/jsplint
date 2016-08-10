@@ -159,25 +159,19 @@ function transformInvocation (invocation) {
   if (invocation.isArray) {
     let transformed_indexes = invocation.indexes.map(exp => exp.map(transformExpression))
 
-    let get_values = {action:'values', name:invocation.name}
-
-    action_list.addNode(new GenericNode(get_values))
-
     for (let node_array of transformed_indexes) {
       for (let node of node_array) {
         action_list.addNode(node)
       }
-      let access = {action:'subscript'}
-      action_list.addNode(new GenericNode(access))
     }
+    let access = {action:'subscript', name:invocation.name, total_indexes:invocation.indexes.length}
+    action_list.addNode(new GenericNode(access))
   }
   else {
     // actions
-    let get_values = {action:'values', name:invocation.name}
     let push = {action:'push', value:1}
-    let access = {action:'subscript'}
+    let access = {action:'subscript', name:invocation.name, total_indexes:1}
 
-    action_list.addNode(new GenericNode(get_values))
     action_list.addNode(new GenericNode(push))
     action_list.addNode(new GenericNode(access))
   }
@@ -212,7 +206,7 @@ function transformAssigment(assignment) {
     }
 
     assign = {
-      action: '<-',
+      action: 'assign',
       varname: assignment.left.name,
       total_indexes: assignment.left.indexes.length,
       bounds_checked: assignment.left.bounds_checked
@@ -220,7 +214,7 @@ function transformAssigment(assignment) {
   }
   else {
     indexes_list.addNode(new GenericNode({ action: 'push', value:1 }))
-    assign = { action: '<-', varname: assignment.left.name, total_indexes:1, bounds_checked: true }
+    assign = { action: 'assign', varname: assignment.left.name, total_indexes:1, bounds_checked: true }
   }
 
   let assign_node = new GenericNode(assign)
@@ -375,12 +369,43 @@ function transformCall(call_statement) {
     let temp_list = new LinkedList()
 
     for (let arg of call_statement.args) {
+      let assignment
+
+      if (arg[0].isArray) {
+        for (let expression of arg[0].indexes) {
+          let node_list = expression.map(transformExpression)
+
+          for (let node of node_list) {
+            temp_list.addNode(node)
+          }
+        }
+
+        assignment = {
+          action:'assign',
+          varname:arg[0].name,
+          total_indexes: arg[0].indexes.length,
+          // HACK: cambiar esto cuando las invocaciones dentro de leer() tengan
+          // esta propiedad
+          bounds_checked: false
+        }
+      }
+      else {
+        temp_list.addNode(new GenericNode({action:'push', value:1}))
+
+        assignment = {
+          action:'assign',
+          varname:arg[0].name,
+          total_indexes: 1,
+          // HACK: cambiar esto cuando las invocaciones dentro de leer() tengan
+          // esta propiedad
+          bounds_checked: false
+        }
+      }
+
       let call = {name: 'leer', action: 'module_call', variable_name: arg[0].name}
 
-      let pop = {action:'pop', variable:arg[0]}
-
       temp_list.addNode(new GenericNode(call))
-      temp_list.addNode(new GenericNode(pop))
+      temp_list.addNode(new GenericNode(assignment))
     }
 
     return temp_list.firstNode
@@ -413,7 +438,7 @@ function transformCall(call_statement) {
       }
     }
 
-    let call = {action: 'module_call', name: call_statement.name, total_parameters: call_statement.args.length}
+    let call = {action: 'module_call', name: call_statement.name, total_arguments: call_statement.args.length}
 
     temp_list.addNode(new GenericNode(call))
 
