@@ -219,7 +219,7 @@ function transformAssigment(assignment) {
     }
   }
   else {
-    indexes_list.addNode({ action: 'push', value:1 })
+    indexes_list.addNode(new GenericNode({ action: 'push', value:1 }))
     assign = { action: '<-', varname: assignment.left.name, total_indexes:1, bounds_checked: true }
   }
 
