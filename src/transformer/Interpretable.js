@@ -263,6 +263,12 @@ function transformWhile(while_statement) {
     temp_list.addNode(transformStatement(statement))
   }
 
+  let expression_nodes = while_statement.condition.map(transformExpression)
+
+  for (let node of expression_nodes)  {
+    temp_list.addNode(node)
+  }
+
   let while_node = new WhileNode({action:'while'})
 
   while_node.loop_body_root = temp_list.firstNode
