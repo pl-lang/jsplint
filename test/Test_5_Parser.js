@@ -192,7 +192,7 @@ describe('Checkable transformer', () => {
   })
 })
 
-describe('Interpretable', () => {
+describe.skip('Interpretable', () => {
   it('prueba con un programa con un cuerpo vacio', () => {
     let code = `variables
     entero a, real b

@@ -30,7 +30,7 @@ function programFromSource(string) {
 }
 
 
-describe.only('Evaluacion de programas y expresiones', () => {
+describe('Evaluacion de programas y expresiones', () => {
   it('programa sin enunciados', () => {
     let code = `variables
     inicio
