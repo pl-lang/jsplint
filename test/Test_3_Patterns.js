@@ -258,71 +258,6 @@ describe('TypeName', () => {
   })
 })
 
-describe.only('RPNExpression', () => {
-  it('captura literales', () => {
-    let q = queueFromSource('1')
-
-    let report = match(Patterns.RPNExpression).from(q)
-
-    report.error.should.equal(false)
-    report.result.should.deepEqual([{type:'literal', dtype:'entero', value:1}])
-  })
-
-  it ('captura la invocacion de una variable', () => {
-    {
-      let nombre = 'contador'
-      let q = queueFromSource(nombre)
-      let capt = match(Patterns.RPNExpression).from(q)
-      capt.error.should.equal(false)
-      capt.result.should.deepEqual([{
-        type:'invocation',
-        name:'contador',
-        isArray:false,
-        indexes:null
-      }])
-    }
-
-    {
-      let nombre = 'vector[2]'
-      let q = queueFromSource(nombre)
-      let capt = match(Patterns.RPNExpression).from(q)
-      capt.error.should.equal(false)
-      capt.result.should.deepEqual([{
-        type:'invocation',
-        name:'vector',
-        isArray:true,
-        indexes:[{expression_type:'literal', type:'entero', value:2}]
-      }])
-    }
-  })
-
-  it('captura una operacion', () => {
-    let nombre = 'contador + 1'
-    let q = queueFromSource(nombre)
-    let capt = match(Patterns.RPNExpression).from(q)
-    capt.error.should.equal(false)
-    capt.result.should.deepEqual([
-      {type:'invocation', name:'contador', isArray:false, indexes:null},
-      {type:'literal', dtype:'entero', value:1},
-      {type:'operator', name:'plus'},
-    ])
-  })
-
-  it('captura expresiones entre parentesis', () => {
-    it('captura una operacion', () => {
-      let nombre = '(2 + 1)'
-      let q = queueFromSource(nombre)
-      let capt = match(Patterns.RPNExpression).from(q)
-      capt.error.should.equal(false)
-      capt.result.should.deepEqual([
-        {type:'literal', dtype:'entero', value:2},
-        {type:'literal', dtype:'entero', value:1},
-        {type:'operator', name:'plus'},
-      ])
-    })
-  })
-})
-
 describe('Assignment pattern', () => {
   it('captura un enunciado de asignacion', () => {
     let asignacion = 'var <- 48'
@@ -331,18 +266,14 @@ describe('Assignment pattern', () => {
     let assignment_match = match(Patterns.Assignment).from(q)
 
     assignment_match.error.should.equal(false)
-    assignment_match.result.payload.should.deepEqual(
-      {
-        expression_type:'literal',
-        value:48,
-        type:'entero',
-      }
-    )
+    assignment_match.result.payload.should.deepEqual([
+      {type:'literal', value:48}
+    ])
     assignment_match.result.target.name.should.equal('var')
   })
 })
 
-describe('Argument list pattern', () => {
+describe('ArgumentList', () => {
   it('captura dos expresiones', () => {
     let test_string = '2, verdadero'
 
@@ -352,8 +283,8 @@ describe('Argument list pattern', () => {
 
     argument_match.error.should.equal(false)
     argument_match.result.should.deepEqual([
-      {expression_type:'literal', type:'entero', value:2},
-      {expression_type:'literal', type:'logico', value:true}
+      [{type:'literal', value:2}],
+      [{type:'literal', value:true}]
     ])
   })
 })
@@ -384,324 +315,10 @@ describe('ModuleCall pattern', () => {
     capt.error.should.equal(false)
     capt.result.name.should.equal('escribir')
     capt.result.args.should.deepEqual([
-      {expression_type:'literal', type:'entero', value:42},
+      [{type:'literal', value:42}],
     ])
   })
 })
-
-describe('New Expression', () => {
-  it ('captura la invocacion de una variable', () => {
-    {
-      let nombre = 'contador'
-      let q = queueFromSource(nombre)
-      let capt = match(Patterns.Expression).from(q)
-      capt.error.should.equal(false)
-      capt.result.should.deepEqual({
-        expression_type:'invocation',
-        name:'contador',
-        isArray:false,
-        indexes:null
-      })
-    }
-
-    {
-      let nombre = 'contador + 1'
-      let q = queueFromSource(nombre)
-      let capt = match(Patterns.Expression).from(q)
-      capt.error.should.equal(false)
-      capt.result.should.deepEqual({
-        expression_type:'operation',
-        op:'plus',
-        operands:[
-          {
-            expression_type:'invocation',
-            name:'contador',
-            isArray:false,
-            indexes:null
-          },
-          {expression_type:'literal', type:'entero', value:1}
-        ]
-      })
-    }
-
-    {
-      let nombre = 'vector[2] + 1'
-      let q = queueFromSource(nombre)
-      let capt = match(Patterns.Expression).from(q)
-      capt.error.should.equal(false)
-      capt.result.should.deepEqual({
-        expression_type:'operation',
-        op:'plus',
-        operands:[
-          {
-            expression_type:'invocation',
-            name:'vector',
-            isArray:true,
-            indexes:[{expression_type:'literal', type:'entero', value:2}]
-          },
-          {expression_type:'literal', type:'entero', value:1}
-        ]
-      })
-    }
-
-  })
-
-  it('captura factores logicos', () => {
-    {
-      let logico = 'verdadero'
-      let q = queueFromSource(logico)
-      let capt = match(Patterns.Expression).from(q)
-      capt.error.should.equal(false)
-      capt.result.should.deepEqual({
-        expression_type:'literal',
-        type:'logico',
-        value:true
-      })
-    }
-
-    {
-      let logico = 'falso'
-      let q = queueFromSource(logico)
-      let capt = match(Patterns.Expression).from(q)
-      capt.error.should.equal(false)
-      capt.result.should.deepEqual({
-        expression_type:'literal',
-        type:'logico',
-        value:false
-      })
-    }
-  })
-
-  it('captura factores numeros', () => {
-    {
-      let dato = '32'
-      let q = queueFromSource(dato)
-      let capt = match(Patterns.Expression).from(q)
-      capt.error.should.equal(false)
-      capt.result.should.deepEqual({
-        expression_type:'literal',
-        type:'entero',
-        value:32
-      })
-    }
-
-    {
-      let dato = '2.78'
-      let q = queueFromSource(dato)
-      let capt = match(Patterns.Expression).from(q)
-      capt.error.should.equal(false)
-      capt.result.should.deepEqual({
-        expression_type:'literal',
-        type:'real',
-        value:2.78
-      })
-    }
-  })
-
-  it('captura cadenas', () => {
-    {
-      let dato = '"hola mundo"'
-      let q = queueFromSource(dato)
-      let capt = match(Patterns.Expression).from(q)
-      capt.error.should.equal(false)
-      capt.result.should.deepEqual({
-        expression_type:'literal',
-        type:'string',
-        value:'hola mundo',
-        length:"hola mundo".length
-      })
-    }
-  })
-
-  it('captura una expresion OR', () => {
-    {
-      let dato = 'verdadero OR falso'
-      let q = queueFromSource(dato)
-      let capt = match(Patterns.Expression).from(q)
-      capt.error.should.equal(false)
-      capt.result.expression_type.should.equal('operation')
-      capt.result.op.should.equal('or')
-    }
-  })
-
-  it('captura una expresion AND', () => {
-    {
-      let dato = 'verdadero AND falso'
-      let q = queueFromSource(dato)
-      let capt = match(Patterns.Expression).from(q)
-      capt.error.should.equal(false)
-      capt.result.expression_type.should.equal('operation')
-      capt.result.op.should.equal('and')
-    }
-  })
-
-  it('captura una expresion IGUAL', () => {
-    {
-      let dato = 'verdadero = falso'
-      let q = queueFromSource(dato)
-      let capt = match(Patterns.Expression).from(q)
-      capt.error.should.equal(false)
-      capt.result.expression_type.should.equal('operation')
-      capt.result.op.should.equal('equal')
-    }
-  })
-
-  it('captura una expresion DESIGUAL', () => {
-    {
-      let dato = 'verdadero <> falso'
-      let q = queueFromSource(dato)
-      let capt = match(Patterns.Expression).from(q)
-      capt.error.should.equal(false)
-      capt.result.expression_type.should.equal('operation')
-      capt.result.op.should.equal('diff-than')
-    }
-  })
-
-  it('captura expresiones RELACIONALES', () => {
-    {
-      let dato = '3 > 2'
-      let q = queueFromSource(dato)
-      let capt = match(Patterns.Expression).from(q)
-      capt.error.should.equal(false)
-      capt.result.expression_type.should.equal('operation')
-      capt.result.op.should.equal('major-than')
-    }
-
-    {
-      let dato = '3 >= 2'
-      let q = queueFromSource(dato)
-      let capt = match(Patterns.Expression).from(q)
-      capt.error.should.equal(false)
-      capt.result.expression_type.should.equal('operation')
-      capt.result.op.should.equal('major-equal')
-    }
-
-    {
-      let dato = '2 < 7'
-      let q = queueFromSource(dato)
-      let capt = match(Patterns.Expression).from(q)
-      capt.error.should.equal(false)
-      capt.result.expression_type.should.equal('operation')
-      capt.result.op.should.equal('minor-than')
-    }
-
-    {
-      let dato = '2 <= 4'
-      let q = queueFromSource(dato)
-      let capt = match(Patterns.Expression).from(q)
-      capt.error.should.equal(false)
-      capt.result.expression_type.should.equal('operation')
-      capt.result.op.should.equal('minor-equal')
-    }
-  })
-
-  it('captura expresiones de ADICION (suma y resta)', () => {
-    {
-      let dato = '3 - 2'
-      let q = queueFromSource(dato)
-      let capt = match(Patterns.Expression).from(q)
-      capt.error.should.equal(false)
-      capt.result.expression_type.should.equal('operation')
-      capt.result.op.should.equal('minus')
-    }
-
-    {
-      let dato = '3 + 2'
-      let q = queueFromSource(dato)
-      let capt = match(Patterns.Expression).from(q)
-      capt.error.should.equal(false)
-      capt.result.expression_type.should.equal('operation')
-      capt.result.op.should.equal('plus')
-    }
-  })
-
-  it('captura expresiones MULTIPLICATIVAS (*, /, div y mod)', () => {
-    {
-      let dato = '3 mod 2'
-      let q = queueFromSource(dato)
-      let capt = match(Patterns.Expression).from(q)
-      capt.error.should.equal(false)
-      capt.result.expression_type.should.equal('operation')
-      capt.result.op.should.equal('mod')
-    }
-
-    {
-      let dato = '3 / 2'
-      let q = queueFromSource(dato)
-      let capt = match(Patterns.Expression).from(q)
-      capt.error.should.equal(false)
-      capt.result.expression_type.should.equal('operation')
-      capt.result.op.should.equal('divide')
-    }
-
-    {
-      let dato = '3 div 2'
-      let q = queueFromSource(dato)
-      let capt = match(Patterns.Expression).from(q)
-      capt.error.should.equal(false)
-      capt.result.expression_type.should.equal('operation')
-      capt.result.op.should.equal('div')
-    }
-
-    {
-      let dato = '3 * 2'
-      let q = queueFromSource(dato)
-      let capt = match(Patterns.Expression).from(q)
-      capt.error.should.equal(false)
-      capt.result.expression_type.should.equal('operation')
-      capt.result.op.should.equal('times')
-    }
-
-    {
-      let dato = '3 ^ 2'
-      let q = queueFromSource(dato)
-      let capt = match(Patterns.Expression).from(q)
-      capt.error.should.equal(false)
-      capt.result.expression_type.should.equal('operation')
-      capt.result.op.should.equal('power')
-    }
-  })
-
-  it('captura expresiones UNARIAS (-, +, not)', () => {
-    {
-      let dato = 'not verdadero'
-      let q = queueFromSource(dato)
-      let capt = match(Patterns.Expression).from(q)
-      capt.error.should.equal(false)
-      capt.result.expression_type.should.equal('unary-operation')
-      capt.result.op.should.equal('not')
-    }
-
-    {
-      let dato = '-2'
-      let q = queueFromSource(dato)
-      let capt = match(Patterns.Expression).from(q)
-      capt.error.should.equal(false)
-      capt.result.expression_type.should.equal('unary-operation')
-      capt.result.op.should.equal('unary-minus')
-    }
-
-    {
-      let dato = '+3'
-      let q = queueFromSource(dato)
-      let capt = match(Patterns.Expression).from(q)
-      capt.error.should.equal(false)
-      capt.result.expression_type.should.equal('literal')
-    }
-  })
-
-  it('captura expresiones entre parentesis', () => {
-    {
-      let dato = '(not verdadero)'
-      let q = queueFromSource(dato)
-      let capt = match(Patterns.Expression).from(q)
-      capt.error.should.equal(false)
-      capt.result.expression_type.should.equal('expression')
-      capt.result.expression.should.deepEqual({expression_type:'unary-operation', op:'not', operand:{expression_type:'literal', type:'logico', value:true}})
-    }
-  })
-})
-
 
 describe('VariablePattern', () => {
 
@@ -727,11 +344,9 @@ describe('VariablePattern', () => {
     report.result.should.deepEqual({
       name:'mi_vector',
       isArray:true,
-      indexes:[{
-        expression_type:'literal',
-        type:'entero',
-        value:2
-      }]
+      indexes:[
+        [{type:'literal', value:2}]
+      ]
     })
   })
 
@@ -745,50 +360,29 @@ describe('VariablePattern', () => {
       name:'mi_matriz',
       isArray:true,
       indexes:[
-        {expression_type:'invocation', name:'i', isArray:false, indexes:null},
-        {expression_type:'invocation', name:'j', isArray:false, indexes:null}
+        [{type:'invocation', name:'i', isArray:false, indexes:null}],
+        [{type:'invocation', name:'j', isArray:false, indexes:null}]
       ]
     })
   })
 
-})
-
-describe('NewAssignment', () => {
-  it('captura una asignacion bien escrita', () => {
-    let code = 'var <- 32'
-    let q = queueFromSource(code)
-    let report = match(Patterns.NewAssignment).from(q)
+  it('captura la variable (un arreglo3) en una asignacion', () => {
+    let dato = 'mi_matriz[i, j, k] <- 2'
+    let q = queueFromSource(dato)
+    let report = match(Patterns.Variable).from(q)
 
     report.error.should.equal(false)
     report.result.should.deepEqual({
-      type:'assignment',
-      left:{
-        name:'var',
-        isArray:false,
-        indexes:null
-      },
-      right:{
-        expression_type:'literal',
-        type:'entero',
-        value:32
-      }
+      name:'mi_matriz',
+      isArray:true,
+      indexes:[
+        [{type:'invocation', name:'i', isArray:false, indexes:null}],
+        [{type:'invocation', name:'j', isArray:false, indexes:null}],
+        [{type:'invocation', name:'k', isArray:false, indexes:null}]
+      ]
     })
   })
 
-  it('captura una asignacion bien escrita', () => {
-    let code = 'var = 32'
-    let q = queueFromSource(code)
-    let report = match(Patterns.NewAssignment).from(q)
-
-    report.error.should.equal(true)
-    report.result.should.deepEqual({
-      unexpected:'equal',
-      expected:'<-',
-      line:0,
-      column:4,
-      reason:'bad-assignment-operator'
-    })
-  })
 })
 
 describe('If', () => {
@@ -803,11 +397,11 @@ describe('If', () => {
     report.error.should.equal(false)
     report.result.should.deepEqual({
       type:'if',
-      condition:{expression_type:'literal', type:'logico', value:true},
+      condition: [{type:'literal', value:true}],
       true_branch:[{
         type:'assignment',
         left:{name:'var', isArray:false, indexes:null},
-        right:{expression_type:'literal', type:'entero', value:32}
+        right:[{type:'literal', value:32}]
       }],
       false_branch:[]
     })
@@ -826,16 +420,16 @@ describe('If', () => {
     report.error.should.equal(false)
     report.result.should.deepEqual({
       type:'if',
-      condition:{expression_type:'literal', type:'logico', value:true},
+      condition: [{type:'literal', value:true}],
       true_branch:[{
         type:'assignment',
         left:{name:'var', isArray:false, indexes:null},
-        right:{expression_type:'literal', type:'entero', value:32}
+        right:[{type:'literal', value:32}]
       }],
       false_branch:[{
         type:'assignment',
         left:{name:'var', isArray:false, indexes:null},
-        right:{expression_type:'literal', type:'entero', value:16}
+        right:[{type:'literal', value:16}]
       }]
     })
   })
@@ -855,7 +449,7 @@ describe('If', () => {
     report.error.should.equal(false)
     report.result.should.deepEqual({
       type:'if',
-      condition:{expression_type:'literal', type:'logico', value:true},
+      condition:[{type:'literal', value:true}],
       true_branch:[],
       false_branch:[]
     })
@@ -953,11 +547,11 @@ describe('While', () => {
     report.error.should.equal(false)
     report.result.should.deepEqual({
       type:'while',
-      condition:{expression_type:'literal', type:'logico', value:true},
+      condition:[{type:'literal', value:true}],
       body:[{
         type:'assignment',
         left:{name:'var', isArray:false, indexes:null},
-        right:{expression_type:'literal', type:'entero', value:32}
+        right:[{type:'literal', value:32}]
       }]
     })
   })
@@ -975,7 +569,7 @@ describe('While', () => {
     report.error.should.equal(false)
     report.result.should.deepEqual({
       type:'while',
-      condition:{expression_type:'literal', type:'logico', value:true},
+      condition:[{type:'literal', value:true}],
       body:[]
     })
   })
@@ -1026,11 +620,11 @@ describe('Until', () => {
     report.error.should.equal(false)
     report.result.should.deepEqual({
       type:'until',
-      condition:{expression_type:'literal', type:'logico', value:true},
+      condition:[{type:'literal', value:true}],
       body:[{
         type:'assignment',
         left:{name:'var', isArray:false, indexes:null},
-        right:{expression_type:'literal', type:'entero', value:32}
+        right:[{type:'literal', value:32}]
       }]
     })
   })
@@ -1050,7 +644,7 @@ describe('Until', () => {
     report.error.should.equal(false)
     report.result.should.deepEqual({
       type:'until',
-      condition:{expression_type:'literal', type:'logico', value:true},
+      condition:[{type:'literal', value:true}],
       body:[]
     })
   })
@@ -1107,13 +701,13 @@ describe('For', () => {
       counter_init: {
         type:'assignment',
         left:{name:'i', isArray:false, indexes:null},
-        right:{expression_type:'literal', type:'entero', value:1}
+        right:[{type:'literal', value:1}]
       },
-      last_value: {expression_type:'literal', type:'entero', value:10},
+      last_value: [{type:'literal', value:10}],
       body: [{
         type:'assignment',
         left:{name:'j', isArray:false, indexes:null},
-        right:{expression_type:'literal', type:'entero', value:2}
+        right:[{type:'literal', value:2}]
       }]
     })
   })
@@ -1166,7 +760,7 @@ describe('Statement', () => {
     report.error.should.equal(false)
     report.result.should.deepEqual({
       type:'return',
-      expression:{expression_type:'literal', type:'entero', value:25}
+      expression:[{type:'literal', value:25}]
     })
   })
 
@@ -1278,11 +872,7 @@ describe('MainModule', () => {
             isArray:false,
             indexes:null
           },
-          right:{
-            expression_type:'literal',
-            type:'entero',
-            value:32
-          }
+          right:[{type:'literal', value:32}]
         }
       ]
     })
@@ -1310,11 +900,7 @@ describe('MainModule', () => {
           isArray:false,
           indexes:null
         },
-        right:{
-          expression_type:'literal',
-          type:'entero',
-          value:32
-        }
+        right:[{type:'literal', value:32}]
       }]
     })
   })
@@ -1426,13 +1012,12 @@ describe('FunctionModule', () => {
         },
         {
           type:'call',
-          args:[{expression_type:'literal', type:'entero', value:42}],
-          name:'escribir',
-          expression_type:'module_call'
+          args:[[{type:'literal', value:42}]],
+          name:'escribir'
         },
         {
           type:'return',
-          expression:{expression_type:'literal', type:'entero', value:2}
+          expression:[{type:'literal', value:2}]
         }
       ]
     })
@@ -1469,9 +1054,8 @@ describe('ProcedureModule', () => {
         },
         {
           type:'call',
-          args:[{expression_type:'literal', type:'entero', value:42}],
-          name:'escribir',
-          expression_type:'module_call'
+          args:[[{type:'literal', value:42}]],
+          name:'escribir'
         }
       ]
     })

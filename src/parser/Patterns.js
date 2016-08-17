@@ -225,13 +225,13 @@ export function IndexExpression(source) {
     if (source.current().kind === 'comma') {
       source.next()
 
-      let another_index_report = Expression(source)
+      let another_index_report = IndexExpression(source)
 
       if (another_index_report.error === true) {
         return another_index_report
       }
       else {
-        indexes = indexes.concat(another_index_report.result)
+        indexes = [...indexes, ...another_index_report.result]
 
         return new Report(false, indexes)
       }
@@ -287,7 +287,7 @@ export function Variable(source) {
   }
 }
 
-let precedence_by_op = {
+let precedence = {
   'power'       : 6 ,
   'div'         : 5 ,
   'mod'         : 5 ,
@@ -305,9 +305,30 @@ let precedence_by_op = {
   'or'          : 0
 }
 
-let operator_names = new Set(Object.getOwnPropertyNames(precedence_by_op))
+function is_operator (string) {
+  switch (string) {
+    case 'power':
+    case 'div':
+    case 'mod':
+    case 'times':
+    case 'divide':
+    case 'minus':
+    case 'plus':
+    case 'minor-than':
+    case 'minor-equal':
+    case 'major-than':
+    case 'major-equal':
+    case 'equal':
+    case 'diff-than':
+    case 'and':
+    case 'or':
+      return true
+    default:
+      return false
+  }
+}
 
-export function RPNExpression (source) {
+export function Expression (source) {
   let end_reached = (tkind) => {
     return  tkind == 'eol'
             || tkind == 'eof'
@@ -318,8 +339,6 @@ export function RPNExpression (source) {
 
   let output = []
   let operators = []
-
-  let precedence = precedence_by_op
 
   while (!end_reached(source.current().kind)) {
     let ctoken = source.current()
@@ -335,7 +354,7 @@ export function RPNExpression (source) {
       if (operators[top].kind == 'left-par') operators.shift();
       else return {error:false, result:{reason:'mismatched-parenthesis'}};
     }
-    else if (operator_names.has(ctoken.kind)) {
+    else if (is_operator(ctoken.kind)) {
       let p1 = precedence[ctoken.kind]
       let p2 = () => precedence[operators[0].kind]
 
@@ -389,7 +408,12 @@ export function Value (source) {
     }
   }
   else if (isLiteralTokenType(ctoken.kind)) {
-    let result = {type:'literal', value:ctoken.value, dtype:ctoken.kind}
+    let value
+
+    if (ctoken.kind == 'entero' || ctoken.kind == 'real') value = ctoken.value;
+    else value = ctoken.kind == 'verdadero' ? true:false;
+
+    let result = {type:'literal', value}
 
     source.next()
 
@@ -402,8 +426,9 @@ export function Value (source) {
 
 function isLiteralTokenType (token_kind) {
   let is_num = token_kind == 'entero' || token_kind == 'real'
-  let is_other = token_kind == 'caracter' || token_kind == 'logico' || token_kind == 'string'
-  return is_num || is_other
+  let is_bool = token_kind == 'verdadero' || token_kind == 'falso'
+  let is_other = token_kind == 'caracter' || token_kind == 'string'
+  return is_num || is_bool || is_other
 }
 
 function UnaryExpression(source) {
@@ -529,62 +554,6 @@ function PrimaryExpression(source) {
     let result          = {unexpected, expected, column, line}
 
     return new Report(error, result)
-  }
-}
-
-function queueToRPN(source) {
-  let operator_stack = []
-  let output_stack = []
-
-  while ( source.current().kind != 'eol' && source.current().kind != 'eof' && source.current().kind != 'comma' && source.current().kind != 'right-par' && source.current().kind != 'right-bracket') {
-    let operand_exp  = UnaryExpression(source)
-    if (operand_exp.error) {
-      return operand_exp
-    }
-    else {
-      output_stack.push(operand_exp.result)
-    }
-
-    if (operator_names.has(source.current().kind)) {
-      while (operator_stack.length > 0 && precedence_by_op[source.current().kind] <= precedence_by_op[operator_stack[operator_stack.length-1]]) {
-        output_stack.push(operator_stack.pop())
-      }
-      operator_stack.push(source.current().kind)
-      source.next()
-    }
-  }
-
-  while (operator_stack.length > 0) {
-    output_stack.push(operator_stack.pop())
-  }
-
-  return new Report(false, output_stack)
-}
-
-function RPNtoTree(rpn_stack) {
-  let last_token = rpn_stack.pop()
-
-  if (operator_names.has(last_token)) {
-    let op = last_token
-    let operands = [RPNtoTree(rpn_stack)]
-    operands.unshift(RPNtoTree(rpn_stack))
-    let expression_type = 'operation'
-    return {expression_type, op, operands}
-  }
-  else {
-    return last_token
-  }
-}
-
-export function Expression(source) {
-  let rpn = queueToRPN(source)
-
-  if (rpn.error) {
-    return rpn
-  }
-  else {
-    let tree = RPNtoTree(rpn.result)
-    return new Report(false, tree)
   }
 }
 
@@ -734,8 +703,7 @@ export function ModuleCall(source) {
         let data = {
           type:'call',
           args:args.result,
-          name:name.result,
-          expression_type:'module_call'
+          name:name.result
         }
         return new Report(false, data)
       }
@@ -755,8 +723,7 @@ export function ModuleCall(source) {
     let data = {
       type:'call',
       args:[],
-      name:name.result,
-      expression_type:'module_call'
+      name:name.result
     }
     return new Report(false, data)
   }
