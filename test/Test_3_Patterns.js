@@ -258,6 +258,71 @@ describe('TypeName', () => {
   })
 })
 
+describe.only('RPNExpression', () => {
+  it('captura literales', () => {
+    let q = queueFromSource('1')
+
+    let report = match(Patterns.RPNExpression).from(q)
+
+    report.error.should.equal(false)
+    report.result.should.deepEqual([{type:'literal', dtype:'entero', value:1}])
+  })
+
+  it ('captura la invocacion de una variable', () => {
+    {
+      let nombre = 'contador'
+      let q = queueFromSource(nombre)
+      let capt = match(Patterns.RPNExpression).from(q)
+      capt.error.should.equal(false)
+      capt.result.should.deepEqual([{
+        type:'invocation',
+        name:'contador',
+        isArray:false,
+        indexes:null
+      }])
+    }
+
+    {
+      let nombre = 'vector[2]'
+      let q = queueFromSource(nombre)
+      let capt = match(Patterns.RPNExpression).from(q)
+      capt.error.should.equal(false)
+      capt.result.should.deepEqual([{
+        type:'invocation',
+        name:'vector',
+        isArray:true,
+        indexes:[{expression_type:'literal', type:'entero', value:2}]
+      }])
+    }
+  })
+
+  it('captura una operacion', () => {
+    let nombre = 'contador + 1'
+    let q = queueFromSource(nombre)
+    let capt = match(Patterns.RPNExpression).from(q)
+    capt.error.should.equal(false)
+    capt.result.should.deepEqual([
+      {type:'invocation', name:'contador', isArray:false, indexes:null},
+      {type:'literal', dtype:'entero', value:1},
+      {type:'operator', name:'plus'},
+    ])
+  })
+
+  it('captura expresiones entre parentesis', () => {
+    it('captura una operacion', () => {
+      let nombre = '(2 + 1)'
+      let q = queueFromSource(nombre)
+      let capt = match(Patterns.RPNExpression).from(q)
+      capt.error.should.equal(false)
+      capt.result.should.deepEqual([
+        {type:'literal', dtype:'entero', value:2},
+        {type:'literal', dtype:'entero', value:1},
+        {type:'operator', name:'plus'},
+      ])
+    })
+  })
+})
+
 describe('Assignment pattern', () => {
   it('captura un enunciado de asignacion', () => {
     let asignacion = 'var <- 48'

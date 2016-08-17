@@ -2,7 +2,7 @@
 
 import Report from '../utility/Report.js'
 
-import {take, zipObj, flatten} from '../utility/helpers.js'
+import {take, zipObj, flatten, mergeObjs} from '../utility/helpers.js'
 
 import TokenQueue from './TokenQueue.js'
 
@@ -306,6 +306,105 @@ let precedence_by_op = {
 }
 
 let operator_names = new Set(Object.getOwnPropertyNames(precedence_by_op))
+
+export function RPNExpression (source) {
+  let end_reached = (tkind) => {
+    return  tkind == 'eol'
+            || tkind == 'eof'
+            || tkind == 'comma'
+            || tkind == 'right-par'
+            || tkind == 'right-bracket'
+  }
+
+  let output = []
+  let operators = []
+
+  let precedence = precedence_by_op
+
+  while (!end_reached(source.current().kind)) {
+    let ctoken = source.current()
+
+    if (ctoken.kind == 'left-par') {
+      operators.unshift(ctoken)
+      source.next()
+    }
+    else if (ctoken.kind == 'right-par') {
+      while (operators.length > 0 && operators[0].kind != 'left-par') {
+        output.push(operators.shift())
+      }
+      if (operators[top].kind == 'left-par') operators.shift();
+      else return {error:false, result:{reason:'mismatched-parenthesis'}};
+    }
+    else if (operator_names.has(ctoken.kind)) {
+      let p1 = precedence[ctoken.kind]
+      let p2 = () => precedence[operators[0].kind]
+
+      while (operators.length > 0 &&  p1 <= p2()) {
+        let op_tok = operators.shift()
+
+        let operator = {type:'operator', name:op_tok.kind}
+
+        output.push(operator);
+      }
+
+      let operator = {type:'operator', name:ctoken.kind}
+
+      operators.unshift(operator)
+
+      source.next()
+    }
+    else {
+      let value_match = Value(source)
+
+      if (value_match.error) return value_match;
+
+      output.push(value_match.result)
+    }
+  }
+
+  while (operators.length > 0) output.push(operators.shift());
+
+  return {error:false, result:output}
+}
+
+export function Value (source) {
+  let ctoken = source.current()
+
+  if (ctoken.kind == 'word') {
+    if (source.peek().kind == 'left-par') {
+      let call_match = ModuleCall(source)
+
+      return call_match
+    }
+    else {
+      let value_match = Variable(source)
+
+      if (value_match.error) return value_match;
+
+      let result = {type:'invocation'}
+
+      result = mergeObjs(result, value_match.result)
+
+      return {error:false, result}
+    }
+  }
+  else if (isLiteralTokenType(ctoken.kind)) {
+    let result = {type:'literal', value:ctoken.value, dtype:ctoken.kind}
+
+    source.next()
+
+    return {error:false, result}
+  }
+  else {
+    return UnexpectedTokenReport(ctoken, 'expression', '@Value-expected-expression')
+  }
+}
+
+function isLiteralTokenType (token_kind) {
+  let is_num = token_kind == 'entero' || token_kind == 'real'
+  let is_other = token_kind == 'caracter' || token_kind == 'logico' || token_kind == 'string'
+  return is_num || is_other
+}
 
 function UnaryExpression(source) {
   let op_found = false
