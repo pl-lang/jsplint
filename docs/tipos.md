@@ -5,7 +5,7 @@ de su programa.
 
 El lenguaje que se busca implementar especifica 4 tipos basicos: enteros,
 reales, caracteres, y valores logicos (verdadero, falso). Ademas, se pueden
-crear arreglos de dimensiones arbitrarias (preferentemente) de valores de
+crear arreglos de dimensiones (preferentemente) arbitrarias de valores de
 cualquiera de estos tipos. Por lo tanto el sistema tiene que poder describir
 el tipo de un arreglo 'invocado' con menos indices que su cantidad de
 dimensiones.
@@ -22,9 +22,6 @@ Tipo {
 
 ```
 
-_Nota: ademas de los tipos basicos la propiedad `simple` tambien podria tomar
-los valores `'cualquiera'` y `'ninguno'`_
-
 Entonces, `simple` es una cadena que describe cual es el tipo 'basico/atomico'
 de la expresion o variable y `dimension` es un arreglo de enteros que indica el
 tamaño de cada una de las dimensiones de la variable. Con esos dos campos la
@@ -40,18 +37,6 @@ Se ve que una variable 'normal' se representa como un vector con una celda. Un
 vector más grande cambiaría el 1 por algún otro numero, mientras que una matriz
 podria tener una dimension igual a `[2, 4]`
 
-Además, como la estructura presentada debe ser capaz de escribir los tipos de
-retorno de las funciones y los tipos de los parametros que estas toman, hace
-falta agregar 2 tipos 'atómicos' más:
-
-  - `ninguno`: utilizado para representar a los procedimientos, funciones que no
-  retornan ningun valor.
-
-  - `cualquiera`: utilizado para representar a parametros que aceptan
-  expresiones de cualquier tipo.
-
-Ninguno de los 2 valores anteriores está disponible para el usuario.
-
 A partir de ahora el parser debería dejar de asignar tipos a las expresiones
 y 'enfocarse' en producir estructuras que representen la sintaxis. Luego, se
 transformará el ast en una estructura similar pero donde intervienen
@@ -61,10 +46,10 @@ procedimientos. El chequeo de tipos se hará utilizando esta última estructura
 y no debería ser muy diferente a un evaluador.
 
 Asignarle un tipo a una expresión  requiere información sobre ésta, por eso a
-partir de ahora las expresioens tendrá una propiedad llamada `kind` que
+partir de ahora las expresiones tendrán una propiedad llamada `kind` que
 indicará que clase de expresión pertencen.
 
-Hay 4 clases:
+Hay 3 clases:
 
   - literal: incluye a todos los valores 'crudos'
 
@@ -72,15 +57,19 @@ Hay 4 clases:
 
   - call: para las llamadas a funciones
 
-  - any: esta clase incluye a las demas y está pensada para las funciones
-  `leer`, `escribir` y `escribir_linea`
-
-Las clases de expresion sirven 2 propositos. Cuando se las encuentra en una
-expresion simplemente indican su clase, y cuando están anotando a un
-_parámetro_ indican que clase de expresiones acepta dicho parámetro.
-
 Las clases se anotan al nivel del Parser y luego se utilizan en el proceso de
 chequeo de tipado.
+
+# Clases de tipo
+
+Las clases de tipo sirven para agrupar a tipos que tienen cierta caracteristica
+en común. Por ejemplo, pertencen a la clase `writeable` todos los tipos que
+pueden ser escritos en pantalla. Las voy a usar para restringir los tipos que
+las funciones `leer`, `escribir`, y `escribir_linea` aceptan. Las clases (y los
+tipos que estas contienen) deberán estar anotadas en TypeChecker.js.
+
+Las clases existen unicamente para poder verificar los argumentos que se pasan
+a dichas funciones, ya que no hay manera de representarlas en la sintaxis.
 
 # Chequeo
 
@@ -107,14 +96,42 @@ Las asignaciones deben cumplir que:
 
 Las llamadas deben cumplir que:
 
-  - parametro a parametro, los tipos de las expresiones pasadas sean compatibles
-  o iguales y sus clases sean iguales.
+  - parametro a parametro:
 
-Como la mayoría de las expresiones involucrarán operadores, sus tipos tendrán
-que ser calculados.
+    - si el parametro exige tipos de una clase, el tipo pasado debe pertenecer
+    a esa clase
+
+    - si el parametro especifica un tipo, el tipo pasado debe ser igual o
+    compatible con el especificado
+
+La unica excepcion son las llamadas a la funcion especial `leer`, donde se debe
+revisar las expresiones que se hayan pasado como parametros sean invocaciones.
+
+Por ultimo, como la mayoría de las expresiones involucrarán operadores,
+sus tipos tendrán que ser calculados.
 
 Así como los operadores se aplican a valores en el evaluador, se aplicarán a
 tipos en TypeChecker.
 
-Los operadores y las funciones serán funciones que tomen cierta cantidad de
-tipos y produzcan un nuevo tipo.
+Los operadores y las funciones (del usuario) serán funciones que tomen cierta
+cantidad de tipos y produzcan un nuevo tipo.
+
+Entonces, por ejemplo, los datos del chequeo podrían verse así:
+
+Del lado izquierdo de la asignación:
+```js
+Expression {
+  kind:'invocation',
+  name:'variable_1',
+  indexes:[1, 2]
+}
+```
+
+Del lado derecho:
+```js
+Expression {
+  kind:'literal',
+  value:2.3
+}
+
+```
