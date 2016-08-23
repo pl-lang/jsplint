@@ -11,7 +11,8 @@ export default class Transformer  {
     let result = {}
 
     for (let module of input) {
-      let old_module = this.data[module.name]
+      // let old_module = this.data[module.name]
+      let old_module = module
 
       let new_module = { name: module.name, body: [] }
 
@@ -42,6 +43,8 @@ export default class Transformer  {
 
       result[module.name] = new_module
     }
+
+    return result
   }
 
   transform_statement (statement, module) {
@@ -74,7 +77,7 @@ export default class Transformer  {
   transform_assignment (assignment, module) {
     let target_type = this.type_var(module.locals[assignment.left.name], assignment.left)
     let payload_type = this.type_expression(assignment.right)
-    return {left:target_type, right:payload_type}
+    return {type:'assignment', left:target_type, right:payload_type}
   }
 
   transform_call (call, module) {
@@ -95,32 +98,32 @@ export default class Transformer  {
 
     let return_type = this.type_return(module.return_type)
 
-    return {argtypes, args, return_type}
+    return {type:'call', argtypes, args, return_type}
   }
 
   type_expression (expression, module) {
     let result = []
 
-    for (let token in expression) {
+    for (let token of expression) {
       if (this.is_operator(token.type)) {
-        result.push(token)
+        result.push({kind:'operator', name:token.name})
       }
       else {
-        let type
+        let wrapper
         switch (token.type) {
           case 'literal':
-            type = this.type_literal(token)
+            wrapper = {kind:'type', type:this.type_literal(token.value)}
             break
           case 'invocation':
-            type = this.type_var(module.locals[token.name], token)
+            wrapper = {kind:'type', type:this.type_var(module.locals[token.name], token)}
             break
           case 'call':
-            type = this.transform_call(token, module)
+            wrapper = {kind:'call', call:this.transform_call(token, module)}
             break
           default:
             throw new Error(`@Typer: tipo de expresion ${token.type} desconocido`)
         }
-        result.push(type)
+        result.push(wrapper)
       }
     }
 
@@ -129,19 +132,24 @@ export default class Transformer  {
 
   type_var (variable, invocation) {
     let dimension_sizes
-    if (variable.dimension.length == invocation.indexes.length) {
+    if (variable.isArray) {
+      if (variable.dimension.length == invocation.indexes.length) {
+        dimension_sizes = [1]
+      }
+      else if (invocation.indexes.length < variable.dimension.length) {
+        dimension_sizes = variable.dimension.slice(invocation.indexes.length)
+      }
+      else throw new Error('@Typer: invocando variable con demasiados indices')
+    }
+    else {
       dimension_sizes = [1]
     }
-    else if (invocation.indexes.length < variable.dimension.length) {
-      dimension_sizes = variable.dimension.slice(invocation.indexes.length)
-    }
-    else throw new Error('@Typer: invocando variable con demasiados indices')
 
     switch (variable.type) {
-      case 'entero': return new Types.Integer(dimension_sizes)
-      case 'real': return new Types.Float(dimension_sizes)
-      case 'logico': return new Types.Bool(dimension_sizes)
-      case 'caracter': return new Types.Char(dimension_sizes)
+      case 'entero': return new Types.IntegerType(dimension_sizes)
+      case 'real': return new Types.FloatType(dimension_sizes)
+      case 'logico': return new Types.BoolType(dimension_sizes)
+      case 'caracter': return new Types.CharType(dimension_sizes)
       default: throw new Error(`@Typer: tipo "${variable.type}" desconocido`)
     }
   }
@@ -155,6 +163,22 @@ export default class Transformer  {
       default:
         throw new Error(`@Typer: no existe el tipo atomico "${atomic_typename}"`)
     }
+  }
+
+  type_literal (literal) {
+    if (typeof literal == 'string') return new Types.CharType([literal.length])
+    else if (typeof literal == 'boolean') return new Types.BoolType([1])
+    else if (this.is_int(literal)) return new Types.IntegerType([1])
+    else if (this.is_float(literal)) return new Types.FloatType([1])
+    else throw new Error(`@Typer: no puedo tipar el literal ${literal}`)
+  }
+
+  is_int (value) {
+    return value === Math.trunc(value)
+  }
+
+  is_float (value) {
+    return value - Math.trunc(value) > 0
   }
 
   is_operator (string) {
