@@ -4,19 +4,30 @@ export function check (modules) {
   let errors_found = []
 
   for (let module of modules) {
-    for (let statement of module) {
-      let report
+    for (let statement of module.body) {
+      let report = this.check_statement(statement)
 
-      if (statement.type == 'call') report = call_rule(statement)
-      else if (statement.type == 'assignment') report = assignment_rule(statement)
-      else
-        throw new Erroor(`@TypeChecker: no se como verificar enunciados de tipo ${statement.type}`)
-
-      if (report.error) errors_found.push(report.result)
+      if (report.error) {
+        if (statement.type == 'control') errors_found.push(...report.result)
+        else errors_found.push(report.result)
+      }
     }
   }
 
   return errors_found
+}
+
+export function check_statement (statement) {
+  switch (statement.type) {
+    case 'call':
+      return this.call_rule(statement)
+    case 'assignment':
+      return this.assignment_rule(statement)
+    case 'control':
+      return this.ctrl_rule(statement)
+    default:
+      throw new Error(`@TypeChecker: no se como verificar enunciados de tipo ${statement.type}`)
+  }
 }
 
 export function assignment_rule (assignment) {
@@ -76,6 +87,26 @@ export function call_rule (call) {
   }
 
   return {error:false, result:call.return_type}
+}
+
+export function ctrl_rule (ctrl_statement) {
+  let errors_found = []
+
+  if (!equals(ctrl_statement.condition_type, Types.Bool)) {
+    let reason = '@condition-invalid-expression'
+    let unexpected = stringify(ctrl_statement.condition_type)
+    return {error:true, result:{reason, target_type, payload_type}}
+  }
+
+  for (let statement of ctrl_statement.body) {
+    let report = this.check_statement(statement)
+    if (report.error) {
+      if (statement.type == 'control')  errors_found.push(...report.result)
+      else errors_found.push(report.result)
+    }
+  }
+
+  return errors_found
 }
 
 // el argumento de esta funcion es un arreglo de tipos y operadores
