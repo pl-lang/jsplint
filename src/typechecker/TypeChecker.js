@@ -3,9 +3,10 @@ import * as Types from './Types.js'
 export function check (modules) {
   let errors_found = []
 
-  for (let module of modules) {
+  for (let module_name in modules) {
+    let module = modules[module_name]
     for (let statement of module.body) {
-      let report = this.check_statement(statement)
+      let report = check_statement(statement)
 
       if (report.error) {
         if (statement.type == 'control') errors_found.push(...report.result)
@@ -20,11 +21,11 @@ export function check (modules) {
 export function check_statement (statement) {
   switch (statement.type) {
     case 'call':
-      return this.call_rule(statement)
+      return call_rule(statement)
     case 'assignment':
-      return this.assignment_rule(statement)
+      return assignment_rule(statement)
     case 'control':
-      return this.ctrl_rule(statement)
+      return ctrl_rule(statement)
     default:
       throw new Error(`@TypeChecker: no se como verificar enunciados de tipo ${statement.type}`)
   }
@@ -34,7 +35,7 @@ export function assignment_rule (assignment) {
   let type_report = calculate_type(assignment.right)
 
   if (type_report.error) return type_report
-
+  
   let right_type = type_report.result
 
   if (equals(assignment.left, right_type)) return {error:false}
@@ -99,7 +100,7 @@ export function ctrl_rule (ctrl_statement) {
   }
 
   for (let statement of ctrl_statement.body) {
-    let report = this.check_statement(statement)
+    let report = check_statement(statement)
     if (report.error) {
       if (statement.type == 'control')  errors_found.push(...report.result)
       else errors_found.push(report.result)
