@@ -115,7 +115,7 @@ export default class Transformer  {
             wrapper = {kind:'type', type:this.type_literal(token.value)}
             break
           case 'invocation':
-            wrapper = {kind:'type', type:this.type_var(module.locals[token.name], token)}
+            wrapper = {kind:'invocation', invocation:this.type_var(module.locals[token.name], token)}
             break
           case 'call':
             wrapper = {kind:'call', call:this.transform_call(token, module)}
@@ -131,7 +131,9 @@ export default class Transformer  {
   }
 
   type_var (variable, invocation) {
+    // result = {type, indextypes}
     let dimension_sizes
+    let indextypes = []
     if (variable.isArray) {
       if (variable.dimension.length == invocation.indexes.length) {
         dimension_sizes = [1]
@@ -140,18 +142,33 @@ export default class Transformer  {
         dimension_sizes = variable.dimension.slice(invocation.indexes.length)
       }
       else throw new Error('@Typer: invocando variable con demasiados indices')
+
+      for (let index of invocation.indexes)
+        indextypes.push(this.type_expression(index))
     }
     else {
       dimension_sizes = [1]
+      indextypes.push(new Types.IntegerType([1]))
     }
 
+    let type
     switch (variable.type) {
-      case 'entero': return new Types.IntegerType(dimension_sizes)
-      case 'real': return new Types.FloatType(dimension_sizes)
-      case 'logico': return new Types.BoolType(dimension_sizes)
-      case 'caracter': return new Types.CharType(dimension_sizes)
-      default: throw new Error(`@Typer: tipo "${variable.type}" desconocido`)
+      case 'entero':
+        type = new Types.IntegerType(dimension_sizes)
+        break
+      case 'real':
+        type = new Types.FloatType(dimension_sizes)
+        break
+      case 'logico':
+        type = new Types.BoolType(dimension_sizes)
+        break
+      case 'caracter':
+        type = new Types.CharType(dimension_sizes)
+        break
+      default: throw new Error(`@Typer: tipo atomico "${variable.type}" desconocido`)
     }
+
+    return {type, indextypes}
   }
 
   type_return (atomic_typename) {
