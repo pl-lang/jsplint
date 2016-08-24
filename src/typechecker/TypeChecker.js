@@ -32,13 +32,17 @@ export function check_statement (statement) {
 }
 
 export function assignment_rule (assignment) {
+  let variable_type = invocation_rule(assignment.left)
+
+  if (variable_type.error) return variable_type
+
   let type_report = calculate_type(assignment.right)
 
   if (type_report.error) return type_report
 
   let right_type = type_report.result
 
-  if (equals(assignment.left, right_type)) return {error:false}
+  if (equals(variable_type.result, right_type)) return {error:false}
 
   else if (right_type.atomic == 'entero' && assignment.left.atomic == 'real') {
     if (equal_dimensions(assignment.left, right_type)) return {error:false}
@@ -98,7 +102,7 @@ export function invocation_rule (invocation) {
   let indexnum = 1
 
   for (let type_expression of invocation.indextypes) {
-    let type_report = this.calculate_type(type_expression)
+    let type_report = calculate_type(type_expression)
 
     if (type_report.error) return type_report
 

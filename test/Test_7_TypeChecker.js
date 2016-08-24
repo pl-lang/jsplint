@@ -91,8 +91,13 @@ describe('invocation rule', () => {
 
 describe('assignment rule', () => {
   it('asignar un valor entero a una variable entera', () => {
+    let invocation = {
+      type:Types.Integer,
+      indextypes:[[{kind:'type', type:Types.Integer}], [{kind:'type', type:Types.Integer}]]
+    }
+
     let assignment = {
-      left: Types.Integer,
+      left: invocation,
       right: [{kind:'type', type:Types.Integer}]
     }
 
