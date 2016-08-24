@@ -35,7 +35,7 @@ export function assignment_rule (assignment) {
   let type_report = calculate_type(assignment.right)
 
   if (type_report.error) return type_report
-  
+
   let right_type = type_report.result
 
   if (equals(assignment.left, right_type)) return {error:false}
@@ -79,7 +79,7 @@ export function call_rule (call) {
     let expected_type = call.argtypes[i]
 
     if (!equals(argument_types[i], expected_type)) {
-      let reason = '@call-wrong-type'
+      let reason = '@call-wrong-argument-type'
       let target_type = stringify(right_type)
       let payload_type = stringify(assignment.left)
 
