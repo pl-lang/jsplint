@@ -5,6 +5,10 @@
   "main": "main.js",
   "scripts": {
     "test": "mocha",
+    "test3": "mocha ./test/Test_3_Patterns.js",
+    "test5": "mocha ./test/Test_5_Parser.js",
+    "test7": "mocha ./test/Test_7_TypeChecker.js",
+    "test9": "mocha ./test/Test_8_TestableEvaluator.js",
     "m_watch": "mocha -w --reporter min",
     "coverage": "istanbul cover node_modules/mocha/bin/_mocha",
     "nyc": "nyc --cache --reporter=lcov --reporter=text mocha"
