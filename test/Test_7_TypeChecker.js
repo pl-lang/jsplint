@@ -87,6 +87,17 @@ describe('invocation rule', () => {
     report.error.should.equal(false)
     report.result.should.deepEqual(Types.Integer)
   })
+
+  it('bad invocation', () => {
+    let invocation = {
+      type:Types.Integer,
+      indextypes:[[{kind:'type', type:Types.Integer}], [{kind:'type', type:Types.Float}]]
+    }
+
+    let report = TC.invocation_rule(invocation)
+
+    report.error.should.equal(true)
+  })
 })
 
 describe('assignment rule', () => {
