@@ -75,6 +75,20 @@ describe('calculate type', () => {
   })
 })
 
+describe('invocation rule', () => {
+  it('good invocation', () => {
+    let invocation = {
+      type:Types.Integer,
+      indextypes:[[{kind:'type', type:Types.Integer}], [{kind:'type', type:Types.Integer}]]
+    }
+
+    let report = TC.invocation_rule(invocation)
+
+    report.error.should.equal(false)
+    report.result.should.deepEqual(Types.Integer)
+  })
+})
+
 describe('assignment rule', () => {
   it('asignar un valor entero a una variable entera', () => {
     let assignment = {
