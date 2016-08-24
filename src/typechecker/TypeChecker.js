@@ -9,7 +9,7 @@ export function check (modules) {
       let report = check_statement(statement)
 
       if (report.error) {
-        if (statement.type == 'control') errors_found.push(...report.result)
+        if (statement.result instanceof Array) errors_found.push(...report.result)
         else errors_found.push(report.result)
       }
     }
@@ -90,6 +90,32 @@ export function call_rule (call) {
   return {error:false, result:call.return_type}
 }
 
+export function invocation_rule (invocation) {
+  let error = false
+
+  let errors_found = []
+
+  let indexnum = 1
+
+  for (let type_expression of invocation.indextypes) {
+    let type_report = this.calculate_type(type_expression)
+
+    if (type_report.error) return type_report
+
+    if (!equals(Types.Integer, type_report.result)) {
+      error = true
+      let error_info = {
+        reason:'non-integer-index', indexnum, bad_type:stringify(type_report.result)
+      }
+      errors_found.push(error_info)
+    }
+    indexnum++
+  }
+
+  if (error) return {error, result:errors_found}
+  else return {error, result:invocation.type}
+}
+
 export function ctrl_rule (ctrl_statement) {
   let errors_found = []
 
@@ -123,6 +149,11 @@ export function calculate_type (expression) {
     }
     else if (elt.kind == 'call') {
       let report = call_rule(elt.call)
+      if (report.error) return report
+      stack.push(report.result)
+    }
+    else if (elt.kind == 'invocation') {
+      let report = invocation_rule(elt.invocation)
       if (report.error) return report
       stack.push(report.result)
     }
