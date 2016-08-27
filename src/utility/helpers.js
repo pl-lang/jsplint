@@ -1,3 +1,5 @@
+// import R from 'ramda'
+
 // similar como seria bind (>>=) de haskell si solo pudiera ser aplicado a
 // Maybes
 // En resumen, una funcion que toma una funcion y un reporte. Si el reporte indica
@@ -5,9 +7,7 @@
 // (y sobre cualquier otro argumento pasado luego del reporte). Cabe aclarar que
 // f es una funcion que tambien devuelve reportes. Un reporte es un objeto que
 // contiene las propiedades `error` y `result`.
-export function bind (f, report) {
-  return report.error ? report:f(report.result)
-}
+export const bind = (f, r) => r.error ? r:f(r.result)
 
 // flatten :: [any] -> [[any]] -> [any]
 export function flatten (accumulator, arr) {
