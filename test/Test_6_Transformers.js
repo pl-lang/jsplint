@@ -6,7 +6,6 @@ import Parser from '../src/parser/Parser.js'
 
 import * as Types from '../src/typechecker/Types.js'
 
-import Transformer from '../src/transformer/Transformer.js'
 import Declarator from '../src/transformer/Declarator.js'
 import Typer from '../src/transformer/Typer.js'
 
@@ -29,11 +28,7 @@ describe('Declarator', () => {
 
     let parser_output = programFromSource(code)
 
-    let transformer = new Transformer()
-
-    transformer.add_transforms(Declarator)
-
-    let transformed_ast = transformer.transform(parser_output)
+    let transformed_ast = Declarator(parser_output)
 
     transformed_ast.error.should.equal(false)
     transformed_ast.result.modules.should.deepEqual([
@@ -59,11 +54,7 @@ describe('Declarator', () => {
 
     let parser_output = programFromSource(code)
 
-    let transformer = new Transformer()
-
-    transformer.add_transforms(Declarator)
-
-    let transformed_ast = transformer.transform(parser_output)
+    let transformed_ast = Declarator(parser_output)
 
     transformed_ast.error.should.equal(true)
     transformed_ast.result.should.deepEqual([
