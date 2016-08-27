@@ -1,5 +1,7 @@
 import {bind, mergeObjs} from '../utility/helpers.js'
 
+import {curry} from 'ramda'
+
 export default function transform (ast) {
   let new_ast = {
     modules: []
@@ -39,7 +41,7 @@ function transform_main (old_module) {
 
    let locals = declare_variables(declarations)
 
-   return bind(make_module, locals, old_module)
+   return bind(make_module(old_module), locals)
 }
 
 function declare_variables (declarations) {
@@ -82,7 +84,7 @@ function declare_variables (declarations) {
   return {error, result}
 }
 
-function make_module (locals, old_module) {
+const make_module = curry((old_module, locals) => {
   let new_module = {
     module_type: old_module.module_type,
     type: 'module',
@@ -92,7 +94,7 @@ function make_module (locals, old_module) {
   }
 
   return {error:false, result:new_module}
-}
+})
 
 function transform_procedure (module) {
 
