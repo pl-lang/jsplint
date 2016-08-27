@@ -5,8 +5,8 @@
 // (y sobre cualquier otro argumento pasado luego del reporte). Cabe aclarar que
 // f es una funcion que tambien devuelve reportes. Un reporte es un objeto que
 // contiene las propiedades `error` y `result`.
-export function bind (f, report, ...rest) {
-  return report.error ? report:f(report.result, ...rest)
+export function bind (f, report) {
+  return report.error ? report:f(report.result)
 }
 
 // flatten :: [any] -> [[any]] -> [any]
