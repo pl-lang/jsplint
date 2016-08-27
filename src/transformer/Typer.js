@@ -2,7 +2,7 @@
 
 import * as Types from '../typechecker/Types.js'
 
-import {curry} from 'ramda'
+import {curry, map} from 'ramda'
 
 function transform (input) {
   let output = {}
@@ -56,7 +56,7 @@ function transform_ctrl_stmnt (ctrl_statement, module) {
 function transform_assignment (assignment, module) {
   let variable = get_var(assignment.left.name, module.locals)
 
-  let vartype = bind(type_var(assignment.left), variable)
+  let vartype = bind(type_var(module, assignment.left), variable)
 
   let payload_type = type_expression(assignment.right)
 
@@ -69,13 +69,9 @@ const make_assignment = curry((left, right) => {
   return {error:false, result}
 })
 
+// TODO: esta funcion
 function transform_call (call, module) {
-  let args = []
-
-  for (let argument of call.args) {
-    let type = this.type_expression(arg, module)
-    args.push(type)
-  }
+  let argtypes = type_exp_array(module, call.args)
 
   let argtypes = []
   let parameters = module.parameters
@@ -90,74 +86,109 @@ function transform_call (call, module) {
   return {type:'call', argtypes, args, return_type}
 }
 
-function type_expression (expression, module) {
-  let result = []
+function type_expression (module, expression) {
+  let output = []
+  let errors_found = []
 
   for (let token of expression) {
     if (this.is_operator(token.type)) {
       result.push({kind:'operator', name:token.name})
     }
     else {
-      let wrapper
+      let type_info
       switch (token.type) {
         case 'literal':
-          wrapper = {kind:'type', type:this.type_literal(token.value)}
+          type_info = type_literal(token.value)
           break
         case 'invocation':
-          wrapper = {kind:'invocation', invocation:this.type_var(module.locals[token.name], token)}
+          {
+            let variable = get_var(token.name, module.locals)
+            // type_info = type_var >>= module >>= variable >>= token
+            type_info = bind(bind(type_var(module), variable), token)
+          }
           break
         case 'call':
-          wrapper = {kind:'call', call:this.transform_call(token, module)}
+          type_info = transform_call(token, module)
           break
         default:
           throw new Error(`@Typer: tipo de expresion ${token.type} desconocido`)
       }
-      result.push(wrapper)
+      if (type_info.error) errors_found = [...errors_found, ...type_info.result]
+      else output.push({kind:token.type, result:type_info.result})
     }
   }
 
-  return result
+  let error = errors_found.length > 0
+  let result = error ? errors_found:output
+
+  return {error, result}
 }
 
-function type_var (variable, invocation) {
-  // result = {type, indextypes}
-  let dimension_sizes
-  let indextypes = []
-  if (variable.isArray) {
-    if (variable.dimension.length == invocation.indexes.length) {
-      dimension_sizes = [1]
-    }
-    else if (invocation.indexes.length < variable.dimension.length) {
-      dimension_sizes = variable.dimension.slice(invocation.indexes.length)
-    }
-    else throw new Error('@Typer: invocando variable con demasiados indices')
+const type_var = curry((module, variable, invocation) => {
+  // Report [Num]
+  // size per dimension
+  let dimension_sizes = calculate_sizes(variable, invocation)
 
-    for (let index of invocation.indexes)
-      indextypes.push(this.type_expression(index))
+  // Report Type
+  // the type of the value this invocation returns
+  let type = bind(make_type(typename), dimension_sizes)
+
+  // [Report ExpStack]
+  // the type of the indexes in this invocation
+  let indextypes = type_exp_array(module, invocation.indexes)
+
+  return bind(bind(make_inv, type), indextypes)
+})
+
+const make_inv = curry((type, index_stacks) => {
+  let indextypes = map(r => r.result, index_stacks)
+  return {error:false, result:{type, indextypes}}
+})
+
+const make_type = curry((tn, sizes) => {
+  let type
+  switch (tn) {
+    case 'entero':
+      return {error:false, result:new Types.IntegerType(sizes)}
+    case 'real':
+      return {error:false, result:new Types.FloatType(sizes)}
+    case 'logico':
+      return {error:false, result:new Types.BoolType(sizes)}
+    case 'caracter':
+      return {error:false, result:new Types.IntegerType(sizes)}
+    default:
+     throw new Error(`@Typer: tipo atomico "${variable.type}" desconocido`)
+  }
+})
+
+function calculate_sizes (v, i) {
+  if (i.indexes.length > v.dimension.length) {
+    let result = {
+      reason: '@invocation-too-many-indexes',
+      expected: v.dimension.length,
+      received: i.indexes.length
+    }
+    return {error:true, result}
   }
   else {
-    dimension_sizes = [1]
-    indextypes.push(new Types.IntegerType([1]))
+    return {error:false, result:[drop(i.indexes.length, v.dimension])}
+  }
+}
+
+function type_exp_array (m, es) {
+  let errors_found = []
+  let output = []
+
+  for (let e of es) {
+    let report = type_expression(m, e)
+    if (report.error) errors_found.push(...report.result)
+    else output.push(report.result)
   }
 
-  let type
-  switch (variable.type) {
-    case 'entero':
-      type = new Types.IntegerType(dimension_sizes)
-      break
-    case 'real':
-      type = new Types.FloatType(dimension_sizes)
-      break
-    case 'logico':
-      type = new Types.BoolType(dimension_sizes)
-      break
-    case 'caracter':
-      type = new Types.CharType(dimension_sizes)
-      break
-    default: throw new Error(`@Typer: tipo atomico "${variable.type}" desconocido`)
-  }
+  let error = errors_found.length > 0
+  let result = error ? errors_found:result
 
-  return {type, indextypes}
+  return {error, result}
 }
 
 function type_return (atomic_typename) {
@@ -172,11 +203,15 @@ function type_return (atomic_typename) {
 }
 
 function type_literal (literal) {
-  if (typeof literal == 'string') return new Types.CharType([literal.length])
-  else if (typeof literal == 'boolean') return new Types.BoolType([1])
-  else if (this.is_int(literal)) return new Types.IntegerType([1])
-  else if (this.is_float(literal)) return new Types.FloatType([1])
+  let type
+
+  if (typeof literal == 'string')       type = Types.CharType([literal.length])
+  else if (typeof literal == 'boolean') type = Types.BoolType([1])
+  else if (this.is_int(literal))        type = Types.IntegerType([1])
+  else if (this.is_float(literal))      type = Types.FloatType([1])
   else throw new Error(`@Typer: no puedo tipar el literal ${literal}`)
+
+  return {error:false, result:type}
 }
 
 function is_int (value) {
