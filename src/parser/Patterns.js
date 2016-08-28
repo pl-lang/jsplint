@@ -121,7 +121,7 @@ export function VariableDeclaration(source) {
   let variable = {
     name    : '',
     isArray : false,
-    dimension:null
+    dimension: []
   }
 
   let text = Word(source)
@@ -243,7 +243,7 @@ export function IndexExpression(source) {
 }
 
 export function Variable(source) {
-  let name = '', isArray = false, indexes = null
+  let name = '', isArray = false, indexes = []
 
   let word_match = Word(source)
 
@@ -410,8 +410,10 @@ export function Value (source) {
   else if (isLiteralTokenType(ctoken.kind)) {
     let value
 
-    if (ctoken.kind == 'entero' || ctoken.kind == 'real') value = ctoken.value;
-    else value = ctoken.kind == 'verdadero' ? true:false;
+    if (ctoken.kind == 'verdadero' || ctoken.kind == 'falso')
+      value = ctoken.kind == 'verdadero' ? true:false
+    else
+      value = ctoken.value
 
     let result = {type:'literal', value}
 
