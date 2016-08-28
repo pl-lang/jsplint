@@ -65,7 +65,7 @@ describe('Declarator', () => {
   })
 })
 
-describe.only('Typer', () => {
+describe('Typer', () => {
   it('tipea un modulo principal', () => {
     let code = `variables
       entero a, entero b[7], c[2, 3]

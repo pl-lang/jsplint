@@ -30,6 +30,14 @@ describe('Comparar tipos', () => {
   it('Integer != Float', () => {
     TC.equals(Types.Integer, Types.Float).should.equal(false)
   })
+
+  it('Integer != Array<3, Integer>', () => {
+    TC.equals(Types.Integer, new Types.ArrayType(Types.Integer, 3)).should.equal(false)
+  })
+
+  it('Array<3, Integer> == Array<3, Integer>', () => {
+    TC.equals(new Types.ArrayType(Types.Integer, 3), new Types.ArrayType(Types.Integer, 3)).should.equal(true)
+  })
 })
 
 describe('calculate type', () => {
