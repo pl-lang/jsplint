@@ -1,23 +1,26 @@
 'use strict'
 
+import {curry, map, drop} from 'ramda'
+
+import {bind} from '../utility/helpers.js'
+
 import * as Types from '../typechecker/Types.js'
 
-import {curry, map} from 'ramda'
-
-function transform (input) {
+export default function transform (input) {
   let output = {}
   let errors_found = []
 
-  for (let module of input) {
-    let old_module = module
+  for (let module of input.modules) {
 
-    let new_module = { name: module.name, body: [] }
+    let verifiable_statements = []
 
     for (let statement of module.body) {
       let new_statement = transform_statement(statement, module)
       if (new_statement.error) errors_found.push(new_statement.result)
-      else output[module.name] = new_module
+      else verifiable_statements.push(new_statement.result)
     }
+
+    output[module.name] = verifiable_statements
   }
 
   let error = errors_found.length > 0
@@ -29,14 +32,14 @@ function transform (input) {
 function transform_statement (statement, module) {
   switch (statement.type) {
     case 'assignment':
-      return this.transform_assignment(statement, old_module)
+      return transform_assignment(statement, module)
     case 'call':
-      return this.transform_call(statement, old_module)
+      return transform_call(statement, module)
     case 'for':
     case 'until':
     case 'while':
     case 'if':
-      return this.transform_ctrl_stmnt(statement, old_module)
+      return transform_ctrl_stmnt(statement, module)
     default:
       throw new Error(`@Typer: no se puede transformar un enunciado "${statement.type}"`)
   }
@@ -46,9 +49,9 @@ function transform_ctrl_stmnt (ctrl_statement, module) {
   let result = {type:'control', body:[]}
 
   for (let statement of ctrl_statement.body)
-    result.body.push(this.transform_statement(statement, module))
+    result.body.push(transform_statement(statement, module))
 
-  result.condition_type = this.type_expression(ctrl_statement.condition)
+  result.condition_type = type_expression(ctrl_statement.condition)
 
   return result
 }
@@ -58,7 +61,7 @@ function transform_assignment (assignment, module) {
 
   let vartype = bind(type_var(module, assignment.left), variable)
 
-  let payload_type = type_expression(assignment.right)
+  let payload_type = type_expression(module, assignment.right)
 
   // make_assignment >>= vartype >>= payload_type
   return bind(bind(make_assignment, vartype), payload_type)
@@ -73,15 +76,14 @@ const make_assignment = curry((left, right) => {
 function transform_call (call, module) {
   let argtypes = type_exp_array(module, call.args)
 
-  let argtypes = []
   let parameters = module.parameters
   for (let parameter of parameters) {
-    let type = this.type_var(parameter)
+    let type = type_var(parameter)
     // TODO: cambiar argtypes a paramtypes
     argtypes.push(type)
   }
 
-  let return_type = this.type_return(module.return_type)
+  let return_type = type_return(module.return_type)
 
   return {type:'call', argtypes, args, return_type}
 }
@@ -91,7 +93,7 @@ function type_expression (module, expression) {
   let errors_found = []
 
   for (let token of expression) {
-    if (this.is_operator(token.type)) {
+    if (is_operator(token.type)) {
       result.push({kind:'operator', name:token.name})
     }
     else {
@@ -104,7 +106,7 @@ function type_expression (module, expression) {
           {
             let variable = get_var(token.name, module.locals)
             // type_info = type_var >>= module >>= variable >>= token
-            type_info = bind(bind(type_var(module), variable), token)
+            type_info = bind(bind(type_var(module), token), variable)
           }
           break
         case 'call':
@@ -114,7 +116,7 @@ function type_expression (module, expression) {
           throw new Error(`@Typer: tipo de expresion ${token.type} desconocido`)
       }
       if (type_info.error) errors_found = [...errors_found, ...type_info.result]
-      else output.push({kind:token.type, result:type_info.result})
+      else output.push({kind:token.type, type_info:type_info.result})
     }
   }
 
@@ -124,14 +126,14 @@ function type_expression (module, expression) {
   return {error, result}
 }
 
-const type_var = curry((module, variable, invocation) => {
+const type_var = curry((module, invocation, variable) => {
   // Report [Num]
   // size per dimension
   let dimension_sizes = calculate_sizes(variable, invocation)
 
   // Report Type
   // the type of the value this invocation returns
-  let type = bind(make_type(typename), dimension_sizes)
+  let type = bind(make_type(variable.type), dimension_sizes)
 
   // [Report ExpStack]
   // the type of the indexes in this invocation
@@ -157,12 +159,12 @@ const make_type = curry((tn, sizes) => {
     case 'caracter':
       return {error:false, result:new Types.IntegerType(sizes)}
     default:
-     throw new Error(`@Typer: tipo atomico "${variable.type}" desconocido`)
+     throw new Error(`@Typer: tipo atomico "${tn}" desconocido`)
   }
 })
 
-function calculate_sizes (v, i) {
-  if (i.indexes.length > v.dimension.length) {
+function calculate_sizes (i, v) {
+  if (i.indexes != null && i.indexes.length > v.dimension.length) {
     let result = {
       reason: '@invocation-too-many-indexes',
       expected: v.dimension.length,
@@ -171,7 +173,9 @@ function calculate_sizes (v, i) {
     return {error:true, result}
   }
   else {
-    return {error:false, result:[drop(i.indexes.length, v.dimension])}
+    let n = i.indexes != null ? i.indexes.length:0
+    let result = v.dimension != null ? drop(n, v.dimension):[1]
+    return {error:false, result}
   }
 }
 
@@ -186,7 +190,7 @@ function type_exp_array (m, es) {
   }
 
   let error = errors_found.length > 0
-  let result = error ? errors_found:result
+  let result = error ? errors_found:output
 
   return {error, result}
 }
@@ -205,10 +209,10 @@ function type_return (atomic_typename) {
 function type_literal (literal) {
   let type
 
-  if (typeof literal == 'string')       type = Types.CharType([literal.length])
-  else if (typeof literal == 'boolean') type = Types.BoolType([1])
-  else if (this.is_int(literal))        type = Types.IntegerType([1])
-  else if (this.is_float(literal))      type = Types.FloatType([1])
+  if (typeof literal == 'string')       type = new Types.CharType([literal.length])
+  else if (typeof literal == 'boolean') type = new Types.BoolType([1])
+  else if (is_int(literal))             type = new Types.IntegerType([1])
+  else if (is_float(literal))           type = new Types.FloatType([1])
   else throw new Error(`@Typer: no puedo tipar el literal ${literal}`)
 
   return {error:false, result:type}
@@ -243,4 +247,12 @@ function is_operator (string) {
     default:
       return false
   }
+}
+
+function get_var (name, locals) {
+  let error = !(name in locals)
+
+  let result = error ? [{reason:'undefined-variable', name}]:locals[name]
+
+  return {error, result}
 }

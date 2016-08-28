@@ -2,6 +2,8 @@
 import should from 'should'
 import fs from 'fs'
 
+import {bind} from '../src/utility/helpers.js'
+
 import Parser from '../src/parser/Parser.js'
 
 import * as Types from '../src/typechecker/Types.js'
@@ -63,8 +65,8 @@ describe('Declarator', () => {
   })
 })
 
-describe.skip('Typer', () => {
-  it('tipe un modulo principal', () => {
+describe('Typer', () => {
+  it('tipea un modulo principal', () => {
     let code = `variables
       entero a
     inicio
@@ -74,18 +76,14 @@ describe.skip('Typer', () => {
 
     let parser_output = programFromSource(code)
 
-    let transformer = new Transformer()
-
-    transformer.add_transforms(Declarator, Typer)
-
-    let transformed_ast = transformer.transform(parser_output)
+    let transformed_ast = bind(Typer, Declarator(parser_output))
 
     transformed_ast.error.should.equal(false)
     transformed_ast.result.main.should.deepEqual([
       {
         type: 'assignment',
-        left: { indextypes: [Types.Integer], type: Types.Integer},
-        right: [{kind:'type', type_info:Types.Integer}]
+        left: { indextypes: [], type: Types.Integer},
+        right: [{kind:'literal', type_info:Types.Integer}]
       }
     ])
   })

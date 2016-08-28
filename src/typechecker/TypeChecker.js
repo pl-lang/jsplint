@@ -5,7 +5,7 @@ export function check (modules) {
 
   for (let module_name in modules) {
     let module = modules[module_name]
-    for (let statement of module.body) {
+    for (let statement of module) {
       let report = check_statement(statement)
 
       if (report.error) {
@@ -161,7 +161,7 @@ export function calculate_type (expression) {
       if (report.error) return report
       stack.push(report.result)
     }
-    else stack.push(elt.type)
+    else stack.push(elt.type_info)
   }
 
   return {error:false, result:stack.pop()}

@@ -2,8 +2,25 @@
 import should from 'should'
 import fs from 'fs'
 
+import {bind} from '../src/utility/helpers.js'
+
+import Parser from '../src/parser/Parser.js'
+
 import * as Types from '../src/typechecker/Types.js'
+
+import Declarator from '../src/transformer/Declarator.js'
+import Typer from '../src/transformer/Typer.js'
+
 import * as TC from '../src/typechecker/TypeChecker.js'
+
+function parse(string) {
+  let parser = new Parser()
+
+  let parser_output = parser.parse(string).result
+
+  return parser_output
+}
+
 
 describe('Comparar tipos', () => {
   it('Integer == Integer', () => {
@@ -17,7 +34,7 @@ describe('Comparar tipos', () => {
 
 describe('calculate type', () => {
   it('expresion logica', () => {
-    let exp = [ {kind:'type', type:Types.Bool}, {kind:'operator', name:'not'} ]
+    let exp = [ {kind:'type', type_info:Types.Bool}, {kind:'operator', name:'not'} ]
 
     let report = TC.calculate_type(exp)
     report.error.should.equal(false)
@@ -25,7 +42,7 @@ describe('calculate type', () => {
   })
 
   it('comparasion de entero con real', () => {
-    let exp = [ {kind:'type', type:Types.Integer}, {kind:'type', type:Types.Float}, {kind:'operator', name:'equal'} ]
+    let exp = [ {kind:'type', type_info:Types.Integer}, {kind:'type', type_info:Types.Float}, {kind:'operator', name:'equal'} ]
 
     let report = TC.calculate_type(exp)
     report.error.should.equal(false)
@@ -33,7 +50,7 @@ describe('calculate type', () => {
   })
 
   it('suma de entero con real', () => {
-    let exp = [ {kind:'type', type:Types.Integer}, {kind:'type', type:Types.Float}, {kind:'operator', name:'plus'} ]
+    let exp = [ {kind:'type', type_info:Types.Integer}, {kind:'type', type_info:Types.Float}, {kind:'operator', name:'plus'} ]
 
     let report = TC.calculate_type(exp)
     report.error.should.equal(false)
@@ -41,7 +58,7 @@ describe('calculate type', () => {
   })
 
   it('suma de entero con entero', () => {
-    let exp = [ {kind:'type', type:Types.Integer}, {kind:'type', type:Types.Integer}, {kind:'operator', name:'plus'} ]
+    let exp = [ {kind:'type', type_info:Types.Integer}, {kind:'type', type_info:Types.Integer}, {kind:'operator', name:'plus'} ]
 
     let report = TC.calculate_type(exp)
     report.error.should.equal(false)
@@ -50,7 +67,7 @@ describe('calculate type', () => {
 
   it('division', () => {
     {
-      let exp = [ {kind:'type', type:Types.Integer}, {kind:'type', type:Types.Integer}, {kind:'operator', name:'divide'} ]
+      let exp = [ {kind:'type', type_info:Types.Integer}, {kind:'type', type_info:Types.Integer}, {kind:'operator', name:'divide'} ]
 
       let report = TC.calculate_type(exp)
       report.error.should.equal(false)
@@ -58,7 +75,7 @@ describe('calculate type', () => {
     }
 
     {
-      let exp = [ {kind:'type', type:Types.Float}, {kind:'type', type:Types.Float}, {kind:'operator', name:'divide'} ]
+      let exp = [ {kind:'type', type_info:Types.Float}, {kind:'type', type_info:Types.Float}, {kind:'operator', name:'divide'} ]
 
       let report = TC.calculate_type(exp)
       report.error.should.equal(false)
@@ -67,7 +84,7 @@ describe('calculate type', () => {
   })
 
   it('binary_logic_operators', () => {
-    let exp = [ {kind:'type', type:Types.Bool}, {kind:'type', type:Types.Bool}, {kind:'operator', name:'and'} ]
+    let exp = [ {kind:'type', type_info:Types.Bool}, {kind:'type', type_info:Types.Bool}, {kind:'operator', name:'and'} ]
 
     let report = TC.calculate_type(exp)
     report.error.should.equal(false)
@@ -79,7 +96,7 @@ describe('invocation rule', () => {
   it('good invocation', () => {
     let invocation = {
       type:Types.Integer,
-      indextypes:[[{kind:'type', type:Types.Integer}], [{kind:'type', type:Types.Integer}]]
+      indextypes:[[{kind:'type', type_info:Types.Integer}], [{kind:'type', type_info:Types.Integer}]]
     }
 
     let report = TC.invocation_rule(invocation)
@@ -91,7 +108,7 @@ describe('invocation rule', () => {
   it('bad invocation', () => {
     let invocation = {
       type:Types.Integer,
-      indextypes:[[{kind:'type', type:Types.Integer}], [{kind:'type', type:Types.Float}]]
+      indextypes:[[{kind:'type', type_info:Types.Integer}], [{kind:'type', type_info:Types.Float}]]
     }
 
     let report = TC.invocation_rule(invocation)
@@ -104,12 +121,12 @@ describe('assignment rule', () => {
   it('asignar un valor entero a una variable entera', () => {
     let invocation = {
       type:Types.Integer,
-      indextypes:[[{kind:'type', type:Types.Integer}], [{kind:'type', type:Types.Integer}]]
+      indextypes:[[{kind:'type', type_info:Types.Integer}], [{kind:'type', type_info:Types.Integer}]]
     }
 
     let assignment = {
       left: invocation,
-      right: [{kind:'type', type:Types.Integer}]
+      right: [{kind:'type', type_info:Types.Integer}]
     }
 
     let report = TC.assignment_rule(assignment)
@@ -121,7 +138,7 @@ describe('assignment rule', () => {
 describe('call rule', () => {
   it('verificar una llamada correcta', () => {
     let call = {
-      args:[[{kind:'type', type:Types.Integer}], [{kind:'type', type:Types.Float}]],
+      args:[[{kind:'type', type_info:Types.Integer}], [{kind:'type', type_info:Types.Float}]],
       argtypes: [Types.Integer, Types.Float],
       return_type: Types.Integer
     }
@@ -130,5 +147,24 @@ describe('call rule', () => {
 
     report.error.should.equal(false)
     report.result.should.deepEqual(Types.Integer)
+  })
+})
+
+describe('Integracion con Typer', () => {
+  it('programa solo con modulo principal', () => {
+    let code = `variables
+      entero a
+    inicio
+      a <- 2
+    fin
+    `
+
+    let parser_output = parse(code)
+
+    let transformed_ast = bind(Typer, Declarator(parser_output))
+
+    let check_result = bind(TC.check, transformed_ast)
+
+    check_result.should.deepEqual([])
   })
 })
