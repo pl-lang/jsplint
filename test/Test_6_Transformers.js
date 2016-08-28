@@ -39,8 +39,8 @@ describe('Declarator', () => {
         type: 'module',
         module_type: 'main',
         locals: {
-          'a':{isArray:false, dimension:null, name:'a', type:'entero', value:null},
-          'b':{isArray:false, dimension:null, name:'b', type:'entero', value:null}
+          'a':{isArray:false, dimension:[], name:'a', type:'entero', value:null},
+          'b':{isArray:false, dimension:[], name:'b', type:'entero', value:null}
         },
         body: []
       }
@@ -65,14 +65,25 @@ describe('Declarator', () => {
   })
 })
 
-describe('Typer', () => {
+describe.only('Typer', () => {
   it('tipea un modulo principal', () => {
     let code = `variables
-      entero a
+      entero a, entero b[7], c[2, 3]
+      entero d[3, 3, 3]
     inicio
       a <- 2
+      a <- a
+      a <- b
+      a <- c
+      a <- d
     fin
     `
+
+    let b_type = new Types.ArrayType(Types.Integer, 7)
+
+    let c_type = new Types.ArrayType(new Types.ArrayType(Types.Integer, 3), 2)
+
+    let d_type = new Types.ArrayType(new Types.ArrayType(new Types.ArrayType(Types.Integer, 3), 3), 3)
 
     let parser_output = programFromSource(code)
 
@@ -83,7 +94,27 @@ describe('Typer', () => {
       {
         type: 'assignment',
         left: { indextypes: [], type: Types.Integer},
-        right: [{kind:'literal', type_info:Types.Integer}]
+        right: [{kind:'literal', type_info: Types.Integer}]
+      },
+      {
+        type: 'assignment',
+        left: {indextypes: [], type: Types.Integer},
+        right: [{kind:'invocation', type_info:{indextypes: [], type: Types.Integer}}]
+      },
+      {
+        type: 'assignment',
+        left: {indextypes: [], type: Types.Integer},
+        right: [{kind:'invocation', type_info:{indextypes: [], type: b_type}}]
+      },
+      {
+        type: 'assignment',
+        left: {indextypes: [], type: Types.Integer},
+        right: [{kind:'invocation', type_info:{indextypes: [], type: c_type}}]
+      },
+      {
+        type: 'assignment',
+        left: {indextypes: [], type: Types.Integer},
+        right: [{kind:'invocation', type_info:{indextypes: [], type: d_type}}]
       }
     ])
   })

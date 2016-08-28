@@ -106,7 +106,7 @@ function type_expression (module, expression) {
           {
             let variable = get_var(token.name, module.locals)
             // type_info = type_var >>= module >>= variable >>= token
-            type_info = bind(bind(type_var(module), token), variable)
+            type_info = bind(type_var(module, token), variable)
           }
           break
         case 'call':
@@ -129,7 +129,7 @@ function type_expression (module, expression) {
 const type_var = curry((module, invocation, variable) => {
   // Report [Num]
   // size per dimension
-  let dimension_sizes = calculate_sizes(variable, invocation)
+  let dimension_sizes = calculate_sizes(invocation, variable)
 
   // Report Type
   // the type of the value this invocation returns
@@ -148,23 +148,38 @@ const make_inv = curry((type, index_stacks) => {
 })
 
 const make_type = curry((tn, sizes) => {
-  let type
-  switch (tn) {
-    case 'entero':
-      return {error:false, result:new Types.IntegerType(sizes)}
-    case 'real':
-      return {error:false, result:new Types.FloatType(sizes)}
-    case 'logico':
-      return {error:false, result:new Types.BoolType(sizes)}
-    case 'caracter':
-      return {error:false, result:new Types.IntegerType(sizes)}
-    default:
-     throw new Error(`@Typer: tipo atomico "${tn}" desconocido`)
+  if (sizes.length == 0) {
+    return {error:false, result:atomic_type(tn)}
+  }
+  else {
+    let result
+    for (let i = sizes.length - 1; i >= 0; i--) {
+      if (i == sizes.length - 1)
+        result = new Types.ArrayType(atomic_type(tn), sizes[i])
+      else
+        result = new Types.ArrayType(result, sizes[i])
+    }
+    return {error:false, result}
   }
 })
 
+function atomic_type (typename) {
+  switch (typename) {
+    case 'entero':
+      return Types.Integer
+    case 'real':
+      return Types.Float
+    case 'logico':
+      return Types.Bool
+    case 'caracter':
+      return Types.Integer
+    default:
+      throw new Error(`@Typer: tipo atomico "${tn}" desconocido`)
+  }
+}
+
 function calculate_sizes (i, v) {
-  if (i.indexes != null && i.indexes.length > v.dimension.length) {
+  if (i.indexes.length > v.dimension.length) {
     let result = {
       reason: '@invocation-too-many-indexes',
       expected: v.dimension.length,
@@ -173,8 +188,7 @@ function calculate_sizes (i, v) {
     return {error:true, result}
   }
   else {
-    let n = i.indexes != null ? i.indexes.length:0
-    let result = v.dimension != null ? drop(n, v.dimension):[1]
+    let result = drop(i.indexes.length, v.dimension)
     return {error:false, result}
   }
 }
@@ -197,10 +211,10 @@ function type_exp_array (m, es) {
 
 function type_return (atomic_typename) {
   switch (atomic_typename) {
-    case 'entero': return new Types.Integer
-    case 'real': return new Types.Float
-    case 'logico': return new Types.Bool
-    case 'caracter': return new Types.Char
+    case 'entero': return Types.Integer
+    case 'real': return Types.Float
+    case 'logico': return Types.Bool
+    case 'caracter': return Types.Char
     default:
       throw new Error(`@Typer: no existe el tipo atomico "${atomic_typename}"`)
   }
@@ -209,10 +223,15 @@ function type_return (atomic_typename) {
 function type_literal (literal) {
   let type
 
-  if (typeof literal == 'string')       type = new Types.CharType([literal.length])
-  else if (typeof literal == 'boolean') type = new Types.BoolType([1])
-  else if (is_int(literal))             type = new Types.IntegerType([1])
-  else if (is_float(literal))           type = new Types.FloatType([1])
+  if (typeof literal == 'string') {
+    if (literal.length > 1)
+      type = new Types.String(literal.length)
+    else
+      type = Types.Char
+  }
+  else if (typeof literal == 'boolean') type = Types.Bool
+  else if (is_int(literal))             type = Types.Integer
+  else if (is_float(literal))           type = Types.Float
   else throw new Error(`@Typer: no puedo tipar el literal ${literal}`)
 
   return {error:false, result:type}
