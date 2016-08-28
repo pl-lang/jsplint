@@ -1,39 +1,33 @@
-export class IntegerType {
-  constructor(dimensions_sizes) {
-    this.atomic = 'entero'
-    this.dimensions = dimensions_sizes.length
-    this.dimensions_sizes = dimensions_sizes
+export const Integer = {
+  kind: 'atomic',
+  atomic: 'entero'
+}
+
+export const Float = {
+  kind: 'atomic',
+  atomic: 'real'
+}
+
+export const Bool = {
+  kind: 'atomic',
+  atomic: 'logico'
+}
+
+export const Char = {
+  kind: 'atomic',
+  atomic: 'caracter'
+}
+
+export class ArrayType {
+  constructor(element_type, length) {
+    this.kind = 'array'
+    this.length = length
+    this.contains = element_type
   }
 }
 
-export class FloatType {
-  constructor(dimensions_sizes) {
-    this.atomic = 'real'
-    this.dimensions = dimensions_sizes.length
-    this.dimensions_sizes = dimensions_sizes
+export class String extends ArrayType {
+  constructor(length) {
+    super(Char, length)
   }
 }
-
-export class BoolType {
-  constructor(dimensions_sizes) {
-    this.atomic = 'logico'
-    this.dimensions = dimensions_sizes.length
-    this.dimensions_sizes = dimensions_sizes
-  }
-}
-
-export class CharType {
-  constructor(dimensions_sizes) {
-    this.atomic = 'caracter'
-    this.dimensions = dimensions_sizes.length
-    this.dimensions_sizes = dimensions_sizes
-  }
-}
-
-export const Integer = new IntegerType([1])
-
-export const Float = new FloatType([1])
-
-export const Bool = new BoolType([1])
-
-export const Char = new CharType([1])
