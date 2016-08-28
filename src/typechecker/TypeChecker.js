@@ -360,10 +360,22 @@ function not (stack) {
 }
 
 export function equals(type_a, type_b) {
-  if (type_a.atomic == type_b.atomic && equal_dimensions(type_a, type_b))
-    return true
+  if (type_a.kind != type_b.kind) return false
   else
-    return false
+    if (type_a instanceof Types.ArrayType) return array_equality(type_a, type_b)
+    else return atomic_equality(type_a, type_b)
+}
+
+function array_equality (a, b) {
+  if (a.length == b.length) {
+    return equals(a.contains, b.contains)
+  }
+  else return false
+}
+
+function atomic_equality (a, b) {
+  if (a.atomic == b.atomic && equal_dimensions(a, b)) return true
+  else return false
 }
 
 export function equal_dimensions(type_a, type_b) {
@@ -379,8 +391,16 @@ export function equal_dimensions(type_a, type_b) {
 }
 
 function stringify (type) {
-  if (type.dimensions == 1)
-    return `${type.atomic}`
-
-  else return `${type.atomic}${type.dimensions_sizes.toString()}`
+  if (type.kind == 'array') {
+    let dimensions = ''
+    let ct = type
+    while (ct.kind == 'array') {
+      dimensions += ct.length
+      if (ct.contains.kind == 'array') dimensions += ', '
+    }
+    return `${ct.atomic}[${dimensions}]`
+  }
+  else {
+    return type.atomic
+  }
 }
