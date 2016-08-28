@@ -6,44 +6,84 @@ de su programa.
 El lenguaje que se busca implementar especifica 4 tipos basicos: enteros,
 reales, caracteres, y valores logicos (verdadero, falso). Ademas, se pueden
 crear arreglos de dimensiones (preferentemente) arbitrarias de valores de
-cualquiera de estos tipos. Por lo tanto el sistema tiene que poder describir
-el tipo de un arreglo 'invocado' con menos indices que su cantidad de
-dimensiones.
+cualquiera de estos tipos.
 
 Hasta ahora (bc68829) los tipos de las variables y expresiones se representaban
 unicamente con cadenas de texto y solo estaban permitidos los 4 tipos basicos.
-A partir de ahora voy a intentar usar el siguiente formato:
+A partir de ahora voy a usar el siguiente formato:
 
 ```js
-Tipo {
-  simple: 'entero' | 'real' | 'logico' | 'caracter',
-  dimension: [enteros]
+Integer {
+  kind: 'atomic',
+  atomic: 'entero'
 }
 
+ArrayType {
+  kind: 'array',
+  length: <number>,
+  contains: <tipo>
+}
 ```
 
-Entonces, `simple` es una cadena que describe cual es el tipo 'basico/atomico'
-de la expresion o variable y `dimension` es un arreglo de enteros que indica el
-tamaño de cada una de las dimensiones de la variable. Con esos dos campos la
-estructura `Tipo` puede describir todos los que puede tener una variable o
-expresión en este lenguaje.
+Para el sistema de tipos hay dos clases de tipos: los tipos atomicos y los tipos
+de arreglos. Los tipos atomicos son los mas simples (entero, real, etc.) y los de
+arreglos son una cantidad dada de valores de otro tipo. La propiedad `kind` indica
+la clase de un tipo y es necesaria para saber como comparar un tipo con otro.
 
-Por ejemplo: una variable común y corriente que almacena un valor entero puede
-tener un tipo de:
+Para sbaer si dos tipos son iguales lo primero que hay que mirar es la propiedad
+`kind` de cada uno. Si son de clases distintas entonces definitivamente no son
+iguales. Si son de la misma clase, se puede seguir la comparacion para ver si
+en realidad son iguales.
+
+### Ejemplos
+
+Un vector 7 de enteros tiene tipo:
+
+```javascript
+ArrayType {
+  kind: 'array',
+  length: 7,
+  contains: Integer { kind: 'atomic', atomic:'entero' }
+}
+```
+
+La propiedad `length` indica el tamaño del vector.
+
+Una matriz 2x3 de valores enteros puede representarse como un vector 2 que en
+cada celda contiene un vector 3 de enteros. Su tipo seria:
+
+```javascript
+ArrayType {
+  kind: 'array',
+  length: 2,
+  contains: ArrayType {
+    kind: 'array',
+    length: 3,
+    contains: Integer { kind: 'atomic', atomic:'entero' }
+  }
+}
+```
+
+Una variable común y corriente que almacena un valor entero puede tiene tipo:
 ```js
-Tipo { simple: 'entero', dimension: [1] }
+Integer { kind: 'atomic', atomic:'entero' }
 ```
-Se ve que una variable 'normal' se representa como un vector con una celda. Un
-vector más grande cambiaría el 1 por algún otro numero, mientras que una matriz
-podria tener una dimension igual a `[2, 4]`
 
-A partir de ahora el parser debería dejar de asignar tipos a las expresiones
-y 'enfocarse' en producir estructuras que representen la sintaxis. Luego, se
-transformará el ast en una estructura similar pero donde intervienen
-unicamente situaciones donde se debe verificar las reglas de tipado, es decir
-operaciones, asignaciones a variables, invocaciones, y llamadas a funciones o
-procedimientos. El chequeo de tipos se hará utilizando esta última estructura
-y no debería ser muy diferente a un evaluador.
+# Tipado
+
+Los tipos se asignan a las expresiones, llamadas, e invocaciones luego de que
+todo el codigo ha sido analizado y se verificó que no hay errores de sintaxis.
+
+Se toma la salida de `Parser` y se la transforma en otra estructura, declarando
+las variables de cada modulo en el proceso (durante esta etapa se encuentran
+las variables repetidas, de haber alguna). Luego se toma esa estructura y se la
+transforma (con la funcion exportada por `Typer.js`) en otra que solo contiene
+los enunciados donde se deben verificar los tipos (invocaciones, condiciones,
+asignaciones, etc).
+
+Durante este proceso se detectan otros errores, detallados en [OTRO DOC].
+
+## Tipar expresiones
 
 Asignarle un tipo a una expresión  requiere información sobre ésta, por eso a
 partir de ahora las expresiones tendrán una propiedad llamada `kind` que
@@ -72,6 +112,9 @@ Las clases existen unicamente para poder verificar los argumentos que se pasan
 a dichas funciones, ya que no hay manera de representarlas en la sintaxis.
 
 # Chequeo
+
+El chequeo de tipos se hará utilizando esta última estructura
+y no debería ser muy diferente a un evaluador.
 
 El TypeChecker entiende (entenderá) solo 2 enunciados/acciones:
 
