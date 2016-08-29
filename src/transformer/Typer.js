@@ -171,7 +171,7 @@ function atomic_type (typename) {
     case 'logico':
       return Types.Bool
     case 'caracter':
-      return Types.Integer
+      return Types.Char
     default:
       throw new Error(`@Typer: tipo atomico "${tn}" desconocido`)
   }
