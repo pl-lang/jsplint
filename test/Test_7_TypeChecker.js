@@ -231,4 +231,20 @@ describe('Integracion con Typer', () => {
 
     check_result.should.deepEqual([])
   })
+
+  it('asignar a una "cadena"', () => {
+    let code = `variables
+      caracter cadena[4]
+    inicio
+      cadena <- "hola"
+    fin`
+
+    let parser_output = parse(code)
+
+    let transformed_ast = bind(Typer, Declarator(parser_output))
+
+    let check_result = bind(TC.check, transformed_ast)
+
+    check_result.should.deepEqual([])
+  })
 })
