@@ -159,13 +159,69 @@ describe('call rule', () => {
 })
 
 describe('Integracion con Typer', () => {
-  it('programa solo con modulo principal', () => {
+  it('asignacion a una variable', () => {
     let code = `variables
       entero a
     inicio
       a <- 2
     fin
     `
+
+    let parser_output = parse(code)
+
+    let transformed_ast = bind(Typer, Declarator(parser_output))
+
+    let check_result = bind(TC.check, transformed_ast)
+
+    check_result.should.deepEqual([])
+  })
+
+  it('asignar a las celdas de un vector ', () => {
+    let code = `variables
+      entero v[5]
+    inicio
+      v[1] <- 5
+      v[2] <- 8
+      v[3] <- 7
+      v[4] <- 9
+      v[5] <- 3
+    fin`
+
+    let parser_output = parse(code)
+
+    let transformed_ast = bind(Typer, Declarator(parser_output))
+
+    let check_result = bind(TC.check, transformed_ast)
+
+    check_result.should.deepEqual([])
+  })
+
+  it('asignacion a las celda de una matriz', () => {
+    let code = `variables
+      entero m[2, 2]
+    inicio
+      m[1, 1] <- 5
+      m[1, 2] <- 8
+      m[2, 1] <- 7
+      m[2, 2] <- 9
+    fin`
+
+    let parser_output = parse(code)
+
+    let transformed_ast = bind(Typer, Declarator(parser_output))
+
+    let check_result = bind(TC.check, transformed_ast)
+
+    check_result.should.deepEqual([])
+  })
+
+  it('asignar vector a fila de matriz', () => {
+    let code = `variables
+      entero m[2, 2], v[2]
+    inicio
+      m[1] <- v
+      m[2] <- m[1]
+    fin`
 
     let parser_output = parse(code)
 

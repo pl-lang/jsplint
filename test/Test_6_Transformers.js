@@ -118,4 +118,22 @@ describe('Typer', () => {
       }
     ])
   })
+
+  it('tipea un modulo principal', () => {
+    let code = `variables
+      entero v[5]
+    inicio
+      v[1] <- 5
+      v[2] <- 8
+      v[3] <- 7
+      v[4] <- 9
+      v[5] <- 3
+    fin`
+
+    let parser_output = programFromSource(code)
+
+    let transformed_ast = bind(Typer, Declarator(parser_output))
+
+    transformed_ast.error.should.equal(false)
+  })
 })

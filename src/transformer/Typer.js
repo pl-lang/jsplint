@@ -142,8 +142,7 @@ const type_var = curry((module, invocation, variable) => {
   return bind(bind(make_inv, type), indextypes)
 })
 
-const make_inv = curry((type, index_stacks) => {
-  let indextypes = map(r => r.result, index_stacks)
+const make_inv = curry((type, indextypes) => {
   return {error:false, result:{type, indextypes}}
 })
 

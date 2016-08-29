@@ -152,12 +152,12 @@ export function calculate_type (expression) {
       stack = report.result
     }
     else if (elt.kind == 'call') {
-      let report = call_rule(elt.call)
+      let report = call_rule(elt.type_info)
       if (report.error) return report
       stack.push(report.result)
     }
     else if (elt.kind == 'invocation') {
-      let report = invocation_rule(elt.invocation)
+      let report = invocation_rule(elt.type_info)
       if (report.error) return report
       stack.push(report.result)
     }
