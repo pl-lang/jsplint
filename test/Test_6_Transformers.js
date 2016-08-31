@@ -8,17 +8,68 @@ import Parser from '../src/parser/Parser.js'
 
 import * as Types from '../src/typechecker/Types.js'
 
+import CallDecorator from '../src/transformer/CallDecorator.js'
 import Declarator from '../src/transformer/Declarator.js'
 import Typer from '../src/transformer/Typer.js'
 
 function programFromSource(string) {
   let parser = new Parser()
 
+  parser.on('syntax-error', (...args) => {
+    console.log(...args)
+    throw new Error('Error de sintaxis en una prueba')
+  })
+
+
   let parser_output = parser.parse(string).result
 
   return parser_output
 }
 
+
+describe('CallDecorator', () => {
+  it('agrega datos de una funcion a un llamado', () => {
+    let code = `variables
+      entero a
+    inicio
+      func()
+    fin
+
+    entero funcion func(entero a)
+    inicio
+      retornar 2
+    finfuncion
+    `
+
+    let parser_output = programFromSource(code)
+
+    let transformed_ast = CallDecorator(parser_output)
+
+    transformed_ast.error.should.equal(false)
+    transformed_ast.result.should.deepEqual({
+      main: {
+        name: 'main',
+        type: 'module',
+        module_type: 'main',
+        body: [
+          {type:'declaration', variables:[{name:'a', isArray:false, dimension:[], type:'entero'}]},
+          {type:'call', args:[], name:'func', return_type:'entero', parameters:[{name:'a', type:'entero', by_ref:false}]}
+        ]
+      },
+
+      func: {
+        name: 'func',
+        type: 'module',
+        module_type: 'function',
+        parameters: [{name:'a', type:'entero', by_ref:false}],
+        return_type: 'entero',
+        body: [
+          {type:'return', expression:[{type:'literal', value:2}]}
+        ]
+      }
+    })
+  })
+})
 
 describe('Declarator', () => {
   it('transforma un modulo main', () => {
@@ -33,8 +84,8 @@ describe('Declarator', () => {
     let transformed_ast = Declarator(parser_output)
 
     transformed_ast.error.should.equal(false)
-    transformed_ast.result.modules.should.deepEqual([
-      {
+    transformed_ast.result.should.deepEqual({
+      main: {
         name: 'main',
         type: 'module',
         module_type: 'main',
@@ -44,7 +95,7 @@ describe('Declarator', () => {
         },
         body: []
       }
-    ])
+    })
   })
 
   it('encuentra variables repetidas', () => {
