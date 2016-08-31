@@ -1,3 +1,5 @@
+import {curry} from 'ramda'
+
 export const Integer = {
   kind: 'atomic',
   atomic: 'entero'
@@ -82,4 +84,40 @@ export const ReadType = {
     amount: 1,
     constraints: [Readable]
   }
+}
+
+
+function is_atomic (type) {
+  return type.kind == 'atomic'
+}
+
+export function equals(type_a, type_b) {
+  if (type_a.kind != type_b.kind) return false
+  else
+    if (type_a instanceof ArrayType) return array_equality(type_a, type_b)
+    else return atomic_equality(type_a, type_b)
+}
+
+function array_equality (a, b) {
+  if (a.length == b.length) {
+    return equals(a.contains, b.contains)
+  }
+  else return false
+}
+
+function atomic_equality (a, b) {
+  if (a.atomic == b.atomic && equal_dimensions(a, b)) return true
+  else return false
+}
+
+export function equal_dimensions(type_a, type_b) {
+  if (type_a.dimensions == type_b.dimensions) {
+    for (let i = 0; i < type_a.dimensions; i++) {
+      if (type_a.dimensions_sizes[i] != type_b.dimensions_sizes[i]) {
+        return false
+      }
+    }
+    return true
+  }
+  return false
 }

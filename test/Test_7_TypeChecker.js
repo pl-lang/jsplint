@@ -6,11 +6,10 @@ import {bind} from '../src/utility/helpers.js'
 
 import Parser from '../src/parser/Parser.js'
 
-import * as Types from '../src/typechecker/Types.js'
-
 import Declarator from '../src/transformer/Declarator.js'
 import Typer from '../src/transformer/Typer.js'
 
+import * as Types from '../src/typechecker/Types.js'
 import * as TC from '../src/typechecker/TypeChecker.js'
 
 function parse(string) {
@@ -24,19 +23,19 @@ function parse(string) {
 
 describe('Comparar tipos', () => {
   it('Integer == Integer', () => {
-    TC.equals(Types.Integer, Types.Integer).should.equal(true)
+    Types.equals(Types.Integer, Types.Integer).should.equal(true)
   })
 
   it('Integer != Float', () => {
-    TC.equals(Types.Integer, Types.Float).should.equal(false)
+    Types.equals(Types.Integer, Types.Float).should.equal(false)
   })
 
   it('Integer != Array<3, Integer>', () => {
-    TC.equals(Types.Integer, new Types.ArrayType(Types.Integer, 3)).should.equal(false)
+    Types.equals(Types.Integer, new Types.ArrayType(Types.Integer, 3)).should.equal(false)
   })
 
   it('Array<3, Integer> == Array<3, Integer>', () => {
-    TC.equals(new Types.ArrayType(Types.Integer, 3), new Types.ArrayType(Types.Integer, 3)).should.equal(true)
+    Types.equals(new Types.ArrayType(Types.Integer, 3), new Types.ArrayType(Types.Integer, 3)).should.equal(true)
   })
 })
 
