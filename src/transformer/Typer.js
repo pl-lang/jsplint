@@ -6,11 +6,12 @@ import {bind} from '../utility/helpers.js'
 
 import * as Types from '../typechecker/Types.js'
 
-export default function transform (input) {
+export default function transform (modules) {
   let output = {}
   let errors_found = []
 
-  for (let module of input.modules) {
+  for (let module_name in modules) {
+    let module = modules[module_name]
 
     let verifiable_statements = []
 

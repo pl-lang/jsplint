@@ -3,16 +3,15 @@ import {bind, mergeObjs} from '../utility/helpers.js'
 import {curry} from 'ramda'
 
 export default function transform (ast) {
-  let new_ast = {
-    modules: []
-  }
+  let new_ast = {}
 
   let errors_found = []
 
-  for (let module of ast.modules) {
+  for (let module_name in ast) {
+    let module = ast[module_name]
     let report = transform_module(module)
     if (report.error) errors_found.push(...report.result)
-    else new_ast.modules.push(report.result)
+    else new_ast[module_name] = report.result
   }
 
   let error = errors_found.length > 0
