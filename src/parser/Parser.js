@@ -15,9 +15,7 @@ export default class Parser extends Emitter {
   parse(code) {
     this.emit('parsing-started')
 
-    let result = {
-      modules : []
-    }
+    let result = {}
 
     let source = new SourceWrapper(code)
     let lexer = new Lexer()
@@ -45,7 +43,7 @@ export default class Parser extends Emitter {
       return {error:true, result:'syntax-error'}
     }
     else {
-      result.modules.push(main_match.result)
+      result['main'] = main_match.result
     }
 
     // parsear el resto de los modulos del programa
@@ -69,7 +67,7 @@ export default class Parser extends Emitter {
         return {error:true, result:'syntax-error'}
       }
       else {
-        result.modules.push(module_match.result)
+        result[module_match.result.name] = module_match.result
       }
     }
 
