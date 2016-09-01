@@ -56,33 +56,25 @@ export const type_constraint = curry((a, b) => {
   return equals(a, b)
 })
 
-// tipo de la funcion `escribir`
-export const WriteType = {
-  kind: 'function',
-  return_type: None,
-  parameters: {
-    amount: 1,
-    constraints: [Writable]
+export class FunctionType {
+  constructor (return_type, paramtypes) {
+    this.kind = 'function',
+    this.return_type = return_type
+    this.parameters = {
+      amount: paramtypes.length,
+      constraints: paramtypes.map(type_constraint)
+    }
   }
 }
 
-// tipo de la funcion `escribir_linea`
-export const WriteLineType = {
-  kind: 'function',
-  return_type: None,
-  parameters: {
-    amount: 1,
-    constraints: [Writable]
-  }
-}
-
-// tipo de la funcion `leer`
-export const ReadType = {
-  kind: 'function',
-  return_type: None,
-  parameters: {
-    amount: 1,
-    constraints: [Readable]
+export class ProcedureType {
+  constructor (paramtypes) {
+    this.kind = 'function',
+    this.return_type = None
+    this.parameters = {
+      amount: paramtypes.length,
+      constraints: paramtypes.map(type_constraint)
+    }
   }
 }
 
