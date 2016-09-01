@@ -77,18 +77,18 @@ function transform_statement (statement, ast) {
 }
 
 function transform_assignment (assignment, module) {
-  let variable = transform_invocation(assignment.left, ast)
+  let variable = transform_invocation(assignment.left, module)
 
-  let payload = transform_expression(assignment.right, ast)
+  let payload = transform_expression(assignment.right, module)
 
   // make_assignment >>= vartype >>= payload_type
   return bind(bind(make_assignment, variable), payload)
 }
 
 function transform_call (call, ast) {
-  let type_info = get_module_info(call.name, ast)
+  let info = get_module_info(call.name, ast)
 
-  return bind(make_call(call), type_info)
+  return bind(make_call(call), info)
 }
 
 function transform_crtl (statement, ast) {
@@ -108,8 +108,19 @@ function transform_return (ret_statement, ast) {
 function transform_invocation(invocation, ast) {
   if (invocation.indexes.length == 0) return {error:false, result:invocation}
   else {
-    let new_indexes = transform_expression(invocation.indexes)
-    return bind(make_invocation(invocation), new_indexes)
+    let errors_found = []
+    let new_indexes = []
+
+    for (let index of invocation.indexes) {
+      let new_index = transform_expression(index)
+      if (new_index.error) errors_found.push(new_index.result)
+      else new_indexes.push(new_index.result)
+    }
+
+    let error = errors_found.length > 0
+    let result = error ? errors_found:new_indexes
+
+    return bind(make_invocation(invocation), {error, result})
   }
 }
 
@@ -124,9 +135,9 @@ function transform_expression (expression, ast) {
       new_element = transform_call(element, ast)
     else if (element.type == 'invocation')
       new_element = transform_invocation(element, ast)
-    else if (element.type == 'literal') {
+    else if (element.type == 'literal' || element.type == 'operator')
       new_element = {error:false, result:element}
-    }
+
 
     if (new_element.error) errors_found.push(new_element.error)
     else output.push(new_element.result)
@@ -149,7 +160,8 @@ function get_module_info (name, ast) {
   else {
     let result = {
       parameters: ast[name].parameters,
-      return_type: ast[name].return_type
+      return_type: ast[name].return_type,
+      module_type: ast[name].module_type
     }
 
     return {error:false, result}
@@ -171,10 +183,11 @@ const make_return = curry(expression => {
   return {error:false, result:{type:'return', expression}}
 })
 
-const make_call = curry((old_call, type_info) => {
+const make_call = curry((old_call, info) => {
   let result = clone_obj(old_call)
-  result.parameters = type_info.parameters
-  result.return_type = type_info.return_type
+  result.parameters = info.parameters
+  result.return_type = info.return_type
+  result.module_type = info.module_type
   return {error: false, result}
 })
 
