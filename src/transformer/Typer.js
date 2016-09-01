@@ -11,17 +11,26 @@ export default function transform (modules) {
   let errors_found = []
 
   for (let module_name in modules) {
-    let module = modules[module_name]
+    let old_module = modules[module_name]
+    let new_module = transform_module(old_module)
+    if (new_module.error) errors_found.push(new_module.result)
+    else output[module_name] = new_module.result
+  }
 
-    let verifiable_statements = []
+  let error = errors_found.length > 0
+  let result = error ? errors_found:output
 
-    for (let statement of module.body) {
-      let new_statement = transform_statement(statement, module)
-      if (new_statement.error) errors_found.push(new_statement.result)
-      else verifiable_statements.push(new_statement.result)
-    }
+  return {error, result}
+}
 
-    output[module.name] = verifiable_statements
+function transform_module (module) {
+  let output = []
+  let errors_found = []
+
+  for (let statement of module.body) {
+    let new_statement = transform_statement(statement, module)
+    if (new_statement.error) errors_found.push(new_statement.result)
+    else output.push(new_statement.result)
   }
 
   let error = errors_found.length > 0
@@ -41,6 +50,8 @@ function transform_statement (statement, module) {
     case 'while':
     case 'if':
       return transform_ctrl_stmnt(statement, module)
+    case 'return':
+      return type_return(statement, module)
     default:
       throw new Error(`@Typer: no se puede transformar un enunciado "${statement.type}"`)
   }
@@ -75,27 +86,41 @@ const make_assignment = curry((left, right) => {
 
 // TODO: esta funcion
 function transform_call (call, module) {
+  let paramtypes = map(p => atomic_type(p.type), call.parameters)
+
+  let type
+  if (call.module_type == 'function')
+    type = new Types.FunctionType(atomic_type(call.return_type), paramtypes)
+  else
+    type = new Types.ProcedureType(paramtypes)
+
   let argtypes = type_exp_array(module, call.args)
 
-  let parameters = module.parameters
-  for (let parameter of parameters) {
-    let type = type_var(parameter)
-    // TODO: cambiar argtypes a paramtypes
-    argtypes.push(type)
-  }
-
-  let return_type = type_return(module.return_type)
-
-  return {type:'call', argtypes, args, return_type}
+  // return {type:'call', argtypes}
+  return bind(bind(make_call(call.name, call.return_type), paramtypes), argtypes)
 }
+
+const make_call = curry((name, return_type, paramtypes, argtypes) => {
+  return {error:false, result:{name, return_type, paramtypes, argtypes}}
+})
+
+function type_return (statement, module) {
+  let exptype = type_expression(module, statement.expression)
+
+  return bind(make_return, exptype)
+}
+
+const make_return = curry((exptype) => {
+  return {error:false, result:{type:'return', exptype}}
+})
 
 function type_expression (module, expression) {
   let output = []
   let errors_found = []
 
   for (let token of expression) {
-    if (is_operator(token.type)) {
-      result.push({kind:'operator', name:token.name})
+    if (token.type == 'operator') {
+      output.push({kind:'operator', name:token.name})
     }
     else {
       let type_info
@@ -173,6 +198,8 @@ function atomic_type (typename) {
       return Types.Bool
     case 'caracter':
       return Types.Char
+    case 'none':
+      return Types.None
     default:
       throw new Error(`@Typer: tipo atomico "${tn}" desconocido`)
   }
@@ -207,17 +234,6 @@ function type_exp_array (m, es) {
   let result = error ? errors_found:output
 
   return {error, result}
-}
-
-function type_return (atomic_typename) {
-  switch (atomic_typename) {
-    case 'entero': return Types.Integer
-    case 'real': return Types.Float
-    case 'logico': return Types.Bool
-    case 'caracter': return Types.Char
-    default:
-      throw new Error(`@Typer: no existe el tipo atomico "${atomic_typename}"`)
-  }
 }
 
 function type_literal (literal) {
