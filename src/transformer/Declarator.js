@@ -1,5 +1,7 @@
 import {bind, mergeObjs} from '../utility/helpers.js'
 
+const copy_obj = curry(mergeObjs)({})
+
 import {curry} from 'ramda'
 
 export default function transform (ast) {
@@ -26,16 +28,22 @@ function transform_module (module) {
     case 'main':
       return transform_main(module)
     case 'procedure':
-      // return transform_procedure(module)
-      throw Error(`@Declarator.js: la transformacion de funciones no esta implementada`)
     case 'function':
-      throw Error(`@Declarator.js: la transformacion de funciones no esta implementada`)
+      return transform_user_module(module)
     default:
       throw Error(`@Declarator.js: no se como transformar modulos de tipo ${module.module_type}`)
   }
 }
 
 function transform_main (old_module) {
+   let declarations = old_module.body.filter(statement => statement.type === 'declaration')
+
+   let locals = declare_variables(declarations)
+
+   return bind(make_module(old_module), locals)
+}
+
+function transform_user_module (old_module) {
    let declarations = old_module.body.filter(statement => statement.type === 'declaration')
 
    let locals = declare_variables(declarations)
@@ -84,14 +92,9 @@ function declare_variables (declarations) {
 }
 
 const make_module = curry((old_module, locals) => {
-  let new_module = {
-    module_type: old_module.module_type,
-    type: 'module',
-    name: old_module.name,
-    locals: locals,
-    body: old_module.body.filter(statement => statement.type !== 'declaration')
-  }
-
+  let new_module = copy_obj(old_module)
+  new_module.body = old_module.body.filter(statement => statement.type !== 'declaration')
+  new_module.locals = locals
   return {error:false, result:new_module}
 })
 
