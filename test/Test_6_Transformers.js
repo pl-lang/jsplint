@@ -53,7 +53,7 @@ describe('CallDecorator', () => {
         module_type: 'main',
         body: [
           {type:'declaration', variables:[{name:'a', isArray:false, dimension:[], type:'entero'}]},
-          {type:'call', args:[], name:'func', return_type:'entero', parameters:[{name:'a', type:'entero', by_ref:false}]}
+          {type:'call', args:[], name:'func', module_type: 'function', return_type:'entero', parameters:[{name:'a', type:'entero', by_ref:false}]}
         ]
       },
 
@@ -170,20 +170,28 @@ describe('Typer', () => {
     ])
   })
 
-  it('tipea un modulo principal', () => {
+  it('tipea dos modulos', () => {
     let code = `variables
-      entero v[5]
+      entero v[5], a
     inicio
       v[1] <- 5
       v[2] <- 8
       v[3] <- 7
       v[4] <- 9
       v[5] <- 3
-    fin`
+      a <- sumar(2, 2)
+    fin
+
+    entero funcion sumar(entero a, entero b)
+      entero a, b
+    inicio
+      retornar a + b
+    finfuncion
+    `
 
     let parser_output = programFromSource(code)
 
-    let transformed_ast = bind(Typer, Declarator(parser_output))
+    let transformed_ast = bind(Typer, bind(CallDecorator, Declarator(parser_output)))
 
     transformed_ast.error.should.equal(false)
   })
