@@ -1,3 +1,5 @@
+import {last} from 'ramda'
+
 import * as Types from './Types.js'
 
 const equals = Types.equals
@@ -7,17 +9,66 @@ export function check (modules) {
 
   for (let module_name in modules) {
     let module = modules[module_name]
-    for (let statement of module) {
-      let report = check_statement(statement)
-
-      if (report.error) {
-        if (statement.result instanceof Array) errors_found.push(...report.result)
-        else errors_found.push(report.result)
-      }
-    }
+    let report = check_module(module)
+    if (report.error) errors_found.push(...report.result)
   }
 
   return errors_found
+}
+
+function check_module (module) {
+  switch (module.module_type) {
+    case 'main':
+    case 'procedure':
+      return check_procedure(module)
+    case 'function':
+      return check_function(module)
+  }
+}
+
+function check_procedure (procedure) {
+  let errors_found = []
+
+  for (let statement of procedure.body) {
+    let report = check_statement(statement)
+
+    if (report.error) {
+      if (statement.result instanceof Array) errors_found.push(...report.result)
+      else errors_found.push(report.result)
+    }
+  }
+
+  let error = errors_found.length > 0
+
+  return {error, result:errors_found}
+}
+
+function check_function (func) {
+  let errors_found = []
+
+  for (let statement of func.body) {
+    let report = check_statement(statement)
+
+    if (report.error) {
+      if (statement.result instanceof Array) errors_found.push(...report.result)
+      else errors_found.push(report.result)
+    }
+  }
+
+  let return_exp_type = calculate_type(last(func.body).exptype)
+
+  if (!Types.equals(func.type.return_type, return_exp_type.result)) {
+    let error_info = {
+      reason: '@function-bad-return-type',
+      expected: stringify(func.type.return_type),
+      returned: stringify(return_exp_type)
+    }
+    errors_found.push(error_info)
+  }
+
+  let error = errors_found.length > 0
+
+  return {error, result:errors_found}
 }
 
 export function check_statement (statement) {
@@ -28,6 +79,8 @@ export function check_statement (statement) {
       return assignment_rule(statement)
     case 'control':
       return ctrl_rule(statement)
+    case 'return':
+      return {error:false}
     default:
       throw new Error(`@TypeChecker: no se como verificar enunciados de tipo ${statement.type}`)
   }
@@ -66,34 +119,34 @@ export function assignment_rule (assignment) {
 }
 
 export function call_rule (call) {
-  if (call.args.length != call.argtypes.length) {
+  if (call.argtypes.length != call.type_info.parameters.amount) {
     let reason = '@call-incorrect-arg-number'
-    let expected = call.argtypes.length
-    let received = call.arg.length
+    let expected = call.type_info.parameters.amount
+    let received = call.argtypes.length
     return {error:true, result:{reason, expected, received}}
   }
 
   let argument_types = []
 
-  for (let i = 0; i < call.args.length; i++) {
-    let type = calculate_type(call.args[i])
+  for (let i = 0; i < call.argtypes.length; i++) {
+    let type = calculate_type(call.argtypes[i])
     if (type.error) return type
     argument_types.push(type.result)
   }
 
   for (let i = 0; i < argument_types.length; i++) {
-    let expected_type = call.argtypes[i]
+    let expected_type = call.type_info.parameters.types[i]
 
     if (!equals(argument_types[i], expected_type)) {
       let reason = '@call-wrong-argument-type'
-      let target_type = stringify(right_type)
-      let payload_type = stringify(assignment.left)
+      let expected = stringify(expected_type)
+      let received = stringify(argument_types[i])
 
-      return {error:true, result:{reason, target_type, payload_type}}
+      return {error:true, result:{reason, expected, received}}
     }
   }
 
-  return {error:false, result:call.return_type}
+  return {error:false, result:call.type_info.return_type}
 }
 
 export function invocation_rule (invocation) {
