@@ -62,7 +62,7 @@ export class FunctionType {
     this.return_type = return_type
     this.parameters = {
       amount: paramtypes.length,
-      constraints: paramtypes.map(type_constraint)
+      types: paramtypes
     }
   }
 }
@@ -73,7 +73,7 @@ export class ProcedureType {
     this.return_type = None
     this.parameters = {
       amount: paramtypes.length,
-      constraints: paramtypes.map(type_constraint)
+      types: paramtypes
     }
   }
 }
