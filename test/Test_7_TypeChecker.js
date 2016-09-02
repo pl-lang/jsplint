@@ -6,6 +6,7 @@ import {bind} from '../src/utility/helpers.js'
 
 import Parser from '../src/parser/Parser.js'
 
+import CallDecorator from '../src/transformer/CallDecorator.js'
 import Declarator from '../src/transformer/Declarator.js'
 import Typer from '../src/transformer/Typer.js'
 
@@ -142,7 +143,7 @@ describe('assignment rule', () => {
   })
 })
 
-describe('call rule', () => {
+describe.skip('call rule', () => {
   it('verificar una llamada correcta', () => {
     let call = {
       args:[[{kind:'type', type_info:Types.Integer}], [{kind:'type', type_info:Types.Float}]],
@@ -241,6 +242,29 @@ describe('Integracion con Typer', () => {
     let parser_output = parse(code)
 
     let transformed_ast = bind(Typer, Declarator(parser_output))
+
+    let check_result = bind(TC.check, transformed_ast)
+
+    check_result.should.deepEqual([])
+  })
+
+  it('asignar retorno de funcion', () => {
+    let code = `variables
+      entero a
+    inicio
+      a <- sumar(2, 3)
+    fin
+
+    entero funcion sumar(entero a, entero b)
+      entero a, b
+    inicio
+      retornar a + b
+    finfuncion
+    `
+
+    let parser_output = parse(code)
+
+    let transformed_ast = bind(Typer, bind(CallDecorator, Declarator(parser_output)))
 
     let check_result = bind(TC.check, transformed_ast)
 
