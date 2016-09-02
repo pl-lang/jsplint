@@ -141,7 +141,7 @@ describe('Typer', () => {
     let transformed_ast = bind(Typer, Declarator(parser_output))
 
     transformed_ast.error.should.equal(false)
-    transformed_ast.result.main.should.deepEqual([
+    transformed_ast.result.main.body.should.deepEqual([
       {
         type: 'assignment',
         left: { indextypes: [], type: Types.Integer},

@@ -24,14 +24,17 @@ export default function transform (modules) {
 }
 
 function transform_module (module) {
-  let output = []
+  let output = {body:[], module_type:module.module_type}
   let errors_found = []
 
   for (let statement of module.body) {
     let new_statement = transform_statement(statement, module)
     if (new_statement.error) errors_found.push(new_statement.result)
-    else output.push(new_statement.result)
+    else output.body.push(new_statement.result)
   }
+
+  if (module.module_type == 'function')
+    output.type = type_module(module.module_type, module.parameters, module.return_type)
 
   let error = errors_found.length > 0
   let result = error ? errors_found:output
@@ -86,22 +89,25 @@ const make_assignment = curry((left, right) => {
 
 // TODO: esta funcion
 function transform_call (call, module) {
-  let paramtypes = map(p => atomic_type(p.type), call.parameters)
-
-  let type
-  if (call.module_type == 'function')
-    type = new Types.FunctionType(atomic_type(call.return_type), paramtypes)
-  else
-    type = new Types.ProcedureType(paramtypes)
+  let type_info = type_module(call.module_type, call.parameters, call.return_type)
 
   let argtypes = type_exp_array(module, call.args)
 
   // return {type:'call', argtypes}
-  return bind(bind(make_call(call.name, call.return_type), paramtypes), argtypes)
+  return bind(make_call(call.name, type_info), argtypes)
 }
 
-const make_call = curry((name, return_type, paramtypes, argtypes) => {
-  return {error:false, result:{name, return_type, paramtypes, argtypes}}
+function type_module (mtype, parameters, return_type) {
+  let paramtypes = map(p => atomic_type(p.type), parameters)
+
+  if (mtype == 'function')
+    return new Types.FunctionType(atomic_type(return_type), paramtypes)
+  else
+    return new Type.ProcedureType(paramtypes)
+}
+
+const make_call = curry((name, type_info, argtypes) => {
+  return {error:false, result:{type:'call', name, argtypes, type_info}}
 })
 
 function type_return (statement, module) {
