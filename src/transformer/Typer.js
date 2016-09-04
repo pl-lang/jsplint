@@ -51,8 +51,9 @@ function transform_statement (statement, module) {
     case 'for':
     case 'until':
     case 'while':
-    case 'if':
       return transform_ctrl_stmnt(statement, module)
+    case 'if':
+      return transform_if(statement, module)
     case 'return':
       return type_return(statement, module)
     default:
@@ -69,6 +70,34 @@ function transform_ctrl_stmnt (ctrl_statement, module) {
   result.condition_type = type_expression(ctrl_statement.condition)
 
   return result
+}
+
+function transform_if (if_statement, module) {
+  let errors_found = []
+
+  let output = {type:'control', body:[]}
+
+  for (let statement of if_statement.true_branch) {
+    let new_statement = transform_statement(statement, module)
+    if (new_statement.error) errors_found.push(new_statement.result)
+    else output.body.push(new_statement.result)
+  }
+
+  for (let statement of if_statement.false_branch) {
+    let new_statement = transform_statement(statement, module)
+    if (new_statement.error) errors_found.push(new_statement.result)
+    else output.body.push(new_statement.result)
+  }
+
+  let new_condition = type_expression(module, if_statement.condition)
+
+  if (new_condition.error) errors_found.push(new_condition.result)
+  else output.condition = new_condition.result
+
+  let error = errors_found.length > 0
+  let result = error ? errors_found:output
+
+  return {error, result}
 }
 
 function transform_assignment (assignment, module) {
