@@ -65,8 +65,9 @@ function transform_statement (statement, ast) {
       throw new Error('@FunctionDecorator: la transformacion de "fors" no esta implementada')
     case 'until':
     case 'while':
-    case 'if':
       return transform_crtl(statement, ast)
+    case 'if':
+      return transform_if(statement, ast)
     case 'declaration':
       return {error:false, result:statement}
     case 'return':
@@ -92,11 +93,21 @@ function transform_call (call, ast) {
 }
 
 function transform_crtl (statement, ast) {
-  let new_condition = transform_expression(exp, ast)
+  let new_condition = transform_expression(statement.condition, ast)
 
   let new_body = transform_body(statement.body, ast)
 
-  return bind(bind(make_ctrl_statement(statement), condition), new_body)
+  return bind(bind(make_ctrl_statement(statement), new_condition), new_body)
+}
+
+function transform_if (statement, ast) {
+  let new_condition = transform_expression(statement.condition, ast)
+
+  let new_true_branch = transform_body(statement.true_branch, ast)
+
+  let new_false_branch = transform_body(statement.false_branch, ast)
+
+  return bind(bind(bind(make_if(statement), new_condition), new_true_branch), new_false_branch)
 }
 
 function transform_return (ret_statement, ast) {
@@ -195,6 +206,14 @@ const make_ctrl_statement = curry((statement, condition, body) => {
   let result = clone_obj(statement)
   result.condition = condition
   result.body = body
+  return {error: false, result}
+})
+
+const make_if = curry((statement, condition, true_branch, false_branch) => {
+  let result = clone_obj(statement)
+  result.condition = condition
+  result.true_branch = true_branch
+  result.false_branch = false_branch
   return {error: false, result}
 })
 
