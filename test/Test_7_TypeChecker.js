@@ -271,3 +271,186 @@ describe('Integracion con Typer', () => {
     check_result.should.deepEqual([])
   })
 })
+
+describe.only('Programas que deberian devolver errores', () => {
+  it('tipo de retorno distinto al declarado', () => {
+    let code = `variables
+      entero a
+    inicio
+      a <- sumar(2, 3)
+    fin
+
+    entero funcion sumar(entero a, entero b)
+      entero a, b
+    inicio
+      retornar 2.78
+    finfuncion
+    `
+
+    let parser_output = parse(code)
+
+    let transformed_ast = bind(Typer, bind(CallDecorator, Declarator(parser_output)))
+
+    let check_result = bind(TC.check, transformed_ast)
+
+    check_result.should.deepEqual([
+      {
+        reason: '@function-bad-return-type',
+        expected: 'entero',
+        returned: 'real'
+      }
+    ])
+  })
+
+  it('asignar real a variable de tipo entero', () => {
+    let code = `variables
+      entero a
+    inicio
+      a <- 2.36
+    fin
+    `
+
+    let parser_output = parse(code)
+
+    let transformed_ast = bind(Typer, bind(CallDecorator, Declarator(parser_output)))
+
+    let check_result = bind(TC.check, transformed_ast)
+
+    check_result.should.deepEqual([
+      {
+        reason: 'incompatible-types-at-assignment',
+        expected: 'entero',
+        received: 'real'
+      }
+    ])
+  })
+
+  it('asignar entero a variable de tipo logico', () => {
+    let code = `variables
+      logico a
+    inicio
+      a <- 2
+    fin
+    `
+
+    let parser_output = parse(code)
+
+    let transformed_ast = bind(Typer, bind(CallDecorator, Declarator(parser_output)))
+
+    let check_result = bind(TC.check, transformed_ast)
+
+    check_result.should.deepEqual([
+      {
+        reason: 'incompatible-types-at-assignment',
+        expected: 'logico',
+        received: 'entero'
+      }
+    ])
+  })
+
+  it('llamar funcion con menos o mas argumentos de los necesarios', () => {
+    let code = `variables
+      entero a
+    inicio
+      a <- sumar(2)
+    fin
+
+    entero funcion sumar(entero a, entero b)
+      entero a, b
+    inicio
+      retornar a + b
+    finfuncion
+    `
+
+    let parser_output = parse(code)
+
+    let transformed_ast = bind(Typer, bind(CallDecorator, Declarator(parser_output)))
+
+    let check_result = bind(TC.check, transformed_ast)
+
+    check_result.should.deepEqual([
+      {
+        reason: '@call-incorrect-arg-number',
+        expected: 2,
+        received: 1
+      }
+    ])
+  })
+
+  it('llamar funcion con argumentos del tipo equivocado', () => {
+    let code = `variables
+      entero a
+    inicio
+      a <- sumar(2.89, 4.6)
+    fin
+
+    entero funcion sumar(entero a, entero b)
+      entero a, b
+    inicio
+      retornar a + b
+    finfuncion
+    `
+
+    let parser_output = parse(code)
+
+    let transformed_ast = bind(Typer, bind(CallDecorator, Declarator(parser_output)))
+
+    let check_result = bind(TC.check, transformed_ast)
+
+    check_result.should.deepEqual([
+      {
+        reason: '@call-wrong-argument-type',
+        expected: 'entero',
+        received: 'real',
+        at: 1
+      }
+    ])
+  })
+
+  it.skip('invocar arreglo con un indice de tipo real', () => {
+    let code = `variables
+      entero m[5, 3]
+    inicio
+      m[2.78, verdadero] <- 2
+    fin
+    `
+
+    let parser_output = parse(code)
+
+    let transformed_ast = bind(Typer, bind(CallDecorator, Declarator(parser_output)))
+
+    let check_result = bind(TC.check, transformed_ast)
+
+    check_result.should.deepEqual([
+      {
+        reason: 'non-integer-index',
+        bad_type: 'real',
+        at: 1
+      }
+    ])
+  })
+
+  it('condicionar una estructura con un valor entero', () => {
+    let code = `variables
+      entero a
+    inicio
+      si (2) entonces
+        a <- 3
+      finsi
+    fin
+    `
+
+    let parser_output = parse(code)
+
+    let transformed_ast = bind(Typer, bind(CallDecorator, Declarator(parser_output)))
+
+    let check_result = bind(TC.check, transformed_ast)
+
+    check_result.should.deepEqual([
+      {
+        reason: '@condition-invalid-expression',
+        unexpected: 'entero'
+      }
+    ])
+  })
+})

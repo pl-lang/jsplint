@@ -57,14 +57,17 @@ function check_function (func) {
 
   let return_exp_type = calculate_type(last(func.body).exptype)
 
-  if (!Types.equals(func.type.return_type, return_exp_type.result)) {
-    let error_info = {
-      reason: '@function-bad-return-type',
-      expected: stringify(func.type.return_type),
-      returned: stringify(return_exp_type)
+  if (!return_exp_type.error) {
+    if (!Types.equals(func.type.return_type, return_exp_type.result)) {
+      let error_info = {
+        reason: '@function-bad-return-type',
+        expected: stringify(func.type.return_type),
+        returned: stringify(return_exp_type.result)
+      }
+      errors_found.push(error_info)
     }
-    errors_found.push(error_info)
   }
+  else errors_found.push(return_exp_type.result)
 
   let error = errors_found.length > 0
 
@@ -99,22 +102,22 @@ export function assignment_rule (assignment) {
 
   if (equals(variable_type.result, right_type)) return {error:false}
 
-  else if (right_type.atomic == 'entero' && assignment.left.atomic == 'real') {
-    if (equal_dimensions(assignment.left, right_type)) return {error:false}
+  else if (right_type.atomic == 'entero' && variable_type.result.atomic == 'real') {
+    if (equal_dimensions(variable_type.result, right_type)) return {error:false}
     else {
       // TODO: cambiar nombre de error por @incompatible-types-at-assignment
       let reason = 'incompatible-types-at-assignment'
-      let target_type = stringify(right_type)
-      let payload_type = stringify(assignment.left)
-      return {error:true, result:{reason, target_type, payload_type}}
+      let expected = stringify(variable_type.result)
+      let received = stringify(right_type)
+      return {error:true, result:{reason, expected, received}}
     }
   }
 
   else {
     let reason = 'incompatible-types-at-assignment'
-    let target_type = stringify(right_type)
-    let payload_type = stringify(assignment.left)
-    return {error:true, result:{reason, target_type, payload_type}}
+    let expected = stringify(variable_type.result)
+    let received = stringify(right_type)
+    return {error:true, result:{reason, expected, received}}
   }
 }
 
@@ -141,8 +144,9 @@ export function call_rule (call) {
       let reason = '@call-wrong-argument-type'
       let expected = stringify(expected_type)
       let received = stringify(argument_types[i])
+      let at = i + 1
 
-      return {error:true, result:{reason, expected, received}}
+      return {error:true, result:{reason, expected, received, at}}
     }
   }
 
@@ -164,7 +168,7 @@ export function invocation_rule (invocation) {
     if (!equals(Types.Integer, type_report.result)) {
       error = true
       let error_info = {
-        reason:'non-integer-index', indexnum, bad_type:stringify(type_report.result)
+        reason:'non-integer-index', at:indexnum, bad_type:stringify(type_report.result)
       }
       errors_found.push(error_info)
     }
@@ -178,11 +182,16 @@ export function invocation_rule (invocation) {
 export function ctrl_rule (ctrl_statement) {
   let errors_found = []
 
-  if (!equals(ctrl_statement.condition_type, Types.Bool)) {
-    let reason = '@condition-invalid-expression'
-    let unexpected = stringify(ctrl_statement.condition_type)
-    return {error:true, result:{reason, target_type, payload_type}}
+  let condition_type = calculate_type(ctrl_statement.condition)
+  
+  if (!condition_type.error) {
+    if (!equals(condition_type.result, Types.Bool)) {
+      let reason = '@condition-invalid-expression'
+      let unexpected = stringify(condition_type.result)
+      return {error:true, result:{reason, unexpected}}
+    }
   }
+  else errors_found.push(condition_type.result)
 
   for (let statement of ctrl_statement.body) {
     let report = check_statement(statement)
