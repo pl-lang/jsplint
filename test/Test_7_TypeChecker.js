@@ -272,7 +272,7 @@ describe('Integracion con Typer', () => {
   })
 })
 
-describe.only('Programas que deberian devolver errores', () => {
+describe('Programas que deberian devolver errores', () => {
   it('tipo de retorno distinto al declarado', () => {
     let code = `variables
       entero a
