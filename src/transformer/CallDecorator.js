@@ -6,7 +6,7 @@
 //
 // Si la funcion no existe entonces devuelve un error.
 
-import {bind, mergeObjs} from '../utility/helpers.js'
+import {bind, bindN, mergeObjs} from '../utility/helpers.js'
 
 import {curry} from 'ramda'
 
@@ -44,7 +44,7 @@ function transform_body (statements, ast) {
 
   for (let statement of statements) {
     let new_statement = transform_statement(statement, ast)
-    if (new_statement.error) errors_found.push(new_statement.result)
+    if (new_statement.error) errors_found.push(...new_statement.result)
     else new_body.push(new_statement.result)
   }
 
@@ -82,8 +82,8 @@ function transform_assignment (assignment, module) {
 
   let payload = transform_expression(assignment.right, module)
 
-  // make_assignment >>= vartype >>= payload_type
-  return bind(bind(make_assignment, variable), payload)
+  // make_assignment(vartype, payload_type)
+  return bindN(make_assignment, variable, payload)
 }
 
 function transform_call (call, ast) {
@@ -97,7 +97,8 @@ function transform_crtl (statement, ast) {
 
   let new_body = transform_body(statement.body, ast)
 
-  return bind(bind(make_ctrl_statement(statement), new_condition), new_body)
+  // make_ctrl_statement(statement, new_condition, new_body)
+  return bindN(make_ctrl_statement(statement), new_condition, new_body)
 }
 
 function transform_if (statement, ast) {
@@ -107,7 +108,8 @@ function transform_if (statement, ast) {
 
   let new_false_branch = transform_body(statement.false_branch, ast)
 
-  return bind(bind(bind(make_if(statement), new_condition), new_true_branch), new_false_branch)
+  //make_if(statement, new_condition, new_true_branch, new_false_branch)
+  return bindN(make_if(statement), new_condition, new_true_branch, new_false_branch)
 }
 
 function transform_return (ret_statement, ast) {
@@ -123,8 +125,8 @@ function transform_invocation(invocation, ast) {
     let new_indexes = []
 
     for (let index of invocation.indexes) {
-      let new_index = transform_expression(index)
-      if (new_index.error) errors_found.push(new_index.result)
+      let new_index = transform_expression(index, ast)
+      if (new_index.error) errors_found.push(...new_index.result)
       else new_indexes.push(new_index.result)
     }
 
@@ -150,7 +152,7 @@ function transform_expression (expression, ast) {
       new_element = {error:false, result:element}
 
 
-    if (new_element.error) errors_found.push(new_element.error)
+    if (new_element.error) errors_found.push(...new_element.result)
     else output.push(new_element.result)
   }
 
@@ -165,7 +167,7 @@ function get_module_info (name, ast) {
     throw new Error(`Falta la info de tipos de ${name}`)
   }
   if ( !(name in ast) ) {
-    let result = {reason: '@call-undefined-function', name}
+    let result = [{reason: '@call-undefined-function', name}]
     return {error:true, result}
   }
   else {

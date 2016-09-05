@@ -1,12 +1,22 @@
-// import R from 'ramda'
+export function bindN (f, ...args) {
+  let func = f
+  let output
+
+  for (let i = 0; i < args.length - 1; i++) {
+    let report = bind(func, args[i])
+    if (!(report instanceof Function)) return report
+    else func = report
+  }
+
+  return bind(func, args[args.length-1])
+}
 
 // similar como seria bind (>>=) de haskell si solo pudiera ser aplicado a
 // Maybes
 // En resumen, una funcion que toma una funcion y un reporte. Si el reporte indica
 // un error, lo devuelve. Si no, aplica f sobre el valor que el reporte contiene
-// (y sobre cualquier otro argumento pasado luego del reporte). Cabe aclarar que
-// f es una funcion que tambien devuelve reportes. Un reporte es un objeto que
-// contiene las propiedades `error` y `result`.
+// Cabe aclarar que f es una funcion que tambien devuelve reportes.
+// Un reporte es un objeto que contiene las propiedades `error` y `result`.
 export const bind = (f, r) => r.error ? r:f(r.result)
 
 // flatten :: [any] -> [[any]] -> [any]

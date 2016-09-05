@@ -69,6 +69,23 @@ describe('CallDecorator', () => {
       }
     })
   })
+
+  it('error al invocar variable con funcion inexistente', () => {
+    let code = `variables
+      entero v[2]
+    inicio
+      a[devolver_2()] <- 1
+    fin`
+
+    let parser_output = programFromSource(code)
+
+    let transformed_ast = CallDecorator(parser_output)
+
+    transformed_ast.error.should.equal(true)
+    transformed_ast.result.should.deepEqual([
+      {reason: '@call-undefined-function', name: 'devolver_2'}
+    ])
+  })
 })
 
 describe('Declarator', () => {
