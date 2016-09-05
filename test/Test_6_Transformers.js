@@ -245,4 +245,25 @@ describe('Typer', () => {
       {reason:'@invocation-too-many-indexes', expected:1, received:2}
     ])
   })
+
+  it('encontrar error dentro del cuerpo de una estructura', () => {
+    let code = `variables
+      entero v[3], i
+    inicio
+      i <- 0
+      mientras (i < 10)
+        v[2, 1] <- 5
+        i <- 1 + 1
+      finmientras
+    fin`
+
+    let parser_output = programFromSource(code)
+
+    let transformed_ast = bind(Typer, bind(CallDecorator, Declarator(parser_output)))
+
+    transformed_ast.error.should.equal(true)
+    transformed_ast.result.should.deepEqual([
+      {reason:'@invocation-too-many-indexes', expected:1, received:2}
+    ])
+  })
 })
