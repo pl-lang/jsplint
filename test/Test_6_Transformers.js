@@ -212,4 +212,37 @@ describe('Typer', () => {
 
     transformed_ast.error.should.equal(false)
   })
+
+  it('error al intentar asignar a una variable inexistente', () => {
+    let code = `variables
+    inicio
+      a <- 5
+    fin`
+
+    let parser_output = programFromSource(code)
+
+    let transformed_ast = bind(Typer, bind(CallDecorator, Declarator(parser_output)))
+
+    transformed_ast.error.should.equal(true)
+    transformed_ast.result.should.deepEqual([
+      {reason:'undefined-variable', name:'a'}
+    ])
+  })
+
+  it('error al usar demasiados indices sobre un arreglo', () => {
+    let code = `variables
+      entero v[3]
+    inicio
+      v[2, 1] <- 5
+    fin`
+
+    let parser_output = programFromSource(code)
+
+    let transformed_ast = bind(Typer, bind(CallDecorator, Declarator(parser_output)))
+
+    transformed_ast.error.should.equal(true)
+    transformed_ast.result.should.deepEqual([
+      {reason:'@invocation-too-many-indexes', expected:1, received:2}
+    ])
+  })
 })

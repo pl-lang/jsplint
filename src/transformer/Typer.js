@@ -2,7 +2,7 @@
 
 import {curry, map, drop} from 'ramda'
 
-import {bind} from '../utility/helpers.js'
+import {bind, bindN} from '../utility/helpers.js'
 
 import * as Types from '../typechecker/Types.js'
 
@@ -13,7 +13,7 @@ export default function transform (modules) {
   for (let module_name in modules) {
     let old_module = modules[module_name]
     let new_module = transform_module(old_module)
-    if (new_module.error) errors_found.push(new_module.result)
+    if (new_module.error) errors_found.push(...new_module.result)
     else output[module_name] = new_module.result
   }
 
@@ -29,7 +29,7 @@ function transform_module (module) {
 
   for (let statement of module.body) {
     let new_statement = transform_statement(statement, module)
-    if (new_statement.error) errors_found.push(new_statement.result)
+    if (new_statement.error) errors_found.push(...new_statement.result)
     else output.body.push(new_statement.result)
   }
 
@@ -62,14 +62,25 @@ function transform_statement (statement, module) {
 }
 
 function transform_ctrl_stmnt (ctrl_statement, module) {
-  let result = {type:'control', body:[]}
+  let errors_found = []
 
-  for (let statement of ctrl_statement.body)
-    result.body.push(transform_statement(statement, module))
+  let output = {type:'control', body:[]}
 
-  result.condition_type = type_expression(ctrl_statement.condition)
+  for (let statement of ctrl_statement.body) {
+    let new_statement = transform_statement(statement, module)
+    if (new_statement.error) errors_found.push(...new_statement.result)
+    else output.body.push(new_statement.result)
+  }
 
-  return result
+  let new_condition = type_expression(module, ctrl_statement.condition)
+
+  if (new_condition.error) errors_found.push(...new_condition.result)
+  else output.condition = new_condition.result
+
+  let error = errors_found.length > 0
+  let result = error ? errors_found:output
+
+  return {error, result}
 }
 
 function transform_if (if_statement, module) {
@@ -79,19 +90,19 @@ function transform_if (if_statement, module) {
 
   for (let statement of if_statement.true_branch) {
     let new_statement = transform_statement(statement, module)
-    if (new_statement.error) errors_found.push(new_statement.result)
+    if (new_statement.error) errors_found.push(...new_statement.result)
     else output.body.push(new_statement.result)
   }
 
   for (let statement of if_statement.false_branch) {
     let new_statement = transform_statement(statement, module)
-    if (new_statement.error) errors_found.push(new_statement.result)
+    if (new_statement.error) errors_found.push(...new_statement.result)
     else output.body.push(new_statement.result)
   }
 
   let new_condition = type_expression(module, if_statement.condition)
 
-  if (new_condition.error) errors_found.push(new_condition.result)
+  if (new_condition.error) errors_found.push(...new_condition.result)
   else output.condition = new_condition.result
 
   let error = errors_found.length > 0
@@ -107,8 +118,8 @@ function transform_assignment (assignment, module) {
 
   let payload_type = type_expression(module, assignment.right)
 
-  // make_assignment >>= vartype >>= payload_type
-  return bind(bind(make_assignment, vartype), payload_type)
+  // make_assignment(vartype, payload_type)
+  return bindN(make_assignment, vartype, payload_type)
 }
 
 const make_assignment = curry((left, right) => {
@@ -200,7 +211,7 @@ const type_var = curry((module, invocation, variable) => {
   // the type of the indexes in this invocation
   let indextypes = type_exp_array(module, invocation.indexes)
 
-  return bind(bind(make_inv, type), indextypes)
+  return bindN(make_inv, type, indextypes)
 })
 
 const make_inv = curry((type, indextypes) => {
@@ -242,11 +253,11 @@ function atomic_type (typename) {
 
 function calculate_sizes (i, v) {
   if (i.indexes.length > v.dimension.length) {
-    let result = {
+    let result = [{
       reason: '@invocation-too-many-indexes',
       expected: v.dimension.length,
       received: i.indexes.length
-    }
+    }]
     return {error:true, result}
   }
   else {
