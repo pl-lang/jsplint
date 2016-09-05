@@ -122,12 +122,6 @@ function transform_assignment (assignment, module) {
   return bindN(make_assignment, vartype, payload_type)
 }
 
-const make_assignment = curry((left, right) => {
-  let result = {type:'assignment', left, right}
-  return {error:false, result}
-})
-
-// TODO: esta funcion
 function transform_call (call, module) {
   let type_info = type_module(call.module_type, call.parameters, call.return_type)
 
@@ -146,19 +140,27 @@ function type_module (mtype, parameters, return_type) {
     return new Type.ProcedureType(paramtypes)
 }
 
-const make_call = curry((name, type_info, argtypes) => {
-  return {error:false, result:{type:'call', name, argtypes, type_info}}
-})
-
 function type_return (statement, module) {
   let exptype = type_expression(module, statement.expression)
 
   return bind(make_return, exptype)
 }
 
-const make_return = curry((exptype) => {
-  return {error:false, result:{type:'return', exptype}}
-})
+function type_exp_array (m, es) {
+  let errors_found = []
+  let output = []
+
+  for (let e of es) {
+    let report = type_expression(m, e)
+    if (report.error) errors_found.push(...report.result)
+    else output.push(report.result)
+  }
+
+  let error = errors_found.length > 0
+  let result = error ? errors_found:output
+
+  return {error, result}
+}
 
 function type_expression (module, expression) {
   let output = []
@@ -214,25 +216,22 @@ const type_var = curry((module, invocation, variable) => {
   return bindN(make_inv, type, indextypes)
 })
 
-const make_inv = curry((type, indextypes) => {
-  return {error:false, result:{type, indextypes}}
-})
+function type_literal (literal) {
+  let type
 
-const make_type = curry((tn, sizes) => {
-  if (sizes.length == 0) {
-    return {error:false, result:atomic_type(tn)}
+  if (typeof literal == 'string') {
+    if (literal.length > 1)
+      type = new Types.String(literal.length)
+    else
+      type = Types.Char
   }
-  else {
-    let result
-    for (let i = sizes.length - 1; i >= 0; i--) {
-      if (i == sizes.length - 1)
-        result = new Types.ArrayType(atomic_type(tn), sizes[i])
-      else
-        result = new Types.ArrayType(result, sizes[i])
-    }
-    return {error:false, result}
-  }
-})
+  else if (typeof literal == 'boolean') type = Types.Bool
+  else if (is_int(literal))             type = Types.Integer
+  else if (is_float(literal))           type = Types.Float
+  else throw new Error(`@Typer: no puedo tipar el literal ${literal}`)
+
+  return {error:false, result:type}
+}
 
 function atomic_type (typename) {
   switch (typename) {
@@ -266,68 +265,12 @@ function calculate_sizes (i, v) {
   }
 }
 
-function type_exp_array (m, es) {
-  let errors_found = []
-  let output = []
-
-  for (let e of es) {
-    let report = type_expression(m, e)
-    if (report.error) errors_found.push(...report.result)
-    else output.push(report.result)
-  }
-
-  let error = errors_found.length > 0
-  let result = error ? errors_found:output
-
-  return {error, result}
-}
-
-function type_literal (literal) {
-  let type
-
-  if (typeof literal == 'string') {
-    if (literal.length > 1)
-      type = new Types.String(literal.length)
-    else
-      type = Types.Char
-  }
-  else if (typeof literal == 'boolean') type = Types.Bool
-  else if (is_int(literal))             type = Types.Integer
-  else if (is_float(literal))           type = Types.Float
-  else throw new Error(`@Typer: no puedo tipar el literal ${literal}`)
-
-  return {error:false, result:type}
-}
-
 function is_int (value) {
   return value === Math.trunc(value)
 }
 
 function is_float (value) {
   return value - Math.trunc(value) > 0
-}
-
-function is_operator (string) {
-  switch (string) {
-    case 'power':
-    case 'div':
-    case 'mod':
-    case 'times':
-    case 'divide':
-    case 'minus':
-    case 'plus':
-    case 'minor-than':
-    case 'minor-equal':
-    case 'major-than':
-    case 'major-equal':
-    case 'equal':
-    case 'diff-than':
-    case 'and':
-    case 'or':
-      return true
-    default:
-      return false
-  }
 }
 
 function get_var (name, locals) {
@@ -337,3 +280,36 @@ function get_var (name, locals) {
 
   return {error, result}
 }
+
+const make_call = curry((name, type_info, argtypes) => {
+  return {error:false, result:{type:'call', name, argtypes, type_info}}
+})
+
+const make_assignment = curry((left, right) => {
+  let result = {type:'assignment', left, right}
+  return {error:false, result}
+})
+
+const make_return = curry((exptype) => {
+  return {error:false, result:{type:'return', exptype}}
+})
+
+const make_inv = curry((type, indextypes) => {
+  return {error:false, result:{type, indextypes}}
+})
+
+const make_type = curry((tn, sizes) => {
+  if (sizes.length == 0) {
+    return {error:false, result:atomic_type(tn)}
+  }
+  else {
+    let result
+    for (let i = sizes.length - 1; i >= 0; i--) {
+      if (i == sizes.length - 1)
+        result = new Types.ArrayType(atomic_type(tn), sizes[i])
+      else
+        result = new Types.ArrayType(result, sizes[i])
+    }
+    return {error:false, result}
+  }
+})
