@@ -1,14 +1,17 @@
+import {last} from 'ramda'
+
 export function bindN (f, ...args) {
   let func = f
   let output
 
   for (let i = 0; i < args.length - 1; i++) {
-    let report = bind(func, args[i])
-    if (!(report instanceof Function)) return report
-    else func = report
+    if (args[i].error)
+      return args[i]
+    else
+      func = func(args[i].result)
   }
 
-  return bind(func, args[args.length-1])
+  return bind(func, last(args))
 }
 
 // similar como seria bind (>>=) de haskell si solo pudiera ser aplicado a
