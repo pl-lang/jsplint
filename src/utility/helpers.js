@@ -1,4 +1,4 @@
-import {last} from 'ramda'
+import {last, curry} from 'ramda'
 
 export function bindN (f, ...args) {
   let func = f
@@ -20,7 +20,7 @@ export function bindN (f, ...args) {
 // un error, lo devuelve. Si no, aplica f sobre el valor que el reporte contiene
 // Cabe aclarar que f es una funcion que tambien devuelve reportes.
 // Un reporte es un objeto que contiene las propiedades `error` y `result`.
-export const bind = (f, r) => r.error ? r:f(r.result)
+export const bind = curry((f, r) => r.error ? r:f(r.result))
 
 // flatten :: [any] -> [[any]] -> [any]
 export function flatten (accumulator, arr) {

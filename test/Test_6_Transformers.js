@@ -12,6 +12,8 @@ import CallDecorator from '../src/transformer/CallDecorator.js'
 import Declarator from '../src/transformer/Declarator.js'
 import Typer from '../src/transformer/Typer.js'
 
+import {compose, curry} from 'ramda'
+
 function programFromSource(string) {
   let parser = new Parser()
 
@@ -155,7 +157,9 @@ describe('Typer', () => {
 
     let parser_output = programFromSource(code)
 
-    let transformed_ast = bind(Typer, Declarator(parser_output))
+    let transform = compose(bind(Typer), Declarator)
+
+    let transformed_ast = transform(parser_output)
 
     transformed_ast.error.should.equal(false)
     transformed_ast.result.main.body.should.deepEqual([
@@ -208,7 +212,9 @@ describe('Typer', () => {
 
     let parser_output = programFromSource(code)
 
-    let transformed_ast = bind(Typer, bind(CallDecorator, Declarator(parser_output)))
+    let transform = compose(bind(Typer), bind(CallDecorator), Declarator)
+
+    let transformed_ast = transform(parser_output)
 
     transformed_ast.error.should.equal(false)
   })
@@ -221,7 +227,9 @@ describe('Typer', () => {
 
     let parser_output = programFromSource(code)
 
-    let transformed_ast = bind(Typer, bind(CallDecorator, Declarator(parser_output)))
+    let transform = compose(bind(Typer), bind(CallDecorator), Declarator)
+
+    let transformed_ast = transform(parser_output)
 
     transformed_ast.error.should.equal(true)
     transformed_ast.result.should.deepEqual([
@@ -238,7 +246,9 @@ describe('Typer', () => {
 
     let parser_output = programFromSource(code)
 
-    let transformed_ast = bind(Typer, bind(CallDecorator, Declarator(parser_output)))
+    let transform = compose(bind(Typer), bind(CallDecorator), Declarator)
+
+    let transformed_ast = transform(parser_output)
 
     transformed_ast.error.should.equal(true)
     transformed_ast.result.should.deepEqual([
@@ -259,7 +269,9 @@ describe('Typer', () => {
 
     let parser_output = programFromSource(code)
 
-    let transformed_ast = bind(Typer, bind(CallDecorator, Declarator(parser_output)))
+    let transform = compose(bind(Typer), bind(CallDecorator), Declarator)
+
+    let transformed_ast = transform(parser_output)
 
     transformed_ast.error.should.equal(true)
     transformed_ast.result.should.deepEqual([
