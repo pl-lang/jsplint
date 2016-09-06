@@ -39,23 +39,6 @@ export class String extends ArrayType {
   }
 }
 
-export function Writable(type) {
-  if (type instanceof String) return true
-  else return is_atomic(type)
-}
-
-export function Readable(type) {
-  if (type instanceof ArrayType) {
-    if (type.contains == Char) return true
-    else return false
-  }
-  else return is_atomic(type)
-}
-
-export const type_constraint = curry((a, b) => {
-  return equals(a, b)
-})
-
 export class FunctionType {
   constructor (return_type, paramtypes) {
     this.kind = 'function',
@@ -76,6 +59,11 @@ export class ProcedureType {
       types: paramtypes
     }
   }
+}
+
+export const IOType = {
+  return_type: None,
+  parameter_constraint: type => type instanceof String || is_atomic(type)
 }
 
 

@@ -123,7 +123,12 @@ function transform_assignment (assignment, module) {
 }
 
 function transform_call (call, module) {
-  let type_info = type_module(call.module_type, call.parameters, call.return_type)
+  let type_info
+
+  if (is_builtin(call.name))
+    type_info = Types.IOType
+  else
+    type_info = type_module(call.module_type, call.parameters, call.return_type)
 
   let argtypes = type_exp_array(module, call.args)
 
@@ -313,3 +318,7 @@ const make_type = curry((tn, sizes) => {
     return {error:false, result}
   }
 })
+
+function is_builtin (name) {
+  return name == 'escribir' || name == 'escribir_linea' || name == 'leer'
+}
