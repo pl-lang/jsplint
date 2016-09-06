@@ -87,6 +87,9 @@ function transform_assignment (assignment, module) {
 }
 
 function transform_call (call, ast) {
+  // si es una de las funciones especiales del lenguaje, no hay que transformarla
+  if (is_builtin(call.name)) return {error:false, result:clone_obj(call)}
+
   let info = get_module_info(call.name, ast)
 
   return bind(make_call(call), info)
@@ -163,9 +166,6 @@ function transform_expression (expression, ast) {
 }
 
 function get_module_info (name, ast) {
-  if (name == 'escribir' || name == 'leer' || name == 'escribir_linea') {
-    throw new Error(`Falta la info de tipos de ${name}`)
-  }
   if ( !(name in ast) ) {
     let result = [{reason: '@call-undefined-function', name}]
     return {error:true, result}
@@ -224,3 +224,8 @@ const make_invocation = curry((old_invocation, new_indexes) => {
   new_invocation.indexes = new_indexes
   return {error: false, result: new_invocation}
 })
+
+
+function is_builtin (name) {
+  return name == 'escribir' || name == 'escribir_linea' || name == 'leer'
+}
