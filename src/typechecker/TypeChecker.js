@@ -77,7 +77,14 @@ function check_function (func) {
 export function check_statement (statement) {
   switch (statement.type) {
     case 'call':
-      return call_rule(statement)
+      switch (statement.name) {
+        case 'escribir':
+        case 'escribir_linea':
+        case 'leer':
+          return io_rule(statement)
+        default:
+          return call_rule(statement)
+      }
     case 'assignment':
       return assignment_rule(statement)
     case 'control':
@@ -153,6 +160,31 @@ export function call_rule (call) {
   return {error:false, result:call.type_info.return_type}
 }
 
+function io_rule (call) {
+  let argument_types = []
+
+  for (let i = 0; i < call.argtypes.length; i++) {
+    let type = calculate_type(call.argtypes[i])
+    if (type.error) return type
+    argument_types.push(type.result)
+  }
+
+  let constraint = call.type_info.parameter_constraint
+
+  for (let i = 0; i < argument_types.length; i++) {
+    if (!constraint(argument_types[i])) {
+      let reason = '@io-wrong-argument-type'
+      let received = stringify(argument_types[i])
+      let name = call.name
+      let at = i + 1
+
+      return {error:true, result:{reason, received, name, at}}
+    }
+  }
+
+  return {error:false, result:call.type_info.return_type}
+}
+
 export function invocation_rule (invocation) {
   let error = false
 
@@ -183,7 +215,7 @@ export function ctrl_rule (ctrl_statement) {
   let errors_found = []
 
   let condition_type = calculate_type(ctrl_statement.condition)
-  
+
   if (!condition_type.error) {
     if (!equals(condition_type.result, Types.Bool)) {
       let reason = '@condition-invalid-expression'
@@ -430,6 +462,7 @@ function stringify (type) {
     while (ct.kind == 'array') {
       dimensions += ct.length
       if (ct.contains.kind == 'array') dimensions += ', '
+      ct = ct.contains
     }
     return `${ct.atomic}[${dimensions}]`
   }

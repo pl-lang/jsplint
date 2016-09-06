@@ -453,4 +453,48 @@ describe('Programas que deberian devolver errores', () => {
       }
     ])
   })
+
+  it('llamar a escribir con un valor "escribible"', () => {
+    let code = `variables
+      entero v[2, 2, 3]
+    inicio
+      escribir(v)
+    fin
+    `
+
+    let parser_output = parse(code)
+
+    let transformed_ast = bind(Typer, bind(CallDecorator, Declarator(parser_output)))
+
+    let check_result = bind(TC.check, transformed_ast)
+
+    check_result.should.deepEqual([{
+      reason: '@io-wrong-argument-type',
+      at: 1,
+      name: 'escribir',
+      received: 'entero[2, 2, 3]'
+    }])
+  })
+
+  it('llamar a escribir con un valor no "escribible"', () => {
+    let code = `variables
+      entero v[2, 2, 3]
+    inicio
+      escribir(v)
+    fin
+    `
+
+    let parser_output = parse(code)
+
+    let transformed_ast = bind(Typer, bind(CallDecorator, Declarator(parser_output)))
+
+    let check_result = bind(TC.check, transformed_ast)
+
+    check_result.should.deepEqual([{
+      reason: '@io-wrong-argument-type',
+      at: 1,
+      name: 'escribir',
+      received: 'entero[2, 2, 3]'
+    }])
+  })
 })
