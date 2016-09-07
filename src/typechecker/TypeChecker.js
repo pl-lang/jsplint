@@ -112,8 +112,7 @@ export function assignment_rule (assignment) {
   else if (right_type.atomic == 'entero' && variable_type.result.atomic == 'real') {
     if (equal_dimensions(variable_type.result, right_type)) return {error:false}
     else {
-      // TODO: cambiar nombre de error por @incompatible-types-at-assignment
-      let reason = 'incompatible-types-at-assignment'
+      let reason = '@assignment-incompatible-types'
       let expected = stringify(variable_type.result)
       let received = stringify(right_type)
       return {error:true, result:{reason, expected, received}}
@@ -121,7 +120,7 @@ export function assignment_rule (assignment) {
   }
 
   else {
-    let reason = 'incompatible-types-at-assignment'
+    let reason = '@assignment-incompatible-types'
     let expected = stringify(variable_type.result)
     let received = stringify(right_type)
     return {error:true, result:{reason, expected, received}}
@@ -130,6 +129,7 @@ export function assignment_rule (assignment) {
 
 export function call_rule (call) {
   if (call.argtypes.length != call.type_info.parameters.amount) {
+    // TODO: agregarle name (el nombre la funcion llamada) a este error
     let reason = '@call-incorrect-arg-number'
     let expected = call.type_info.parameters.amount
     let received = call.argtypes.length
@@ -219,8 +219,8 @@ export function ctrl_rule (ctrl_statement) {
   if (!condition_type.error) {
     if (!equals(condition_type.result, Types.Bool)) {
       let reason = '@condition-invalid-expression'
-      let unexpected = stringify(condition_type.result)
-      return {error:true, result:{reason, unexpected}}
+      let received = stringify(condition_type.result)
+      return {error:true, result:{reason, received}}
     }
   }
   else errors_found.push(condition_type.result)

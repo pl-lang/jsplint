@@ -318,7 +318,7 @@ describe('Programas que deberian devolver errores', () => {
 
     check_result.should.deepEqual([
       {
-        reason: 'incompatible-types-at-assignment',
+        reason: '@assignment-incompatible-types',
         expected: 'entero',
         received: 'real'
       }
@@ -341,7 +341,7 @@ describe('Programas que deberian devolver errores', () => {
 
     check_result.should.deepEqual([
       {
-        reason: 'incompatible-types-at-assignment',
+        reason: '@assignment-incompatible-types',
         expected: 'logico',
         received: 'entero'
       }
@@ -449,7 +449,7 @@ describe('Programas que deberian devolver errores', () => {
     check_result.should.deepEqual([
       {
         reason: '@condition-invalid-expression',
-        unexpected: 'entero'
+        received: 'entero'
       }
     ])
   })
