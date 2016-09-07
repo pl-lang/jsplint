@@ -167,7 +167,7 @@ function transform_expression (expression, ast) {
 
 function get_module_info (name, ast) {
   if ( !(name in ast) ) {
-    let result = [{reason: '@call-undefined-function', name}]
+    let result = [{reason: '@call-undefined-module', name}]
     return {error:true, result}
   }
   else {

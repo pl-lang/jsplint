@@ -1,7 +1,7 @@
 # Errores
 
 Esta es una lista de los errores que el interprete puede encontrar y reportar
-mientras intenta ejecutar un programa. Cada error item es un error e indica su
+mientras intenta ejecutar un programa. Cada item es un error e indica su
 nombre, que módulo los reporta y por qué, y sus atributos.
 
 Todos los errores son objetos y tienen una propiedad llamada `reason`. Están
@@ -36,15 +36,12 @@ listados (mas o menos) en el orden en le que serian reportados.
   - name: nombre repetido.
 
   - first: tipo con el que fue declarada la primer variable con dicho nombre.
-  (**NOTA: nombre viejo 'original_type'**)
 
   - second: tipo con el que fue declarada la variable repetida.
-  (**NOTA: nombre viejo 'repeated_type'**)
 
 ## Detectados en CallDecorator.js
 
 - @call-undefined-module: reportado cuando se invoca un modulo no declarado.
-(**NOTA: nombre viejo '@call-undefined-function'**)
 
   - name: nombre de dicho modulo.
 

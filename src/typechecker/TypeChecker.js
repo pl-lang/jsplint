@@ -303,15 +303,15 @@ function division (stack) {
   let b = new_stack.pop()
 
   if (!equals(a, Types.Integer) && !equals(a, Types.Float)) {
-    let reason = '@expression-incompatible-operator-type'
-    let unexpected = stringify(a)
-    return {error:true, result:{reason, unexpected}}
+    let reason = '@expression-incompatible-type'
+    let received = stringify(a)
+    return {error:true, result:{reason, received}}
   }
 
   if (!equals(b, Types.Integer) && !equals(b, Types.Float)) {
-    let reason = '@expression-incompatible-operator-type'
-    let unexpected = stringify(b)
-    return {error:true, result:{reason, unexpected}}
+    let reason = '@expression-incompatible-type'
+    let received = stringify(b)
+    return {error:true, result:{reason, received}}
   }
 
   new_stack.push(Types.Float)
@@ -324,9 +324,9 @@ function minus (stack) {
   let a = new_stack.pop()
 
   if (!equals(a, Types.Integer) && !equals(a, Types.Float)) {
-    let reason = '@expression-incompatible-operator-type'
-    let unexpected = stringify(a)
-    return {error:true, result:{reason, unexpected}}
+    let reason = '@expression-incompatible-type'
+    let received = stringify(a)
+    return {error:true, result:{reason, received}}
   }
 
   // hay que devolver el mismo tipo de dato que se recibio
@@ -348,15 +348,15 @@ function real_operators (stack) {
   let b_is_float = equals(b, Types.Float)
 
   if (!a_is_integer && !a_is_float) {
-    let reason = '@expression-incompatible-operator-types'
-    let unexpected = stringify(a)
-    return {error:true, result:{reason, unexpected}}
+    let reason = '@expression-incompatible-types'
+    let received = stringify(a)
+    return {error:true, result:{reason, received}}
   }
 
   if (!b_is_integer && !b_is_float) {
-    let reason = '@expression-incompatible-operator-types'
-    let unexpected = stringify(b)
-    return {error:true, result:{reason, unexpected}}
+    let reason = '@expression-incompatible-types'
+    let received = stringify(b)
+    return {error:true, result:{reason, received}}
   }
 
   let return_type = a_is_integer && b_is_integer ? Types.Integer:Types.Float
@@ -373,15 +373,15 @@ function integer_operators (stack) {
   let b = new_stack.pop()
 
   if (!equals(a, Types.Integer)) {
-    let reason = '@expression-incompatible-operator-types'
-    let unexpected = stringify(a)
-    return {error:true, result:{reason, unexpected}}
+    let reason = '@expression-incompatible-types'
+    let received = stringify(a)
+    return {error:true, result:{reason, received}}
   }
 
   if (!equals(b, Types.Integer)) {
-    let reason = '@expression-incompatible-operator-types'
-    let unexpected = stringify(b)
-    return {error:true, result:{reason, unexpected}}
+    let reason = '@expression-incompatible-types'
+    let received = stringify(b)
+    return {error:true, result:{reason, received}}
   }
 
   new_stack.push(Types.Integer)
@@ -424,15 +424,15 @@ function binary_logic_operators (stack) {
   let b = new_stack.pop()
 
   if (!equals(a, Types.Bool)) {
-    let reason = '@expression-incompatible-operator-types'
-    let unexpected = stringify(a)
-    return {error:true, result:{reason, unexpected}}
+    let reason = '@expression-incompatible-types'
+    let received = stringify(a)
+    return {error:true, result:{reason, received}}
   }
 
   if (!equals(b, Types.Bool)) {
-    let reason = '@expression-incompatible-operator-types'
+    let reason = '@expression-incompatible-types'
     let unexpected = stringify(b)
-    return {error:true, result:{reason, unexpected}}
+    return {error:true, result:{reason, received}}
   }
 
   new_stack.push(Types.Bool)
@@ -445,9 +445,9 @@ function not (stack) {
   let a = new_stack.pop()
 
   if (!equals(a, Types.Bool)) {
-    let reason = '@expression-incompatible-operator-type'
-    let unexpected = stringify(a)
-    return {error:true, result:{reason, unexpected}}
+    let reason = '@expression-incompatible-type'
+    let received = stringify(a)
+    return {error:true, result:{reason, received}}
   }
 
   new_stack.push(Types.Bool)

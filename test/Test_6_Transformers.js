@@ -85,7 +85,7 @@ describe('CallDecorator', () => {
 
     transformed_ast.error.should.equal(true)
     transformed_ast.result.should.deepEqual([
-      {reason: '@call-undefined-function', name: 'devolver_2'}
+      {reason: '@call-undefined-module', name: 'devolver_2'}
     ])
   })
 })

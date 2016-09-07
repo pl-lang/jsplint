@@ -75,8 +75,8 @@ function declare_variables (declarations) {
         let error_info = {
           reason: 'repeated-variable',
           name: original.name,
-          original_type: original.type,
-          repeated_type: variable.type
+          first: original.type,
+          second: variable.type
         }
 
         repeated_variables.push(error_info)
