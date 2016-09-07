@@ -61,8 +61,7 @@ function transform_statement (statement, ast) {
     case 'call':
       return transform_call(statement, ast)
     case 'for':
-      // return transform_for(statement, ast)
-      throw new Error('@FunctionDecorator: la transformacion de "fors" no esta implementada')
+      return transform_for(statement, ast)
     case 'until':
     case 'while':
       return transform_crtl(statement, ast)
@@ -113,6 +112,16 @@ function transform_if (statement, ast) {
 
   //make_if(statement, new_condition, new_true_branch, new_false_branch)
   return bindN(make_if(statement), new_condition, new_true_branch, new_false_branch)
+}
+
+function transform_for (statement, ast) {
+  let new_init = transform_assignment(statement.counter_init, ast)
+
+  let new_goal = transform_expression(statement.last_value, ast)
+
+  let new_body = transform_body(statement.body, ast)
+
+  return bindN(make_for(statement), new_init, new_goal, new_body)
 }
 
 function transform_return (ret_statement, ast) {
@@ -217,6 +226,10 @@ const make_if = curry((statement, condition, true_branch, false_branch) => {
   result.true_branch = true_branch
   result.false_branch = false_branch
   return {error: false, result}
+})
+
+const make_for = curry((statement, counter_init, last_value, body) => {
+  return {error:false, result:{type:'for', counter_init, last_value, body}}
 })
 
 const make_invocation = curry((old_invocation, new_indexes) => {

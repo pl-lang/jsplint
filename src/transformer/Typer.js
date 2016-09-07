@@ -68,9 +68,9 @@ function transform_for (for_statement, module) {
   let output = {
     type: 'for_loop',
     body: [],
-    init_value_type: null,
-    last_value_type: null,
-    counter_type: null
+    init_value: null,
+    last_value: null,
+    counter_invocation: null
   }
 
   for (let statement of for_statement.body) {
@@ -84,24 +84,24 @@ function transform_for (for_statement, module) {
   if (init_type.error)
     errors_found.push(...init_type.result)
   else
-    output.init_value_type = init_type.result
+    output.init_value = init_type.result
 
   // counter_variable
   let cv = get_var(for_statement.counter_init.left.name, module.locals)
 
-  let counter_type = bind(type_var(module, for_statement.counter_init.left), cv)
+  let counter_invocation = bind(type_var(module, for_statement.counter_init.left), cv)
 
-  if (counter_type.error)
-    errors_found.push(...counter_type.result)
+  if (counter_invocation.error)
+    errors_found.push(...counter_invocation.result)
   else
-    output.counter_type = counter_type.result
+    output.counter_invocation = counter_invocation.result
 
   let last_type = type_expression(module, for_statement.last_value)
 
   if (last_type.error)
     errors_found.push(...last_type.result)
   else
-    output.last_value_type = last_type.result
+    output.last_value = last_type.result
 
   let error = errors_found.length > 0
   let result = error ? errors_found:output
