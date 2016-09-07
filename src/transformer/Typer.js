@@ -24,7 +24,7 @@ export default function transform (modules) {
 }
 
 function transform_module (module) {
-  let output = {body:[], module_type:module.module_type}
+  let output = {body:[], module_type:module.module_type, name:module.name}
   let errors_found = []
 
   for (let statement of module.body) {
