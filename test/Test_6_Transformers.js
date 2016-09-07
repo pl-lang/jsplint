@@ -130,7 +130,7 @@ describe('Declarator', () => {
 
     transformed_ast.error.should.equal(true)
     transformed_ast.result.should.deepEqual([
-      {reason:'repeated-variable', name:'a', original_type:'entero', repeated_type:'entero'}
+      {reason:'repeated-variable', name:'a', first:'entero', second:'entero'}
     ])
   })
 })
@@ -234,6 +234,33 @@ describe('Typer', () => {
     transformed_ast.error.should.equal(true)
     transformed_ast.result.should.deepEqual([
       {reason:'undefined-variable', name:'a'}
+    ])
+  })
+
+  it('tipea un modulo principal con un bucle para', () => {
+    let code = `variables
+      entero a
+    inicio
+      para a <- 1 hasta 10
+      finpara
+    fin
+    `
+
+    let parser_output = programFromSource(code)
+
+    let transform = compose(bind(Typer), Declarator)
+
+    let transformed_ast = transform(parser_output)
+
+    transformed_ast.error.should.equal(false)
+    transformed_ast.result.main.body.should.deepEqual([
+      {
+        type: 'for_loop',
+        body: [],
+        last_value_type: [{kind:'literal', type_info:Types.Integer}],
+        init_value_type: [{kind:'literal', type_info:Types.Integer}],
+        counter_type: {indextypes:[], type:Types.Integer}
+      }
     ])
   })
 

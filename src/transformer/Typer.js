@@ -49,6 +49,7 @@ function transform_statement (statement, module) {
     case 'call':
       return transform_call(statement, module)
     case 'for':
+      return transform_for(statement, module)
     case 'until':
     case 'while':
       return transform_ctrl_stmnt(statement, module)
@@ -59,6 +60,53 @@ function transform_statement (statement, module) {
     default:
       throw new Error(`@Typer: no se puede transformar un enunciado "${statement.type}"`)
   }
+}
+
+function transform_for (for_statement, module) {
+  let errors_found = []
+
+  let output = {
+    type: 'for_loop',
+    body: [],
+    init_value_type: null,
+    last_value_type: null,
+    counter_type: null
+  }
+
+  for (let statement of for_statement.body) {
+    let new_statement = transform_statement(statement, module)
+    if (new_statement.error) errors_found.push(...new_statement.result)
+    else output.body.push(new_statement.result)
+  }
+
+  let init_type = type_expression(module, for_statement.counter_init.right)
+
+  if (init_type.error)
+    errors_found.push(...init_type.result)
+  else
+    output.init_value_type = init_type.result
+
+  // counter_variable
+  let cv = get_var(for_statement.counter_init.left.name, module.locals)
+
+  let counter_type = bind(type_var(module, for_statement.counter_init.left), cv)
+
+  if (counter_type.error)
+    errors_found.push(...counter_type.result)
+  else
+    output.counter_type = counter_type.result
+
+  let last_type = type_expression(module, for_statement.last_value)
+
+  if (last_type.error)
+    errors_found.push(...last_type.result)
+  else
+    output.last_value_type = last_type.result
+
+  let error = errors_found.length > 0
+  let result = error ? errors_found:output
+
+  return {error, result}
 }
 
 function transform_ctrl_stmnt (ctrl_statement, module) {
