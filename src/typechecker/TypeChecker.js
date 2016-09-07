@@ -87,6 +87,8 @@ export function check_statement (statement) {
       }
     case 'assignment':
       return assignment_rule(statement)
+    case 'for_loop':
+      return for_rule(statement)
     case 'control':
       return ctrl_rule(statement)
     case 'return':
@@ -183,6 +185,59 @@ function io_rule (call) {
   }
 
   return {error:false, result:call.type_info.return_type}
+}
+
+function for_rule (for_loop) {
+  let errors_found = []
+
+  let counter_type = invocation_rule(for_loop.counter_invocation)
+
+  if (counter_type.error) return counter_type
+
+  let init_value_type =  calculate_type(for_loop.init_value)
+
+  if (init_value_type.error) return init_value_type
+
+  let last_value_type =  calculate_type(for_loop.last_value)
+
+  if (last_value_type.error) return last_value_type
+
+  if (!equals(Types.Integer, counter_type.result)) {
+    let error_info = {
+      reason: '@for-non-integer-counter',
+      received: stringify(counter_type.result)
+    }
+    errors_found.push(error_info)
+  }
+
+  if (!equals(Types.Integer, init_value_type.result)) {
+    let error_info = {
+      reason: '@for-non-integer-init',
+      received: stringify(init_value_type.result)
+    }
+    errors_found.push(error_info)
+  }
+
+  if (!equals(Types.Integer, last_value_type.result)) {
+    let error_info = {
+      reason: '@for-non-integer-goal',
+      received: stringify(last_value_type.result)
+    }
+    errors_found.push(error_info)
+  }
+
+  for (let statement of for_loop.body) {
+    let report = check_statement(statement)
+    if (report.error) {
+      if (statement.type == 'control')  errors_found.push(...report.result)
+      else errors_found.push(report.result)
+    }
+  }
+
+  if (errors_found.length > 0)
+    return {error:true, result:errors_found}
+  else
+    return {error:false}
 }
 
 export function invocation_rule (invocation) {

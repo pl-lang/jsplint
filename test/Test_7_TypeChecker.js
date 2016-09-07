@@ -270,6 +270,23 @@ describe('Integracion con Typer', () => {
 
     check_result.should.deepEqual([])
   })
+
+  it('bucle para correcto', () => {
+    let code = `variables
+      entero i
+    inicio
+      para i <- 1 hasta 10
+      finpara
+    fin`
+
+    let parser_output = parse(code)
+
+    let transformed_ast = bind(Typer, bind(CallDecorator, Declarator(parser_output)))
+
+    let check_result = bind(TC.check, transformed_ast)
+
+    check_result.should.deepEqual([])
+  })
 })
 
 describe('Programas que deberian devolver errores', () => {
@@ -496,5 +513,37 @@ describe('Programas que deberian devolver errores', () => {
       name: 'escribir',
       received: 'entero[2, 2, 3]'
     }])
+  })
+
+  it('bucle para correcto', () => {
+    let code = `variables
+      real i
+    inicio
+      para i <- 2.6 hasta verdadero
+      finpara
+    fin`
+
+    let parser_output = parse(code)
+
+    let transformed_ast = bind(Typer, bind(CallDecorator, Declarator(parser_output)))
+
+    let check_result = bind(TC.check, transformed_ast)
+
+    check_result.should.deepEqual([
+      [
+        {
+          reason: '@for-non-integer-counter',
+          received: 'real'
+        },
+        {
+          reason: '@for-non-integer-init',
+          received: 'real'
+        },
+        {
+          reason: '@for-non-integer-goal',
+          received: 'logico'
+        }
+      ]
+    ])
   })
 })
