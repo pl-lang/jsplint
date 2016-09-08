@@ -335,9 +335,10 @@ describe('Programas que deberian devolver errores', () => {
 
     check_result.should.deepEqual([
       {
-        reason: '@assignment-incompatible-types',
-        expected: 'entero',
-        received: 'real'
+        reason: 'assignment-error',
+        errors: [
+          {reason: '@assignment-incompatible-types', expected: 'entero', received: 'real'}
+        ]
       }
     ])
   })
@@ -358,9 +359,10 @@ describe('Programas que deberian devolver errores', () => {
 
     check_result.should.deepEqual([
       {
-        reason: '@assignment-incompatible-types',
-        expected: 'logico',
-        received: 'entero'
+        reason: 'assignment-error',
+        errors: [
+          {reason: '@assignment-incompatible-types', expected: 'logico', received: 'entero'}
+        ]
       }
     ])
   })
@@ -387,10 +389,15 @@ describe('Programas que deberian devolver errores', () => {
 
     check_result.should.deepEqual([
       {
-        reason: '@call-errors-found',
-        name: 'sumar',
+        reason: 'assignment-error',
         errors: [
-          {reason: '@call-incorrect-arg-number', expected: 2, received: 1}
+          {
+            reason: '@call-errors-found',
+            name: 'sumar',
+            errors: [
+              {reason: '@call-incorrect-arg-number', expected: 2, received: 1}
+            ]
+          }
         ]
       }
     ])
@@ -418,11 +425,16 @@ describe('Programas que deberian devolver errores', () => {
 
     check_result.should.deepEqual([
       {
-        reason: '@call-errors-found',
-        name: 'sumar',
+        reason: 'assignment-error',
         errors: [
-          {reason: '@call-wrong-argument-type', expected: 'entero', received: 'real', at: 1},
-          {reason: '@call-wrong-argument-type', expected: 'entero', received: 'real', at: 2}
+          {
+            reason: '@call-errors-found',
+            name: 'sumar',
+            errors: [
+              {reason: '@call-wrong-argument-type', expected: 'entero', received: 'real', at: 1},
+              {reason: '@call-wrong-argument-type', expected: 'entero', received: 'real', at: 2}
+            ]
+          }
         ]
       }
     ])

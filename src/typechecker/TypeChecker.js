@@ -98,34 +98,54 @@ export function check_statement (statement) {
   }
 }
 
+// assignment_error:: error_report
+//
+// Informacion sobre los errores encontrados en la asignacion a una variable
+//
+//  reason: 'assignment-error'
+//
+//  errors: [error]
+//  Arreglo con todos los errores encontrados en el llamado
+//
+// :: (assignment) -> report<assignment_error, type>
+// Encuentra errores en una asignacion a una variable
 export function assignment_rule (assignment) {
-  let variable_type = invocation_rule(assignment.left)
+  let errors = []
 
-  if (variable_type.error) return variable_type
+  let variable_type = invocation_rule(assignment.left)
 
   let type_report = calculate_type(assignment.right)
 
-  if (type_report.error) return type_report
+  if (variable_type.error) errors.push(variable_type.result)
 
-  let right_type = type_report.result
+  if (type_report.error) errors.push(type_report.result)
 
-  if (equals(variable_type.result, right_type)) return {error:false}
+  let error = errors.length > 0
 
-  else if (right_type.atomic == 'entero' && variable_type.result.atomic == 'real') {
-    if (equal_dimensions(variable_type.result, right_type)) return {error:false}
-    else {
-      let reason = '@assignment-incompatible-types'
-      let expected = stringify(variable_type.result)
-      let received = stringify(right_type)
-      return {error:true, result:{reason, expected, received}}
-    }
+  if (error) {
+    let result = {reason: 'assignment-error', errors}
+    return {error, result}
   }
-
   else {
+    let right_type = type_report.result
+
+    if (equals(variable_type.result, right_type)) {
+      return {error:false}
+    }
+
+    if (right_type.atomic == 'entero' && variable_type.result.atomic == 'real')
+      if (equal_dimensions(variable_type.result, right_type)) {
+        return {error:false}
+      }
+
     let reason = '@assignment-incompatible-types'
     let expected = stringify(variable_type.result)
     let received = stringify(right_type)
-    return {error:true, result:{reason, expected, received}}
+    errors.push({reason, expected, received})
+
+    let result = {reason: 'assignment-error', errors}
+
+    return {error:true, result}
   }
 }
 

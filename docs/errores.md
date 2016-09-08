@@ -58,6 +58,11 @@ Estos errores son detectados en TypeChecker.js
 
   - returned: el tipo que la funcion realmente retorna.
 
+- assignment-error: reportado cuando se encuentra al menos un error en una
+asignacion.
+
+  - errors: arreglo con los errores encontrados.
+
 - @assignment-incompatible-types: Es reportado cuando el tipo del valor que se
    quiere asignar a una variable no es compatible con el tipo de la variable.
 
