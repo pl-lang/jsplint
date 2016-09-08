@@ -103,36 +103,6 @@ describe('Parser', () => {
       retornar resultado
     finfuncion
 
-    entero funcion restar(entero a, entero b)
-      entero resultado
-    inicio
-      resultado <- a - b
-      retornar resultado
-    finfuncion
-    `
-
-    let parser = new Parser()
-
-    let report = parser.parse(code)
-
-    report.error.should.equal(false)
-    report.result.modules.length.should.equal(3)
-    report.result.modules[0].name.should.equal('main')
-    report.result.modules[1].name.should.equal('sumar')
-    report.result.modules[2].name.should.equal('restar')
-  })
-
-  it('lee un programa con procedimientos', () => {
-    let code = `variables
-    inicio
-    fin
-
-    procedimiento sumar(entero a, entero b)
-      entero resultado
-    inicio
-      resultado <- a + b
-    finprocedimiento
-
     procedimiento restar(entero a, entero b)
       entero resultado
     inicio
@@ -142,53 +112,17 @@ describe('Parser', () => {
 
     let parser = new Parser()
 
-    parser.on('syntax-error', console.log)
-
     let report = parser.parse(code)
 
     report.error.should.equal(false)
-    report.result.modules.length.should.equal(3)
-    report.result.modules[0].name.should.equal('main')
-    report.result.modules[1].name.should.equal('sumar')
-    report.result.modules[2].name.should.equal('restar')
-  })
-})
 
-describe('Checkable transformer', () => {
-  it('transforma correctamente un modulo', () => {
-    let code = `variables
-    entero a, b
-    inicio
-    fin`
+    let main_parsed = 'main' in report.result
+    let sumar_parsed = 'sumar' in report.result
+    let restar_parsed = 'restar' in report.result
 
-    let parser = new Parser()
-
-    let report =  parser.parse(code)
-
-    report.error.should.equal(false)
-
-    let transformed_module = Checkable(report.result).modules[0]
-
-    transformed_module.should.deepEqual({
-      type:'module',
-      module_type:'main',
-      name:'main',
-      body:[],
-      locals:{
-        'a':{
-          name:'a',
-          type:'entero',
-          isArray:false,
-          dimension:null
-        },
-        b:{
-          name:'b',
-          type:'entero',
-          isArray:false,
-          dimension:null
-        }
-      }
-    })
+    main_parsed.should.equal(true)
+    sumar_parsed.should.equal(true)
+    restar_parsed.should.equal(true)
   })
 })
 

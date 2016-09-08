@@ -257,9 +257,9 @@ describe('Typer', () => {
       {
         type: 'for_loop',
         body: [],
-        last_value_type: [{kind:'literal', type_info:Types.Integer}],
-        init_value_type: [{kind:'literal', type_info:Types.Integer}],
-        counter_type: {indextypes:[], type:Types.Integer}
+        last_value: [{kind:'literal', type_info:Types.Integer}],
+        init_value: [{kind:'literal', type_info:Types.Integer}],
+        counter_invocation: {indextypes:[], type:Types.Integer}
       }
     ])
   })
