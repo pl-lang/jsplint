@@ -32,10 +32,8 @@ function check_procedure (procedure) {
   for (let statement of procedure.body) {
     let report = check_statement(statement)
 
-    if (report.error) {
-      if (statement.result instanceof Array) errors_found.push(...report.result)
-      else errors_found.push(report.result)
-    }
+    if (report.error)
+      errors_found.push(report.result)
   }
 
   let error = errors_found.length > 0
@@ -265,55 +263,68 @@ function io_rule (call) {
   return {error, result}
 }
 
+// for_loop_error:: error_report
+//
+// Informacion sobre los errores encontrados en un bucle para.
+//
+//  reason: 'for-loop-error'
+//
+//  errors: [error]
+//  Arreglo con todos los arreglos encontrados en el bucle.
+//
+// :: (for_statement) -> report<for_loop_error, type>
+// Encuentra errores en un bucle para.
 function for_rule (for_loop) {
-  let errors_found = []
+  let errors = []
 
   let counter_type = invocation_rule(for_loop.counter_invocation)
 
-  if (counter_type.error) return counter_type
+  if (counter_type.error) errors.push(counter_type.result)
 
   let init_value_type =  calculate_type(for_loop.init_value)
 
-  if (init_value_type.error) return init_value_type
+  if (init_value_type.error) errors.push(init_value_type.result)
 
   let last_value_type =  calculate_type(for_loop.last_value)
 
-  if (last_value_type.error) return last_value_type
+  if (last_value_type.error) errors.push(last_value_type.result)
 
-  if (!equals(Types.Integer, counter_type.result)) {
+  if (!counter_type.error && !equals(Types.Integer, counter_type.result)) {
     let error_info = {
       reason: '@for-non-integer-counter',
       received: stringify(counter_type.result)
     }
-    errors_found.push(error_info)
+    errors.push(error_info)
   }
 
-  if (!equals(Types.Integer, init_value_type.result)) {
+  if (!init_value_type.error && !equals(Types.Integer, init_value_type.result)) {
     let error_info = {
       reason: '@for-non-integer-init',
       received: stringify(init_value_type.result)
     }
-    errors_found.push(error_info)
+    errors.push(error_info)
   }
 
-  if (!equals(Types.Integer, last_value_type.result)) {
+  if (!last_value_type.error && !equals(Types.Integer, last_value_type.result)) {
     let error_info = {
       reason: '@for-non-integer-goal',
       received: stringify(last_value_type.result)
     }
-    errors_found.push(error_info)
+    errors.push(error_info)
   }
 
   for (let statement of for_loop.body) {
     let report = check_statement(statement)
     if (report.error) {
-      if (statement.type == 'control')  errors_found.push(...report.result)
-      else errors_found.push(report.result)
+      if (statement.type == 'control')  errors.push(report.result)
+      else errors.push(report.result)
     }
   }
 
-  if (errors_found.length > 0)
-    return {error:true, result:errors_found}
+  if (errors.length > 0) {
+    let result = {reason: 'for-loop-error', errors}
+    return {error:true, result}
+  }
   else
     return {error:false}
 }
@@ -345,7 +356,7 @@ export function invocation_rule (invocation) {
 }
 
 export function ctrl_rule (ctrl_statement) {
-  let errors_found = []
+  let errors = []
 
   let condition_type = calculate_type(ctrl_statement.condition)
 
@@ -353,20 +364,24 @@ export function ctrl_rule (ctrl_statement) {
     if (!equals(condition_type.result, Types.Bool)) {
       let reason = '@condition-invalid-expression'
       let received = stringify(condition_type.result)
-      return {error:true, result:{reason, received}}
+      errors.push({reason, received})
     }
   }
-  else errors_found.push(condition_type.result)
+  else
+    errors.push(condition_type.result)
 
   for (let statement of ctrl_statement.body) {
     let report = check_statement(statement)
-    if (report.error) {
-      if (statement.type == 'control')  errors_found.push(...report.result)
-      else errors_found.push(report.result)
-    }
+    if (report.error)
+      errors.push(report.result)
   }
 
-  return errors_found
+  if (errors.length > 0) {
+    let result = {reason: 'control-error', errors}
+    return {error:true, result}
+  }
+  else
+    return {error:false}
 }
 
 // el argumento de esta funcion es un arreglo de tipos y operadores

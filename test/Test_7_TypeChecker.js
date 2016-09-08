@@ -481,8 +481,8 @@ describe('Programas que deberian devolver errores', () => {
 
     check_result.should.deepEqual([
       {
-        reason: '@condition-invalid-expression',
-        received: 'entero'
+        reason: 'control-error',
+        errors: [{reason: '@condition-invalid-expression', received: 'entero'}]
       }
     ])
   })
@@ -544,20 +544,23 @@ describe('Programas que deberian devolver errores', () => {
     let check_result = bind(TC.check, transformed_ast)
 
     check_result.should.deepEqual([
-      [
-        {
-          reason: '@for-non-integer-counter',
-          received: 'real'
-        },
-        {
-          reason: '@for-non-integer-init',
-          received: 'real'
-        },
-        {
-          reason: '@for-non-integer-goal',
-          received: 'logico'
-        }
-      ]
+      {
+        reason: 'for-loop-error',
+        errors: [
+          {
+            reason: '@for-non-integer-counter',
+            received: 'real'
+          },
+          {
+            reason: '@for-non-integer-init',
+            received: 'real'
+          },
+          {
+            reason: '@for-non-integer-goal',
+            received: 'logico'
+          }
+        ]
+      }
     ])
   })
 })
