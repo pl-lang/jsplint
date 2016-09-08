@@ -47,10 +47,8 @@ function check_function (func) {
   for (let statement of func.body) {
     let report = check_statement(statement)
 
-    if (report.error) {
-      if (statement.result instanceof Array) errors_found.push(...report.result)
-      else errors_found.push(report.result)
-    }
+    if (report.error)
+      errors_found.push(report.result)
   }
 
   let return_exp_type = calculate_type(last(func.body).exptype)
