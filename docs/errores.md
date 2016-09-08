@@ -66,6 +66,14 @@ Estos errores son detectados en TypeChecker.js
 
   - received: el tipo del valor que se intentó asignar.
 
+- @call-errors-found: reportado cuando se encuentra al menos un error en una
+llamada.
+
+  - name: una cadena, indica el nombre del modulo que fue llamado donde se
+  encontro el error.
+
+  - errors: arreglo con los errores encontrados.
+
 - @call-incorrect-arg-number: Es reportado cuando se llama una funcion o
   procedimiento con el numero incorrecto de argumentos.
 
@@ -74,8 +82,8 @@ Estos errores son detectados en TypeChecker.js
   - received: el numero de argumentos que se uso en la llamada.
 
 - @call-wrong-argument-type: Se reporta cuando el tipo del argumento *n* de
-  una llamada no coincide con el tipo del parametro *n* en la declaración de la
-  función/procedimiento.
+  una llamada no coincide con el tipo del parametro *n* en la declaración de
+  la función/procedimiento.
 
   - expected: el tipo que se esperaba recibir, es el tipo del parametro *n*.
 
@@ -116,6 +124,9 @@ Estos errores son detectados en TypeChecker.js
   - first: tipo del valor a la izquierda del operador de comparacion.
 
   - second: tipo del valor a la derecha del operador de comparacion.
+
+- @call-error: objeto que contiene informacion sobre los errores encontrados
+en una llamada. Tiene tres campos
 
 ## Reportados por el Evaluador
 

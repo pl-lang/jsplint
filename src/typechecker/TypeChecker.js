@@ -129,23 +129,41 @@ export function assignment_rule (assignment) {
   }
 }
 
+// call_error:: error_report
+//
+// Informacion sobre los errores encontrados en el llamado a un modulo
+//
+//  reason: '@call-errors-found'
+//
+//  name: string
+//  Nombre del modulo llamado
+//
+//  errors: [error]
+//  Arreglo con todos los errores encontrados en el llamado
+//
+// :: (call) -> report<call_error, type>
+// Encuentra errores en una llamada a un modulo
 export function call_rule (call) {
+  let errors = []
+
+  // ver si se llamó al modulo con la cantidad correcta de argumentos
   if (call.argtypes.length != call.type_info.parameters.amount) {
-    // TODO: agregarle name (el nombre la funcion llamada) a este error
     let reason = '@call-incorrect-arg-number'
     let expected = call.type_info.parameters.amount
     let received = call.argtypes.length
-    return {error:true, result:{reason, expected, received}}
+    errors.push({reason, expected, received})
   }
 
+  // calcular los tipos de los argumentos
   let argument_types = []
-
   for (let i = 0; i < call.argtypes.length; i++) {
     let type = calculate_type(call.argtypes[i])
-    if (type.error) return type
+    if (type.error) errors.push(type.result)
     argument_types.push(type.result)
   }
 
+  // verificar que los tipos de los argumentos coincidan con los tipos de los
+  // parametros
   for (let i = 0; i < argument_types.length; i++) {
     let expected_type = call.type_info.parameters.types[i]
 
@@ -155,19 +173,48 @@ export function call_rule (call) {
       let received = stringify(argument_types[i])
       let at = i + 1
 
-      return {error:true, result:{reason, expected, received, at}}
+      errors.push({reason, expected, received, at})
     }
   }
 
-  return {error:false, result:call.type_info.return_type}
+  let error = errors.length > 0
+
+  // Si se encontro algun error se retorna informacion sobre ellos
+  // si no se retorna el tipo de retorno declarado por el modulo
+  let result
+  if (error) {
+    let reason = '@call-errors-found'
+    let name = call.name
+    result = {reason, name, errors}
+  }
+  else
+    result = call.type_info.return_type
+
+  return {error, result}
 }
 
+// io_error:: error_report
+//
+// Informacion sobre los errores encontrados en el llamado a un modulo de IO
+//
+//  reason: '@io-errors-found'
+//
+//  name: string
+//  Nombre del modulo llamado (escribir, escribir_linea, leer)
+//
+//  errors: [error]
+//  Arreglo con todos los arreglos encontrados en el llamado
+//
+// :: (call) -> report<io_error, type>
+// Encuentra errores en una llamada a un modulo
 function io_rule (call) {
+  let errors = []
+
   let argument_types = []
 
   for (let i = 0; i < call.argtypes.length; i++) {
     let type = calculate_type(call.argtypes[i])
-    if (type.error) return type
+    if (type.error) errors.push(type.result)
     argument_types.push(type.result)
   }
 
@@ -180,11 +227,22 @@ function io_rule (call) {
       let name = call.name
       let at = i + 1
 
-      return {error:true, result:{reason, received, name, at}}
+      errors.push({reason, received, at})
     }
   }
 
-  return {error:false, result:call.type_info.return_type}
+  let error = errors.length > 0
+
+  let result
+  if (error) {
+    let reason = '@io-errors-found'
+    let name = call.name
+    result = {reason, name, errors}
+  }
+  else
+    result = call.type_info.return_type
+
+  return {error, result}
 }
 
 function for_rule (for_loop) {

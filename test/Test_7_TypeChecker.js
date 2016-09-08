@@ -387,9 +387,11 @@ describe('Programas que deberian devolver errores', () => {
 
     check_result.should.deepEqual([
       {
-        reason: '@call-incorrect-arg-number',
-        expected: 2,
-        received: 1
+        reason: '@call-errors-found',
+        name: 'sumar',
+        errors: [
+          {reason: '@call-incorrect-arg-number', expected: 2, received: 1}
+        ]
       }
     ])
   })
@@ -416,10 +418,12 @@ describe('Programas que deberian devolver errores', () => {
 
     check_result.should.deepEqual([
       {
-        reason: '@call-wrong-argument-type',
-        expected: 'entero',
-        received: 'real',
-        at: 1
+        reason: '@call-errors-found',
+        name: 'sumar',
+        errors: [
+          {reason: '@call-wrong-argument-type', expected: 'entero', received: 'real', at: 1},
+          {reason: '@call-wrong-argument-type', expected: 'entero', received: 'real', at: 2}
+        ]
       }
     ])
   })
@@ -486,10 +490,9 @@ describe('Programas que deberian devolver errores', () => {
     let check_result = bind(TC.check, transformed_ast)
 
     check_result.should.deepEqual([{
-      reason: '@io-wrong-argument-type',
-      at: 1,
+      reason: '@io-errors-found',
       name: 'escribir',
-      received: 'entero[2, 2, 3]'
+      errors: [{reason: '@io-wrong-argument-type', at: 1, received: 'entero[2, 2, 3]'}]
     }])
   })
 
@@ -508,10 +511,9 @@ describe('Programas que deberian devolver errores', () => {
     let check_result = bind(TC.check, transformed_ast)
 
     check_result.should.deepEqual([{
-      reason: '@io-wrong-argument-type',
-      at: 1,
+      reason: '@io-errors-found',
       name: 'escribir',
-      received: 'entero[2, 2, 3]'
+      errors: [{reason: '@io-wrong-argument-type', at: 1, received: 'entero[2, 2, 3]'}]
     }])
   })
 
