@@ -327,6 +327,7 @@ function for_rule (for_loop) {
     return {error:false}
 }
 
+// TODO: adaptar esta funcion al nuevo formato de errores
 export function invocation_rule (invocation) {
   let error = false
 
