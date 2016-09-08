@@ -194,7 +194,7 @@ describe('VariableDeclaration', () => {
     capture.result.should.deepEqual({
       name    : 'sueldo',
       isArray : false,
-      dimension: null
+      dimension: []
     })
   })
 
@@ -220,8 +220,8 @@ describe('VariableList', () => {
     let capture = match(Patterns.VariableList).from(q)
 
     capture.error.should.equal(false)
-    capture.result[0].should.deepEqual({name:'a', isArray:false, dimension:null})
-    capture.result[1].should.deepEqual({name:'b', isArray:false, dimension:null})
+    capture.result[0].should.deepEqual({name:'a', isArray:false, dimension:[]})
+    capture.result[1].should.deepEqual({name:'b', isArray:false, dimension:[]})
     capture.result[2].should.deepEqual({name:'matriz', isArray:true, dimension:[3, 3]})
     capture.result[3].should.deepEqual({name:'v', isArray:true, dimension:[8]})
     q.current().kind.should.equal('eof')
@@ -331,7 +331,7 @@ describe('VariablePattern', () => {
     report.result.should.deepEqual({
       name:'mi_variable',
       isArray:false,
-      indexes:null,
+      indexes:[],
     })
   })
 
@@ -360,8 +360,8 @@ describe('VariablePattern', () => {
       name:'mi_matriz',
       isArray:true,
       indexes:[
-        [{type:'invocation', name:'i', isArray:false, indexes:null}],
-        [{type:'invocation', name:'j', isArray:false, indexes:null}]
+        [{type:'invocation', name:'i', isArray:false, indexes:[]}],
+        [{type:'invocation', name:'j', isArray:false, indexes:[]}]
       ]
     })
   })
@@ -376,9 +376,9 @@ describe('VariablePattern', () => {
       name:'mi_matriz',
       isArray:true,
       indexes:[
-        [{type:'invocation', name:'i', isArray:false, indexes:null}],
-        [{type:'invocation', name:'j', isArray:false, indexes:null}],
-        [{type:'invocation', name:'k', isArray:false, indexes:null}]
+        [{type:'invocation', name:'i', isArray:false, indexes:[]}],
+        [{type:'invocation', name:'j', isArray:false, indexes:[]}],
+        [{type:'invocation', name:'k', isArray:false, indexes:[]}]
       ]
     })
   })
@@ -400,7 +400,7 @@ describe('If', () => {
       condition: [{type:'literal', value:true}],
       true_branch:[{
         type:'assignment',
-        left:{name:'var', isArray:false, indexes:null},
+        left:{name:'var', isArray:false, indexes:[]},
         right:[{type:'literal', value:32}]
       }],
       false_branch:[]
@@ -423,12 +423,12 @@ describe('If', () => {
       condition: [{type:'literal', value:true}],
       true_branch:[{
         type:'assignment',
-        left:{name:'var', isArray:false, indexes:null},
+        left:{name:'var', isArray:false, indexes:[]},
         right:[{type:'literal', value:32}]
       }],
       false_branch:[{
         type:'assignment',
-        left:{name:'var', isArray:false, indexes:null},
+        left:{name:'var', isArray:false, indexes:[]},
         right:[{type:'literal', value:16}]
       }]
     })
@@ -550,7 +550,7 @@ describe('While', () => {
       condition:[{type:'literal', value:true}],
       body:[{
         type:'assignment',
-        left:{name:'var', isArray:false, indexes:null},
+        left:{name:'var', isArray:false, indexes:[]},
         right:[{type:'literal', value:32}]
       }]
     })
@@ -623,7 +623,7 @@ describe('Until', () => {
       condition:[{type:'literal', value:true}],
       body:[{
         type:'assignment',
-        left:{name:'var', isArray:false, indexes:null},
+        left:{name:'var', isArray:false, indexes:[]},
         right:[{type:'literal', value:32}]
       }]
     })
@@ -700,13 +700,13 @@ describe('For', () => {
       type: 'for',
       counter_init: {
         type:'assignment',
-        left:{name:'i', isArray:false, indexes:null},
+        left:{name:'i', isArray:false, indexes:[]},
         right:[{type:'literal', value:1}]
       },
       last_value: [{type:'literal', value:10}],
       body: [{
         type:'assignment',
-        left:{name:'j', isArray:false, indexes:null},
+        left:{name:'j', isArray:false, indexes:[]},
         right:[{type:'literal', value:2}]
       }]
     })
@@ -790,9 +790,9 @@ describe('DeclarationStatement', () => {
     report.result.should.deepEqual({
       type:'declaration',
       variables:[
-        {type:'entero', name:'a', isArray:false, dimension:null},
-        {type:'entero', name:'b', isArray:false, dimension:null},
-        {type:'entero', name:'c', isArray:false, dimension:null}
+        {type:'entero', name:'a', isArray:false, dimension:[]},
+        {type:'entero', name:'b', isArray:false, dimension:[]},
+        {type:'entero', name:'c', isArray:false, dimension:[]}
       ]
     })
   })
@@ -806,9 +806,9 @@ describe('DeclarationStatement', () => {
     report.result.should.deepEqual({
       type:'declaration',
       variables:[
-        {type:'entero', name:'var_entera1', isArray:false, dimension:null},
-        {type:'entero', name:'var_entera2', isArray:false, dimension:null},
-        {type:'real', name:'var_real', isArray:false, dimension:null}
+        {type:'entero', name:'var_entera1', isArray:false, dimension:[]},
+        {type:'entero', name:'var_entera2', isArray:false, dimension:[]},
+        {type:'real', name:'var_real', isArray:false, dimension:[]}
       ]
     })
   })
@@ -825,8 +825,8 @@ describe('DeclarationStatement', () => {
     first_line.result.should.deepEqual({
       type:'declaration',
       variables:[
-        {type:'entero', name:'var_entera1', isArray:false, dimension:null},
-        {type:'entero', name:'var_entera2', isArray:false, dimension:null},
+        {type:'entero', name:'var_entera1', isArray:false, dimension:[]},
+        {type:'entero', name:'var_entera2', isArray:false, dimension:[]},
       ]
     })
 
@@ -834,7 +834,7 @@ describe('DeclarationStatement', () => {
     second_line.result.should.deepEqual({
       type:'declaration',
       variables:[
-        {type:'real', name:'var_real', isArray:false, dimension:null}
+        {type:'real', name:'var_real', isArray:false, dimension:[]}
       ]
     })
   })
@@ -861,8 +861,8 @@ describe('MainModule', () => {
         {
           type:'declaration',
           variables:[
-            {type:'entero', name:'var_entera1', isArray:false, dimension:null},
-            {type:'entero', name:'var_entera2', isArray:false, dimension:null}
+            {type:'entero', name:'var_entera1', isArray:false, dimension:[]},
+            {type:'entero', name:'var_entera2', isArray:false, dimension:[]}
           ]
         },
         {
@@ -870,7 +870,7 @@ describe('MainModule', () => {
           left:{
             name:'var',
             isArray:false,
-            indexes:null
+            indexes:[]
           },
           right:[{type:'literal', value:32}]
         }
@@ -898,7 +898,7 @@ describe('MainModule', () => {
         left:{
           name:'var',
           isArray:false,
-          indexes:null
+          indexes:[]
         },
         right:[{type:'literal', value:32}]
       }]
@@ -1005,9 +1005,9 @@ describe('FunctionModule', () => {
         {
           type:'declaration',
           variables:[
-            {type:'entero', name:'a', isArray:false, dimension:null},
-            {type:'entero', name:'b', isArray:false, dimension:null},
-            {type:'entero', name:'c', isArray:false, dimension:null}
+            {type:'entero', name:'a', isArray:false, dimension:[]},
+            {type:'entero', name:'b', isArray:false, dimension:[]},
+            {type:'entero', name:'c', isArray:false, dimension:[]}
           ]
         },
         {
@@ -1047,9 +1047,9 @@ describe('ProcedureModule', () => {
         {
           type:'declaration',
           variables:[
-            {type:'entero', name:'a', isArray:false, dimension:null},
-            {type:'entero', name:'b', isArray:false, dimension:null},
-            {type:'entero', name:'c', isArray:false, dimension:null}
+            {type:'entero', name:'a', isArray:false, dimension:[]},
+            {type:'entero', name:'b', isArray:false, dimension:[]},
+            {type:'entero', name:'c', isArray:false, dimension:[]}
           ]
         },
         {
