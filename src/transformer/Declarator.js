@@ -5,7 +5,10 @@ const copy_obj = curry(mergeObjs)({})
 import {curry} from 'ramda'
 
 export default function transform (ast) {
-  let new_ast = {}
+  let new_ast = {
+    modules:{},
+    local_variables:{}
+  }
 
   let errors_found = []
 
@@ -13,7 +16,11 @@ export default function transform (ast) {
     let module = ast[module_name]
     let report = transform_module(module)
     if (report.error) errors_found.push(...report.result)
-    else new_ast[module_name] = report.result
+    else {
+      new_ast.local_variables[module.name] = report.result.locals
+      delete report.result.locals
+      new_ast.modules[module.name] = report.result
+    }
   }
 
   let error = errors_found.length > 0
