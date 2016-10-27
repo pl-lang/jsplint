@@ -227,7 +227,7 @@ describe('Typer', () => {
     entero funcion sumar(entero a, entero b)
       entero a, b
     inicio
-      retornar a + b
+      retornar a + b + v[1]
     finfuncion
     `
 
