@@ -29,12 +29,13 @@ function programFromSource(string) {
 }
 
 
-describe.only('CallDecorator', () => {
-  it('agrega datos de una funcion a un llamado', () => {
+describe('CallDecorator', () => {
+  it('agrega datos de una funcion a un llamado y datos de una variable a una invocacion', () => {
     let code = `variables
-      entero a
+      entero a, b[2]
     inicio
       func()
+      a <- b[1]
     fin
 
     entero funcion func(entero a)
@@ -54,7 +55,22 @@ describe.only('CallDecorator', () => {
         type: 'module',
         module_type: 'main',
         body: [
-          {type:'call', args:[], name:'func', module_type: 'function', return_type:'entero', parameters:[{name:'a', type:'entero', by_ref:false}]}
+          {type:'call', args:[], name:'func', module_type: 'function', return_type:'entero', parameters:[{name:'a', type:'entero', by_ref:false}]},
+          {
+            type:'assignment',
+            left:{dimension:[],
+              indexes:[],
+              isArray:false,
+              name:'a'
+            },
+            right: [{
+                type: 'invocation',
+                name: 'b',
+                dimension: [2],
+                indexes: [[{type:'literal', value:1}]],
+                isArray: true
+            }]
+          }
         ]
       },
 
@@ -75,7 +91,8 @@ describe.only('CallDecorator', () => {
     let code = `variables
       entero v[2]
     inicio
-      a[devolver_2()] <- 1
+      v[devolver_2()] <- 1
+      a <- 2
     fin`
 
     let parser_output = programFromSource(code)
@@ -84,7 +101,8 @@ describe.only('CallDecorator', () => {
 
     transformed_ast.error.should.equal(true)
     transformed_ast.result.should.deepEqual([
-      {reason: '@call-undefined-module', name: 'devolver_2'}
+      {reason: '@call-undefined-module', name: 'devolver_2'},
+      {reason: 'undefined-variable', name: 'a'}
     ])
   })
 })
