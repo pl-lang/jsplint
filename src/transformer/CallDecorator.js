@@ -13,16 +13,21 @@ import {curry} from 'ramda'
 const clone_obj = curry(mergeObjs)({})
 
 export default function transform (ast) {
-  let new_ast = {}
+  let new_ast = {
+    modules: {},
+    local_variables: {}
+  }
 
   let errors_found = []
 
-  for (let module_name in ast) {
-    let module = ast[module_name]
+  for (let module_name in ast.modules) {
+    let module = ast.modules[module_name]
     let report = transform_module(module, ast)
     if (report.error) errors_found.push(...report.result)
-    else new_ast[module_name] = report.result
+    else new_ast.modules[module_name] = report.result
   }
+
+  new_ast.local_variables = ast.local_variables
 
   let error = errors_found.length > 0
 
@@ -32,7 +37,6 @@ export default function transform (ast) {
 }
 
 function transform_module (module, ast) {
-  // throw Error(`@FunctionDecorator.js: no se como transformar modulos de tipo ${module.module_type}`)
   let new_body = transform_body(module.body, ast)
 
   return bind(make_module(module), new_body)
@@ -175,15 +179,15 @@ function transform_expression (expression, ast) {
 }
 
 function get_module_info (name, ast) {
-  if ( !(name in ast) ) {
+  if ( !(name in ast.modules) ) {
     let result = [{reason: '@call-undefined-module', name}]
     return {error:true, result}
   }
   else {
     let result = {
-      parameters: ast[name].parameters,
-      return_type: ast[name].return_type,
-      module_type: ast[name].module_type
+      parameters: ast.modules[name].parameters,
+      return_type: ast.modules[name].return_type,
+      module_type: ast.modules[name].module_type
     }
 
     return {error:false, result}

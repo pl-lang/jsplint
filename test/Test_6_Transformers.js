@@ -29,7 +29,7 @@ function programFromSource(string) {
 }
 
 
-describe('CallDecorator', () => {
+describe.only('CallDecorator', () => {
   it('agrega datos de una funcion a un llamado', () => {
     let code = `variables
       entero a
@@ -45,16 +45,15 @@ describe('CallDecorator', () => {
 
     let parser_output = programFromSource(code)
 
-    let transformed_ast = CallDecorator(parser_output)
+    let transformed_ast = bind(CallDecorator, Declarator(parser_output))
 
     transformed_ast.error.should.equal(false)
-    transformed_ast.result.should.deepEqual({
+    transformed_ast.result.modules.should.deepEqual({
       main: {
         name: 'main',
         type: 'module',
         module_type: 'main',
         body: [
-          {type:'declaration', variables:[{name:'a', isArray:false, dimension:[], type:'entero'}]},
           {type:'call', args:[], name:'func', module_type: 'function', return_type:'entero', parameters:[{name:'a', type:'entero', by_ref:false}]}
         ]
       },
@@ -81,7 +80,7 @@ describe('CallDecorator', () => {
 
     let parser_output = programFromSource(code)
 
-    let transformed_ast = CallDecorator(parser_output)
+    let transformed_ast = bind(CallDecorator, Declarator(parser_output))
 
     transformed_ast.error.should.equal(true)
     transformed_ast.result.should.deepEqual([
@@ -104,15 +103,19 @@ describe('Declarator', () => {
 
     transformed_ast.error.should.equal(false)
     transformed_ast.result.should.deepEqual({
-      main: {
-        name: 'main',
-        type: 'module',
-        module_type: 'main',
-        locals: {
+      modules: {
+        main: {
+          name: 'main',
+          type: 'module',
+          module_type: 'main',
+          body: []
+        }
+      },
+      local_variables: {
+        main: {
           'a':{isArray:false, dimension:[], name:'a', type:'entero', value:null},
           'b':{isArray:false, dimension:[], name:'b', type:'entero', value:null}
-        },
-        body: []
+        }
       }
     })
   })
