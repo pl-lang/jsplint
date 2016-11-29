@@ -69,7 +69,7 @@ describe('LinkedList', () => {
   })
 })
 
-describe('IfNode', () => {
+describe.only('IfNode', () => {
   it('Ambas raman "convergen" en el mismo nodo', () => {
     let leftNode = new GenericNode('left')
     let rightNode = new GenericNode('right')
@@ -78,13 +78,15 @@ describe('IfNode', () => {
 
     let ifNode = new IfNode()
 
-    ifNode.leftBranchNode = leftNode
-    ifNode.rightBranchNode = rightNode
+    ifNode.false_branch_root = leftNode
+    ifNode.true_branch_root = rightNode
 
     ifNode.setNext(testNode)
 
-    ifNode.leftBranchNode.getNext().should.equal(testNode)
-    ifNode.rightBranchNode.getNext().should.equal(testNode)
+    console.log(ifNode.false_branch_root.getNext())
+
+    ifNode.false_branch_root.getNext().should.equal(testNode)
+    ifNode.true_branch_root.getNext().should.equal(testNode)
   })
 
   it('Cuando solo existe la rama verdadera, el nodo de la rama izquierda es el que le sigue al bloque if', () => {
@@ -94,11 +96,11 @@ describe('IfNode', () => {
 
     let ifNode = new IfNode()
 
-    ifNode.rightBranchNode = rightNode
+    ifNode.true_branch_root = rightNode
 
     ifNode.setNext(testNode)
 
-    ifNode.leftBranchNode.should.equal(testNode)
+    ifNode.false_branch_root.should.equal(testNode)
   })
 
   it('setCurrentBranchTo cambia el nodo que getNext devuelve', () => {
@@ -108,8 +110,8 @@ describe('IfNode', () => {
 
     let ifNode = new IfNode()
 
-    ifNode.rightBranchNode = rightNode
-    ifNode.leftBranchNode = leftNode
+    ifNode.true_branch_root = rightNode
+    ifNode.false_branch_root = leftNode
     ifNode.setNext(next)
 
     ifNode.setCurrentBranchTo('false_branch')

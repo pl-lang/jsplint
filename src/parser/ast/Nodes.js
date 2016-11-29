@@ -34,26 +34,26 @@ export class IfNode {
       this.data = null
     }
 
-    this.leftBranchNode = null
-    this.rightBranchNode = null
+    this.false_branch_root = null
+    this.true_branch_root = null
 
     this.next_statement_node = null
   }
 
   setNext(node) {
-    if (this.leftBranchNode === null) {
-      this.leftBranchNode = node
+    if (this.false_branch_root === null) {
+      this.false_branch_root = node
     }
     else {
-      let lastLeft = getLastNode(this.leftBranchNode)
+      let lastLeft = getLastNode(this.false_branch_root)
       lastLeft.setNext(node)
     }
 
-    if (this.rightBranchNode === null) {
-      this.rightBranchNode = node
+    if (this.true_branch_root === null) {
+      this.true_branch_root = node
     }
     else {
-      let lastRight = getLastNode(this.rightBranchNode)
+      let lastRight = getLastNode(this.true_branch_root)
       lastRight.setNext(node)
     }
 
@@ -62,10 +62,10 @@ export class IfNode {
 
   setCurrentBranchTo(branch_name) {
     if (branch_name === 'true_branch') {
-      this.returnedNode = this.rightBranchNode
+      this.returnedNode = this.true_branch_root
     }
     else if (branch_name === 'false_branch') {
-      this.returnedNode = this.leftBranchNode
+      this.returnedNode = this.false_branch_root
     }
     else if (branch_name === 'next_statement') {
       this.returnedNode = this.next_statement_node

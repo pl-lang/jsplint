@@ -240,8 +240,8 @@ function transformIf(if_statement) {
 
   let if_node = new IfNode({action:'if'})
 
-  if_node.leftBranchNode = left_branch.firstNode
-  if_node.rightBranchNode = right_branch.firstNode
+  if_node.left_branch_root = left_branch.firstNode
+  if_node.right_branch_root = right_branch.firstNode
 
   let expression_list = if_statement.condition.map(transformExpression).reduce((l, n) => { l.addNode(n); return l; }, new LinkedList())
 
