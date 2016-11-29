@@ -69,7 +69,7 @@ describe('LinkedList', () => {
   })
 })
 
-describe.only('IfNode', () => {
+describe('IfNode', () => {
   it('Ambas raman "convergen" en el mismo nodo', () => {
     let leftNode = new GenericNode('left')
     let rightNode = new GenericNode('right')

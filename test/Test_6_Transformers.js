@@ -11,6 +11,7 @@ import * as Types from '../src/typechecker/Types.js'
 import CallDecorator from '../src/transformer/CallDecorator.js'
 import Declarator from '../src/transformer/Declarator.js'
 import Typer from '../src/transformer/Typer.js'
+import Interpretable from '../src/transformer/InterpretableV2.js'
 
 import {compose, curry} from 'ramda'
 
@@ -325,5 +326,22 @@ describe('Typer', () => {
     transformed_ast.result.should.deepEqual([
       {reason:'@invocation-too-many-indexes', expected:1, received:2}
     ])
+  })
+})
+
+describe.only('Interpretable', () => {
+  it('Transforma asignaciones', () => {
+    const code = `variables
+    entero a[2], b
+    inicio
+      b <- 2
+    fin
+    `
+
+    const parser_output = programFromSource(code)
+    const transform = compose(bind(Interpretable), bind(CallDecorator), Declarator)
+    const transformed_ast = transform(parser_output)
+
+    transformed_ast.error.should.equal(false)
   })
 })
