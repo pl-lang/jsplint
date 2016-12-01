@@ -48,7 +48,7 @@ export interface Module {
 
 export type Statement = Call | Assignment | If | While | For | Until
 
-export interface IOCall extends PI.IModuleCall {
+export interface IOCall extends PI.Call {
   name: 'escribir' | 'leer'
 }
 

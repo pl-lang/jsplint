@@ -6,15 +6,7 @@ import {take, flatten, mergeObjs} from '../utility/helpers.js'
 
 import {IError, ISuccess} from '../interfaces/Utility'
 
-import {TokenKind, DataTypeKind, TypeNameString, ExpValue} from '../interfaces/ParsingInterfaces'
-
-import {PatternError, NumberInfo, IDeclarationInfo, IInvocationInfo, IExpElement, ILiteralValue} from '../interfaces/ParsingInterfaces'
-
-import {IInvocationValue, IParameter, IModuleCall, IAssignment, IIf} from '../interfaces/ParsingInterfaces'
-
-import {IWhile, IFor, IUntil, IReturn, ITypedDeclaration, IDeclarationStatement, Statement} from '../interfaces/ParsingInterfaces'
-
-import {IMainModule, IFunctionModule, IProcedureModule} from '../interfaces/ParsingInterfaces'
+import * as PI from '../interfaces/ParsingInterfaces'
 
 import {ValueKind, ReservedKind, SymbolKind, OtherKind, Token} from './TokenTypes'
 
@@ -24,7 +16,7 @@ import TokenQueue from './TokenQueue.js'
  * Funcion que intenta capturar un token numerico
  * @param {TokenQueue} source Fuente en la que hay que buscar el numero
  */
-export function Number(source : TokenQueue) : IError<PatternError> | ISuccess<NumberInfo> {
+export function Number(source : TokenQueue) : IError<PI.PatternError> | ISuccess<PI.NumberInfo> {
   let current = source.current()
 
   if (current.kind == ValueKind.Real || current.kind == ValueKind.Integer) {
@@ -48,7 +40,7 @@ export function Number(source : TokenQueue) : IError<PatternError> | ISuccess<Nu
  * Captura un token de tipo 'entero'
  * @param {TokenQueue} source fuente desde la cual se debe capturar
  */
-export function Integer(source: TokenQueue) : IError<PatternError> | ISuccess<number> {
+export function Integer(source: TokenQueue) : IError<PI.PatternError> | ISuccess<number> {
   const current = source.current()
 
   if (current.kind === ValueKind.Integer) {
@@ -71,7 +63,7 @@ export function Integer(source: TokenQueue) : IError<PatternError> | ISuccess<nu
 /**
  * Captura la dimension de un arreglo
  */
-export function ArrayDimension(source: TokenQueue) : IError<PatternError> | ISuccess<number[]> {
+export function ArrayDimension(source: TokenQueue) : IError<PI.PatternError> | ISuccess<number[]> {
   let indexes : number[] = []
 
   let index_report = Integer(source)
@@ -101,7 +93,7 @@ export function ArrayDimension(source: TokenQueue) : IError<PatternError> | ISuc
   }
 }
 
-export function Word (source: TokenQueue) : IError<PatternError> | ISuccess<string> {
+export function Word (source: TokenQueue) : IError<PI.PatternError> | ISuccess<string> {
   let current = source.current()
 
   if (current.kind === OtherKind.Word) {
@@ -121,9 +113,9 @@ export function Word (source: TokenQueue) : IError<PatternError> | ISuccess<stri
 /**
  * Patron que consume la declaracion de una variable (nombre y dimension)
  */
-export function VariableDeclaration (source: TokenQueue) : IError<PatternError> | ISuccess<IDeclarationInfo> {
+export function VariableDeclaration (source: TokenQueue) : IError<PI.PatternError> | ISuccess<PI.DeclarationInfo> {
 
-  const variable : IDeclarationInfo = {name: '', is_array  : false, dimensions: []}
+  const variable : PI.DeclarationInfo = {name: '', is_array  : false, dimensions: []}
 
   let text = Word(source)
 
@@ -165,8 +157,8 @@ export function VariableDeclaration (source: TokenQueue) : IError<PatternError> 
 /**
  * Patron que consume una lista de declaraciones
  */
-export function VariableList (source: TokenQueue) : IError<PatternError> | ISuccess<IDeclarationInfo[]> {
-  const variables : IDeclarationInfo[] = []
+export function VariableList (source: TokenQueue) : IError<PI.PatternError> | ISuccess<PI.DeclarationInfo[]> {
+  const variables : PI.DeclarationInfo[] = []
 
   let partial_match = false
 
@@ -176,7 +168,7 @@ export function VariableList (source: TokenQueue) : IError<PatternError> | ISucc
     return name_report
   }
   else {
-    variables.push(name_report.result as IDeclarationInfo)
+    variables.push(name_report.result as PI.DeclarationInfo)
 
     if (source.current().kind === SymbolKind.Comma && source.peek().kind === OtherKind.Word) {
       source.next()
@@ -198,19 +190,19 @@ export function VariableList (source: TokenQueue) : IError<PatternError> | ISucc
   }
 }
 
-let isType = (k: TokenKind) => {
+let isType = (k: PI.TokenKind) => {
   return k == ReservedKind.Entero || k == ReservedKind.Real || k == ReservedKind.Logico || k == ReservedKind.Caracter 
 } 
 
 /**
  * Patron que consume un tipo de datos.
  */
-export function TypeName (source: TokenQueue) : IError<PatternError> | ISuccess<TypeNameString> {
+export function TypeName (source: TokenQueue) : IError<PI.PatternError> | ISuccess<PI.TypeNameString> {
   const current = source.current()
 
   if ( isType(current.kind) ) {
     source.next()
-    return {error:false, result:current.name as TypeNameString}
+    return {error:false, result:current.name as PI.TypeNameString}
   }
   else {
     const unexpected  = current.kind
@@ -226,8 +218,8 @@ export function TypeName (source: TokenQueue) : IError<PatternError> | ISuccess<
 /**
  * Patron que consume un indice (una expresion) de un arreglo
  */
-export function IndexExpression (source: TokenQueue) : IError<PatternError> | ISuccess<IExpElement[][]> {
-  let indexes: IExpElement[][] = []
+export function IndexExpression (source: TokenQueue) : IError<PI.PatternError> | ISuccess<PI.ExpElement[][]> {
+  let indexes: PI.ExpElement[][] = []
 
   const index_report = Expression(source)
 
@@ -260,8 +252,8 @@ export function IndexExpression (source: TokenQueue) : IError<PatternError> | IS
 /**
  * Captura la invocacion de una variable
  */
-export function Variable (source: TokenQueue) : IError<PatternError> | ISuccess<IInvocationInfo> {
-  let name = '', is_array = false, indexes: IExpElement[][] = []
+export function Variable (source: TokenQueue) : IError<PI.PatternError> | ISuccess<PI.InvocationInfo> {
+  let name = '', is_array = false, indexes: PI.ExpElement[][] = []
 
   let word_match = Word(source)
 
@@ -323,7 +315,7 @@ let precedence : {[p: string]: number} = {
   'or'          : 0
 }
 
-function is_operator (k: TokenKind) {
+function is_operator (k: PI.TokenKind) {
   switch (k) {
     case SymbolKind.Power:
     case SymbolKind.Times:
@@ -349,7 +341,7 @@ function is_operator (k: TokenKind) {
 /**
  * Captura una expresion
  */
-export function Expression (source: TokenQueue) : IError<PatternError> | ISuccess<IExpElement[]> {
+export function Expression (source: TokenQueue) : IError<PI.PatternError> | ISuccess<PI.ExpElement[]> {
   // Ubicacion del inicio de la expresion, en caso de que haya algun error
   const column = source.current().column
   const line = source.current().line
@@ -357,7 +349,7 @@ export function Expression (source: TokenQueue) : IError<PatternError> | ISucces
   /**
    * Dice si un token indica el fin de la expresion a capturar
    */
-  const end_reached = (tkind: TokenKind) => {
+  const end_reached = (tkind: PI.TokenKind) => {
     return  tkind == SymbolKind.EOL
             || tkind == SymbolKind.EOF
             || tkind == SymbolKind.Comma
@@ -365,8 +357,8 @@ export function Expression (source: TokenQueue) : IError<PatternError> | ISucces
             || tkind == SymbolKind.RightBracket
   }
 
-  const output: IExpElement[] = []
-  const operators: IExpElement[] = []
+  const output: PI.ExpElement[] = []
+  const operators: PI.ExpElement[] = []
 
   while (!end_reached(source.current().kind)) {
     const ctoken = source.current()
@@ -422,7 +414,7 @@ export function Expression (source: TokenQueue) : IError<PatternError> | ISucces
 /**
  * Patron que captura un valor (literal o invocado)
  */
-export function Value (source: TokenQueue) : IError<PatternError> | ISuccess<ExpValue> {
+export function Value (source: TokenQueue) : IError<PI.PatternError> | ISuccess<PI.ExpValue> {
   let ctoken = source.current()
 
   if (ctoken.kind == OtherKind.Word) {
@@ -439,7 +431,7 @@ export function Value (source: TokenQueue) : IError<PatternError> | ISuccess<Exp
       }
       else if (value_match.error == false) {
         
-        const result: IInvocationValue = {
+        const result: PI.InvocationValue = {
           type: 'invocation',
           name: value_match.result.name,
           is_array: value_match.result.is_array,
@@ -472,7 +464,7 @@ export function Value (source: TokenQueue) : IError<PatternError> | ISuccess<Exp
   }
 }
 
-function isLiteralTokenType (k: TokenKind) {
+function isLiteralTokenType (k: PI.TokenKind) {
   let is_num = k == ReservedKind.Entero || k == ReservedKind.Real
   let is_bool = k == ReservedKind.Verdadero || k == ReservedKind.Falso
   let is_other = k == ReservedKind.Caracter || k == ValueKind.String
@@ -482,8 +474,8 @@ function isLiteralTokenType (k: TokenKind) {
 /**
  * Captura una lista de argumentos, es decir, una lista de expresiones 
  */
-export function ArgumentList (source: TokenQueue) : IError<PatternError> | ISuccess<IExpElement[][]>{
-  let args: IExpElement[][] = []
+export function ArgumentList (source: TokenQueue) : IError<PI.PatternError> | ISuccess<PI.ExpElement[][]>{
+  let args: PI.ExpElement[][] = []
   const exp = Expression(source)
 
   if (exp.error) {
@@ -499,7 +491,7 @@ export function ArgumentList (source: TokenQueue) : IError<PatternError> | ISucc
         return next_args
       }
       else {
-        args = args.concat(next_args.result as IExpElement[][])
+        args = args.concat(next_args.result as PI.ExpElement[][])
         return {error:false, result:args}
       }
     }
@@ -512,8 +504,8 @@ export function ArgumentList (source: TokenQueue) : IError<PatternError> | ISucc
 /**
  * Captura una lista de parametros en la declaracion de una funcion o procedimiento
  */
-export function ParameterList (source: TokenQueue) : IError<PatternError> | ISuccess<IParameter[]> {
-  let result: IParameter[] = []
+export function ParameterList (source: TokenQueue) : IError<PI.PatternError> | ISuccess<PI.Parameter[]> {
+  let result: PI.Parameter[] = []
 
   let parameter_report = Parameter(source)
 
@@ -521,7 +513,7 @@ export function ParameterList (source: TokenQueue) : IError<PatternError> | ISuc
     return parameter_report
   }
   else {
-    result.push(parameter_report.result as IParameter)
+    result.push(parameter_report.result as PI.Parameter)
 
     if (source.current().kind == SymbolKind.Comma) {
       source.next()
@@ -532,7 +524,7 @@ export function ParameterList (source: TokenQueue) : IError<PatternError> | ISuc
         return other_parameters
       }
       else {
-        result = result.concat(other_parameters.result as IParameter[])
+        result = result.concat(other_parameters.result as PI.Parameter[])
 
         return {error:false, result}
       }
@@ -546,8 +538,8 @@ export function ParameterList (source: TokenQueue) : IError<PatternError> | ISuc
 /**
  * Captura un parametro de una funcion o procedimiento
  */
-export function Parameter (source: TokenQueue) : IError<PatternError> | ISuccess<IParameter> {
-  const result: IParameter = {name: '', by_ref: false, type: null}
+export function Parameter (source: TokenQueue) : IError<PI.PatternError> | ISuccess<PI.Parameter> {
+  const result: PI.Parameter = {name: '', by_ref: false, type: null}
 
   let type_r = TypeName(source)
 
@@ -555,7 +547,7 @@ export function Parameter (source: TokenQueue) : IError<PatternError> | ISuccess
     return type_r
   }
   else {
-    result.type = type_r.result as TypeNameString
+    result.type = type_r.result as PI.TypeNameString
 
     if (source.current().kind === ReservedKind.Ref) {
       result.by_ref = true
@@ -580,7 +572,7 @@ export function Parameter (source: TokenQueue) : IError<PatternError> | ISuccess
 /**
  * Captura una llamada a una funcion o procedimiento
  */
-export function ModuleCall (source: TokenQueue) : IError<PatternError> | ISuccess<IModuleCall> {
+export function ModuleCall (source: TokenQueue) : IError<PI.PatternError> | ISuccess<PI.Call> {
   const name = Word(source)
 
   if (name.error) {
@@ -634,8 +626,8 @@ export function ModuleCall (source: TokenQueue) : IError<PatternError> | ISucces
 /**
  * Captura un enunciado de asignacion
  */
-export function Assignment (source: TokenQueue) : IError<PatternError> | ISuccess<IAssignment> {
-  const result: IAssignment = {type: 'assignment', left: null, right: null}
+export function Assignment (source: TokenQueue) : IError<PI.PatternError> | ISuccess<PI.Assignment> {
+  const result: PI.Assignment = {type: 'assignment', left: null, right: null}
 
   const left_hand_match = Variable(source)
 
@@ -643,7 +635,7 @@ export function Assignment (source: TokenQueue) : IError<PatternError> | ISucces
     return left_hand_match
   }
   else {
-    result.left = left_hand_match.result as IInvocationInfo
+    result.left = left_hand_match.result as PI.InvocationInfo
 
     if (source.current().kind !== SymbolKind.Assignment) {
       const current = source.current()
@@ -664,7 +656,7 @@ export function Assignment (source: TokenQueue) : IError<PatternError> | ISucces
       return right_hand_match
     }
     else {
-      result.right = right_hand_match.result as IExpElement[]
+      result.right = right_hand_match.result as PI.ExpElement[]
 
       return {error:false, result}
     }
@@ -674,8 +666,8 @@ export function Assignment (source: TokenQueue) : IError<PatternError> | ISucces
 /**
  * Captura un enunciado si
  */
-export function If (source: TokenQueue) : IError<PatternError> | ISuccess<IIf> {
-  let result: IIf = {
+export function If (source: TokenQueue) : IError<PI.PatternError> | ISuccess<PI.If> {
+  let result: PI.If = {
     type : 'if',
     condition : null,
     true_branch : [],
@@ -720,7 +712,7 @@ export function If (source: TokenQueue) : IError<PatternError> | ISuccess<IIf> {
     return expression_match
   }
   else {
-    result.condition = expression_match.result as IExpElement[]
+    result.condition = expression_match.result as PI.ExpElement[]
   }
 
   if (source.current().kind === SymbolKind.RightPar) {
@@ -758,7 +750,7 @@ export function If (source: TokenQueue) : IError<PatternError> | ISuccess<IIf> {
       return statement_match
     }
 
-    result.true_branch.push(statement_match.result as Statement)
+    result.true_branch.push(statement_match.result as PI.Statement)
 
     skipWhiteSpace(source)
   }
@@ -775,7 +767,7 @@ export function If (source: TokenQueue) : IError<PatternError> | ISuccess<IIf> {
         return statement_match
       }
 
-      result.false_branch.push(statement_match.result as Statement)
+      result.false_branch.push(statement_match.result as PI.Statement)
 
       skipWhiteSpace(source)
     }
@@ -801,8 +793,8 @@ export function If (source: TokenQueue) : IError<PatternError> | ISuccess<IIf> {
   return {error:false, result}
 }
 
-export function While (source: TokenQueue) : IError<PatternError> | ISuccess<IWhile> {
-  const result: IWhile = {
+export function While (source: TokenQueue) : IError<PI.PatternError> | ISuccess<PI.While> {
+  const result: PI.While = {
     type : 'while',
     condition : null,
     body : []
@@ -846,7 +838,7 @@ export function While (source: TokenQueue) : IError<PatternError> | ISuccess<IWh
     return expression_match
   }
   else {
-    result.condition = expression_match.result as IExpElement[]
+    result.condition = expression_match.result as PI.ExpElement[]
   }
 
   if (source.current().kind === SymbolKind.RightPar) {
@@ -871,7 +863,7 @@ export function While (source: TokenQueue) : IError<PatternError> | ISuccess<IWh
       return statement_match
     }
 
-    result.body.push(statement_match.result as Statement)
+    result.body.push(statement_match.result as PI.Statement)
 
     skipWhiteSpace(source)
   }
@@ -905,8 +897,8 @@ export function While (source: TokenQueue) : IError<PatternError> | ISuccess<IWh
 //    [<enunciado>]
 // 'finpara'
 
-export function For(source: TokenQueue) : IError<PatternError> | ISuccess<IFor> {
-  const result: IFor = {
+export function For(source: TokenQueue) : IError<PI.PatternError> | ISuccess<PI.For> {
+  const result: PI.For = {
     type: 'for',
     counter_init: null,
     last_value: null,
@@ -938,7 +930,7 @@ export function For(source: TokenQueue) : IError<PatternError> | ISuccess<IFor> 
     return init_statement
   }
   else {
-    result.counter_init = init_statement.result as IAssignment
+    result.counter_init = init_statement.result as PI.Assignment
 
     if (source.current().kind === ReservedKind.Hasta) {
       source.next()
@@ -959,7 +951,7 @@ export function For(source: TokenQueue) : IError<PatternError> | ISuccess<IFor> 
       return last_val_exp
     }
     else {
-      result.last_value = last_val_exp.result as IExpElement[]
+      result.last_value = last_val_exp.result as PI.ExpElement[]
 
       skipWhiteSpace(source)
 
@@ -970,7 +962,7 @@ export function For(source: TokenQueue) : IError<PatternError> | ISuccess<IFor> 
           return statement_match
         }
 
-        result.body.push(statement_match.result as Statement)
+        result.body.push(statement_match.result as PI.Statement)
 
         skipWhiteSpace(source)
       }
@@ -995,8 +987,8 @@ export function For(source: TokenQueue) : IError<PatternError> | ISuccess<IFor> 
   }
 }
 
-export function Until (source: TokenQueue) : IError<PatternError> | ISuccess<IUntil> {
-  const result: IUntil = {
+export function Until (source: TokenQueue) : IError<PI.PatternError> | ISuccess<PI.Until> {
+  const result: PI.Until = {
     type : 'until',
     condition : null,
     body : []
@@ -1026,7 +1018,7 @@ export function Until (source: TokenQueue) : IError<PatternError> | ISuccess<IUn
     }
     else {
       if (statement_match.result !== null) {
-        result.body.push(statement_match.result as Statement)
+        result.body.push(statement_match.result as PI.Statement)
       }
 
       skipWhiteSpace(source)
@@ -1084,7 +1076,7 @@ export function Until (source: TokenQueue) : IError<PatternError> | ISuccess<IUn
     return expression_match
   }
   else {
-    result.condition = expression_match.result as IExpElement[]
+    result.condition = expression_match.result as PI.ExpElement[]
 
     if (source.current().kind === SymbolKind.RightPar) {
       source.next()
@@ -1107,8 +1099,8 @@ export function Until (source: TokenQueue) : IError<PatternError> | ISuccess<IUn
   }
 }
 
-export function Return (source: TokenQueue) : IError<PatternError> | ISuccess<IReturn> {
-  const result: IReturn = {
+export function Return (source: TokenQueue) : IError<PI.PatternError> | ISuccess<PI.Return> {
+  const result: PI.Return = {
     type:'return',
     expression:null
   }
@@ -1131,14 +1123,14 @@ export function Return (source: TokenQueue) : IError<PatternError> | ISuccess<IR
       return exp
     }
     else {
-      result.expression = exp.result as IExpElement[]
+      result.expression = exp.result as PI.ExpElement[]
 
       return {error:false, result}
     }
   }
 }
 
-export function AnyStatement (source: TokenQueue) : IError<PatternError> | ISuccess<Statement> {
+export function AnyStatement (source: TokenQueue) : IError<PI.PatternError> | ISuccess<PI.Statement> {
   switch (source.current().kind) {
     case OtherKind.Word:
       if (source.peek().kind === SymbolKind.LeftPar) {
@@ -1169,8 +1161,8 @@ export function AnyStatement (source: TokenQueue) : IError<PatternError> | ISucc
   }
 }
 
-export function MainModule (source: TokenQueue) : IError<PatternError> | ISuccess<IMainModule> {
-  const result: IMainModule = {
+export function MainModule (source: TokenQueue) : IError<PI.PatternError> | ISuccess<PI.Main> {
+  const result: PI.Main = {
     type:'module',
     name:'main',
     module_type:'main',
@@ -1199,7 +1191,7 @@ export function MainModule (source: TokenQueue) : IError<PatternError> | ISucces
       return var_declaration_match
     }
     else {
-      result.body.push(var_declaration_match.result as IDeclarationStatement)
+      result.body.push(var_declaration_match.result as PI.Declaration)
     }
 
     skipWhiteSpace(source)
@@ -1227,7 +1219,7 @@ export function MainModule (source: TokenQueue) : IError<PatternError> | ISucces
       return statement_match
     }
     else {
-      result.body.push(statement_match.result as Statement)
+      result.body.push(statement_match.result as PI.Statement)
     }
 
     skipWhiteSpace(source)
@@ -1253,7 +1245,7 @@ export function MainModule (source: TokenQueue) : IError<PatternError> | ISucces
   return {error:false, result}
 }
 
-export function FunctionModule (source: TokenQueue) : IError<PatternError> | ISuccess<IFunctionModule> {
+export function FunctionModule (source: TokenQueue) : IError<PI.PatternError> | ISuccess<PI.Function> {
   // Lectura del encabezado: <tipo> funcion <nombre>(<parametros>)
 
   const typename = TypeName(source)
@@ -1283,7 +1275,7 @@ export function FunctionModule (source: TokenQueue) : IError<PatternError> | ISu
   // Fin del encabezado
 
   // Leer declaraciones de variables
-  const declarations: IDeclarationStatement[] = []
+  const declarations: PI.Declaration[] = []
 
   while (/inicio|eof/.test(source.current().name) === false) {
     const var_declaration_match = DeclarationStatement(source)
@@ -1292,7 +1284,7 @@ export function FunctionModule (source: TokenQueue) : IError<PatternError> | ISu
       return var_declaration_match
     }
     else {
-      declarations.push(var_declaration_match.result as IDeclarationStatement)
+      declarations.push(var_declaration_match.result as PI.Declaration)
     }
 
     skipWhiteSpace(source)
@@ -1304,7 +1296,7 @@ export function FunctionModule (source: TokenQueue) : IError<PatternError> | ISu
 
   skipWhiteSpace(source)
 
-  const statements: Statement[] = []
+  const statements: PI.Statement[] = []
 
   // Leer el resto de los enunciados
   while (/finfuncion|eof/.test(source.current().name) === false) {
@@ -1314,7 +1306,7 @@ export function FunctionModule (source: TokenQueue) : IError<PatternError> | ISu
       return statement
     }
     else {
-      statements.push(statement.result as Statement)
+      statements.push(statement.result as PI.Statement)
     }
 
     skipWhiteSpace(source)
@@ -1324,13 +1316,13 @@ export function FunctionModule (source: TokenQueue) : IError<PatternError> | ISu
 
   source.next() // consumir 'finfuncion'
 
-  const function_body: Statement[] = [...declarations, ...statements]
+  const function_body: PI.Statement[] = [...declarations, ...statements]
 
-  const result: IFunctionModule = {
+  const result: PI.Function = {
     type: 'module',
     module_type: 'function',
     name: name.result as string,
-    parameters: parameters.result as IParameter[],
+    parameters: parameters.result as PI.Parameter[],
     body: function_body,
     return_type: typename.result as string
   }
@@ -1338,7 +1330,7 @@ export function FunctionModule (source: TokenQueue) : IError<PatternError> | ISu
   return {error:false, result}
 }
 
-export function ProcedureModule (source: TokenQueue) : IError<PatternError> | ISuccess<IProcedureModule> {
+export function ProcedureModule (source: TokenQueue) : IError<PI.PatternError> | ISuccess<PI.Procedure> {
   // Lectura del encabezado: procedimiento <nombre>(<parametros>)
 
   if (source.current().kind != ReservedKind.Funcion) return UnexpectedTokenReport(source.current(), ['procedimiento'], 'missing-procedimiento');
@@ -1364,7 +1356,7 @@ export function ProcedureModule (source: TokenQueue) : IError<PatternError> | IS
   // Fin del encabezado
 
   // Leer declaraciones de variables
-  const declarations: IDeclarationStatement[] = []
+  const declarations: PI.Declaration[] = []
 
   while (/inicio|eof/.test(source.current().name) === false) {
     const var_declaration_match = DeclarationStatement(source)
@@ -1373,7 +1365,7 @@ export function ProcedureModule (source: TokenQueue) : IError<PatternError> | IS
       return var_declaration_match
     }
     else {
-      declarations.push(var_declaration_match.result as IDeclarationStatement)
+      declarations.push(var_declaration_match.result as PI.Declaration)
     }
 
     skipWhiteSpace(source)
@@ -1385,7 +1377,7 @@ export function ProcedureModule (source: TokenQueue) : IError<PatternError> | IS
 
   skipWhiteSpace(source)
 
-  const statements: Statement[] = []
+  const statements: PI.Statement[] = []
 
   // Leer el resto de los enunciados
   while (/finprocedimiento|eof/.test(source.current().name) === false) {
@@ -1395,7 +1387,7 @@ export function ProcedureModule (source: TokenQueue) : IError<PatternError> | IS
       return statement
     }
     else {
-      statements.push(statement.result as Statement)
+      statements.push(statement.result as PI.Statement)
     }
 
     skipWhiteSpace(source)
@@ -1405,33 +1397,33 @@ export function ProcedureModule (source: TokenQueue) : IError<PatternError> | IS
 
   source.next() // consumir 'finprocedimiento'
 
-  const function_body: Statement[] = [...declarations, ...statements]
+  const function_body: PI.Statement[] = [...declarations, ...statements]
 
-  const result: IProcedureModule = {
+  const result: PI.Procedure = {
     type: 'module',
     module_type: 'procedure',
     name: name.result as string,
-    parameters: parameters.result as IParameter[],
+    parameters: parameters.result as PI.Parameter[],
     body: function_body
   }
 
   return {error:false, result}
 }
 
-export function DeclarationStatement (source: TokenQueue) : IError<PatternError> | ISuccess<IDeclarationStatement> {
-  const result: IDeclarationStatement = {
+export function DeclarationStatement (source: TokenQueue) : IError<PI.PatternError> | ISuccess<PI.Declaration> {
+  const result: PI.Declaration = {
     type:'declaration',
     variables: []
   }
 
   const type_match = TypeName(source)
-  let current_type: TypeNameString = null
+  let current_type: PI.TypeNameString = null
 
   if (type_match.error) {
     return type_match
   }
   else {
-    current_type = type_match.result as TypeNameString
+    current_type = type_match.result as PI.TypeNameString
   }
 
   const variables_match = VariableList(source)
@@ -1440,7 +1432,7 @@ export function DeclarationStatement (source: TokenQueue) : IError<PatternError>
     return variables_match
   }
   else {
-    for (let variable of (variables_match.result as IDeclarationInfo[])) {
+    for (let variable of (variables_match.result as PI.DeclarationInfo[])) {
       const declaration = {
         datatype: current_type,
         name: variable.name,
@@ -1484,7 +1476,7 @@ export function DeclarationStatement (source: TokenQueue) : IError<PatternError>
       return next_declaration_match
     }
     else {
-      result.variables = result.variables.concat((next_declaration_match.result as IDeclarationStatement).variables)
+      result.variables = result.variables.concat((next_declaration_match.result as PI.Declaration).variables)
       return {error:false, result}
     }
   }
@@ -1501,8 +1493,8 @@ export function skipWhiteSpace (source: TokenQueue) : void {
   }
 }
 
-function UnexpectedTokenReport(current_token: Token, expected:  string[], reason: string) : IError<PatternError> {
-  const result: PatternError = {
+function UnexpectedTokenReport(current_token: Token, expected:  string[], reason: string) : IError<PI.PatternError> {
+  const result: PI.PatternError = {
     unexpected: current_token.kind,
     line: current_token.line,
     column: current_token.column,

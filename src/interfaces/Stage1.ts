@@ -30,7 +30,7 @@ export interface Function {
   type: 'module'
   module_type: 'function'
   name: string
-  parameters: PI.IParameter[]
+  parameters: PI.Parameter[]
   body: Statement[]
   return_type: string
 }
@@ -39,13 +39,13 @@ export interface Procedure {
   type: 'module'
   module_type: 'procedure'
   name: string
-  parameters: PI.IParameter[]
+  parameters: PI.Parameter[]
   body: Statement[]
 }
 
-export type Statement = PI.IModuleCall | PI.IAssignment | PI.IIf | PI.IWhile | PI.IFor | PI.IUntil
+export type Statement = PI.Call | PI.Assignment | PI.If | PI.While | PI.For | PI.Until
 
-export interface ArrayVariable extends PI.ITypedDeclaration {
+export interface ArrayVariable extends PI.TypedDeclaration {
   is_array: true
   values: any[]
 }
@@ -56,7 +56,7 @@ export interface VariableDict {
 
 export type Variable = ArrayVariable | RegularVariable
 
-export interface RegularVariable extends PI.ITypedDeclaration {
+export interface RegularVariable extends PI.TypedDeclaration {
   is_array: false
   value: any
 }

@@ -6,11 +6,11 @@ export type DataTypeKind = ReservedKind.Entero | ReservedKind.Real | ReservedKin
 
 export type TypeNameString = 'entero' | 'real' | 'logico' | 'caracter'
 
-export type ExpValue = ILiteralValue  | IInvocationValue | IModuleCall
+export type ExpValue = LiteralValue  | InvocationValue | Call
 
-export type Statement = IModuleCall | IAssignment | IIf | IWhile | IFor | IUntil | IReturn | IDeclarationStatement
+export type Statement = Call | Assignment | If | While | For | Until | Return | Declaration
 
-export type Module = IMainModule | IFunctionModule | IProcedureModule
+export type Module = Main | Function | Procedure
 
 export interface PatternError {
   unexpected: ValueKind | ReservedKind | SymbolKind | OtherKind,
@@ -25,121 +25,121 @@ export interface NumberInfo {
   type: ValueKind.Integer | ValueKind.Real
 }
 
-export interface IDeclarationInfo {
+export interface DeclarationInfo {
   name: string
   is_array: boolean
   dimensions: number[] 
 }
 
-export interface IInvocationInfo {
+export interface InvocationInfo {
   name: string
   is_array: boolean
-  indexes: IExpElement[][]
+  indexes: ExpElement[][]
 }
 
 /**
  * Representa un elemento de una expresion
  */
-export interface IExpElement {
+export interface ExpElement {
   type: 'invocation' | 'literal' | 'operator' | 'parenthesis' | 'call'
   name?: string
 }
 
-export interface ILiteralValue {
+export interface LiteralValue {
   type: 'literal'
   value: boolean | string | number
 }
 
-export interface IInvocationValue {
+export interface InvocationValue {
   type: 'invocation'
   name: string
   is_array: boolean
-  indexes: IExpElement[][]
+  indexes: ExpElement[][]
 }
 
-export interface IParameter {
+export interface Parameter {
   name: string
   by_ref: boolean
   type: TypeNameString
 }
 
-export interface IModuleCall {
+export interface Call {
   type: 'call'
-  args: IExpElement[][]
+  args: ExpElement[][]
   name: string
 }
 
-export interface IAssignment {
+export interface Assignment {
   type: 'assignment'
-  left: IInvocationInfo
-  right: IExpElement[]
+  left: InvocationInfo
+  right: ExpElement[]
 }
 
-export interface IIf {
+export interface If {
   type: 'if'
-  condition: IExpElement[]
+  condition: ExpElement[]
   true_branch: Statement[]
   false_branch: Statement[]
 }
 
-export interface IWhile {
+export interface While {
   type: 'while'
-  condition: IExpElement[]
+  condition: ExpElement[]
   body: Statement[]
 }
 
-export interface IFor {
+export interface For {
   type: 'for'
-  counter_init: IAssignment
-  last_value: IExpElement[]
+  counter_init: Assignment
+  last_value: ExpElement[]
   body: Statement[]
 }
 
-export interface IUntil {
+export interface Until {
   type: 'until'
-  condition: IExpElement[]
+  condition: ExpElement[]
   body: Statement[]
 }
 
-export interface IReturn {
+export interface Return {
   type: 'return'
-  expression: IExpElement[]
+  expression: ExpElement[]
 }
 
-export interface ITypedDeclaration extends IDeclarationInfo {
+export interface TypedDeclaration extends DeclarationInfo {
   datatype: string
 }
 
-export interface IDeclarationStatement {
+export interface Declaration {
   type: 'declaration'
-  variables: ITypedDeclaration[]
+  variables: TypedDeclaration[]
 }
 
-export interface IMainModule {
+export interface Main {
   type: 'module'
   name: 'main'
   module_type: 'main'
   body: Statement[]
 }
 
-export interface IFunctionModule {
+export interface Function {
   type: 'module'
   module_type: 'function'
   name: string
-  parameters: IParameter[]
+  parameters: Parameter[]
   body: Statement[]
   return_type: string
 }
 
-export interface IProcedureModule {
+export interface Procedure {
   type: 'module'
   module_type: 'procedure'
   name: string
-  parameters: IParameter[]
+  parameters: Parameter[]
   body: Statement[]
 }
 
 export interface ParsedProgram {
-  main: IMainModule
+  main: Main
   [m: string]: Module
 }

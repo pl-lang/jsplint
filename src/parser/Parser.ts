@@ -8,7 +8,7 @@ import TokenQueue from './TokenQueue'
 import {Token} from './TokenTypes'
 import {MainModule as MainModulePattern, skipWhiteSpace} from './Patterns'
 import {FunctionModule as FunctionPattern, ProcedureModule as ProcedurePattern} from './Patterns'
-import {IMainModule, Module, ParsedProgram, PatternError, IProcedureModule, IFunctionModule} from '../interfaces/ParsingInterfaces'
+import {IMainModule, Module, ParsedProgram, PatternError, IProcedureModule, Function} from '../interfaces/ParsingInterfaces'
 
 export default class Parser extends Emitter {
   constructor() {
@@ -52,7 +52,7 @@ export default class Parser extends Emitter {
     while (token_queue.current().name !== 'eof') {
       skipWhiteSpace(token_queue)
 
-      let module_match: (IError<PatternError> | ISuccess<IProcedureModule>) | (IError<PatternError> | ISuccess<IFunctionModule>)
+      let module_match: (IError<PatternError> | ISuccess<IProcedureModule>) | (IError<PatternError> | ISuccess<Function>)
 
       if (token_queue.current().name == 'procedimiento') {
         module_match = ProcedurePattern(token_queue)
