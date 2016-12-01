@@ -4,17 +4,17 @@ import {ReportInterface, Report} from '../utility/Report.js'
 
 import {take, flatten, mergeObjs} from '../utility/helpers.js'
 
-import {IError, ISuccess} from '../utility/UInterfaces'
+import {IError, ISuccess} from '../interfaces/Utility'
 
-import {TokenKind, DataTypeKind, TypeNameString, ExpValue} from './ParsingInterfaces'
+import {TokenKind, DataTypeKind, TypeNameString, ExpValue} from '../interfaces/ParsingInterfaces'
 
-import {PatternError, NumberInfo, IDeclarationInfo, IInvocationInfo, IExpElement, ILiteralValue} from './ParsingInterfaces'
+import {PatternError, NumberInfo, IDeclarationInfo, IInvocationInfo, IExpElement, ILiteralValue} from '../interfaces/ParsingInterfaces'
 
-import {IInvocationValue, IParameter, IModuleCall, IAssignment, IIf} from './ParsingInterfaces'
+import {IInvocationValue, IParameter, IModuleCall, IAssignment, IIf} from '../interfaces/ParsingInterfaces'
 
-import {IWhile, IFor, IUntil, IReturn, ITypedDeclaration, IDeclarationStatement, Statement} from './ParsingInterfaces'
+import {IWhile, IFor, IUntil, IReturn, ITypedDeclaration, IDeclarationStatement, Statement} from '../interfaces/ParsingInterfaces'
 
-import {IMainModule, IFunctionModule, IProcedureModule} from './ParsingInterfaces'
+import {IMainModule, IFunctionModule, IProcedureModule} from '../interfaces/ParsingInterfaces'
 
 import {ValueKind, ReservedKind, SymbolKind, OtherKind, Token} from './TokenTypes'
 

@@ -1,26 +1,21 @@
 'use strict'
 
 import Emitter from '../utility/Emitter'
-import {IError, ISuccess} from '../utility/UInterfaces'
+import {IError, ISuccess} from '../interfaces/Utility'
 import SourceWrapper from './SourceWrapper'
 import Lexer from './Lexer'
 import TokenQueue from './TokenQueue'
 import {Token} from './TokenTypes'
 import {MainModule as MainModulePattern, skipWhiteSpace} from './Patterns'
 import {FunctionModule as FunctionPattern, ProcedureModule as ProcedurePattern} from './Patterns'
-import {IMainModule, Module} from './ParsingInterfaces'
-
-interface ParsedProgram {
-  main: IMainModule
-  [m: string]: Module
-}
+import {IMainModule, Module, ParsedProgram, PatternError, IProcedureModule, IFunctionModule} from '../interfaces/ParsingInterfaces'
 
 export default class Parser extends Emitter {
   constructor() {
     super(['parsing-started', 'lexical-error', 'syntax-error', 'parsing-finished'])
   }
 
-  parse(code) : IError<string> | ISuccess<ParsedProgram>  {
+  parse(code: string) : IError<string> | ISuccess<ParsedProgram>  {
     this.emit('parsing-started')
 
     const source = new SourceWrapper(code)
@@ -57,7 +52,7 @@ export default class Parser extends Emitter {
     while (token_queue.current().name !== 'eof') {
       skipWhiteSpace(token_queue)
 
-      let module_match
+      let module_match: (IError<PatternError> | ISuccess<IProcedureModule>) | (IError<PatternError> | ISuccess<IFunctionModule>)
 
       if (token_queue.current().name == 'procedimiento') {
         module_match = ProcedurePattern(token_queue)
@@ -74,7 +69,7 @@ export default class Parser extends Emitter {
         return {error:true, result:'syntax-error'}
       }
       else {
-        result[module_match.result.name] = module_match.result
+        result[(module_match.result as Module).name] = module_match.result as Module
       }
     }
 

@@ -1,9 +1,12 @@
 'use strict'
 
-import { getLastNode } from './List.js'
+import {Node, getLastNode} from './List.js'
 
-export class GenericNode {
-  constructor(data) {
+export class GenericNode<A> implements Node<A> {
+  data: any
+  private _next: Node<A>
+
+  constructor (data: any) {
     if (data) {
       this.data = data
     } else {
@@ -13,21 +16,27 @@ export class GenericNode {
     this._next = null;
   }
 
-  setNext(nextNode) {
-    this._next = nextNode
+  setNext (n: Node<A>) {
+    this._next = n
   }
 
-  getNext() {
+  getNext () {
     return this._next
   }
 
-  getNextStatementNode() {
+  getNextStatementNode () {
     return this.getNext()
   }
 }
 
-export class IfNode {
-  constructor(data) {
+export class IfNode<A> implements Node<A> {
+  data: A
+  false_branch_root: Node<A>
+  true_branch_root: Node<A>
+  next_statement_node: Node<A>
+  next_node: Node<A>
+
+  constructor(data: any) {
     if (data) {
       this.data = data
     } else {
@@ -40,7 +49,7 @@ export class IfNode {
     this.next_statement_node = null
   }
 
-  setNext(node) {
+  setNext(node: Node<A>) {
     if (this.false_branch_root === null) {
       this.false_branch_root = node
     }
@@ -60,20 +69,20 @@ export class IfNode {
     this.next_statement_node = node
   }
 
-  setCurrentBranchTo(branch_name) {
+  setCurrentBranchTo(branch_name: 'true_branch' | 'false_branch' | 'next_statement') {
     if (branch_name === 'true_branch') {
-      this.returnedNode = this.true_branch_root
+      this.next_node = this.true_branch_root
     }
     else if (branch_name === 'false_branch') {
-      this.returnedNode = this.false_branch_root
+      this.next_node = this.false_branch_root
     }
     else if (branch_name === 'next_statement') {
-      this.returnedNode = this.next_statement_node
+      this.next_node = this.next_statement_node
     }
   }
 
   getNext() {
-    return this.returnedNode
+    return this.next_node
   }
 
   getNextStatementNode() {
@@ -81,8 +90,13 @@ export class IfNode {
   }
 }
 
-export class UntilNode {
-  constructor(data) {
+export class UntilNode<A> implements Node<A> {
+  data: A
+  loop_body_root: Node<A>
+  enter_loop_body: boolean
+  next_statement_node: Node<A>
+
+  constructor(data: any) {
     if (data) {
       this.data = data
     }
@@ -100,7 +114,7 @@ export class UntilNode {
    * @param {String} branch_name El nombre de la rama que se va a devolver.
    * Puede ser "loop_body" o "program_body"
    */
-  setCurrentBranchTo(branch_name) {
+  setCurrentBranchTo (branch_name: 'loop_body' | 'program_body') {
     if (branch_name === 'loop_body') {
       this.enter_loop_body = true
     }
@@ -122,13 +136,18 @@ export class UntilNode {
     return this.next_statement_node
   }
 
-  setNext(node) {
+  setNext(node: Node<A>) {
     this.next_statement_node = node
   }
 }
 
-export class WhileNode {
-  constructor(data) {
+export class WhileNode<A> implements Node<A> {
+  data: A
+  _loop_body_root: Node<A>
+  enter_loop_body: boolean
+  next_statement_node: Node<A>
+
+  constructor(data: any) {
     if (data) {
       this.data = data
     }
@@ -147,7 +166,7 @@ export class WhileNode {
    * @param {String} branch_name El nombre de la rama que se va a devolver.
    * Puede ser "loop_body" o "program_body"
    */
-  setCurrentBranchTo(branch_name) {
+  setCurrentBranchTo(branch_name: 'loop_body' | 'program_body') {
     if (branch_name === 'loop_body') {
       this.enter_loop_body = true
     }
@@ -169,7 +188,7 @@ export class WhileNode {
     return this.next_statement_node
   }
 
-  setNext(node) {
+  setNext(node: Node<A>) {
     this.next_statement_node = node
 
     // Cuando se escribe un mientras con el cuerpo vacio lastNode va a ser null

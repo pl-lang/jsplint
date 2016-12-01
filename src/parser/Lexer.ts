@@ -4,7 +4,7 @@ import { Token, EoFToken, WordToken, NumberToken, StringToken, SpecialSymbolToke
 
 import { LexicalError } from './TokenTypes'
 
-import {IError, ISuccess} from '../utility/UInterfaces'
+import {IError, ISuccess} from '../interfaces/Utility'
 
 import { isDigit, isLetter, isWhiteSpace } from '../utility/StringMethods'
 

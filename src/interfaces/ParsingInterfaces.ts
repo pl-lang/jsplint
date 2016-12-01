@@ -1,4 +1,4 @@
-import {ValueKind, ReservedKind, SymbolKind, OtherKind, Token} from './TokenTypes'
+import {ValueKind, ReservedKind, SymbolKind, OtherKind, Token} from '../parser/TokenTypes'
 
 export type TokenKind = ValueKind | ReservedKind | SymbolKind | OtherKind
 
@@ -137,4 +137,9 @@ export interface IProcedureModule {
   name: string
   parameters: IParameter[]
   body: Statement[]
+}
+
+export interface ParsedProgram {
+  main: IMainModule
+  [m: string]: Module
 }
