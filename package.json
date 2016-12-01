@@ -2,7 +2,6 @@
   "name": "interprete-pl",
   "version": "1.0.9",
   "description": "interprete",
-  "main": "main.js",
   "scripts": {
     "test": "mocha",
     "test3": "mocha ./test/Test_3_Patterns.js",

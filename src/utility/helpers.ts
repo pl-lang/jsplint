@@ -20,11 +20,16 @@ export function bindN (f, ...args) {
 // un error, lo devuelve. Si no, aplica f sobre el valor que el reporte contiene
 // Cabe aclarar que f es una funcion que tambien devuelve reportes.
 // Un reporte es un objeto que contiene las propiedades `error` y `result`.
-export const bind = curry((f, r) => r.error ? r:f(r.result))
+export const bind = curry((f : any, r : any) => r.error ? r:f(r.result))
 
 // flatten :: [any] -> [[any]] -> [any]
-export function flatten (accumulator, arr) {
-  return [...accumulator, ...arr]
+export function flatten<A> (accumulator : A[], arr: A[][]) : A[] {
+  for (let a of arr) {
+    for (let element of a) {
+      accumulator.push(element)
+    }
+  }
+  return accumulator
 }
 
 // toma dos objetos y devuelve uno nuevo que contiene las propiedades (y valores)
@@ -50,21 +55,23 @@ export function mergeObjs (a, b) {
 // crea un nuevo objeto dadas una lista de valores y una lista de cadenas.
 // Tendra tantos pares prop/valor como haya elementos en la lista mas
 // corta
-
-export function zipObj (values, names) {
+export function zipObj<A> (values : A[], names : string[]) : { [prop: string]: A} {
   if (values.length > names.length) {
     values = take(names.length, values)
   }
   else if (values.length < names.length) {
-    names = take(values.length, name)
+    names = take(values.length, names)
   }
 
   let pairs = zip(names, values)
 
-  let result = {}
+  /**
+   * result es un objeto cuyas claves son cadenas y cuyos valores son de tipo A
+   */
+  let result : {[prop: string]: A} = {}
 
-  for (let [name, value] of pairs) {
-    result[name] = value
+  for (let [prop, value] of pairs) {
+    result[prop] = value
   }
 
   return result
@@ -73,7 +80,7 @@ export function zipObj (values, names) {
 // toma dos listas y devuelve una lista de pares donde el primer elemento
 // pertenece a "a" y el segundo a "b". La lista tendra tantos elementos
 // como la mas corta entre a y b
-export function zip (a, b) {
+export function zip<A, B> (a : A[], b : B[]) : [A, B][] {
   if (a.length > b.length) {
     a = take(b.length, a)
   }
@@ -81,7 +88,7 @@ export function zip (a, b) {
     b = take(a.length, b)
   }
 
-  let result = []
+  let result : [A, B][] = []
 
   for (let i = 0; i < a.length; i++) {
     result.push([a[i], b[i]])
@@ -91,6 +98,6 @@ export function zip (a, b) {
 }
 
 // toma los primeros n elementos de un arreglo
-export function take (n, list) {
+export function take<T> (n : number, list : T[]) : T[] {
   return list.slice(0, n)
 }

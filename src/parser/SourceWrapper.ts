@@ -5,7 +5,15 @@ let EOL_REACHED = -1
 let READING = 0
 
 export default class SourceWrapper {
-  constructor(string) {
+  EOL : string 
+  EOF : string 
+  _source : string
+  _index : number
+  _current_column : number
+  _current_line : number
+  state : number
+
+  constructor(string : string) {
     this.EOL = '\n'
     this.EOF = String.fromCharCode(0)
 
@@ -19,7 +27,7 @@ export default class SourceWrapper {
     this.updateState()
   }
 
-  currentChar() {
+  currentChar() : string {
     if (this.state === EOF_REACHED) {
       return this.EOF
     }
@@ -28,14 +36,14 @@ export default class SourceWrapper {
     }
   }
 
-  nextChar() {
+  nextChar() : string {
     this._index++
     this.updateState()
     this.updatePosition()
     return this.currentChar()
   }
 
-  peekChar() {
+  peekChar() : string {
     if (this._index + 1 === this._source.length) {
       return this.EOF
     }
@@ -44,7 +52,7 @@ export default class SourceWrapper {
     }
   }
 
-  updateState() {
+  private updateState() {
     if (this._index === this._source.length) {
       this.state = EOF_REACHED
     }
@@ -53,7 +61,7 @@ export default class SourceWrapper {
     }
   }
 
-  updatePosition() {
+  private updatePosition() {
     if (this._source[this._index - 1] === this.EOL) {
       this._current_line++
       this._current_column = 0

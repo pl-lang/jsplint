@@ -1,10 +1,14 @@
 'use strict'
 
-import { EoFToken, WordToken, NumberToken, StringToken, SpecialSymbolToken, UnknownToken } from './TokenTypes.js'
+import { Token, EoFToken, WordToken, NumberToken, StringToken, SpecialSymbolToken, UnknownToken } from './TokenTypes'
 
-import { isDigit, isLetter, isWhiteSpace } from '../utility/StringMethods.js'
+import { LexicalError } from './TokenTypes'
 
-import SourceWrapper from './SourceWrapper.js'
+import { ReportInterface } from '../utility/Report'
+
+import { isDigit, isLetter, isWhiteSpace } from '../utility/StringMethods'
+
+import SourceWrapper from './SourceWrapper'
 
 const isSpecialSymbolChar = SpecialSymbolToken.isSpecialSymbolChar
 
@@ -12,25 +16,27 @@ const isSpecialSymbolChar = SpecialSymbolToken.isSpecialSymbolChar
  * Clase para convertir una cadena en fichas.
  */
 export default class Lexer {
+  _source : SourceWrapper
+
   /**
    * Crea un Lexer.
    * @param  {source} source Fuente a utilizar para construir las fichas
    */
-  constructor(source) {
+  constructor(source ?: SourceWrapper) {
     if (source) this._source = source;
   }
 
-  tokenize(source) {
+  tokenize(source : SourceWrapper) : ReportInterface<LexicalError[], Token[]> {
     this.source = source;
 
-    let tokens = [];
-    let bad_tokens = [];
+    let tokens : Token[] = [];
+    let bad_tokens_info : LexicalError[] = [];
 
     let t = this.nextToken()
 
     while (t.kind !== 'eof') {
-      if (t.kind == 'LEXICAL_ERROR') {
-        bad_tokens.push(t);
+      if (t.error_found) {
+        bad_tokens_info.push(t.error_info);
       } else {
         tokens.push(t)
       }
@@ -38,13 +44,13 @@ export default class Lexer {
     }
     tokens.push(t)
 
-    if (bad_tokens.length > 0) {
-      let result = bad_tokens;
-      let error = true;
+    if (bad_tokens_info.length > 0) {
+      const result = bad_tokens_info;
+      const error = true;
       return {error, result};
     } else {
-      let result = tokens;
-      let error = false;
+      const result = tokens;
+      const error = false;
       return {error, result};
     }
   }
@@ -97,7 +103,7 @@ export default class Lexer {
 
     let c = this.currentChar()
 
-    let result
+    let result : Token
 
     if (isDigit(c))
       result = new NumberToken(this._source)
