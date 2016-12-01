@@ -1,26 +1,32 @@
 'use strict'
 
-import Emitter from '../utility/Emitter.js'
-import SourceWrapper from './SourceWrapper.js'
-import Lexer from './Lexer.js'
-import TokenQueue from './TokenQueue.js'
-import { match, MainModule as MainModulePattern, skipWhiteSpace } from './Patterns.js'
-import { FunctionModule as FunctionPattern, ProcedureModule as ProcedurePattern } from './Patterns.js'
+import Emitter from '../utility/Emitter'
+import {IError, ISuccess} from '../utility/UInterfaces'
+import SourceWrapper from './SourceWrapper'
+import Lexer from './Lexer'
+import TokenQueue from './TokenQueue'
+import {Token} from './TokenTypes'
+import {MainModule as MainModulePattern, skipWhiteSpace} from './Patterns'
+import {FunctionModule as FunctionPattern, ProcedureModule as ProcedurePattern} from './Patterns'
+import {IMainModule, Module} from './ParsingInterfaces'
+
+interface ParsedProgram {
+  main: IMainModule
+  [m: string]: Module
+}
 
 export default class Parser extends Emitter {
   constructor() {
     super(['parsing-started', 'lexical-error', 'syntax-error', 'parsing-finished'])
   }
 
-  parse(code) {
+  parse(code) : IError<string> | ISuccess<ParsedProgram>  {
     this.emit('parsing-started')
 
-    let result = {}
+    const source = new SourceWrapper(code)
+    const lexer = new Lexer()
 
-    let source = new SourceWrapper(code)
-    let lexer = new Lexer()
-
-    let lexer_report = lexer.tokenize(source)
+    const lexer_report = lexer.tokenize(source)
 
     // emitir eventos de error si hubo alguno y finalizar parseo
     if (lexer_report.error) {
@@ -31,32 +37,33 @@ export default class Parser extends Emitter {
       return {error:true, result:'lexical-error'}
     }
 
-    let token_queue = new TokenQueue(lexer_report.result)
+    let token_queue = new TokenQueue(lexer_report.result as Token[])
 
     skipWhiteSpace(token_queue)
 
     // buscar el modulo principal
-    let main_match = match(MainModulePattern).from(token_queue)
+    const main_match = MainModulePattern(token_queue)
 
     if (main_match.error) {
       this.emit('syntax-error', main_match.result)
       return {error:true, result:'syntax-error'}
     }
-    else {
-      result['main'] = main_match.result
+
+    const result: ParsedProgram = {
+      main: main_match.result as IMainModule
     }
 
     // parsear el resto de los modulos del programa
-    while (token_queue.current().kind !== 'eof') {
+    while (token_queue.current().name !== 'eof') {
       skipWhiteSpace(token_queue)
 
       let module_match
 
-      if (token_queue.current().kind == 'procedimiento') {
-        module_match = match(ProcedurePattern).from(token_queue)
+      if (token_queue.current().name == 'procedimiento') {
+        module_match = ProcedurePattern(token_queue)
       }
       else {
-        module_match = match(FunctionPattern).from(token_queue)
+        module_match = FunctionPattern(token_queue)
       }
 
       skipWhiteSpace(token_queue)

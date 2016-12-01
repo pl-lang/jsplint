@@ -4,35 +4,21 @@ import {ReportInterface, Report} from '../utility/Report.js'
 
 import {take, flatten, mergeObjs} from '../utility/helpers.js'
 
+import {IError, ISuccess} from '../utility/UInterfaces'
+
+import {TokenKind, DataTypeKind, TypeNameString, ExpValue} from './ParsingInterfaces'
+
+import {PatternError, NumberInfo, IDeclarationInfo, IInvocationInfo, IExpElement, ILiteralValue} from './ParsingInterfaces'
+
+import {IInvocationValue, IParameter, IModuleCall, IAssignment, IIf} from './ParsingInterfaces'
+
+import {IWhile, IFor, IUntil, IReturn, ITypedDeclaration, IDeclarationStatement, Statement} from './ParsingInterfaces'
+
+import {IMainModule, IFunctionModule, IProcedureModule} from './ParsingInterfaces'
+
 import {ValueKind, ReservedKind, SymbolKind, OtherKind, Token} from './TokenTypes'
 
 import TokenQueue from './TokenQueue.js'
-
-type TokenKind = ValueKind | ReservedKind | SymbolKind | OtherKind
-type DataTypeKind = ReservedKind.Entero | ReservedKind.Real | ReservedKind.Logico | ReservedKind.Caracter
-
-interface PatternError {
-  unexpected: ValueKind | ReservedKind | SymbolKind | OtherKind,
-  expected: string[],
-  column: number,
-  line: number,
-  reason?: string
-}
-
-interface IError<A> {
-  error: true,
-  result: A
-}
-
-interface ISuccess<A> {
-  error: false,
-  result: A
-}
-
-interface NumberInfo {
-  value: number,
-  type: ValueKind.Integer | ValueKind.Real
-}
 
 /**
  * Funcion que intenta capturar un token numerico
@@ -133,30 +119,6 @@ export function Word (source: TokenQueue) : IError<PatternError> | ISuccess<stri
 }
 
 /**
- * Crea un patron que busca un token de tipo "kind".
- * Esta funcion no es un patron, si no que devuelve una funcion que lo es.
- */
-export function Kind <A> (kind : A) : (source:TokenQueue)=>IError<PatternError>|ISuccess<A> {
-  function KindMatcher (source : TokenQueue) : IError<PatternError> | ISuccess<A> {
-    let expected_kind : A = kind
-    if (source.current().kind == expected_kind) {
-      source.next()
-      return {error:false, result:expected_kind}
-    }
-    else {
-      return {error:true, result:{reason:"unexpected-token", expected:expected_kind, unexpected:source.current().kind}}
-    }
-  }
-  return KindMatcher
-}
-
-interface IDeclarationInfo {
-  name: string
-  is_array: boolean
-  dimensions: number[] 
-}
-
-/**
  * Patron que consume la declaracion de una variable (nombre y dimension)
  */
 export function VariableDeclaration (source: TokenQueue) : IError<PatternError> | ISuccess<IDeclarationInfo> {
@@ -238,9 +200,7 @@ export function VariableList (source: TokenQueue) : IError<PatternError> | ISucc
 
 let isType = (k: TokenKind) => {
   return k == ReservedKind.Entero || k == ReservedKind.Real || k == ReservedKind.Logico || k == ReservedKind.Caracter 
-}
-
-type TypeNameString = 'entero' | 'real' | 'logico' | 'caracter' 
+} 
 
 /**
  * Patron que consume un tipo de datos.
@@ -295,12 +255,6 @@ export function IndexExpression (source: TokenQueue) : IError<PatternError> | IS
       return {error:false, result:indexes}
     }
   }
-}
-
-interface IInvocationInfo {
-  name: string
-  is_array: boolean
-  indexes: IExpElement[][]
 }
 
 /**
@@ -393,14 +347,6 @@ function is_operator (k: TokenKind) {
 }
 
 /**
- * Representa un elemento de una expresion
- */
-interface IExpElement {
-  type: 'invocation' | 'literal' | 'operator' | 'parenthesis' | 'call'
-  name?: string
-}
-
-/**
  * Captura una expresion
  */
 export function Expression (source: TokenQueue) : IError<PatternError> | ISuccess<IExpElement[]> {
@@ -472,20 +418,6 @@ export function Expression (source: TokenQueue) : IError<PatternError> | ISucces
 
   return {error:false, result:output}
 }
-
-interface ILiteralValue {
-  type: 'literal'
-  value: boolean | string | number
-}
-
-interface IInvocationValue {
-  type: 'invocation'
-  name: string
-  is_array: boolean
-  indexes: IExpElement[][]
-}
-
-type ExpValue = ILiteralValue  | IInvocationValue | IModuleCall
 
 /**
  * Patron que captura un valor (literal o invocado)
@@ -611,12 +543,6 @@ export function ParameterList (source: TokenQueue) : IError<PatternError> | ISuc
   }
 }
 
-interface IParameter {
-  name: string
-  by_ref: boolean
-  type: TypeNameString
-}
-
 /**
  * Captura un parametro de una funcion o procedimiento
  */
@@ -649,12 +575,6 @@ export function Parameter (source: TokenQueue) : IError<PatternError> | ISuccess
   }
 
 
-}
-
-interface IModuleCall {
-  type: 'call'
-  args: IExpElement[][]
-  name: string
 }
 
 /**
@@ -711,14 +631,6 @@ export function ModuleCall (source: TokenQueue) : IError<PatternError> | ISucces
   }
 }
 
-type Statement = IModuleCall | IAssignment | IIf | IWhile | IFor | IUntil | IReturn | IDeclarationStatement
-
-interface IAssignment {
-  type: 'assignment'
-  left: IInvocationInfo
-  right: IExpElement[]
-}
-
 /**
  * Captura un enunciado de asignacion
  */
@@ -759,12 +671,6 @@ export function Assignment (source: TokenQueue) : IError<PatternError> | ISucces
   }
 }
 
-interface IIf {
-  type: 'if'
-  condition: IExpElement[]
-  true_branch: Statement[]
-  false_branch: Statement[]
-}
 /**
  * Captura un enunciado si
  */
@@ -846,7 +752,7 @@ export function If (source: TokenQueue) : IError<PatternError> | ISuccess<IIf> {
   skipWhiteSpace(source)
 
   while ( /finsi|sino|eof/.test(source.current().name) === false ) {
-    let statement_match = Statement(source)
+    let statement_match = AnyStatement(source)
 
     if (statement_match.error) {
       return statement_match
@@ -863,7 +769,7 @@ export function If (source: TokenQueue) : IError<PatternError> | ISuccess<IIf> {
     skipWhiteSpace(source)
 
     while ( /finsi|eof/.test(source.current().name) === false ) {
-      let statement_match = Statement(source)
+      let statement_match = AnyStatement(source)
 
       if (statement_match.error) {
         return statement_match
@@ -893,12 +799,6 @@ export function If (source: TokenQueue) : IError<PatternError> | ISuccess<IIf> {
   }
 
   return {error:false, result}
-}
-
-interface IWhile {
-  type: 'while'
-  condition: IExpElement[]
-  body: Statement[]
 }
 
 export function While (source: TokenQueue) : IError<PatternError> | ISuccess<IWhile> {
@@ -965,7 +865,7 @@ export function While (source: TokenQueue) : IError<PatternError> | ISuccess<IWh
   skipWhiteSpace(source)
 
   while ( /finmientras|eof/.test(source.current().name) === false ) {
-    let statement_match = Statement(source)
+    let statement_match = AnyStatement(source)
 
     if (statement_match.error) {
       return statement_match
@@ -1004,12 +904,6 @@ export function While (source: TokenQueue) : IError<PatternError> | ISuccess<IWh
 // 'para' <expresion> 'hasta' <expresion.entera>
 //    [<enunciado>]
 // 'finpara'
-interface IFor {
-  type: 'for'
-  counter_init: IAssignment
-  last_value: IExpElement[]
-  body: Statement[]
-}
 
 export function For(source: TokenQueue) : IError<PatternError> | ISuccess<IFor> {
   const result: IFor = {
@@ -1070,7 +964,7 @@ export function For(source: TokenQueue) : IError<PatternError> | ISuccess<IFor> 
       skipWhiteSpace(source)
 
       while ( /finpara|eof/.test(source.current().name) === false ) {
-        let statement_match = Statement(source)
+        let statement_match = AnyStatement(source)
 
         if (statement_match.error) {
           return statement_match
@@ -1101,12 +995,6 @@ export function For(source: TokenQueue) : IError<PatternError> | ISuccess<IFor> 
   }
 }
 
-interface IUntil {
-  type: 'until'
-  condition: IExpElement[]
-  body: Statement[]
-}
-
 export function Until (source: TokenQueue) : IError<PatternError> | ISuccess<IUntil> {
   const result: IUntil = {
     type : 'until',
@@ -1131,7 +1019,7 @@ export function Until (source: TokenQueue) : IError<PatternError> | ISuccess<IUn
 
   // TODO: hacer que "hasta que" sea un solo token ("hastaque")
   while ( /hasta|que|eof/.test(source.current().name) === false ) {
-    let statement_match = Statement(source)
+    let statement_match = AnyStatement(source)
 
     if (statement_match.error) {
       return statement_match
@@ -1219,10 +1107,6 @@ export function Until (source: TokenQueue) : IError<PatternError> | ISuccess<IUn
   }
 }
 
-interface IReturn {
-  type: 'return'
-  expression: IExpElement[]
-}
 export function Return (source: TokenQueue) : IError<PatternError> | ISuccess<IReturn> {
   const result: IReturn = {
     type:'return',
@@ -1254,7 +1138,7 @@ export function Return (source: TokenQueue) : IError<PatternError> | ISuccess<IR
   }
 }
 
-export function Statement (source: TokenQueue) : IError<PatternError> | ISuccess<Statement> {
+export function AnyStatement (source: TokenQueue) : IError<PatternError> | ISuccess<Statement> {
   switch (source.current().kind) {
     case OtherKind.Word:
       if (source.peek().kind === SymbolKind.LeftPar) {
@@ -1283,13 +1167,6 @@ export function Statement (source: TokenQueue) : IError<PatternError> | ISuccess
       return {error:true, result:{unexpected, expected, line, column, reason}}
     }
   }
-}
-
-interface IMainModule {
-  type: 'module'
-  name: 'main'
-  module_type: 'main'
-  body: Statement[]
 }
 
 export function MainModule (source: TokenQueue) : IError<PatternError> | ISuccess<IMainModule> {
@@ -1344,7 +1221,7 @@ export function MainModule (source: TokenQueue) : IError<PatternError> | ISucces
   skipWhiteSpace(source)
 
   while (/fin|eof/.test(source.current().name) === false) {
-    const statement_match = Statement(source)
+    const statement_match = AnyStatement(source)
 
     if (statement_match.error) {
       return statement_match
@@ -1376,125 +1253,169 @@ export function MainModule (source: TokenQueue) : IError<PatternError> | ISucces
   return {error:false, result}
 }
 
-export function FunctionModule (source) {
-  let header = concat([TypeName, Kind('funcion'), Word, Kind(SymbolKind.LeftPar), ParameterList, Kind('right-par')])
+export function FunctionModule (source: TokenQueue) : IError<PatternError> | ISuccess<IFunctionModule> {
+  // Lectura del encabezado: <tipo> funcion <nombre>(<parametros>)
 
-  let h_report = header(source)
+  const typename = TypeName(source)
 
-  if (h_report.error) return h_report;
+  if (typename.error) return typename;
 
-  let header_tokens = h_report.result.filter(t => (typeof t == 'string' && (t == 'funcion' || t == SymbolKind.LeftPar || t == 'right-par') ? false:true))
+  if (source.current().kind != ReservedKind.Funcion) return UnexpectedTokenReport(source.current(), ['funcion'], 'missing-funcion');
 
-  const header_data = {
-    return_type: header_tokens[0],
-    name: header_tokens[1],
-    parameters: header_tokens[2]  
+  source.next()
+
+  const name = Word(source)
+
+  if (name.error) return name;
+
+  if (source.current().kind != SymbolKind.LeftPar) return UnexpectedTokenReport(source.current(), ['('], 'missing-left-par');
+
+  source.next()
+
+  const parameters = ParameterList(source)
+
+  if (parameters.error) return parameters;
+
+  if (source.current().kind != SymbolKind.RightPar) return UnexpectedTokenReport(source.current(), [')'], 'missing-right-par');
+
+  source.next()
+
+  // Fin del encabezado
+
+  // Leer declaraciones de variables
+  const declarations: IDeclarationStatement[] = []
+
+  while (/inicio|eof/.test(source.current().name) === false) {
+    const var_declaration_match = DeclarationStatement(source)
+
+    if (var_declaration_match.error) {
+      return var_declaration_match
+    }
+    else {
+      declarations.push(var_declaration_match.result as IDeclarationStatement)
+    }
+
+    skipWhiteSpace(source)
   }
 
-  let result = header_data
-
-  skipWhiteSpace(source)
-
-  let variable_declarations = until(concat([DeclarationStatement, skipWhiteSpace]), tk => tk == 'inicio')
-
-  let d_report = variable_declarations(source)
-
-  if (source.current().kind != 'inicio') return UnexpectedTokenReport(source.current(), 'inicio', 'missing-inicio')
+  if (source.current().kind != ReservedKind.Inicio) return UnexpectedTokenReport(source.current(), ['inicio'], 'missing-inicio')
 
   source.next() // consumir inicio
 
-  if (d_report.error) return d_report;
-
-  let declarations = d_report.result.reduce(flatten, []).filter(tk => tk == undefined ? false:true)
-
-  result.body = [...declarations]
-
   skipWhiteSpace(source)
 
-  let statements = until(concat([Statement, skipWhiteSpace]), tk => tk == 'finfuncion')
+  const statements: Statement[] = []
 
-  let s_report = match(statements).from(source)
+  // Leer el resto de los enunciados
+  while (/finfuncion|eof/.test(source.current().name) === false) {
+    const statement = AnyStatement(source)
 
-  if (s_report.error) return s_report;
+    if (statement.error) {
+      return statement
+    }
+    else {
+      statements.push(statement.result as Statement)
+    }
 
-  let statement_objs = s_report.result.reduce(flatten, []).filter(tk => tk == undefined ? false:true)
+    skipWhiteSpace(source)
+  }
 
-  result.body = [...result.body, ...statement_objs]
-
-  if (source.current().kind != 'finfuncion') return UnexpectedTokenReport(source.current(), 'finfuncion', 'missing-finfuncion')
+  if (source.current().kind != ReservedKind.FinFuncion) return UnexpectedTokenReport(source.current(), ['finfuncion'], 'missing-finfuncion')
 
   source.next() // consumir 'finfuncion'
 
-  result.type = 'module'
+  const function_body: Statement[] = [...declarations, ...statements]
 
-  result.module_type = 'function'
+  const result: IFunctionModule = {
+    type: 'module',
+    module_type: 'function',
+    name: name.result as string,
+    parameters: parameters.result as IParameter[],
+    body: function_body,
+    return_type: typename.result as string
+  }
 
   return {error:false, result}
 }
 
-export function ProcedureModule (source) {
-  let header = concat([Kind('procedimiento'), Word, Kind(SymbolKind.LeftPar), ParameterList, Kind('right-par')])
+export function ProcedureModule (source: TokenQueue) : IError<PatternError> | ISuccess<IProcedureModule> {
+  // Lectura del encabezado: procedimiento <nombre>(<parametros>)
 
-  let h_report = header(source)
+  if (source.current().kind != ReservedKind.Funcion) return UnexpectedTokenReport(source.current(), ['procedimiento'], 'missing-procedimiento');
 
-  if (h_report.error) return h_report;
+  source.next()
 
-  let header_tokens = h_report.result.filter(t => (typeof t == 'string' && (t == 'procedimiento' || t == SymbolKind.LeftPar || t == 'right-par') ? false:true))
+  const name = Word(source)
 
-  const header_data = {
-    return_type: header_tokens[0],
-    name: header_tokens[1],
-    parameters: header_tokens[2]  
+  if (name.error) return name;
+
+  if (source.current().kind != SymbolKind.LeftPar) return UnexpectedTokenReport(source.current(), ['('], 'missing-left-par');
+
+  source.next()
+
+  const parameters = ParameterList(source)
+
+  if (parameters.error) return parameters;
+
+  if (source.current().kind != SymbolKind.RightPar) return UnexpectedTokenReport(source.current(), [')'], 'missing-right-par');
+
+  source.next()
+
+  // Fin del encabezado
+
+  // Leer declaraciones de variables
+  const declarations: IDeclarationStatement[] = []
+
+  while (/inicio|eof/.test(source.current().name) === false) {
+    const var_declaration_match = DeclarationStatement(source)
+
+    if (var_declaration_match.error) {
+      return var_declaration_match
+    }
+    else {
+      declarations.push(var_declaration_match.result as IDeclarationStatement)
+    }
+
+    skipWhiteSpace(source)
   }
 
-  let result = header_data
-
-  skipWhiteSpace(source)
-
-  let variable_declarations = until(concat([DeclarationStatement, skipWhiteSpace]), tk => tk == 'inicio')
-
-  let d_report = variable_declarations(source)
-
-  if (source.current().kind != 'inicio') return UnexpectedTokenReport(source.current(), 'inicio', 'missing-inicio')
+  if (source.current().kind != ReservedKind.Inicio) return UnexpectedTokenReport(source.current(), ['inicio'], 'missing-inicio')
 
   source.next() // consumir inicio
 
-  if (d_report.error) return d_report;
-
-  let declarations = d_report.result.reduce(flatten, []).filter(tk => tk == undefined ? false:true)
-
-  result.body = [...declarations]
-
   skipWhiteSpace(source)
 
-  let statements = until(concat([Statement, skipWhiteSpace]), tk => tk == 'finprocedimiento')
+  const statements: Statement[] = []
 
-  let s_report = match(statements).from(source)
+  // Leer el resto de los enunciados
+  while (/finprocedimiento|eof/.test(source.current().name) === false) {
+    const statement = AnyStatement(source)
 
-  if (s_report.error) return s_report;
+    if (statement.error) {
+      return statement
+    }
+    else {
+      statements.push(statement.result as Statement)
+    }
 
-  let statement_objs = s_report.result.reduce(flatten, []).filter(tk => tk == undefined ? false:true)
+    skipWhiteSpace(source)
+  }
 
-  result.body = [...result.body, ...statement_objs]
-
-  if (source.current().kind != 'finprocedimiento') return UnexpectedTokenReport(source.current(), 'finprocedimiento', 'missing-finprocedimiento')
+  if (source.current().kind != ReservedKind.FinFuncion) return UnexpectedTokenReport(source.current(), ['finprocedimiento'], 'missing-finprocedimiento')
 
   source.next() // consumir 'finprocedimiento'
 
-  result.type = 'module'
+  const function_body: Statement[] = [...declarations, ...statements]
 
-  result.module_type = 'procedure'
+  const result: IProcedureModule = {
+    type: 'module',
+    module_type: 'procedure',
+    name: name.result as string,
+    parameters: parameters.result as IParameter[],
+    body: function_body
+  }
 
   return {error:false, result}
-}
-
-interface ITypedDeclaration extends IDeclarationInfo {
-  datatype: string
-}
-
-interface IDeclarationStatement {
-  type: 'declaration'
-  variables: ITypedDeclaration[]
 }
 
 export function DeclarationStatement (source: TokenQueue) : IError<PatternError> | ISuccess<IDeclarationStatement> {
@@ -1573,17 +1494,14 @@ export function DeclarationStatement (source: TokenQueue) : IError<PatternError>
   }
 }
 
-export function skipWhiteSpace (source: TokenQueue) {
+export function skipWhiteSpace (source: TokenQueue) : void {
   let current = source.current()
   while (current.kind === SymbolKind.EOL) {
     current = source.next()
   }
-
-  // HACK: Esto permite que skipWhiteSpace se comporte como un patron...
-  return {error:false}
 }
 
-function UnexpectedTokenReport(current_token: Token, expected:  string[], reason: string) {
+function UnexpectedTokenReport(current_token: Token, expected:  string[], reason: string) : IError<PatternError> {
   const result: PatternError = {
     unexpected: current_token.kind,
     line: current_token.line,
@@ -1593,70 +1511,5 @@ function UnexpectedTokenReport(current_token: Token, expected:  string[], reason
 
   result.reason = reason
 
-  return new Report(true, result)
-}
-
-/**
- * Funcion que, dada una funcion de captura y una fuente devuelve un reporte
- * @param {Function} pattern_matcher Funcion que captura tokens
- */
-export function match(pattern_matcher) {
-  return {
-    from: (source) => {
-      return pattern_matcher(source)
-    }
-  }
-}
-
-// concat es una funcion que toma una lista de "patrones" y produce uno nuevo.
-// El patron que produce concat falla cuando el primero de sus componentes lo hace
-// y devuelve el reporte de dicha falla. Si ninguno de los patrones componentes
-// produce un error, se devuelve una lista de los resultados
-
-// match(concat([TypeName, "funcion", Word, ParameterList])).from(source).to([
-// 'return_type',
-// '_',
-// 'name',
-// 'parameter_list'
-// ])
-
-export function concat (func_list) {
-
-  function new_pattern (source) {
-    let functions = func_list
-    let result = []
-    for (let f of functions) {
-      let report = f(source)
-      if (report.error) {
-        return report
-      }
-      else {
-        result.push(report.result)
-      }
-    }
-    return {error:false, result}
-  }
-
-  return new_pattern
-}
-
-export function until (pattern, predicate) {
-  function new_pattern (source) {
-    let result = []
-
-    let current_kind = source.current().kind
-
-    while (current_kind != 'eof' && !predicate(current_kind)) {
-      let report = pattern(source)
-
-      if (report.error) return report;
-      else result.push(report.result);
-
-      current_kind = source.current().kind
-    }
-
-    return {error:false, result}
-  }
-
-  return new_pattern
+  return {error:true, result}
 }

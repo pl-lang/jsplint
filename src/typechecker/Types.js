@@ -1,5 +1,3 @@
-import {curry} from 'ramda'
-
 export const Integer = {
   kind: 'atomic',
   atomic: 'entero'

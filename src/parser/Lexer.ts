@@ -1,10 +1,10 @@
 'use strict'
 
-import { Token, EoFToken, WordToken, NumberToken, StringToken, SpecialSymbolToken, UnknownToken } from './TokenTypes'
+import { Token, EoFToken, WordToken, NumberToken, StringToken, SpecialSymbolToken, UnknownToken, SymbolKind } from './TokenTypes'
 
 import { LexicalError } from './TokenTypes'
 
-import { ReportInterface } from '../utility/Report'
+import {IError, ISuccess} from '../utility/UInterfaces'
 
 import { isDigit, isLetter, isWhiteSpace } from '../utility/StringMethods'
 
@@ -26,15 +26,15 @@ export default class Lexer {
     if (source) this._source = source;
   }
 
-  tokenize(source : SourceWrapper) : ReportInterface<LexicalError[], Token[]> {
+  tokenize(source : SourceWrapper) : IError<LexicalError[]> | ISuccess<Token[]> {
     this.source = source;
 
-    let tokens : Token[] = [];
-    let bad_tokens_info : LexicalError[] = [];
+    const tokens : Token[] = [];
+    const bad_tokens_info : LexicalError[] = [];
 
     let t = this.nextToken()
 
-    while (t.kind !== 'eof') {
+    while (t.kind !== SymbolKind.EOF) {
       if (t.error_found) {
         bad_tokens_info.push(t.error_info);
       } else {
@@ -45,13 +45,9 @@ export default class Lexer {
     tokens.push(t)
 
     if (bad_tokens_info.length > 0) {
-      const result = bad_tokens_info;
-      const error = true;
-      return {error, result};
+      return {error: true, result: bad_tokens_info}
     } else {
-      const result = tokens;
-      const error = false;
-      return {error, result};
+      return {error: false, result: tokens};
     }
   }
 
