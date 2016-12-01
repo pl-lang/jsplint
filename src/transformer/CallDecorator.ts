@@ -6,50 +6,59 @@
 //
 // Si la funcion no existe entonces devuelve un error.
 
-import {bind, bindN, mergeObjs} from '../utility/helpers.js'
+import * as S1 from '../interfaces/Stage1'
 
-import {curry} from 'ramda'
+import * as S2 from '../interfaces/Stage2'
 
-const clone_obj = curry(mergeObjs)({})
+import {IError, ISuccess} from '../interfaces/Utility'
 
-export default function transform (ast) {
-  let new_ast = {
+export default function transform (ast: S1.AST) : IError<S2.UndefinedModule[]> | ISuccess<S2.AST> {
+  const new_ast = {
     modules: {},
     local_variables: {}
-  }
+  } as S2.AST
 
-  let errors_found = []
+  const errors_found: S2.UndefinedModule[] = []
 
   for (let module_name in ast.modules) {
-    let module = ast.modules[module_name]
-    let report = transform_module(module, ast, module_name)
-    if (report.error) errors_found.push(...report.result)
-    else new_ast.modules[module_name] = report.result
+    const old_module = ast.modules[module_name]
+    const report = transform_module(old_module, ast, module_name)
+    if (report.error) {
+      errors_found.push(...report.result)
+    }
+    else {
+      new_ast.modules[module_name] = report.result as S2.Module
+    }
   }
 
   new_ast.local_variables = ast.local_variables
 
-  let error = errors_found.length > 0
-
-  let result = error ? errors_found:new_ast
-
-  return {error, result}
+  if (errors_found.length > 0) {
+    return {error:true, result:errors_found}
+  }
+  else {
+    return {error:false, result:new_ast}
+  }
 }
 
-function transform_module (module, ast, module_name) {
-  let new_body = transform_body(module.body, ast, module_name)
+function transform_module (old_module: S1.Module, ast: S1.AST, module_name: string) : IError<S2.UndefinedModule[]> | ISuccess<S2.Module> {
+  const new_body = transform_body(old_module.body, ast, module_name)
 
-  return bind(make_module(module), new_body)
+  return bind(make_module(old_module), new_body)
 }
 
-function transform_body (statements, ast, module_name) {
-  let errors_found = []
-  let new_body = []
+function transform_body (statements: S1.Statement[], ast: S1.AST, module_name: string) {
+  const errors_found = []
+  const new_body: S2.Statement[] = []
 
   for (let statement of statements) {
-    let new_statement = transform_statement(statement, ast, module_name)
-    if (new_statement.error) errors_found.push(...new_statement.result)
-    else new_body.push(new_statement.result)
+    const new_statement = transform_statement(statement, ast, module_name)
+    if (new_statement.error) {
+      errors_found.push(...new_statement.result)
+    }
+    else {
+      new_body.push(new_statement.result)
+    }
   }
 
   let error = errors_found.length > 0
@@ -58,7 +67,7 @@ function transform_body (statements, ast, module_name) {
   return {error, result}
 }
 
-function transform_statement (statement, ast, module_name) {
+function transform_statement (statement: S1.Statement, ast: S1.AST, module_name: string) : IError<> | ISuccess<S2.Statement> {
   switch (statement.type) {
     case 'assignment':
       return transform_assignment(statement, ast, module_name)

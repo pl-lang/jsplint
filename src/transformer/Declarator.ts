@@ -4,19 +4,17 @@ import {ParsedProgram, Module, IMainModule, IDeclarationStatement, ITypedDeclara
 
 import {IModuleCall , IAssignment , IIf , IWhile , IFor , IUntil, IReturn, IProcedureModule, IFunctionModule} from '../interfaces/ParsingInterfaces'
 
-import {Stage1AST, RepeatedVarError, S1TransformedModule, S1Main, S1Procedure} from '../interfaces/TransformerInterfaces'
-
-import {S1Function, S1Statement, VariableDict, ArrayVariable, RegularVariable} from '../interfaces/TransformerInterfaces'
+import * as S1 from '../interfaces/Stage1'
 
 import {IError, ISuccess} from '../interfaces/Utility'
 
-export default function transform (ast: ParsedProgram) : IError<RepeatedVarError[]> | ISuccess<Stage1AST> {
+export default function transform (ast: ParsedProgram) : IError<S1.RepeatedVarError[]> | ISuccess<S1.AST> {
   const new_ast = {
     modules:{},
     local_variables:{}
-  } as Stage1AST
+  } as S1.AST
 
-  const errors_found: RepeatedVarError[] = []
+  const errors_found: S1.RepeatedVarError[] = []
 
   for (let module_name in ast) {
     const module = ast[module_name]
@@ -25,8 +23,8 @@ export default function transform (ast: ParsedProgram) : IError<RepeatedVarError
       errors_found.push(...report.result)
     }
     else {
-      new_ast.local_variables[module.name] = (report.result as S1TransformedModule).locals
-      new_ast.modules[module.name] = (report.result as S1TransformedModule).new_module
+      new_ast.local_variables[module.name] = (report.result as S1.TransformedModule).locals
+      new_ast.modules[module.name] = (report.result as S1.TransformedModule).new_module
     }
   }
 
@@ -38,7 +36,7 @@ export default function transform (ast: ParsedProgram) : IError<RepeatedVarError
   }
 }
 
-function transform_module (old_module: Module) : IError<RepeatedVarError[]> | ISuccess<S1TransformedModule> {
+function transform_module (old_module: Module) : IError<S1.RepeatedVarError[]> | ISuccess<S1.TransformedModule> {
   switch (old_module.module_type) {
     case 'main':
       return transform_main(old_module)
@@ -48,7 +46,7 @@ function transform_module (old_module: Module) : IError<RepeatedVarError[]> | IS
   }
 }
 
-function transform_main (old_module: IMainModule) : IError<RepeatedVarError[]> | ISuccess<S1TransformedModule> {
+function transform_main (old_module: IMainModule) : IError<S1.RepeatedVarError[]> | ISuccess<S1.TransformedModule> {
    const declarations = old_module.body.filter(statement => statement.type === 'declaration') as IDeclarationStatement[]
 
    const locals = declare_variables(declarations)
@@ -57,17 +55,17 @@ function transform_main (old_module: IMainModule) : IError<RepeatedVarError[]> |
      return locals
    }
    else {
-     const new_module: S1Main = {
+     const new_module: S1.Main = {
        type: 'module',
        module_type: 'main',
        name: 'main',
-       body: old_module.body.filter(statement => statement.type !== 'declaration') as S1Statement[]
+       body: old_module.body.filter(statement => statement.type !== 'declaration') as S1.Statement[]
      }
-     return {error:false, result:{new_module, locals:locals.result as VariableDict}}
+     return {error:false, result:{new_module, locals:locals.result as S1.VariableDict}}
    }
 }
 
-function transform_user_module (old_module: IFunctionModule | IProcedureModule) : IError<RepeatedVarError[]> | ISuccess<S1TransformedModule> {
+function transform_user_module (old_module: IFunctionModule | IProcedureModule) : IError<S1.RepeatedVarError[]> | ISuccess<S1.TransformedModule> {
    const declarations = old_module.body.filter(statement => statement.type === 'declaration') as IDeclarationStatement[]
 
    const locals = declare_variables(declarations)
@@ -77,38 +75,38 @@ function transform_user_module (old_module: IFunctionModule | IProcedureModule) 
    }
    else {
      if (old_module.module_type == 'procedure') {
-       const new_module: S1Procedure = {
+       const new_module: S1.Procedure = {
          type: 'module',
          module_type: 'procedure',
          name: old_module.name,
-         body: old_module.body.filter(statement => statement.type !== 'declaration') as S1Statement[],
+         body: old_module.body.filter(statement => statement.type !== 'declaration') as S1.Statement[],
          parameters: old_module.parameters
        }
-       return {error:false, result:{new_module, locals:locals.result as VariableDict}}
+       return {error:false, result:{new_module, locals:locals.result as S1.VariableDict}}
      }
      else {
-       const new_module: S1Function = {
+       const new_module: S1.Function = {
          type: 'module',
          module_type: 'function',
          name: old_module.name,
-         body: old_module.body.filter(statement => statement.type !== 'declaration') as S1Statement[],
+         body: old_module.body.filter(statement => statement.type !== 'declaration') as S1.Statement[],
          parameters: old_module.parameters,
          return_type: old_module.return_type
        }
-       return {error:false, result:{new_module, locals:locals.result as VariableDict}}
+       return {error:false, result:{new_module, locals:locals.result as S1.VariableDict}}
      }
    }
 }
 
-function declare_variables (declarations: IDeclarationStatement[]) : IError<RepeatedVarError[]> | ISuccess<VariableDict> {
-  const repeated_variables: RepeatedVarError[] = []
-  const declared_variables: VariableDict = {}
+function declare_variables (declarations: IDeclarationStatement[]) : IError<S1.RepeatedVarError[]> | ISuccess<S1.VariableDict> {
+  const repeated_variables: S1.RepeatedVarError[] = []
+  const declared_variables: S1.VariableDict = {}
 
   for (let declaration of declarations) {
     for (let variable of declaration.variables) {
       if (!(variable.name in declared_variables)) {
         if (variable.is_array) {
-          const new_array: ArrayVariable = {
+          const new_array: S1.ArrayVariable = {
             name: variable.name,
             datatype: variable.datatype,
             is_array: true,
@@ -119,7 +117,7 @@ function declare_variables (declarations: IDeclarationStatement[]) : IError<Repe
           declared_variables[new_array.name] = new_array
         }
         else {
-          const new_var: RegularVariable = {
+          const new_var: S1.RegularVariable = {
             name: variable.name,
             datatype: variable.datatype,
             is_array: false,
@@ -132,7 +130,7 @@ function declare_variables (declarations: IDeclarationStatement[]) : IError<Repe
       else {
         const original = declared_variables[variable.name]
 
-        const error_info: RepeatedVarError = {
+        const error_info: S1.RepeatedVarError = {
           reason: 'repeated-variable',
           name: original.name,
           first_type: original.datatype,
