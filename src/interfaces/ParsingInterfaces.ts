@@ -55,6 +55,11 @@ export interface InvocationValue {
   indexes: ExpElement[][]
 }
 
+export interface OperatorElement extends ExpElement {
+  type: 'operator'
+  name: 'plus' | 'minus' | 'slash' | 'times' | 'power' | 'minor-eq' | 'different' | 'minor' | 'major-eq' | 'major' | 'equal' | 'and' | 'or' | 'not' | 'div' | 'mod'
+}
+
 export interface Parameter {
   name: string
   by_ref: boolean
