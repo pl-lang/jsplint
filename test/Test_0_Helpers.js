@@ -1,6 +1,7 @@
-import should from 'should'
-
-import {take, zip, zipObj} from '../src/utility/helpers.js'
+const should = require('should')
+const take = require('../dist/src/utility/helpers.js').take
+const zip = require('../dist/src/utility/helpers.js').zip
+const zipObj = require('../dist/src/utility/helpers.js').zipObj
 
 describe('zip', () => {
   it('con listas de igual longitud', () => {

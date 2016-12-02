@@ -1,9 +1,14 @@
 'use strict'
 
-import should from 'should'
+const should = require('should')
 
-import { LinkedList, getChainLenght, getLastNode } from '../src/parser/ast/List.js'
-import { GenericNode, WhileNode, IfNode } from '../src/parser/ast/Nodes.js'
+const LinkedList = require('../dist/src/parser/ast/List.js').LinkedList
+const getChainLenght = require('../dist/src/parser/ast/List.js').getChainLenght
+const getLastNode = require('../dist/src/parser/ast/List.js').getLastNode
+
+const GenericNode = require('../dist/src/parser/ast/Nodes.js').GenericNode
+const WhileNode = require('../dist/src/parser/ast/Nodes.js').WhileNode
+const IfNode = require('../dist/src/parser/ast/Nodes.js').IfNode
 
 describe("Metodos auxiliares de listas", () => {
   it('getChainLenght funciona bien', () => {
@@ -45,7 +50,7 @@ describe('LinkedList', () => {
 
     list.addNode(node)
 
-    list.firstNode.should.equal(list.lastNode)
+    list.first.should.equal(list.last)
   })
 
   it('Los datos de una lista se guardan bien', () => {
@@ -59,7 +64,7 @@ describe('LinkedList', () => {
       list.addNode(node)
     }
 
-    let current = list.firstNode
+    let current = list.first
     let index = 0
     while (current !== null) {
       current.data.should.equal(data[index])

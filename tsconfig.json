@@ -7,6 +7,8 @@
         "declaration": true
     },
     "files": [
-        "index.ts"
+        "index.ts",
+        "./src/parser/ast/List.ts",
+        "./src/parser/ast/Nodes.ts"
     ]
 }
