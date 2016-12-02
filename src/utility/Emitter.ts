@@ -1,12 +1,12 @@
 'use strict'
 
-type Callback = (...params: any[])=>void 
+export type ICallback = (...params: any[])=>void
 
 export default class Emitter {
   public_events: string[]
   private callbacks: {
-    any?: Callback[]
-    [e: string]: Callback[]
+    any?: ICallback[]
+    [e: string]: ICallback[]
   } 
 
   constructor(public_event_list: string[]) {
@@ -14,7 +14,7 @@ export default class Emitter {
     this.callbacks = {}
   }
 
-  on(event_name: string, callback: Callback) {
+  on(event_name: string, callback: ICallback) {
     if (event_name in this.callbacks) {
       this.callbacks[event_name].push(callback)
     }
