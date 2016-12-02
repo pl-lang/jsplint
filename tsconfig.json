@@ -2,8 +2,9 @@
     "compilerOptions": {
         "allowJs": true,
         "noImplicitAny": true,
-        "outDir": "./built",
-        "target" : "es5"
+        "outDir": "./dist",
+        "target" : "es5",
+        "declaration": true
     },
     "files": [
         "index.ts"
