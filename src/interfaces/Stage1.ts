@@ -5,7 +5,9 @@ import * as PI from './ParsingInterfaces'
 export interface AST {
   modules: {
     main: Main
-    [m: string]: Module
+    user_modules: {
+      [m: string]: Function | Procedure
+    }
   }
   local_variables: {
     [m: string]: VariableDict
@@ -17,33 +19,62 @@ export interface TransformedModule {
   locals: VariableDict
 }
 
-export type Module = Main | Function | Procedure
+export interface TransformedMain {
+  new_module: Main
+  locals: VariableDict
+}
+
+// Esto cambia los enunciados que el modulo contiene por los enunciados S1 (todos menos los de declaracion)
+// Debe mantenerse sincronizado con los analogos de ParsingInterfaces
+export type Module = Function | Procedure 
 
 export interface Main {
   type: 'module'
-  module_type: 'main'
   name: 'main'
+  module_type: 'main'
   body: Statement[]
 }
 
 export interface Function {
   type: 'module'
-  module_type: 'function'
   name: string
-  parameters: PI.Parameter[]
+  module_type: 'function'
   body: Statement[]
-  return_type: string
+  parameters: PI.Parameter[]
+  return_type: 'entero' | 'real' | 'caracter' | 'logico'
 }
 
 export interface Procedure {
   type: 'module'
-  module_type: 'procedure'
   name: string
+  module_type: 'procedure'
+  body: Statement[]
   parameters: PI.Parameter[]
+  return_type: 'ninguno'
+}
+
+export type Statement = PI.Call | Assignment | If | While | For | Until | PI.Return
+
+export interface Assignment extends PI.Assignment {
   body: Statement[]
 }
 
-export type Statement = PI.Call | PI.Assignment | PI.If | PI.While | PI.For | PI.Until
+export interface If extends PI.If {
+  true_branch: Statement[]
+  false_branch: Statement[]
+}
+
+export interface While extends PI.While {
+  body: Statement[]
+}
+
+export interface For extends PI.For {
+  body: Statement[]
+}
+
+export interface Until extends PI.Until {
+  body: Statement[]
+}
 
 export interface ArrayVariable extends PI.TypedDeclaration {
   is_array: true

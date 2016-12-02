@@ -1324,7 +1324,7 @@ export function FunctionModule (source: TokenQueue) : IError<PI.PatternError> | 
     name: name.result as string,
     parameters: parameters.result as PI.Parameter[],
     body: function_body,
-    return_type: typename.result as string
+    return_type: typename.result as PI.TypeNameString
   }
 
   return {error:false, result}
@@ -1404,7 +1404,8 @@ export function ProcedureModule (source: TokenQueue) : IError<PI.PatternError> |
     module_type: 'procedure',
     name: name.result as string,
     parameters: parameters.result as PI.Parameter[],
-    body: function_body
+    body: function_body,
+    return_type: 'ninguno'
   }
 
   return {error:false, result}

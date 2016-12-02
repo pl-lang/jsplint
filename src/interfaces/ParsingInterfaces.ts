@@ -10,8 +10,6 @@ export type ExpValue = LiteralValue  | InvocationValue | Call
 
 export type Statement = Call | Assignment | If | While | For | Until | Return | Declaration
 
-export type Module = Main | Function | Procedure
-
 export interface PatternError {
   unexpected: ValueKind | ReservedKind | SymbolKind | OtherKind,
   expected: string[],
@@ -115,6 +113,8 @@ export interface Declaration {
   variables: TypedDeclaration[]
 }
 
+export type Module = Function | Procedure 
+
 export interface Main {
   type: 'module'
   name: 'main'
@@ -124,22 +124,25 @@ export interface Main {
 
 export interface Function {
   type: 'module'
-  module_type: 'function'
   name: string
-  parameters: Parameter[]
+  module_type: 'function'
   body: Statement[]
-  return_type: string
+  parameters: Parameter[]
+  return_type: 'entero' | 'real' | 'caracter' | 'logico'
 }
 
 export interface Procedure {
   type: 'module'
-  module_type: 'procedure'
   name: string
-  parameters: Parameter[]
+  module_type: 'procedure'
   body: Statement[]
+  parameters: Parameter[]
+  return_type: 'ninguno'
 }
 
 export interface ParsedProgram {
-  main: Main
-  [m: string]: Module
+  main: Main,
+  user_modules: {
+    [m: string]: Module
+  }
 }

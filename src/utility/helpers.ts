@@ -1,18 +1,17 @@
-import {last, curry} from 'ramda'
+// Estas dos funciones quedan comentadas como referencia
+// export function bindN (f, ...args) {
+//   let func = f
+//   let output
 
-export function bindN (f, ...args) {
-  let func = f
-  let output
+//   for (let i = 0; i < args.length - 1; i++) {
+//     if (args[i].error)
+//       return args[i]
+//     else
+//       func = func(args[i].result)
+//   }
 
-  for (let i = 0; i < args.length - 1; i++) {
-    if (args[i].error)
-      return args[i]
-    else
-      func = func(args[i].result)
-  }
-
-  return bind(func, last(args))
-}
+//   return bind(func, last(args))
+// }
 
 // similar como seria bind (>>=) de haskell si solo pudiera ser aplicado a
 // Maybes
@@ -20,7 +19,7 @@ export function bindN (f, ...args) {
 // un error, lo devuelve. Si no, aplica f sobre el valor que el reporte contiene
 // Cabe aclarar que f es una funcion que tambien devuelve reportes.
 // Un reporte es un objeto que contiene las propiedades `error` y `result`.
-export const bind = curry((f : any, r : any) => r.error ? r:f(r.result))
+// export const bind = curry((f : any, r : any) => r.error ? r:f(r.result))
 
 // flatten :: [any] -> [[any]] -> [any]
 export function flatten<A> (accumulator : A[], arr: A[][]) : A[] {
@@ -35,8 +34,8 @@ export function flatten<A> (accumulator : A[], arr: A[][]) : A[] {
 // toma dos objetos y devuelve uno nuevo que contiene las propiedades (y valores)
 // de los dos anteriores. Si hay propiedades repetidas entre a y b, se toman las
 // de b
-export function mergeObjs (a, b) {
-  let r = {}
+export function mergeObjs<A, B>(a:{[p:string]:A}, b:{[q:string]: B}) : {[q:string]: (A|B)} {
+  const r: {[q:string]: (A|B)} = {}
 
   for (let prop in a) {
     r[prop] = a[prop]
@@ -48,6 +47,10 @@ export function mergeObjs (a, b) {
 
   return r
 }
+
+export function clone_obj<A>(a:{[p:string]:A}) : {[p:string]:A} {
+  return mergeObjs({} as {[p:string]:A}, a)
+} 
 
 
 // take, zip y zipObj estan basadas en funciones de haskell

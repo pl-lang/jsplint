@@ -8,7 +8,7 @@ import TokenQueue from './TokenQueue'
 import {Token} from './TokenTypes'
 import {MainModule as MainModulePattern, skipWhiteSpace} from './Patterns'
 import {FunctionModule as FunctionPattern, ProcedureModule as ProcedurePattern} from './Patterns'
-import {IMainModule, Module, ParsedProgram, PatternError, IProcedureModule, Function} from '../interfaces/ParsingInterfaces'
+import {Main, Module, ParsedProgram, PatternError, Procedure, Function} from '../interfaces/ParsingInterfaces'
 
 export default class Parser extends Emitter {
   constructor() {
@@ -43,38 +43,40 @@ export default class Parser extends Emitter {
       this.emit('syntax-error', main_match.result)
       return {error:true, result:'syntax-error'}
     }
+    else if (main_match.error == false) {
+      const result: ParsedProgram = {
+        main: main_match.result,
+        user_modules: {}
+      }
 
-    const result: ParsedProgram = {
-      main: main_match.result as IMainModule
+      // parsear el resto de los modulos del programa
+      while (token_queue.current().name !== 'eof') {
+        skipWhiteSpace(token_queue)
+
+        let module_match: (IError<PatternError> | ISuccess<Procedure>) | (IError<PatternError> | ISuccess<Function>)
+
+        if (token_queue.current().name == 'procedimiento') {
+          module_match = ProcedurePattern(token_queue)
+        }
+        else {
+          module_match = FunctionPattern(token_queue)
+        }
+
+        skipWhiteSpace(token_queue)
+
+        // si hubo un error emitir un error de sintaxis y finalizar parseo
+        if (module_match.error) {
+          this.emit('syntax-error', module_match.result)
+          return {error:true, result:'syntax-error'}
+        }
+        else if (module_match.error == false) {
+          result.user_modules[module_match.result.name] = module_match.result
+        }
+      }
+
+      this.emit('parsing-finished', {error:false})
+
+      return {error:false, result}
     }
-
-    // parsear el resto de los modulos del programa
-    while (token_queue.current().name !== 'eof') {
-      skipWhiteSpace(token_queue)
-
-      let module_match: (IError<PatternError> | ISuccess<IProcedureModule>) | (IError<PatternError> | ISuccess<Function>)
-
-      if (token_queue.current().name == 'procedimiento') {
-        module_match = ProcedurePattern(token_queue)
-      }
-      else {
-        module_match = FunctionPattern(token_queue)
-      }
-
-      skipWhiteSpace(token_queue)
-
-      // si hubo un error emitir un error de sintaxis y finalizar parseo
-      if (module_match.error) {
-        this.emit('syntax-error', module_match.result)
-        return {error:true, result:'syntax-error'}
-      }
-      else {
-        result[(module_match.result as Module).name] = module_match.result as Module
-      }
-    }
-
-    this.emit('parsing-finished', {error:false})
-
-    return {error:false, result}
   }
 }

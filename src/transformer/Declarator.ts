@@ -1,53 +1,64 @@
 import {bind, mergeObjs} from '../utility/helpers.js'
 
-import {ParsedProgram, Module, IMainModule, IDeclarationStatement, ITypedDeclaration, IParameter} from '../interfaces/ParsingInterfaces'
-
-import {IModuleCall , IAssignment , IIf , IWhile , IFor , IUntil, IReturn, IProcedureModule, IFunctionModule} from '../interfaces/ParsingInterfaces'
+import * as PI from '../interfaces/ParsingInterfaces'
 
 import * as S1 from '../interfaces/Stage1'
 
 import {IError, ISuccess} from '../interfaces/Utility'
 
-export default function transform (ast: ParsedProgram) : IError<S1.RepeatedVarError[]> | ISuccess<S1.AST> {
-  const new_ast = {
-    modules:{},
-    local_variables:{}
-  } as S1.AST
+export default function transform (ast: PI.ParsedProgram) : IError<S1.RepeatedVarError[]> | ISuccess<S1.AST> {
+  const errors_found: S1.RepeatedVarError[] = [] 
 
-  const errors_found: S1.RepeatedVarError[] = []
+  const new_main = transform_main(ast.main)
 
-  for (let module_name in ast) {
-    const module = ast[module_name]
-    const report = transform_module(module)
-    if (report.error) {
-      errors_found.push(...report.result)
+  if (new_main.error) {
+    errors_found.push(...new_main.result)
+  }
+  else if (new_main.error == false) {
+    const user_modules: {[m:string]: (S1.Function | S1.Procedure)} = {}
+    const local_variables: {[m:string]: S1.VariableDict} = {}
+
+    local_variables['main'] = new_main.result.locals
+
+    for (let module_name in ast.user_modules) {
+      const old_module = ast.user_modules[module_name]
+      const new_module = transform_module(old_module)
+      if (new_module.error) {
+        errors_found.push(...new_module.result)
+      }
+      else if (new_module.error == false) {
+        user_modules[old_module.name] = new_module.result.new_module
+        local_variables[old_module.name] = new_module.result.locals
+      }
+    }
+
+    const new_ast: S1.AST = {
+      modules: {
+        main: new_main.result.new_module,
+        user_modules: user_modules
+      },
+      local_variables: local_variables
+    }
+
+    if (errors_found.length > 0) {
+      return {error:true, result:errors_found}
     }
     else {
-      new_ast.local_variables[module.name] = (report.result as S1.TransformedModule).locals
-      new_ast.modules[module.name] = (report.result as S1.TransformedModule).new_module
-    }
-  }
-
-  if (errors_found.length > 0) {
-    return {error:true, result:errors_found}
-  }
-  else {
-    return {error:false, result:new_ast}
+      return {error:false, result:new_ast}
+    } 
   }
 }
 
-function transform_module (old_module: Module) : IError<S1.RepeatedVarError[]> | ISuccess<S1.TransformedModule> {
+function transform_module (old_module: PI.Module) : IError<S1.RepeatedVarError[]> | ISuccess<S1.TransformedModule> {
   switch (old_module.module_type) {
-    case 'main':
-      return transform_main(old_module)
     case 'procedure':
     case 'function':
       return transform_user_module(old_module)
   }
 }
 
-function transform_main (old_module: IMainModule) : IError<S1.RepeatedVarError[]> | ISuccess<S1.TransformedModule> {
-   const declarations = old_module.body.filter(statement => statement.type === 'declaration') as IDeclarationStatement[]
+function transform_main (old_module: PI.Main) : IError<S1.RepeatedVarError[]> | ISuccess<S1.TransformedMain> {
+   const declarations = old_module.body.filter(statement => statement.type === 'declaration') as PI.Declaration[]
 
    const locals = declare_variables(declarations)
 
@@ -65,8 +76,8 @@ function transform_main (old_module: IMainModule) : IError<S1.RepeatedVarError[]
    }
 }
 
-function transform_user_module (old_module: IFunctionModule | IProcedureModule) : IError<S1.RepeatedVarError[]> | ISuccess<S1.TransformedModule> {
-   const declarations = old_module.body.filter(statement => statement.type === 'declaration') as IDeclarationStatement[]
+function transform_user_module (old_module: PI.Function | PI.Procedure) : IError<S1.RepeatedVarError[]> | ISuccess<S1.TransformedModule> {
+   const declarations = old_module.body.filter(statement => statement.type === 'declaration') as PI.Declaration[]
 
    const locals = declare_variables(declarations)
 
@@ -80,7 +91,8 @@ function transform_user_module (old_module: IFunctionModule | IProcedureModule) 
          module_type: 'procedure',
          name: old_module.name,
          body: old_module.body.filter(statement => statement.type !== 'declaration') as S1.Statement[],
-         parameters: old_module.parameters
+         parameters: old_module.parameters,
+         return_type: 'ninguno'
        }
        return {error:false, result:{new_module, locals:locals.result as S1.VariableDict}}
      }
@@ -98,7 +110,7 @@ function transform_user_module (old_module: IFunctionModule | IProcedureModule) 
    }
 }
 
-function declare_variables (declarations: IDeclarationStatement[]) : IError<S1.RepeatedVarError[]> | ISuccess<S1.VariableDict> {
+function declare_variables (declarations: PI.Declaration[]) : IError<S1.RepeatedVarError[]> | ISuccess<S1.VariableDict> {
   const repeated_variables: S1.RepeatedVarError[] = []
   const declared_variables: S1.VariableDict = {}
 
