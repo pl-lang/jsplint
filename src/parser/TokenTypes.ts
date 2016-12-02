@@ -531,28 +531,28 @@ function wtk(word : string) : ReservedKind {
     case 3:
       switch (word) {
         case 'fin':
-          ReservedKind.Fin
+          return ReservedKind.Fin
         case 'que':
-          ReservedKind.Que
+          return ReservedKind.Que
         case 'div':
-          ReservedKind.Div
+          return ReservedKind.Div
         case 'and':
-          ReservedKind.And
+          return ReservedKind.And
         case 'not':
-          ReservedKind.Not
+          return ReservedKind.Not
         case 'mod':
-          ReservedKind.Mod
+          return ReservedKind.Mod
         case 'ref':
-          ReservedKind.Ref
+          return ReservedKind.Ref
       }
     case 4:
       switch (word) {
         case 'sino':
-          ReservedKind.Sino
+          return ReservedKind.Sino
         case 'para':
-          ReservedKind.Para
+          return ReservedKind.Para
         case 'real':
-          ReservedKind.Real
+          return ReservedKind.Real
       }
     case 5:
       switch (word) {
