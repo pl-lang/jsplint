@@ -1,25 +1,5 @@
 import {VariableDict} from './Stage1'
 
-export class Node<A> {
-  data: A
-  private _next: Node<A>
-
-  constructor (data?: A) {
-      if (data) {
-          this.data = data
-      }
-      this._next = null
-  }
-
-  set next (n: Node<A>) {
-      this._next = n
-  }
-
-  get next () {
-      return this._next
-  }
-}
-
 export function get_last (s: Statement) : Statement {
     let current = s
     while (s.exit_point !== null) {
@@ -38,6 +18,23 @@ export interface Program {
     }
 }
 
+/**
+ * Funcion que establece el exit_point de un Statement.
+ * No devuelve nada, solo modifica un objeto
+ */
+export function set_exit (s: Statement, new_exit: Statement) : void {
+    const ns = s
+    switch (ns.kind) {
+        case StatementKinds.If:
+            get_last(ns.false_branch_entry).exit_point = new_exit
+            get_last(ns.true_branch_entry).exit_point = new_exit
+            ns.exit_point = new_exit
+            break
+        default:
+            ns.exit_point = new_exit
+    }
+}
+
 export interface Module {
     name: string
     module_type: 'function' | 'procedure'
@@ -46,7 +43,7 @@ export interface Module {
     return_type?: string // por ahora esto no se usa...si no sirve lo saco
 }
 
-export type Statement = While | If | Until | If | UserModuleCall | ReadCall | WriteCall | Assign | Get | Operation | AssignV | GetV | Push | Pop
+export type Statement = While | If | Until | UserModuleCall | ReadCall | WriteCall | Assign | Get | Operation | AssignV | GetV | Push | Pop
 
 export interface While {
     kind: StatementKinds.While
@@ -114,11 +111,13 @@ export interface GetV {
 }
 
 export interface Push {
+    kind: StatementKinds.Push
     value: number | boolean | string
     exit_point: Statement
 }
 
 export interface Pop {
+    kind: StatementKinds.Pop
     exit_point: Statement
 }
 

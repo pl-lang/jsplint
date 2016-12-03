@@ -17,28 +17,77 @@ export default function transfrom (ast: S2.AST) : P.Program {
 
     result.entry_point = new_main
 
-    for (let module_name in ast.modules.user_modules) {
-        const old_module = ast.modules.user_modules[module_name]
-        const new_module = transform_module(old_module)
-        result.modules[module_name] = new_module
-    }
+    /**
+     * Falta transformar los modulos
+     */
+
+    result.local_variables = ast.local_variables
 
     return result
 }
 
 function transform_main (old_module: S2.Main) : P.Statement {
-    let entry_point: P.Statement = null
+    return transform_body(old_module.body)
+}
 
-    let current: P.Statement = null
-    for (let statement of old_module.body) {
-        const new_statement = transform_statement(statement)
-        if (entry_point == null) {
-            entry_point = current
-        }
-        else {
-            current.exit_point = new_statement
-            current = new_statement
-        }
+function transform_if (statement: S2.If) : P.Statement {
+    /**
+     * La condicion del if debe insertarse antes del propio if
+     */
+    const entry = transform_expression(statement.condition)
+
+    /**
+     * Ultimo enunciado de la condicion del if
+     */
+    const last_statement = P.get_last(entry)
+
+    const true_entry = transform_body(statement.true_branch)
+    const false_entry = transform_body(statement.false_branch)
+
+    const sif: P.If = {
+        exit_point: null,
+        kind: P.StatementKinds.If,
+        false_branch_entry: false_entry,
+        true_branch_entry: true_entry
+    }
+
+    /**
+     * Hacer que la evaluacion de la condicion venga seguida del if
+     */
+    P.set_exit(last_statement, sif)
+
+    return sif
+}
+
+function transform_while (statement: S2.While) : P.Statement {
+    const entry = transform_expression(statement.condition)
+
+    const last_statement = P.get_last(entry)
+
+    const loop_body = transform_body(statement.body)
+
+    P.set_exit(loop_body, entry)
+
+    const swhile: P.While = {
+        entry_point: loop_body,
+        exit_point: null,
+        kind: P.StatementKinds.While
+    }
+
+    P.set_exit(last_statement, swhile)
+
+    return swhile
+}
+
+function transform_body (body: S2.Statement[]) : P.Statement {
+    const entry_point: P.Statement = transform_statement(body[0])
+
+    let last_statement: P.Statement = P.get_last(entry_point)
+
+    for (let i = 1; i < body.length - 1; i++) {
+        const next_statement = transform_statement(body[i])
+        P.set_exit(last_statement, next_statement)
+        last_statement = next_statement
     }
 
     return entry_point
@@ -51,6 +100,7 @@ function transform_statement (statement: S2.Statement) : P.Statement {
         case 'if':
             return transform_if(statement)
         case 'while':
+            return transform_while(statement)
         case 'until':
         case 'for':
         case 'call':
