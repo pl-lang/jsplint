@@ -433,6 +433,39 @@ function transform_assignment (assignment: S2.Assignment) : P.Statement {
     return entry_point
 }
 
+function transform_invocation (i: S2.InvocationValue) : P.Statement {
+    if (i.is_array) {
+        const first_index = transform_expression(i.indexes[0])
+        let last_statement = P.get_last(first_index)
+        for (let j = 1; j < i.indexes.length; j++) {
+            const next_index = transform_expression(i.indexes[j])
+            P.set_exit(last_statement, next_index)
+            last_statement = P.get_last(next_index)
+        }
+
+        const getv: P.GetV = {
+            dimensions: i.dimensions,
+            exit_point: null,
+            kind: P.StatementKinds.GetV,
+            total_indexes: i.indexes.length,
+            varname: i.name
+        }
+
+        P.set_exit(last_statement, getv)
+
+        return first_index
+    }
+    else {
+        const geti: P.Get = {
+            exit_point: null,
+            kind: P.StatementKinds.Get,
+            varname: i.name
+        }
+
+        return geti
+    }
+}
+
 function transform_expression (expression: ExpElement[]) : P.Statement {
     const statements = expression.map(transform_exp_element)
     const entry = statements[0]
@@ -489,7 +522,13 @@ function transform_exp_element (element: ExpElement) : P.Statement {
     case 'literal':
         return {kind:P.StatementKinds.Push, value:(element as LiteralValue).value, exit_point:null}
     case 'invocation':
+        return transform_invocation(element as S2.InvocationValue)
     case 'call':
+        /**
+         * Este type assert no causa problemas porque element
+         * contiene todas las propiedades que se usan en transform_call.
+         */
+        return transform_call(element as S2.Call)
     default:
       console.log(element);
       throw new Error(`La transformacion de  "${element.type}" aun no fue implementada.`)
