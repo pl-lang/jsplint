@@ -247,7 +247,7 @@ function transform_write (wc: S2.IOCall) : P.Statement {
     P.set_exit(last_statement, escribir_call)
     last_statement = escribir_call
 
-    for (let i = 0; i < wc.args.length; i++) {
+    for (let i = 1; i < wc.args.length - 1; i++) {
         const next_arg = transform_expression(wc.args[i])
         P.set_exit(last_statement, next_arg)
         const wcall: P.WriteCall = {
