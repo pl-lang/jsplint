@@ -91,8 +91,9 @@ export interface Assign {
 }
 
 export interface AssignV {
-    kind: StatementKinds.Assign
+    kind: StatementKinds.AssignV
     total_indexes: number
+    dimensions: number[]
     varname: string
     exit_point: Statement
 }
@@ -106,6 +107,7 @@ export interface Get {
 export interface GetV {
     kind: StatementKinds.GetV
     total_indexes: number
+    dimensions: number[]
     varname: string
     exit_point: Statement
 }

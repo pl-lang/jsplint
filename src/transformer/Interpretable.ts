@@ -294,7 +294,7 @@ function transform_read (rc: S2.IOCall) : P.Statement {
             P.set_exit(last_statement, lcall)
         }
 
-        const target_assignment = create_assignment(current_var as S2.InvocationInfo)
+        const target_assignment = create_assignment(current_var)
 
         P.set_exit(lcall, target_assignment)
         last_statement = P.get_last(target_assignment)
@@ -303,8 +303,37 @@ function transform_read (rc: S2.IOCall) : P.Statement {
     return first_call
 }
 
-function create_assignment (v: S2.InvocationInfo) : P.Statement {
-    
+function create_assignment (v: S2.InvocationValue) : P.Statement {
+    if (v.is_array) {
+        const first_index = transform_expression(v.indexes[0])
+        let last_statement = P.get_last(first_index)
+        for (let i = 1; i < v.indexes.length - 1; i++) {
+            const next_index = transform_expression(v.indexes[i])
+            P.set_exit(last_statement, next_index)
+            last_statement = next_index
+        }
+
+        const assignment: P.AssignV = {
+            dimensions: v.dimensions,
+            exit_point: null,
+            kind: P.StatementKinds.AssignV,
+            total_indexes: v.indexes.length,
+            varname: v.name
+        }
+
+        P.set_exit(last_statement, assignment)
+
+        return assignment
+    }
+    else {
+        const assignment: P.Assign = {
+            exit_point: null,
+            kind: P.StatementKinds.Assign,
+            varname: v.name
+        }
+
+        return assignment
+    }
 }
 
 function transform_return (ret: Return) : P.Statement {
