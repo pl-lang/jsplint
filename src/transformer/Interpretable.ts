@@ -196,92 +196,115 @@ function transform_call (call: S2.Call) : P.Statement {
      * a 'leer' o 'escribir', o a alguna funcion o
      * procedimiento del usuario.
      */
-    
-    /**
-     * Para transformar las llamadas solo hay que encadenar
-     * la evaluacion de sus argumentos (en el orden en que aparecen)
-     * con el Statement de llamada.
-     */
 
     if (call.name == 'escribir') {
+        return transform_write(call as S2.IOCall)
+    }
+    else if (call.name == 'leer') {
+        return transform_read(call as S2.IOCall)
+    }
+    else {
         /**
-         * Escribir es un procedimiento que toma solo un argumento,
-         * en realidad.
-         * Hay que hacer una llamada por cada argumento evaluado.
+         * Para transformar las llamadas solo hay que encadenar
+         * la evaluacion de sus argumentos (en el orden en que aparecen)
+         * con el Statement de llamada.
          */
         const first_arg: P.Statement = transform_expression(call.args[0])
         let last_statement = P.get_last(first_arg)
-        const escribir_call: P.WriteCall = {
+
+        for (let i = 1; i < call.args.length - 1; i++) {
+            const next_arg = transform_expression(call.args[i])
+            P.set_exit(last_statement, next_arg)
+            last_statement = next_arg
+        }
+
+        const ucall: P.UserModuleCall = {
+            exit_point: null,
+            kind: P.StatementKinds.UserModuleCall,
+            name: call.name,
+            total_args: call.args.length
+        }
+
+        P.set_exit(last_statement, ucall)
+
+        return first_arg
+    }
+}
+
+function transform_write (wc: S2.IOCall) : P.Statement {
+    /**
+     * Escribir es un procedimiento que toma solo un argumento,
+     * en realidad.
+     * Hay que hacer una llamada por cada argumento evaluado.
+     */
+    const first_arg: P.Statement = transform_expression(wc.args[0])
+    let last_statement = P.get_last(first_arg)
+    const escribir_call: P.WriteCall = {
+        exit_point: null,
+        kind: P.StatementKinds.WriteCall,
+        name: 'escribir'
+    }
+    P.set_exit(last_statement, escribir_call)
+    last_statement = escribir_call
+
+    for (let i = 0; i < wc.args.length; i++) {
+        const next_arg = transform_expression(wc.args[i])
+        P.set_exit(last_statement, next_arg)
+        const wcall: P.WriteCall = {
             exit_point: null,
             kind: P.StatementKinds.WriteCall,
             name: 'escribir'
         }
-        P.set_exit(last_statement, escribir_call)
-        last_statement = escribir_call
-
-        for (let i = 0; i < call.args.length; i++) {
-            const next_arg = transform_expression(call.args[i])
-            P.set_exit(last_statement, next_arg)
-            const wcall: P.WriteCall = {
-                exit_point: null,
-                kind: P.StatementKinds.WriteCall,
-                name: 'escribir'
-            }
-            P.set_exit(next_arg, wcall)
-            last_statement = wcall
-        }
-
-        return first_arg
+        P.set_exit(next_arg, wcall)
+        last_statement = wcall
     }
-    else if (call.name == 'leer') {
+
+    return first_arg
+}
+
+function transform_read (rc: S2.IOCall) : P.Statement {
+    /**
+     * Leer tambien es un procedimiento de un solo argumento.
+     * Por cada argumento hay que crear una llamada a leer y una asignacion.
+     * La llamada a leer inserta el valor leido al tope de la pila.
+     */
+    let first_call: P.Statement
+    let current_call: P.Statement
+    let last_statement: P.Statement
+    let current_var: S2.InvocationValue
+    for (let i = 0; i < rc.args.length; i++) {
         /**
-         * Leer tambien es un procedimiento de un solo argumento.
-         * Ademas, una lectura va seguida de una asignacion, por lo cual
-         * la transformacion es un poco mas aparatoza.
+         * El type assert es correcto porque esta garantizado por
+         * el TypeChecker que los argumentos de un llamado a leer
+         * son todos InvocationValues. O va a estar garantizado...
          */
-        const first_arg: P.Statement = transform_expression(call.args[0])
-        let last_statement = P.get_last(first_arg)
+        current_var = rc.args[i][0] as S2.InvocationValue
+        
         const lcall: P.ReadCall = {
             exit_point: null,
             kind: P.StatementKinds.ReadCall,
             name: 'leer',
-            /**
-             * El type assert es correcto porque esta garantizado por
-             * el TypeChecker que los argumentos de un llamado a leer
-             * son todos InvocationValues. O va a estar garantizado...
-             */
-            varname: (call.args[0][0] as InvocationValue).name,
-
+            varname: (rc.args[0][0] as S2.InvocationValue).name,
         }
-        /**
-         * Ahora hay que hacer la asignacion a la variable...
-         * Eso queda pendiente.
-         */
 
-        P.set_exit(last_statement, lcall)
-        last_statement = lcall
-
-        for (let i = 0; i < call.args.length; i++) {
-            const next_arg = transform_expression(call.args[i])
-            P.set_exit(last_statement, next_arg)
-            const wcall: P.WriteCall = {
-                exit_point: null,
-                kind: P.StatementKinds.WriteCall,
-                name: 'escribir'
-            }
-            P.set_exit(next_arg, wcall)
-            last_statement = wcall
+        if (i == 0) {
+            first_call == lcall
         }
+        else {
+            P.set_exit(last_statement, lcall)
+        }
+
+        const target_assignment = create_assignment(current_var as S2.InvocationInfo)
+
+        P.set_exit(lcall, target_assignment)
+        last_statement = P.get_last(target_assignment)
     }
 
-    const first_arg: P.Statement = transform_expression(call.args[0])
-    let last_statement = P.get_last(first_arg)
+    return first_call
+}
 
-    for (let i = 1; i < call.args.length - 1; i++) {
-        const next_arg = transform_expression(call.args[i])
-        P.set_exit(last_statement, next_arg)
-        last_statement = next_arg
-    }
+function create_assignment (v: S2.InvocationInfo) : P.Statement {
+    
 }
 
 function transform_return (ret: Return) : P.Statement {
