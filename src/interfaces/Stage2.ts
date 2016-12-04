@@ -51,6 +51,7 @@ export interface While extends PI.While {
 
 export interface For extends PI.For {
   body: Statement[]
+  counter_init: Assignment
 }
 
 export interface Until extends PI.Until {

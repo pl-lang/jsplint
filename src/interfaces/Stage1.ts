@@ -8,6 +8,7 @@ export interface AST {
     user_modules: {
       [m: string]: Function | Procedure
     }
+    [p: string]: any
   }
   local_variables: {
     [m: string]: VariableDict

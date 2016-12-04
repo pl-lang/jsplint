@@ -15,7 +15,10 @@ import {IError, ISuccess} from '../interfaces/Utility'
 
 export default function transform (ast: S1.AST) : IError<S2.Error[]> | ISuccess<S2.AST> {
   const new_ast = {
-    modules: {},
+    modules: {
+      main: null,
+      user_modules: {}
+    },
     local_variables: {}
   } as S2.AST
 

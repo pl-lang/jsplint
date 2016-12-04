@@ -4,9 +4,9 @@ import * as S2 from '../interfaces/Stage2'
 
 import * as P from '../interfaces/Program'
 
-import {ExpElement, OperatorElement, LiteralValue} from '../interfaces/ParsingInterfaces'
+import {ExpElement, OperatorElement, LiteralValue, InvocationValue, Return} from '../interfaces/ParsingInterfaces'
 
-export default function transfrom (ast: S2.AST) : P.Program {
+export default function transform (ast: S2.AST) : P.Program {
     const result = {
         entry_point: null,
         modules: {},
@@ -79,6 +79,220 @@ function transform_while (statement: S2.While) : P.Statement {
     return swhile
 }
 
+function transform_until (statement: S2.Until) : P.Statement {
+    const body = transform_body(statement.body)
+    const last_statement = P.get_last(body)
+
+    const condition = transform_expression(statement.condition)
+    /**
+     * La condicion del bucle se evalua luego del ultimo enunciado
+     * que este contiene.
+     */
+    P.set_exit(last_statement, condition)
+
+    const last_st_condition = P.get_last(condition)
+
+    const suntil: P.Until = {
+        entry_point: body,
+        exit_point: null,
+        kind: P.StatementKinds.Until
+    }
+
+    return body
+}
+
+function transform_for (statement: S2.For) : P.Statement {
+    /**
+     * Los bucles para tienen la siguiente estructura
+     * 
+     * para <contador> <- <valor inicial> hasta <valor tope>
+     *      <enunciados>
+     * finpara
+     * 
+     * El bucle finaliza cuando la variable contador llega al
+     * valor tope.
+     */
+
+    /**
+     * Los bucles 'para' se convierten en bucles 'mientras'.
+     * Eso implica que hay crear el enunciado que inicializa
+     * la variable del for, y agregar el enunciado de
+     * incremento y el de comparacion al final del cuerpo
+     * del while
+     */
+
+    /**
+     * Este es el enunciado de asignacion que inicializa el contador.
+     */
+    const init = transform_assignment(statement.counter_init)
+    const init_last = P.get_last(init)
+
+    /**
+     * Ese debe engancharse con la condicion del while.
+     * La condicion es <contador> <= <tope>
+     */
+    const left: S2.InvocationInfo = statement.counter_init.left
+    const counter_invocation: InvocationValue = {type:'invocation', name:left.name, is_array:left.is_array, indexes:left.indexes}
+
+    const condition_exp: ExpElement[] = [counter_invocation, ...statement.last_value, {type:'operator', name:'minor-eq'}]
+    const condition_entry = transform_expression(condition_exp)
+    const conditon_last = P.get_last(condition_entry)
+
+    /**
+     * A la evaluacion de la condicion le sigue el cuerpo del bucle
+     */
+    const body = transform_body(statement.body)
+    const body_last = P.get_last(body)
+
+    /**
+     * Y al cuepor del bucle le sigue el incremento del contador
+     */
+    const increment_value: LiteralValue = {type:'literal', value:1}
+    const right: ExpElement[] = [counter_invocation, increment_value, {type:'operator', name:'plus'}]
+
+    /**
+     * Enunciado S2 del incremento
+     */
+    const assingment: S2.Assignment = {
+        left: left,
+        right: right,
+        type: 'assignment'
+    }
+
+    /**
+     * Ahora ese enunciado de S2 debe convertirse en uno de Program
+     */
+    const incremement_entry = transform_assignment(assingment)
+    const increment_last = P.get_last(incremement_entry)
+
+    const swhile: P.While = {
+        entry_point: body,
+        exit_point: null,
+        kind: P.StatementKinds.While
+    }
+
+    /**
+     * Y ahora hay que enganchar todo:
+     * -    inicializacion
+     * -    condicion
+     * -    enunciado mientras (aca se decide si entrar o no al cuerpo)
+     * -    cuerpo
+     * -    incremento
+     * -    condicion
+     */
+
+    P.set_exit(init_last, condition_entry)
+    P.set_exit(conditon_last, swhile)
+    P.set_exit(swhile, body)
+    P.set_exit(body_last, incremement_entry)
+    P.set_exit(increment_last, condition_entry)
+
+    return swhile
+}
+
+function transform_call (call: S2.Call) : P.Statement {
+    /**
+     * La transformacion es diferente si la llamada es
+     * a 'leer' o 'escribir', o a alguna funcion o
+     * procedimiento del usuario.
+     */
+    
+    /**
+     * Para transformar las llamadas solo hay que encadenar
+     * la evaluacion de sus argumentos (en el orden en que aparecen)
+     * con el Statement de llamada.
+     */
+
+    if (call.name == 'escribir') {
+        /**
+         * Escribir es un procedimiento que toma solo un argumento,
+         * en realidad.
+         * Hay que hacer una llamada por cada argumento evaluado.
+         */
+        const first_arg: P.Statement = transform_expression(call.args[0])
+        let last_statement = P.get_last(first_arg)
+        const escribir_call: P.WriteCall = {
+            exit_point: null,
+            kind: P.StatementKinds.WriteCall,
+            name: 'escribir'
+        }
+        P.set_exit(last_statement, escribir_call)
+        last_statement = escribir_call
+
+        for (let i = 0; i < call.args.length; i++) {
+            const next_arg = transform_expression(call.args[i])
+            P.set_exit(last_statement, next_arg)
+            const wcall: P.WriteCall = {
+                exit_point: null,
+                kind: P.StatementKinds.WriteCall,
+                name: 'escribir'
+            }
+            P.set_exit(next_arg, wcall)
+            last_statement = wcall
+        }
+
+        return first_arg
+    }
+    else if (call.name == 'leer') {
+        /**
+         * Leer tambien es un procedimiento de un solo argumento.
+         * Ademas, una lectura va seguida de una asignacion, por lo cual
+         * la transformacion es un poco mas aparatoza.
+         */
+        const first_arg: P.Statement = transform_expression(call.args[0])
+        let last_statement = P.get_last(first_arg)
+        const lcall: P.ReadCall = {
+            exit_point: null,
+            kind: P.StatementKinds.ReadCall,
+            name: 'leer',
+            /**
+             * El type assert es correcto porque esta garantizado por
+             * el TypeChecker que los argumentos de un llamado a leer
+             * son todos InvocationValues. O va a estar garantizado...
+             */
+            varname: (call.args[0][0] as InvocationValue).name,
+
+        }
+        /**
+         * Ahora hay que hacer la asignacion a la variable...
+         * Eso queda pendiente.
+         */
+
+        P.set_exit(last_statement, lcall)
+        last_statement = lcall
+
+        for (let i = 0; i < call.args.length; i++) {
+            const next_arg = transform_expression(call.args[i])
+            P.set_exit(last_statement, next_arg)
+            const wcall: P.WriteCall = {
+                exit_point: null,
+                kind: P.StatementKinds.WriteCall,
+                name: 'escribir'
+            }
+            P.set_exit(next_arg, wcall)
+            last_statement = wcall
+        }
+    }
+
+    const first_arg: P.Statement = transform_expression(call.args[0])
+    let last_statement = P.get_last(first_arg)
+
+    for (let i = 1; i < call.args.length - 1; i++) {
+        const next_arg = transform_expression(call.args[i])
+        P.set_exit(last_statement, next_arg)
+        last_statement = next_arg
+    }
+}
+
+function transform_return (ret: Return) : P.Statement {
+    /**
+     * Para transformar 'retornar' solo hay que transformar
+     * su expresion. Una vez que se evalue eso, el retorno de
+     * la funcion queda al tope de la pila.
+     */
+    return transform_expression(ret.expression)
+}
+
 function transform_body (body: S2.Statement[]) : P.Statement {
     const entry_point: P.Statement = transform_statement(body[0])
 
@@ -102,11 +316,13 @@ function transform_statement (statement: S2.Statement) : P.Statement {
         case 'while':
             return transform_while(statement)
         case 'until':
+            return transform_until(statement)
         case 'for':
+            return transform_for(statement)
         case 'call':
+            break
         case 'return':
-        default:
-        throw new TypeError(`'${statement.type}' no es un tipo de enunciado reconocido`)
+            return transform_return(statement)
     }
 }
 

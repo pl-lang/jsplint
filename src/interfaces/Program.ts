@@ -128,15 +128,15 @@ export interface Operation {
 
 export type OperationKinds = MathOps | VarOps | StackOps | ComparisonOps | LogicOps
 
-type MathOps = StatementKinds.Plus  | StatementKinds.Minus | StatementKinds.Times | StatementKinds.Slash | StatementKinds.Power | StatementKinds.Div | StatementKinds.Mod
+export type MathOps = StatementKinds.Plus  | StatementKinds.Minus | StatementKinds.Times | StatementKinds.Slash | StatementKinds.Power | StatementKinds.Div | StatementKinds.Mod
 
-type VarOps = StatementKinds.Assign | StatementKinds.Get | StatementKinds.AssignV | StatementKinds.GetV
+export type VarOps = StatementKinds.Assign | StatementKinds.Get | StatementKinds.AssignV | StatementKinds.GetV
 
-type StackOps = StatementKinds.Push | StatementKinds.Pop
+export type StackOps = StatementKinds.Push | StatementKinds.Pop
 
-type ComparisonOps = StatementKinds.Minor | StatementKinds.MinorEq | StatementKinds.Different | StatementKinds.Equal | StatementKinds.Major | StatementKinds.MajorEq
+export type ComparisonOps = StatementKinds.Minor | StatementKinds.MinorEq | StatementKinds.Different | StatementKinds.Equal | StatementKinds.Major | StatementKinds.MajorEq
 
-type LogicOps = StatementKinds.And | StatementKinds.Or | StatementKinds.Not
+export type LogicOps = StatementKinds.And | StatementKinds.Or | StatementKinds.Not
 
 export enum StatementKinds {
   Plus = 0,
