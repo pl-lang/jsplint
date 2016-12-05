@@ -9,6 +9,7 @@
     "files": [
         "index.ts",
         "./src/parser/ast/List.ts",
-        "./src/parser/ast/Nodes.ts"
+        "./src/parser/ast/Nodes.ts",
+        "./src/tools/ir_writer.ts"
     ]
 }
