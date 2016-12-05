@@ -45,7 +45,18 @@ if (args.length > 0) {
 console.log(`Se ${total == 1 ? 'proceso':'procesaron'} ${total} ${total == 1 ? 'archivo':'archivos'}.`)
 
 function procesar (p: S4.Program) : string {
-    let s = 'INICIO\n'
+    let variables = 'VARIABLES\n'
+
+    for (let vn in p.local_variables['main']) {
+        const v = p.local_variables['main'][vn] 
+        variables += `${repetir(' ', espacios*2)}${v.datatype} ${vn}`
+        if (v.is_array) {
+            variables += v.dimensions.toString
+        }
+        variables += '\n'
+    }
+
+    let s = `${variables}INICIO\n`
 
     /**
      * Procesar main
