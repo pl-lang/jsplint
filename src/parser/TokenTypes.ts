@@ -150,11 +150,13 @@ export class NumberToken implements Token {
       }
       else {
         this.error_found = true
-        this.error_info.unexpected = source.currentChar()
-        this.error_info.expected   = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9']
-        this.error_info.line         = source._current_line
-        this.error_info.column       = source._current_column
-        this.error_info.reason         = 'unexpectedCharAtFloat'
+        this.error_info = {
+          unexpected: source.currentChar(),
+          expected: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
+          line: source._current_line,
+          column: source._current_column,
+          reason: 'unexpectedCharAtFloat'
+        }
       }
     }
 
@@ -335,11 +337,13 @@ export class StringToken {
       this.text = '"' + this.value + '"'
     else {
       this.error_found = true
-      this.error_info.unexpected = '\n'
-      this.error_info.expected = ['caracteres', '"']
-      this.error_info.column = source._current_column
-      this.error_info.line = source._current_line
-      this.error_info.reason = 'unexpectedCharAtString'
+      this.error_info = {
+        unexpected: '\n',
+        expected: ['caracteres', '"'],
+        column: source._current_column,
+        line: source._current_line,
+        reason: 'unexpectedCharAtString'
+      }
     }
 
     // Consumo un caracter para dejar a currentChar() uno delante de la
@@ -507,11 +511,13 @@ export class UnknownToken {
   constructor(source : SourceWrapper) {
     this.kind = OtherKind.Unknown
     this.error_found = true
-    this.error_info.unexpected = source.currentChar()
-    this.error_info.expected = null
-    this.error_info.line = source._current_line
-    this.error_info.column = source._current_column
-    this.error_info.reason = 'unknownToken'
+    this.error_info = {
+      unexpected: source.currentChar(),
+      expected: null,
+      line: source._current_line,
+      column: source._current_column,
+      reason: 'unknownToken'
+    }
     source.nextChar()
   }
 }

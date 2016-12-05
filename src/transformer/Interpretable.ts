@@ -314,8 +314,8 @@ function transform_body (body: S2.Statement[]) : P.Statement {
 
     let last_statement: P.Statement = P.get_last(entry_point)
 
-    for (let i = 1; i < body.length - 1; i++) {
-        const next_statement = transform_statement(body[i])
+    for (let i = 0; i < body.length - 1; i++) {
+        const next_statement = transform_statement(body[i+1])
         last_statement.exit_point = next_statement
         last_statement = P.get_last(next_statement)
     }

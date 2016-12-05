@@ -6,7 +6,7 @@ export class BaseStatement {
     protected exit_set: boolean
 
     constructor () {
-        this.exit_point = null
+        this._exit_point = null
         this.exit_set = false
     }
 
