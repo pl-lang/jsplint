@@ -20,6 +20,7 @@
   "author": "Rodrigo Maximiliano Bellusci",
   "license": "MIT",
   "devDependencies": {
+    "@types/node": "0.0.2",
     "istanbul": "^0.4.2",
     "mocha": "^2.3.2",
     "nyc": "^6.4.0",
