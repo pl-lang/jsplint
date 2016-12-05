@@ -66,7 +66,7 @@ function procesar (p: S4.Program) : string {
         const v = p.local_variables['main'][vn] 
         variables += `${repetir(' ', espacios*2)}${v.datatype} ${vn}`
         if (v.is_array) {
-            variables += v.dimensions.toString
+            variables += `[${v.dimensions.toString()}]`
         }
         variables += '\n'
     }

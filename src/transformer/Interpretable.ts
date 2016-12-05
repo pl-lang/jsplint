@@ -248,7 +248,7 @@ function transform_read (rc: S2.ReadCall) : P.Statement {
         const lcall = new P.ReadCall(current_var.name)
 
         if (i == 0) {
-            first_call == lcall
+            first_call = lcall
         }
         else {
             last_statement.exit_point = lcall
@@ -377,10 +377,30 @@ function transform_assignment (assignment: S2.Assignment) : P.Statement {
          * Asignacion normal: hay que copiar un valor a una variable (o una celda de un vector).
          * Para hacer eso hay que poner la expresion que se va a asignar en la pila y luego hacer
          * un enunciado de asignacion.
+         * 
+         * Si la asignacion es a una celda de un vector, primero hay que la expresion a asignar
+         * en la pila, luego los indices de la celda, y por ultimo el enunciado de asignacion.
          */
-        const assign = new P.Assign(assignment.left.name)
+        if (assignment.left.is_array) {
+            const v = assignment.left
 
-        last_statement.exit_point = assign
+            const first_index = transform_expression(v.indexes[0])
+            let index_last_st = P.get_last(first_index)
+
+            for (let i = 0; i < v.indexes.length - 1; i++) {
+                let next_index = transform_expression(v.indexes[i + 1])
+                index_last_st.exit_point = next_index
+                index_last_st = P.get_last(next_index) 
+            }
+            const assignv = new P.AssignV(v.indexes.length, v.dimensions, v.name)
+
+            index_last_st.exit_point = assignv
+            last_statement.exit_point = first_index
+        }
+        else {
+            const assign = new P.Assign(assignment.left.name)
+            last_statement.exit_point = assign
+        }
     }
 
     return entry_point
