@@ -94,7 +94,7 @@ export interface RegularVariable extends PI.TypedDeclaration {
 }
 
 export interface RepeatedVarError {
-  reason: string
+  reason: 'repeated-variable'
   name: string
   first_type: string
   second_type: string
