@@ -1,8 +1,33 @@
 import {VariableDict} from './Stage1'
 
+export class BaseStatement {
+    readonly kind: StatementKinds
+    protected _exit_point: Statement
+    protected exit_set: boolean
+
+    constructor () {
+        this.exit_point = null
+        this.exit_set = false
+    }
+
+    set exit_point (s: Statement) {
+        if (this.exit_set == true) {
+            throw new Error('No se puede establecer el punto de salida de un Statement mas de una vez.')
+        }
+        else {
+            this._exit_point = s
+            this.exit_set = true
+        }
+    }
+
+    get exit_point () : Statement {
+        return this._exit_point
+    }
+}
+
 export function get_last (s: Statement) : Statement {
     let current = s
-    while (s.exit_point !== null) {
+    while (current.exit_point !== null) {
         current = current.exit_point
     }
     return current
@@ -23,16 +48,7 @@ export interface Program {
  * No devuelve nada, solo modifica un objeto
  */
 export function set_exit (s: Statement, new_exit: Statement) : void {
-    const ns = s
-    switch (ns.kind) {
-        case StatementKinds.If:
-            get_last(ns.false_branch_entry).exit_point = new_exit
-            get_last(ns.true_branch_entry).exit_point = new_exit
-            ns.exit_point = new_exit
-            break
-        default:
-            ns.exit_point = new_exit
-    }
+    s.exit_point = new_exit
 }
 
 export interface Module {
@@ -43,98 +59,151 @@ export interface Module {
     return_type?: string // por ahora esto no se usa...si no sirve lo saco
 }
 
-export type Statement = While | If | Until | UserModuleCall | ReadCall | WriteCall | Assign | Get | Operation | AssignV | GetV | Push | Pop
+export type Statement = While | If | Until | UserModuleCall | ReadCall | WriteCall | Assign | Get | Operation | AssignV | GetV | Push | Pop  
 
-export interface While {
-    kind: StatementKinds.While
-    entry_point: Statement
-    exit_point: Statement
+export class While extends BaseStatement {
+    readonly kind: StatementKinds.While
+
+    constructor (readonly entry_point: Statement) {
+        super()
+        this.kind = StatementKinds.While
+    }
 }
 
-export interface Until {
-    kind: StatementKinds.Until
-    entry_point: Statement
-    exit_point: Statement
+export class Until extends BaseStatement {
+    readonly kind: StatementKinds.Until
+
+    constructor (readonly entry_point: Statement) {
+        super()
+        this.kind = StatementKinds.Until
+    }
 }
 
-export interface If {
-    kind: StatementKinds.If
-    true_branch_entry: Statement
-    false_branch_entry: Statement
-    exit_point: Statement
+export class If extends BaseStatement {
+    readonly kind: StatementKinds.If
+    
+    constructor (readonly true_branch_entry: Statement, readonly false_branch_entry: Statement) {
+        super()
+        this.kind = StatementKinds.If
+    }
+
+    set exit_point (s: Statement) {
+        if (this.exit_set == true) {
+            throw new Error('No se puede establecer el punto de salida de un Statement mas de una vez.')
+        }
+        else {
+            this._exit_point = s
+
+            const last_true_s = get_last(this.true_branch_entry)
+            last_true_s.exit_point = s
+
+            const last_false_s = get_last(this.false_branch_entry)
+            last_false_s.exit_point = s
+
+            this.exit_set = true
+        }
+    }
+
+    get exit_point () : Statement {
+        return this._exit_point
+    }    
 }
 
-export interface UserModuleCall {
-    kind: StatementKinds.UserModuleCall
-    name: string
-    total_args: number
-    exit_point: Statement
+export class UserModuleCall extends BaseStatement {
+    readonly kind: StatementKinds.UserModuleCall
+
+    constructor (readonly name: string, readonly total_args: number) {
+        super()
+        this.kind = StatementKinds.UserModuleCall
+    }
 }
 
-export interface ReadCall {
-    kind: StatementKinds.ReadCall
-    name: 'leer'
-    varname: string
-    exit_point: Statement
+export class ReadCall extends BaseStatement {
+    readonly name: 'leer'
+    readonly kind: StatementKinds.ReadCall
+
+    constructor (readonly varname: string) {
+        super()
+        this.kind = StatementKinds.ReadCall
+        this.name = 'leer'
+    }
 }
 
-export interface WriteCall {
-    kind: StatementKinds.WriteCall
-    name: 'escribir'
-    exit_point: Statement
+export class WriteCall extends BaseStatement {
+    readonly name: 'escribir'
+    readonly kind: StatementKinds.WriteCall
+
+    constructor () {
+        super()
+        this.kind = StatementKinds.WriteCall
+        this.name = 'escribir'
+    }
 }
 
-export interface Assign {
-    kind: StatementKinds.Assign
-    varname: string
-    exit_point: Statement
+export class Assign extends BaseStatement {
+    readonly kind: StatementKinds.Assign
+
+    constructor (readonly varname: string) {
+        super()
+        this.kind = StatementKinds.Assign
+    }
 }
 
-export interface AssignV {
-    kind: StatementKinds.AssignV
-    total_indexes: number
-    dimensions: number[]
-    varname: string
-    exit_point: Statement
+export class AssignV extends BaseStatement {
+    readonly kind: StatementKinds.AssignV
+
+    constructor (readonly total_indexes: number, readonly dimensions: number[], readonly varname: string) {
+        super()
+        this.kind = StatementKinds.AssignV
+    }
 }
 
-export interface Get {
-    kind: StatementKinds.Get
-    varname: string
-    exit_point: Statement
+export class Get extends BaseStatement {
+    readonly kind: StatementKinds.Get
+    
+    constructor (readonly varname: string) {
+        super()
+        this.kind = StatementKinds.Get
+    }
 }
 
-export interface GetV {
-    kind: StatementKinds.GetV
-    total_indexes: number
-    dimensions: number[]
-    varname: string
-    exit_point: Statement
+export class GetV extends BaseStatement {
+    readonly kind: StatementKinds.GetV
+    
+    constructor (readonly total_indexes: number, readonly dimensions: number[], readonly varname: string) {
+        super()
+        this.kind = StatementKinds.GetV
+    }
 }
 
-export interface Push {
-    kind: StatementKinds.Push
-    value: number | boolean | string
-    exit_point: Statement
+export class Push extends BaseStatement {
+    readonly kind: StatementKinds.Push
+    
+    constructor (readonly value: number | boolean | string) {
+        super()
+        this.kind = StatementKinds.Push
+    }
 }
 
-export interface Pop {
-    kind: StatementKinds.Pop
-    exit_point: Statement
+export class Pop extends BaseStatement {
+    readonly kind: StatementKinds.Pop
+    
+    constructor () {
+        super()
+        this.kind = StatementKinds.Pop
+    }
 }
 
-export interface Operation {
-    kind: OperationKinds
-    exit_point: Statement
+export class Operation extends BaseStatement {
+    
+    constructor (readonly kind: OperationKinds) {
+        super()
+    }
 }
 
-export type OperationKinds = MathOps | VarOps | StackOps | ComparisonOps | LogicOps
+export type OperationKinds = MathOps | ComparisonOps | LogicOps
 
 export type MathOps = StatementKinds.Plus  | StatementKinds.Minus | StatementKinds.Times | StatementKinds.Slash | StatementKinds.Power | StatementKinds.Div | StatementKinds.Mod
-
-export type VarOps = StatementKinds.Assign | StatementKinds.Get | StatementKinds.AssignV | StatementKinds.GetV
-
-export type StackOps = StatementKinds.Push | StatementKinds.Pop
 
 export type ComparisonOps = StatementKinds.Minor | StatementKinds.MinorEq | StatementKinds.Different | StatementKinds.Equal | StatementKinds.Major | StatementKinds.MajorEq
 
@@ -163,16 +232,10 @@ export enum StatementKinds {
   Not,
   And,
   Or,
-  LeftPar,
-  RightPar,
-  LeftBracket,
-  RightBracket,
-  Comma,
   If,
   While,
   Until,
   UserModuleCall,
   ReadCall,
-  WriteCall,
-  Return
+  WriteCall
 }

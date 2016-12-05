@@ -44,59 +44,54 @@ function transform_if (statement: S2.If) : P.Statement {
     const true_entry = transform_body(statement.true_branch)
     const false_entry = transform_body(statement.false_branch)
 
-    const sif: P.If = {
-        exit_point: null,
-        kind: P.StatementKinds.If,
-        false_branch_entry: false_entry,
-        true_branch_entry: true_entry
-    }
+    const sif = new P.If(true_entry, false_entry)
 
     /**
      * Hacer que la evaluacion de la condicion venga seguida del if
      */
-    P.set_exit(last_statement, sif)
 
-    return sif
+    last_statement.exit_point = sif
+
+    return entry
 }
 
 function transform_while (statement: S2.While) : P.Statement {
-    const entry = transform_expression(statement.condition)
-
-    const last_statement = P.get_last(entry)
+    /**
+     * condicion
+     * bucle
+     * condicion
+     */
+    const condition_entry = transform_expression(statement.condition)
+    const cond_last_st = P.get_last(condition_entry)
 
     const loop_body = transform_body(statement.body)
+    const body_last_st = P.get_last(loop_body)
 
-    P.set_exit(loop_body, entry)
+    const swhile = new P.While(loop_body)
 
-    const swhile: P.While = {
-        entry_point: loop_body,
-        exit_point: null,
-        kind: P.StatementKinds.While
-    }
+    cond_last_st.exit_point = swhile
 
-    P.set_exit(last_statement, swhile)
+    body_last_st.exit_point = condition_entry
 
-    return swhile
+    return condition_entry
 }
 
 function transform_until (statement: S2.Until) : P.Statement {
     const body = transform_body(statement.body)
-    const last_statement = P.get_last(body)
+    const body_last_st = P.get_last(body)
 
     const condition = transform_expression(statement.condition)
     /**
      * La condicion del bucle se evalua luego del ultimo enunciado
      * que este contiene.
      */
-    P.set_exit(last_statement, condition)
+    body_last_st.exit_point = condition
 
     const last_st_condition = P.get_last(condition)
 
-    const suntil: P.Until = {
-        entry_point: body,
-        exit_point: null,
-        kind: P.StatementKinds.Until
-    }
+    const suntil = new P.Until(body)
+
+    last_st_condition.exit_point = suntil
 
     return body
 }
@@ -109,7 +104,7 @@ function transform_for (statement: S2.For) : P.Statement {
      *      <enunciados>
      * finpara
      * 
-     * El bucle finaliza cuando la variable contador llega al
+     * El bucle finaliza cuando la variable contador supera al
      * valor tope.
      */
 
@@ -165,12 +160,6 @@ function transform_for (statement: S2.For) : P.Statement {
     const incremement_entry = transform_assignment(assingment)
     const increment_last = P.get_last(incremement_entry)
 
-    const swhile: P.While = {
-        entry_point: body,
-        exit_point: null,
-        kind: P.StatementKinds.While
-    }
-
     /**
      * Y ahora hay que enganchar todo:
      * -    inicializacion
@@ -181,13 +170,14 @@ function transform_for (statement: S2.For) : P.Statement {
      * -    condicion
      */
 
-    P.set_exit(init_last, condition_entry)
-    P.set_exit(conditon_last, swhile)
-    P.set_exit(swhile, body)
-    P.set_exit(body_last, incremement_entry)
-    P.set_exit(increment_last, condition_entry)
+    const swhile = new P.While(body)
 
-    return swhile
+    init_last.exit_point = condition_entry
+    conditon_last.exit_point = swhile
+    body_last.exit_point = incremement_entry
+    increment_last.exit_point = condition_entry
+
+    return condition_entry
 }
 
 function transform_call (call: S2.Call) : P.Statement {
@@ -214,18 +204,13 @@ function transform_call (call: S2.Call) : P.Statement {
 
         for (let i = 1; i < call.args.length - 1; i++) {
             const next_arg = transform_expression(call.args[i])
-            P.set_exit(last_statement, next_arg)
-            last_statement = next_arg
+            last_statement.exit_point = next_arg
+            last_statement = P.get_last(next_arg)
         }
 
-        const ucall: P.UserModuleCall = {
-            exit_point: null,
-            kind: P.StatementKinds.UserModuleCall,
-            name: call.name,
-            total_args: call.args.length
-        }
+        const ucall = new P.UserModuleCall(call.name, call.args.length)
 
-        P.set_exit(last_statement, ucall)
+        last_statement.exit_point =  ucall
 
         return first_arg
     }
@@ -239,23 +224,17 @@ function transform_write (wc: S2.IOCall) : P.Statement {
      */
     const first_arg: P.Statement = transform_expression(wc.args[0])
     let last_statement = P.get_last(first_arg)
-    const escribir_call: P.WriteCall = {
-        exit_point: null,
-        kind: P.StatementKinds.WriteCall,
-        name: 'escribir'
-    }
-    P.set_exit(last_statement, escribir_call)
+
+    const escribir_call = new P.WriteCall()
+
+    last_statement.exit_point = escribir_call
     last_statement = escribir_call
 
     for (let i = 1; i < wc.args.length - 1; i++) {
         const next_arg = transform_expression(wc.args[i])
         P.set_exit(last_statement, next_arg)
-        const wcall: P.WriteCall = {
-            exit_point: null,
-            kind: P.StatementKinds.WriteCall,
-            name: 'escribir'
-        }
-        P.set_exit(next_arg, wcall)
+        const wcall = new P.WriteCall()
+        next_arg.exit_point = wcall
         last_statement = wcall
     }
 
@@ -279,24 +258,19 @@ function transform_read (rc: S2.IOCall) : P.Statement {
          * son todos InvocationValues. O va a estar garantizado...
          */
         current_var = rc.args[i][0] as S2.InvocationValue
-        
-        const lcall: P.ReadCall = {
-            exit_point: null,
-            kind: P.StatementKinds.ReadCall,
-            name: 'leer',
-            varname: (rc.args[0][0] as S2.InvocationValue).name,
-        }
+
+        const lcall = new P.ReadCall(current_var.name)
 
         if (i == 0) {
             first_call == lcall
         }
         else {
-            P.set_exit(last_statement, lcall)
+            last_statement.exit_point = lcall
         }
 
         const target_assignment = create_assignment(current_var)
 
-        P.set_exit(lcall, target_assignment)
+        lcall.exit_point =  target_assignment
         last_statement = P.get_last(target_assignment)
     }
 
@@ -309,28 +283,18 @@ function create_assignment (v: S2.InvocationValue) : P.Statement {
         let last_statement = P.get_last(first_index)
         for (let i = 1; i < v.indexes.length - 1; i++) {
             const next_index = transform_expression(v.indexes[i])
-            P.set_exit(last_statement, next_index)
-            last_statement = next_index
+            last_statement.exit_point =  next_index
+            last_statement = P.get_last(next_index)
         }
 
-        const assignment: P.AssignV = {
-            dimensions: v.dimensions,
-            exit_point: null,
-            kind: P.StatementKinds.AssignV,
-            total_indexes: v.indexes.length,
-            varname: v.name
-        }
+        const assignment = new P.AssignV(v.indexes.length, v.dimensions, v.name)
 
-        P.set_exit(last_statement, assignment)
+        last_statement.exit_point = assignment
 
-        return assignment
+        return first_index
     }
     else {
-        const assignment: P.Assign = {
-            exit_point: null,
-            kind: P.StatementKinds.Assign,
-            varname: v.name
-        }
+        const assignment = new P.Assign(v.name)
 
         return assignment
     }
@@ -352,8 +316,8 @@ function transform_body (body: S2.Statement[]) : P.Statement {
 
     for (let i = 1; i < body.length - 1; i++) {
         const next_statement = transform_statement(body[i])
-        P.set_exit(last_statement, next_statement)
-        last_statement = next_statement
+        last_statement.exit_point = next_statement
+        last_statement = P.get_last(next_statement)
     }
 
     return entry_point
@@ -382,13 +346,13 @@ function transform_assignment (assignment: S2.Assignment) : P.Statement {
     /**
      * Primer enunciado de la evaluacion de la expresion que se debe asignar
      */
-    const entry_point: P.Statement = transform_expression(assignment.right)
+    const entry_point = transform_expression(assignment.right)
 
     /**
      * Este enunciado es el que finalmente pone el valor de la expresion en la
      * pila. Seguido de este va el enunciado de asignacion.
      */
-    let last_statement = P.get_last(transform_expression(assignment.right))
+    let last_statement = P.get_last(entry_point)
     
     if (assignment.left.dimensions.length > 0 && assignment.left.indexes.length < assignment.left.dimensions.length) {
         /**
@@ -421,11 +385,7 @@ function transform_assignment (assignment: S2.Assignment) : P.Statement {
          * Para hacer eso hay que poner la expresion que se va a asignar en la pila y luego hacer
          * un enunciado de asignacion.
          */
-        const assign: P.Assign = {
-            kind: P.StatementKinds.Assign,
-            varname: assignment.left.name,
-            exit_point: null
-        }
+        const assign = new P.Assign(assignment.left.name)
 
         last_statement.exit_point = assign
     }
@@ -439,28 +399,18 @@ function transform_invocation (i: S2.InvocationValue) : P.Statement {
         let last_statement = P.get_last(first_index)
         for (let j = 1; j < i.indexes.length; j++) {
             const next_index = transform_expression(i.indexes[j])
-            P.set_exit(last_statement, next_index)
+            last_statement.exit_point = next_index
             last_statement = P.get_last(next_index)
         }
+        
+        const getv = new P.GetV(i.indexes.length, i.dimensions, i.name)
 
-        const getv: P.GetV = {
-            dimensions: i.dimensions,
-            exit_point: null,
-            kind: P.StatementKinds.GetV,
-            total_indexes: i.indexes.length,
-            varname: i.name
-        }
-
-        P.set_exit(last_statement, getv)
+        last_statement.exit_point = getv
 
         return first_index
     }
     else {
-        const geti: P.Get = {
-            exit_point: null,
-            kind: P.StatementKinds.Get,
-            varname: i.name
-        }
+        const geti = new P.Get(i.name)
 
         return geti
     }
@@ -474,10 +424,6 @@ function transform_expression (expression: ExpElement[]) : P.Statement {
         last_statement.exit_point = statements[i + 1]
         last_statement = P.get_last(statements[i + 1])
     }
-    /**
-     * Poner al exit de la ultima expresion en null, por las dudas (?)
-     */
-    last_statement.exit_point = null
     
     return entry
 }
@@ -487,40 +433,40 @@ function transform_exp_element (element: ExpElement) : P.Statement {
     case 'operator':
       switch ((element as OperatorElement).name) {
         case 'times':
-            return {kind: P.StatementKinds.Times, exit_point:null}
+            return new P.Operation(P.StatementKinds.Times)
         case 'slash':
-            return {kind: P.StatementKinds.Slash, exit_point:null}
+            return new P.Operation(P.StatementKinds.Slash)
         case 'power':
-            return {kind: P.StatementKinds.Power, exit_point:null}
+            return new P.Operation(P.StatementKinds.Power)
         case 'div':
-            return {kind: P.StatementKinds.Div, exit_point:null}
+            return new P.Operation(P.StatementKinds.Div)
         case 'mod':
-            return {kind: P.StatementKinds.Mod, exit_point:null}
+            return new P.Operation(P.StatementKinds.Mod)
         case 'minus':
-            return {kind: P.StatementKinds.Minus, exit_point:null}
+            return new P.Operation(P.StatementKinds.Minus)
         case 'plus':
-            return {kind: P.StatementKinds.Plus, exit_point:null}
+            return new P.Operation(P.StatementKinds.Plus)
         case 'minor':
-            return {kind: P.StatementKinds.Minor, exit_point:null}
+            return new P.Operation(P.StatementKinds.Minor)
         case 'minor-eq':
-            return {kind: P.StatementKinds.MinorEq, exit_point:null}
+            return new P.Operation(P.StatementKinds.MinorEq)
         case 'major':
-            return {kind: P.StatementKinds.Major, exit_point:null}
+            return new P.Operation(P.StatementKinds.Major)
         case 'major-eq':
-            return {kind: P.StatementKinds.MajorEq, exit_point:null}
+            return new P.Operation(P.StatementKinds.MajorEq)
         case 'equal':
-            return {kind: P.StatementKinds.Equal, exit_point:null}
+            return new P.Operation(P.StatementKinds.Equal)
         case 'not':
-            return {kind: P.StatementKinds.Not, exit_point:null}
+            return new P.Operation(P.StatementKinds.Not)
         case 'different':
-            return {kind: P.StatementKinds.Different, exit_point:null}
+            return new P.Operation(P.StatementKinds.Different)
         case 'and':
-            return {kind: P.StatementKinds.And, exit_point:null}
+            return new P.Operation(P.StatementKinds.And)
         case 'or':
-            return {kind: P.StatementKinds.Or, exit_point:null}
+            return new P.Operation(P.StatementKinds.Or)
       }
     case 'literal':
-        return {kind:P.StatementKinds.Push, value:(element as LiteralValue).value, exit_point:null}
+        return new P.Push((element as LiteralValue).value)
     case 'invocation':
         return transform_invocation(element as S2.InvocationValue)
     case 'call':
