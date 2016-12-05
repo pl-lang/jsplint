@@ -15,10 +15,20 @@ function parse (s: string) {
 
 const args = process.argv.slice(2)
 const espacios = 2
+let guardar_resultado = false
 
 let total = 0
 
 if (args.length > 0) {
+    /**
+     * buscar banderas de configuracion
+     */
+    for (let arg of args) {
+        if (arg == '-s' || arg == '-g') {
+            guardar_resultado = true
+        }
+    }
+
     for (let arg of args) {
         console.log(`Procesando el archivo ${total + 1}`)
         const contenido = readFileSync(arg, 'utf8')
@@ -35,7 +45,12 @@ if (args.length > 0) {
             else {
                 const irs = procesar(ir as S4.Program)
                 console.log(`Archivo ${total + 1} procesado exitosamente`)
-                writeFileSync(arg + '_procesado', irs, {encoding:'utf8'})
+                if (guardar_resultado) {
+                    writeFileSync(arg + '_procesado', irs, {encoding:'utf8'})
+                }
+                else {
+                    console.log(irs)
+                }
                 total++
             }
         }
