@@ -25,8 +25,6 @@ export interface AST {
   }
 }
 
-export type Call = IOCall | ModuleCall
-
 // estas propiedades extra deben ser iguales a las de PI.UserModule 
 export interface ModuleCall extends PI.Call {
   module_type: 'function' | 'procedure'
@@ -58,10 +56,14 @@ export interface Until extends PI.Until {
   body: Statement[]
 }
 
-export type Statement = Call | Assignment | If | While | For | Until | PI.Return
+export type Statement = ReadCall | WriteCall | ModuleCall | Assignment | If | While | For | Until | PI.Return 
 
-export interface IOCall extends PI.Call {
-  name: 'escribir' | 'leer'
+export interface ReadCall extends PI.Call {
+  name: 'leer'
+}
+
+export interface WriteCall extends PI.Call {
+  name: 'escribir'
 }
 
 export interface TransformedModule {
