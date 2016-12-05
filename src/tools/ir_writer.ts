@@ -14,6 +14,7 @@ function parse (s: string) {
 }
 
 const args = process.argv.slice(2)
+const espacios = 2
 
 let total = 0
 
@@ -32,12 +33,12 @@ if (args.length > 0) {
                 console.log(ir)
             }
             else {
-                console.log(`Archivo ${total + 1} procesado exitosamente`)
                 const irs = procesar(ir as S4.Program)
+                console.log(`Archivo ${total + 1} procesado exitosamente`)
                 writeFileSync(arg + '_procesado', irs, {encoding:'utf8'})
+                total++
             }
         }
-        total++
     }
 }
 
@@ -51,7 +52,7 @@ function procesar (p: S4.Program) : string {
      */
     let c = p.entry_point
     while (c != null) {
-        s += procesar_enunciado(c, 0) + '\n'
+        s += procesar_enunciado(c, 1) + '\n'
         c = c.exit_point
     }
 
@@ -63,49 +64,49 @@ function procesar (p: S4.Program) : string {
 function procesar_enunciado (e: S4.Statement, nivel: number) : string {
     switch (e.kind) {
         case S4.StatementKinds.Plus:
-            return `${repetir(' ', nivel*2)} SUMAR`
+            return `${repetir(' ', nivel*espacios)} SUMAR`
         case S4.StatementKinds.Minus:
-            return `${repetir(' ', nivel*2)} REPETIR`
+            return `${repetir(' ', nivel*espacios)} RESTAR`
         case S4.StatementKinds.Times:
-            return `${repetir(' ', nivel*2)} MULTIPLICAR`
+            return `${repetir(' ', nivel*espacios)} MULTIPLICAR`
         case S4.StatementKinds.Slash:
-            return `${repetir(' ', nivel*2)} DIVIDIR`
+            return `${repetir(' ', nivel*espacios)} DIVIDIR`
         case S4.StatementKinds.Div:
-            return `${repetir(' ', nivel*2)} DIV`
+            return `${repetir(' ', nivel*espacios)} DIV`
         case S4.StatementKinds.Mod:
-            return `${repetir(' ', nivel*2)} MODULO`
+            return `${repetir(' ', nivel*espacios)} MODULO`
         case S4.StatementKinds.Power:
-            return `${repetir(' ', nivel*2)} POTENCIA`
+            return `${repetir(' ', nivel*espacios)} POTENCIA`
         case S4.StatementKinds.Assign:
-            return `${repetir(' ', nivel*2)} ASIGNAR ${e.varname}`
+            return `${repetir(' ', nivel*espacios)} ASIGNAR ${e.varname}`
         case S4.StatementKinds.Get:
-            return `${repetir(' ', nivel*2)} INVOCAR ${e.varname}`
+            return `${repetir(' ', nivel*espacios)} INVOCAR ${e.varname}`
         case S4.StatementKinds.AssignV:
-            return `${repetir(' ', nivel*2)} ASIGNARV ${e.varname} ${e.total_indexes}`
+            return `${repetir(' ', nivel*espacios)} ASIGNARV ${e.varname} ${e.total_indexes}`
         case S4.StatementKinds.GetV:
-            return `${repetir(' ', nivel*2)} INVOCARV ${e.varname} ${e.total_indexes}`
+            return `${repetir(' ', nivel*espacios)} INVOCARV ${e.varname} ${e.total_indexes}`
         case S4.StatementKinds.Push:
-            return `${repetir(' ', nivel*2)} APILAR ${e.value}`
+            return `${repetir(' ', nivel*espacios)} APILAR ${e.value}`
         case S4.StatementKinds.Pop:
-            return `${repetir(' ', nivel*2)} DESAPILAR`
+            return `${repetir(' ', nivel*espacios)} DESAPILAR`
         case S4.StatementKinds.Minor:
-            return `${repetir(' ', nivel*2)} MENOR`
+            return `${repetir(' ', nivel*espacios)} MENOR`
         case S4.StatementKinds.MinorEq:
-            return `${repetir(' ', nivel*2)} MENOR IGUAL`
+            return `${repetir(' ', nivel*espacios)} MENOR IGUAL`
         case S4.StatementKinds.Different:
-            return `${repetir(' ', nivel*2)} DISTINTO`
+            return `${repetir(' ', nivel*espacios)} DISTINTO`
         case S4.StatementKinds.Equal:
-            return `${repetir(' ', nivel*2)} IGUAL`
+            return `${repetir(' ', nivel*espacios)} IGUAL`
         case S4.StatementKinds.Major:
-            return `${repetir(' ', nivel*2)} MAYOR`
+            return `${repetir(' ', nivel*espacios)} MAYOR`
         case S4.StatementKinds.MajorEq:
-            return `${repetir(' ', nivel*2)} MAYOR IGUAL`
+            return `${repetir(' ', nivel*espacios)} MAYOR IGUAL`
         case S4.StatementKinds.Not:
-            return `${repetir(' ', nivel*2)} NOT`
+            return `${repetir(' ', nivel*espacios)} NOT`
         case S4.StatementKinds.And:
-            return `${repetir(' ', nivel*2)} AND`
+            return `${repetir(' ', nivel*espacios)} AND`
         case S4.StatementKinds.Or:
-            return `${repetir(' ', nivel*2)} O`
+            return `${repetir(' ', nivel*espacios)} O`
         case S4.StatementKinds.If:
             return procesar_si(e, nivel + 1)
         case S4.StatementKinds.While:
@@ -114,37 +115,37 @@ function procesar_enunciado (e: S4.Statement, nivel: number) : string {
             // return procesar_hasta(e, nivel + 1)
             return '"REPETIR HASTA QUE" NO IMPLEMENTADO'
         case S4.StatementKinds.UserModuleCall:
-            return `${repetir(' ', nivel*2)} LLAMAR ${e.name} ${e.total_args}`
+            return `${repetir(' ', nivel*espacios)} LLAMAR ${e.name} ${e.total_args}`
         case S4.StatementKinds.ReadCall:
-            return `${repetir(' ', nivel*2)} LEER ${e.varname}`
+            return `${repetir(' ', nivel*espacios)} LEER ${e.varname}`
         case S4.StatementKinds.WriteCall:
-            return `${repetir(' ', nivel*2)} ESCRIBIR`
+            return `${repetir(' ', nivel*espacios)} ESCRIBIR`
     }
 }
 
 function procesar_si(e: S4.If, nivel: number) : string {
     let s = ''
 
-    s += `${repetir(' ', (nivel - 1)*2)}SI VERDADERO:`
+    s += `${repetir(' ', (nivel - 1)*espacios)}SI VERDADERO:\n`
     /**
      * Procesar rama verdadera
      */
     let c = e.true_branch_entry
     while (c.exit_point != null) {
-        s += repetir(' ', nivel*2) + procesar_enunciado(c, 0)
+        s += repetir(' ', nivel*espacios) + procesar_enunciado(c, 0) + '\n'
         c = c.exit_point
     }
 
     if (e.false_branch_entry) {
-        s += `${repetir(' ', (nivel - 1)*2)}SI FALSO:`
-        let c = e.true_branch_entry
+        s += `${repetir(' ', (nivel - 1)*espacios)}SI FALSO:\n`
+        let c = e.false_branch_entry
         while (c.exit_point != null) {
-            s += repetir(' ', nivel*2) + procesar_enunciado(c, 0)
+            s += repetir(' ', nivel*espacios) + procesar_enunciado(c, 0) + '\n'
             c = c.exit_point
         }   
     }
 
-    s += `${repetir(' ', (nivel - 1)*2)}FIN SI:`
+    s += `${repetir(' ', (nivel - 1)*espacios)}FIN SI`
 
     return s
 }
@@ -152,17 +153,17 @@ function procesar_si(e: S4.If, nivel: number) : string {
 function procesar_mientras(e: S4.While, nivel: number) : string {
     let s = ''
 
-    s += `${repetir(' ', (nivel - 1)*2)}MIENTRAS VERDADERO:`
+    s += `${repetir(' ', (nivel - 1)*espacios)}MIENTRAS VERDADERO:\n`
     /**
      * Procesar rama verdadera
      */
     let c = e.entry_point
     while (c.exit_point != null) {
-        s += repetir(' ', nivel*2) + procesar_enunciado(c, 0)
+        s += repetir(' ', nivel*espacios) + procesar_enunciado(c, 0) + '\n'
         c = c.exit_point
     }
 
-    s += `${repetir(' ', (nivel - 1)*2)}FIN MIENTRAS:`
+    s += `${repetir(' ', (nivel - 1)*espacios)}FIN MIENTRAS`
 
     return s
 }
