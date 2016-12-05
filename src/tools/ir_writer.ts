@@ -157,7 +157,7 @@ function procesar_si(e: S4.If, nivel: number) : string {
      * Procesar rama verdadera
      */
     let c = e.true_branch_entry
-    while (c.exit_point != null) {
+    while (c != null) {
         s += repetir(' ', nivel*espacios) + procesar_enunciado(c, 0) + '\n'
         c = c.exit_point
     }
@@ -165,7 +165,7 @@ function procesar_si(e: S4.If, nivel: number) : string {
     if (e.false_branch_entry) {
         s += `${repetir(' ', (nivel - 1)*espacios)}SI FALSO:\n`
         let c = e.false_branch_entry
-        while (c.exit_point != null) {
+        while (c != null) {
             s += repetir(' ', nivel*espacios) + procesar_enunciado(c, 0) + '\n'
             c = c.exit_point
         }   
@@ -184,7 +184,7 @@ function procesar_mientras(e: S4.While, nivel: number) : string {
      * Procesar rama verdadera
      */
     let c = e.entry_point
-    while (c.exit_point != null) {
+    while (c != null) {
         s += repetir(' ', nivel*espacios) + procesar_enunciado(c, 0) + '\n'
         c = c.exit_point
     }

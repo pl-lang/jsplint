@@ -218,9 +218,10 @@ function transform_write (wc: S2.WriteCall) : P.Statement {
 
     for (let i = 0; i < wc.args.length - 1; i++) {
         const next_arg = transform_expression(wc.args[i + 1])
-        P.set_exit(last_statement, next_arg)
+        const next_arg_last = P.get_last(next_arg)
+        last_statement.exit_point = next_arg
         const wcall = new P.WriteCall()
-        next_arg.exit_point = wcall
+        next_arg_last.exit_point = wcall
         last_statement = wcall
     }
 
@@ -296,17 +297,22 @@ function transform_return (ret: Return) : P.Statement {
 }
 
 function transform_body (body: S2.Statement[]) : P.Statement {
-    const entry_point: P.Statement = transform_statement(body[0])
+    if (body.length > 0) {
+        const entry_point: P.Statement = transform_statement(body[0])
 
-    let last_statement: P.Statement = P.get_last(entry_point)
+        let last_statement: P.Statement = P.get_last(entry_point)
 
-    for (let i = 0; i < body.length - 1; i++) {
-        const next_statement = transform_statement(body[i+1])
-        last_statement.exit_point = next_statement
-        last_statement = P.get_last(next_statement)
+        for (let i = 0; i < body.length - 1; i++) {
+            const next_statement = transform_statement(body[i+1])
+            last_statement.exit_point = next_statement
+            last_statement = P.get_last(next_statement)
+        }
+
+        return entry_point
     }
-
-    return entry_point
+    else {
+        return null
+    }
 }
 
 function transform_statement (statement: S2.Statement) : P.Statement {

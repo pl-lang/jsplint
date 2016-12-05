@@ -8,7 +8,7 @@ import {IError, ISuccess} from '../interfaces/Utility'
 
 import * as PI from '../interfaces/ParsingInterfaces'
 
-import {ValueKind, ReservedKind, SymbolKind, OtherKind, Token} from './TokenTypes'
+import {ValueKind, ReservedKind, SymbolKind, OtherKind, Token, SpecialSymbolToken} from './TokenTypes'
 
 import TokenQueue from './TokenQueue.js'
 
@@ -382,7 +382,7 @@ export function Expression (source: TokenQueue) : IError<PI.PatternError> | ISuc
       }
     }
     else if (is_operator(ctoken.kind)) {
-      const p1 = precedence[ctoken.kind]
+      const p1 = precedence[(ctoken as SpecialSymbolToken).name]
       const p2 = () => precedence[operators[0].name]
 
       while (operators.length > 0 &&  p1 <= p2()) {

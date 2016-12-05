@@ -90,12 +90,17 @@ export default class Lexer {
 
   nextToken() {
 
+    if (isWhiteSpace(this.currentChar())) {
+      this.skipWhiteSpace()
+    }
+
     if (this.isCommentLine()) {
       this.skipCommment()
     }
 
-    if (isWhiteSpace(this.currentChar()))
+    if (isWhiteSpace(this.currentChar())) {
       this.skipWhiteSpace()
+    }
 
     let c = this.currentChar()
 
