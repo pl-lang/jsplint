@@ -465,7 +465,7 @@ export function Value (source: TokenQueue) : IError<PI.PatternError> | ISuccess<
 }
 
 function isLiteralTokenType (k: PI.TokenKind) {
-  let is_num = k == ReservedKind.Entero || k == ReservedKind.Real
+  let is_num = k == ValueKind.Integer || k == ValueKind.Real
   let is_bool = k == ReservedKind.Verdadero || k == ReservedKind.Falso
   let is_other = k == ReservedKind.Caracter || k == ValueKind.String
   return is_num || is_bool || is_other

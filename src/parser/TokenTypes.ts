@@ -18,7 +18,7 @@ export enum ValueKind {
 }
 
 export enum SymbolKind {
-  Plus = 0,
+  Plus = ValueKind.String + 1,
   Minus,
   Times,
   Slash,
@@ -40,7 +40,7 @@ export enum SymbolKind {
 }
 
 export enum ReservedKind {
-  Si = 0,
+  Si = SymbolKind.EOL + 1,
   Or,
   Fin,
   Que,
@@ -74,7 +74,7 @@ export enum ReservedKind {
 }
 
 export enum OtherKind {
-  Word = 0,
+  Word = ReservedKind.FinProcedimiento + 1,
   Unknown
 }
 
