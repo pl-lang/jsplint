@@ -177,46 +177,32 @@ function transform_for (statement: S2.For) : P.Statement {
     body_last.exit_point = incremement_entry
     increment_last.exit_point = condition_entry
 
-    return condition_entry
+    return init
 }
 
-function transform_call (call: S2.Call) : P.Statement {
+function transform_call (call: S2.ModuleCall) : P.Statement {
     /**
-     * La transformacion es diferente si la llamada es
-     * a 'leer' o 'escribir', o a alguna funcion o
-     * procedimiento del usuario.
+     * Para transformar las llamadas solo hay que encadenar
+     * la evaluacion de sus argumentos (en el orden en que aparecen)
+     * con el Statement de llamada.
      */
+    const first_arg: P.Statement = transform_expression(call.args[0])
+    let last_statement = P.get_last(first_arg)
 
-    if (call.name == 'escribir') {
-        return transform_write(call as S2.IOCall)
+    for (let i = 0; i < call.args.length - 1; i++) {
+        const next_arg = transform_expression(call.args[i + 1])
+        last_statement.exit_point = next_arg
+        last_statement = P.get_last(next_arg)
     }
-    else if (call.name == 'leer') {
-        return transform_read(call as S2.IOCall)
-    }
-    else {
-        /**
-         * Para transformar las llamadas solo hay que encadenar
-         * la evaluacion de sus argumentos (en el orden en que aparecen)
-         * con el Statement de llamada.
-         */
-        const first_arg: P.Statement = transform_expression(call.args[0])
-        let last_statement = P.get_last(first_arg)
 
-        for (let i = 1; i < call.args.length - 1; i++) {
-            const next_arg = transform_expression(call.args[i])
-            last_statement.exit_point = next_arg
-            last_statement = P.get_last(next_arg)
-        }
+    const ucall = new P.UserModuleCall(call.name, call.args.length)
 
-        const ucall = new P.UserModuleCall(call.name, call.args.length)
+    last_statement.exit_point =  ucall
 
-        last_statement.exit_point =  ucall
-
-        return first_arg
-    }
+    return first_arg
 }
 
-function transform_write (wc: S2.IOCall) : P.Statement {
+function transform_write (wc: S2.WriteCall) : P.Statement {
     /**
      * Escribir es un procedimiento que toma solo un argumento,
      * en realidad.
@@ -230,8 +216,8 @@ function transform_write (wc: S2.IOCall) : P.Statement {
     last_statement.exit_point = escribir_call
     last_statement = escribir_call
 
-    for (let i = 1; i < wc.args.length - 1; i++) {
-        const next_arg = transform_expression(wc.args[i])
+    for (let i = 0; i < wc.args.length - 1; i++) {
+        const next_arg = transform_expression(wc.args[i + 1])
         P.set_exit(last_statement, next_arg)
         const wcall = new P.WriteCall()
         next_arg.exit_point = wcall
@@ -241,7 +227,7 @@ function transform_write (wc: S2.IOCall) : P.Statement {
     return first_arg
 }
 
-function transform_read (rc: S2.IOCall) : P.Statement {
+function transform_read (rc: S2.ReadCall) : P.Statement {
     /**
      * Leer tambien es un procedimiento de un solo argumento.
      * Por cada argumento hay que crear una llamada a leer y una asignacion.
@@ -281,8 +267,8 @@ function create_assignment (v: S2.InvocationValue) : P.Statement {
     if (v.is_array) {
         const first_index = transform_expression(v.indexes[0])
         let last_statement = P.get_last(first_index)
-        for (let i = 1; i < v.indexes.length - 1; i++) {
-            const next_index = transform_expression(v.indexes[i])
+        for (let i = 0; i < v.indexes.length - 1; i++) {
+            const next_index = transform_expression(v.indexes[i + 1])
             last_statement.exit_point =  next_index
             last_statement = P.get_last(next_index)
         }
@@ -336,7 +322,14 @@ function transform_statement (statement: S2.Statement) : P.Statement {
         case 'for':
             return transform_for(statement)
         case 'call':
-            break
+            switch (statement.name) {
+                case 'leer':
+                    return transform_read(statement as S2.ReadCall)
+                case 'escribir':
+                    return transform_write(statement as S2.WriteCall)
+                default:
+                    return transform_call(statement as S2.ModuleCall)
+            }
         case 'return':
             return transform_return(statement)
     }
@@ -474,7 +467,7 @@ function transform_exp_element (element: ExpElement) : P.Statement {
          * Este type assert no causa problemas porque element
          * contiene todas las propiedades que se usan en transform_call.
          */
-        return transform_call(element as S2.Call)
+        return transform_call(element as S2.ModuleCall)
     default:
       console.log(element);
       throw new Error(`La transformacion de  "${element.type}" aun no fue implementada.`)
