@@ -263,7 +263,7 @@ export function Variable (source: TokenQueue) : IError<PI.PatternError> | ISucce
   else {
     name = word_match.result
 
-    if (source.current().kind === SymbolKind.LeftPar) {
+    if (source.current().kind === SymbolKind.LeftBracket) {
       source.next()
 
       let index_expressions_match = IndexExpression(source)
@@ -275,7 +275,7 @@ export function Variable (source: TokenQueue) : IError<PI.PatternError> | ISucce
       is_array = true
       indexes = index_expressions_match.result
 
-      if (source.current().kind === SymbolKind.RightPar) {
+      if (source.current().kind === SymbolKind.RightBracket) {
         source.next()
 
         return {error:false, result:{name, is_array, indexes}}
