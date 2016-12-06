@@ -47,12 +47,12 @@ export interface NullAction {
 }
 
 export interface Paused {
-  paused: boolean
+  action: 'paused'
 }
 
 export type SuccessfulReturn = Success<Read> | Success<Write> | Success<NullAction>
 
-export default class Evaluator {
+export class Evaluator {
   private readonly modules: {[p:string]: S4.Module}
   private readonly entry_point: S4.Statement
   private current_statement: S4.Statement
@@ -94,7 +94,7 @@ export default class Evaluator {
    * get_locals
    * devuelve las variables locales de un modulo.
    */
-  public get_locals (module_name: string) {
+  get_locals (module_name: string) {
     return this.locals[module_name]
   }
 
@@ -102,7 +102,7 @@ export default class Evaluator {
    * get_globals
    * devuelve las variables globales de este evaluador.
    */
-  public get_globals() {
+  get_globals() {
     return this.globals
   }
 
@@ -114,12 +114,12 @@ export default class Evaluator {
     this.state.value_stack.push(v)
   }
 
-  step2 () : Failure<OutOfBounds> | SuccessfulReturn | Success<Paused> {
+  step () : Failure<OutOfBounds> | SuccessfulReturn | Success<Paused> {
     /**
      * El evaluador esta en pausa cuando esta esperando que sea realice alguna lectura.
      */
     if (this.state.paused) {
-      return {error: false, result: {paused: true}}
+      return {error: false, result: {action: 'paused'}}
     }
 
     if (this.state.done || this.state.error || this.state.next_statement === null) {
@@ -129,7 +129,7 @@ export default class Evaluator {
       this.current_statement = this.state.next_statement
     }
 
-    const report = this.evaluate2(this.current_statement)
+    const report = this.evaluate(this.current_statement)
 
     this.state.last_report = report
 
@@ -174,7 +174,7 @@ export default class Evaluator {
    * evaluate
    * ejecuta los enunciados y establece el proximo enunciado
    */
-  evaluate2 (s: S4.Statement) : Failure<OutOfBounds> | SuccessfulReturn {
+  private evaluate (s: S4.Statement) : Failure<OutOfBounds> | SuccessfulReturn {
     switch (s.kind) {
        case S4.StatementKinds.Plus:
         return this.plus()
@@ -392,7 +392,7 @@ export default class Evaluator {
     return {error:false, result:{action:'none'}}
   }
 
-  uminus() {
+  private uminus() {
     let a = this.state.value_stack.pop()
 
     this.state.value_stack.push(-a)
@@ -532,7 +532,7 @@ export default class Evaluator {
     return {error: false, result: {action: 'none'}}
   }
 
-  is_whithin_bounds (indexes: number[], dimensions: number[]) {
+  private is_whithin_bounds (indexes: number[], dimensions: number[]) {
     let i = 0
 
     // NOTE: en las condiciones de abajo sumo 1 porque en index_values se le
@@ -552,7 +552,7 @@ export default class Evaluator {
     return true
   }
 
-  calculate_index (indexes: number[], dimensions: number[]) {
+  private calculate_index (indexes: number[], dimensions: number[]) {
     let result = 0
     let index_amount = indexes.length
     let i = 0
