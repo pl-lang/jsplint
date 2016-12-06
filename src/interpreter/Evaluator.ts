@@ -35,19 +35,23 @@ export interface Read {
   action: 'read'
   // agregar esto mas adelante
   // type: 'entero' | 'real' | 'caracter' | 'cadena'
+  done: boolean
 }
 
 export interface Write {
   action: 'write',
   value: Value
+  done: boolean
 }
 
 export interface NullAction {
   action: 'none'
+  done: boolean
 }
 
 export interface Paused {
   action: 'paused'
+  done: boolean
 }
 
 export type SuccessfulReturn = Success<Read> | Success<Write> | Success<NullAction>
@@ -84,7 +88,7 @@ export class Evaluator {
       value_stack: [],
       module_stack: [],
       statement_stack: [],
-      last_report: null,
+      last_report: {error: false, result: {action: 'none', done: this.entry_point === null ? true:false}},
       next_statement: null,
       paused: false
     }
@@ -119,7 +123,7 @@ export class Evaluator {
      * El evaluador esta en pausa cuando esta esperando que sea realice alguna lectura.
      */
     if (this.state.paused) {
-      return {error: false, result: {action: 'paused'}}
+      return {error: false, result: {action: 'paused', done: this.state.done}}
     }
 
     if (this.state.done || this.state.error || this.state.next_statement === null) {
@@ -237,7 +241,7 @@ export class Evaluator {
 
   private push (s: S4.Push) : Success<NullAction> {
     this.state.value_stack.push(s.value)
-    return {error: false, result: {action: 'none'}}
+    return {error: false, result: {action: 'none', done: this.state.done}}
   }
 
   /**
@@ -245,7 +249,7 @@ export class Evaluator {
    */
   private pop (s: S4.Pop) : Success<NullAction> {
     this.state.value_stack.pop()
-    return {error: false, result: {action: 'none'}}
+    return {error: false, result: {action: 'none', done: this.state.done}}
   }
 
   private assign (s: S4.Assign) : Success<NullAction> {
@@ -253,7 +257,7 @@ export class Evaluator {
 
     variable.value = this.state.value_stack.pop()
 
-    return {error: false, result: {action: 'none'}}
+    return {error: false, result: {action: 'none', done: this.state.done}}
   }
 
   private get_value (s: S4.Get) : Success<NullAction> {
@@ -261,7 +265,7 @@ export class Evaluator {
 
     this.state.value_stack.push(variable.value)
 
-    return {error: false, result: {action: 'none'}}
+    return {error: false, result: {action: 'none', done: this.state.done}}
   }
 
   private assignv (s: S4.AssignV) : Failure<OutOfBounds> | Success<NullAction> {
@@ -351,12 +355,12 @@ export class Evaluator {
   private write (s: S4.WriteCall) : Success<Write> {
     const v = this.state.value_stack.pop()
 
-    return {error: false, result: {action: 'write', value: v}}
+    return {error: false, result: {action: 'write', value: v, done: this.state.done}}
   }
 
   private read (s: S4.ReadCall) : Success<Read> {
     this.state.paused = true
-    return {error: false, result: {action: 'read'}}
+    return {error: false, result: {action: 'read', done: this.state.done}}
   }
 
   private if_st (s: S4.If) : Success<NullAction> {
@@ -364,7 +368,7 @@ export class Evaluator {
 
     this.state.next_statement = condition_result ? s.true_branch_entry:s.false_branch_entry
 
-    return {error: false, result: {action: 'none'}}
+    return {error: false, result: {action: 'none', done: this.state.done}}
   }
 
   private while_st (s: S4.While) : Success<NullAction> {
@@ -372,7 +376,7 @@ export class Evaluator {
 
     this.state.next_statement = condition_result ? s.entry_point:s.exit_point
 
-    return {error: false, result: {action: 'none'}}
+    return {error: false, result: {action: 'none', done: this.state.done}}
   }
 
   private until_st (s: S4.Until) : Success<NullAction> {
@@ -380,7 +384,7 @@ export class Evaluator {
 
     this.state.next_statement = !condition_result ? s.entry_point:s.exit_point
 
-    return {error: false, result: {action: 'none'}}
+    return {error: false, result: {action: 'none', done: this.state.done}}
   }
 
   private times() : Success<NullAction> {
@@ -389,7 +393,7 @@ export class Evaluator {
 
     this.state.value_stack.push(a*b)
 
-    return {error:false, result:{action:'none'}}
+    return {error: false, result: {action: 'none', done: this.state.done}}
   }
 
   private uminus() {
@@ -404,7 +408,7 @@ export class Evaluator {
 
     this.state.value_stack.push(Math.pow(a, b))
 
-    return {error: false, result: {action: 'none'}}
+    return {error: false, result: {action: 'none', done: this.state.done}}
   }
 
   private div () : Success<NullAction> {
@@ -413,7 +417,7 @@ export class Evaluator {
 
     this.state.value_stack.push((a - (a % b)) / b)
 
-    return {error: false, result: {action:'none'}}
+    return {error: false, result: {action: 'none', done: this.state.done}}
   }
 
   private mod () : Success<NullAction> {
@@ -422,7 +426,7 @@ export class Evaluator {
 
     this.state.value_stack.push(a % b)
 
-    return {error: false, result: {action:'none'}}
+    return {error: false, result: {action: 'none', done: this.state.done}}
   }
 
   private divide () : Success<NullAction> {
@@ -431,7 +435,7 @@ export class Evaluator {
 
     this.state.value_stack.push(a/b)
 
-    return {error: false, result: {action:'none'}}
+    return {error: false, result: {action: 'none', done: this.state.done}}
   }
 
   private minus () : Success<NullAction> {
@@ -440,7 +444,7 @@ export class Evaluator {
 
     this.state.value_stack.push(a - b)
 
-    return {error: false, result: {action: 'none'}}
+    return {error: false, result: {action: 'none', done: this.state.done}}
   }
 
   private plus () : Success<NullAction> {
@@ -449,7 +453,7 @@ export class Evaluator {
 
     this.state.value_stack.push(a + b)
 
-    return {error: false, result: {action: 'none'}}
+    return {error: false, result: {action: 'none', done: this.state.done}}
   }
 
   private less () : Success<NullAction> {
@@ -458,7 +462,7 @@ export class Evaluator {
 
     this.state.value_stack.push(a < b)
 
-    return {error: false, result: {action: 'none'}}
+    return {error: false, result: {action: 'none', done: this.state.done}}
   }
 
   private less_or_equal () : Success<NullAction> {
@@ -467,7 +471,7 @@ export class Evaluator {
 
     this.state.value_stack.push(a <= b)
 
-    return {error: false, result: {action: 'none'}}
+    return {error: false, result: {action: 'none', done: this.state.done}}
   }
 
   private greater () : Success<NullAction> {
@@ -476,7 +480,7 @@ export class Evaluator {
 
     this.state.value_stack.push(a > b)
 
-    return {error: false, result: {action: 'none'}}
+    return {error: false, result: {action: 'none', done: this.state.done}}
   }
 
   private greater_or_equal () : Success<NullAction> {
@@ -485,7 +489,7 @@ export class Evaluator {
 
     this.state.value_stack.push(a >= b)
 
-    return {error: false, result: {action: 'none'}}
+    return {error: false, result: {action: 'none', done: this.state.done}}
   }
 
   private equal () : Success<NullAction> {
@@ -494,7 +498,7 @@ export class Evaluator {
 
     this.state.value_stack.push(a == b)
 
-    return {error: false, result: {action: 'none'}}
+    return {error: false, result: {action: 'none', done: this.state.done}}
   }
 
   private not () : Success<NullAction> {
@@ -502,7 +506,7 @@ export class Evaluator {
 
     this.state.value_stack.push(!a)
 
-    return {error: false, result: {action: 'none'}}
+    return {error: false, result: {action: 'none', done: this.state.done}}
   }
 
   private different () : Success<NullAction> {
@@ -511,7 +515,7 @@ export class Evaluator {
 
     this.state.value_stack.push(a != b)
 
-    return {error: false, result: {action: 'none'}}
+    return {error: false, result: {action: 'none', done: this.state.done}}
   }
 
   private and () : Success<NullAction> {
@@ -520,7 +524,7 @@ export class Evaluator {
 
     this.state.value_stack.push(a && b)
 
-    return {error: false, result: {action: 'none'}}
+    return {error: false, result: {action: 'none', done: this.state.done}}
   }
 
   private or () : Success<NullAction> {
@@ -529,7 +533,7 @@ export class Evaluator {
 
     this.state.value_stack.push(a || b)
 
-    return {error: false, result: {action: 'none'}}
+    return {error: false, result: {action: 'none', done: this.state.done}}
   }
 
   private is_whithin_bounds (indexes: number[], dimensions: number[]) {
