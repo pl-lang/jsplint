@@ -6,6 +6,8 @@
  * 	- program-paused
  * 	- program-finished
  * 	- evaluation-error
+ *  - write
+ *  - read
  */
 
 import {Evaluator, Value} from './Evaluator'
@@ -53,7 +55,6 @@ export default class Interpreter extends Emitter {
         done = true
         this.emit('evaluation-error', evaluation_report.result)
       }
-
       else if (evaluation_report.error == false) {
         switch (evaluation_report.result.action) {
           case 'read':
@@ -67,6 +68,10 @@ export default class Interpreter extends Emitter {
             this.paused = true
             this.running = false
             break
+        }
+        done = evaluation_report.result.done
+        if (done) {
+          this.running = false
         }
       }
     }
