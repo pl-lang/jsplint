@@ -39,6 +39,7 @@ export interface Program {
         [p:string] : Module
     }
     local_variables: {
+        main: VariableDict
         [p:string] : VariableDict
     }
 }

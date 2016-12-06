@@ -21,6 +21,7 @@ export interface AST {
     }
   }
   local_variables: {
+    main: S1.VariableDict
     [m: string]: S1.VariableDict
   }
 }
