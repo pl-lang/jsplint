@@ -1,32 +1,22 @@
 'use strict'
-import should from 'should'
+import 'should'
 
 import Parser from '../src/parser/Parser.js'
 
-import StaticChecker from '../src/typechecker/TypeChecker.js'
+import stage1_transform from '../src/transformer/Declarator'
+import stage2_transform from '../src/transformer/CallDecorator'
+import stage3_transform from '../src/transformer/Interpretable'
 
-import DeclarationTransform from '../src/transformer/Checkable.js'
-import EvaluatorTransform from '../src/transformer/Interpretable.js'
-import TreeToRPNTransform from '../src/transformer/TreeToRPN.js'
+import {Evaluator} from '../src/interpreter/Evaluator'
 
+import transform from '../src/transformer/transform'
 
-import Evaluator from '../src/interpreter/Evaluator.js'
+function parse (s: string) {
+    const p = new Parser()
 
-function programFromSource(string) {
-  let parser = new Parser()
+    p.on('syntax-error', console.log)
 
-  let checker = new StaticChecker()
-
-  checker.on('type-error', (...args) => {
-    console.log(...args)
-    throw new Error('Programa con error de tipado en una de las pruebas')
-  })
-
-  let parser_output = parser.parse(string).result
-
-  let executable_ast = EvaluatorTransform(DeclarationTransform(TreeToRPNTransform(parser_output)))
-
-  return executable_ast
+    return p.parse(s)
 }
 
 
@@ -36,7 +26,7 @@ describe('Evaluacion de programas y expresiones', () => {
     inicio
     fin
     `
-    let modules = programFromSource(code).modules
+    let modules = parse(code)
 
     let evaluator = new Evaluator(modules)
 
@@ -56,7 +46,7 @@ describe('Evaluacion de programas y expresiones', () => {
       a <- 2
     fin`
 
-    let modules = programFromSource(code).modules
+    let modules = parse(code).modules
 
     let evaluator = new Evaluator(modules)
 
@@ -86,7 +76,7 @@ describe('Evaluacion de programas y expresiones', () => {
       v[5] <- 3
     fin`
 
-    let modules = programFromSource(code).modules
+    let modules = parse(code).modules
 
     let evaluator = new Evaluator(modules)
 
@@ -113,7 +103,7 @@ describe('Evaluacion de programas y expresiones', () => {
       m[2, 2] <- 9
     fin`
 
-    let modules = programFromSource(code).modules
+    let modules = parse(code).modules
 
     let evaluator = new Evaluator(modules)
 
@@ -135,7 +125,7 @@ describe('Evaluacion de programas y expresiones', () => {
       escribir(4)
     fin`
 
-    let modules = programFromSource(code).modules
+    let modules = parse(code).modules
 
     let evaluator = new Evaluator(modules)
 
@@ -152,7 +142,7 @@ describe('Evaluacion de programas y expresiones', () => {
       escribir(4, 3, 2, 1)
     fin`
 
-    let modules = programFromSource(code).modules
+    let modules = parse(code).modules
 
     let evaluator = new Evaluator(modules)
 
@@ -191,7 +181,7 @@ describe('Evaluacion de programas y expresiones', () => {
       escribir(a)
     fin`
 
-    let modules = programFromSource(code).modules
+    let modules = parse(code).modules
 
     let evaluator = new Evaluator(modules)
 
@@ -214,7 +204,7 @@ describe('Evaluacion de programas y expresiones', () => {
       escribir(v[2])
     fin`
 
-    let modules = programFromSource(code).modules
+    let modules = parse(code).modules
 
     let evaluator = new Evaluator(modules)
 
@@ -245,7 +235,7 @@ describe('Evaluacion de programas y expresiones', () => {
       escribir(m[1, 2])
     fin`
 
-    let modules = programFromSource(code).modules
+    let modules = parse(code).modules
 
     let evaluator = new Evaluator(modules)
 
@@ -273,7 +263,7 @@ describe('Evaluacion de programas y expresiones', () => {
       leer(m)
     fin`
 
-    let modules = programFromSource(code).modules
+    let modules = parse(code).modules
 
     let evaluator = new Evaluator(modules)
 
@@ -301,7 +291,7 @@ describe('Evaluacion de programas y expresiones', () => {
       leer(v[1])
     fin`
 
-    let modules = programFromSource(code).modules
+    let modules = parse(code).modules
 
     let evaluator = new Evaluator(modules)
 
@@ -330,7 +320,7 @@ describe('Evaluacion de programas y expresiones', () => {
       finsi
     fin`
 
-    let modules = programFromSource(code).modules
+    let modules = parse(code).modules
 
     let evaluator = new Evaluator(modules)
 
@@ -353,7 +343,7 @@ describe('Evaluacion de programas y expresiones', () => {
       finsi
     fin`
 
-    let modules = programFromSource(code).modules
+    let modules = parse(code).modules
 
     let evaluator = new Evaluator(modules)
 
@@ -378,7 +368,7 @@ describe('Evaluacion de programas y expresiones', () => {
       escribir(i)
     fin`
 
-    let modules = programFromSource(code).modules
+    let modules = parse(code).modules
 
     let evaluator = new Evaluator(modules)
 
@@ -416,7 +406,7 @@ describe('Evaluacion de programas y expresiones', () => {
       finpara
     fin`
 
-    let modules = programFromSource(code).modules
+    let modules = parse(code).modules
 
     let evaluator = new Evaluator(modules)
 
@@ -465,7 +455,7 @@ describe('Evaluacion de programas y expresiones', () => {
       escribir(i)
     fin`
 
-    let modules = programFromSource(code).modules
+    let modules = parse(code).modules
 
     let evaluator = new Evaluator(modules)
 
@@ -506,7 +496,7 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 2*3
         fin`
 
-        let modules = programFromSource(code).modules
+        let modules = parse(code).modules
 
         let evaluator = new Evaluator(modules)
 
@@ -527,7 +517,7 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- -2*-3
         fin`
 
-        let modules = programFromSource(code).modules
+        let modules = parse(code).modules
 
         let evaluator = new Evaluator(modules)
 
@@ -548,7 +538,7 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 2*2*2
         fin`
 
-        let modules = programFromSource(code).modules
+        let modules = parse(code).modules
 
         let evaluator = new Evaluator(modules)
 
@@ -570,7 +560,7 @@ describe('Evaluacion de programas y expresiones', () => {
           c <- a * b
         fin`
 
-        let modules = programFromSource(code).modules
+        let modules = parse(code).modules
 
         let evaluator = new Evaluator(modules)
 
@@ -592,7 +582,7 @@ describe('Evaluacion de programas y expresiones', () => {
           v[3] <- v[1] * v[2]
         fin`
 
-        let modules = programFromSource(code).modules
+        let modules = parse(code).modules
 
         let evaluator = new Evaluator(modules)
 
@@ -614,7 +604,7 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 3/2
         fin`
 
-        let modules = programFromSource(code).modules
+        let modules = parse(code).modules
 
         let evaluator = new Evaluator(modules)
 
@@ -634,7 +624,7 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- -3/-2
         fin`
 
-        let modules = programFromSource(code).modules
+        let modules = parse(code).modules
 
         let evaluator = new Evaluator(modules)
 
@@ -654,7 +644,7 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 2+3/3+4
         fin`
 
-        let modules = programFromSource(code).modules
+        let modules = parse(code).modules
 
         let evaluator = new Evaluator(modules)
 
@@ -674,7 +664,7 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 3/2/2
         fin`
 
-        let modules = programFromSource(code).modules
+        let modules = parse(code).modules
 
         let evaluator = new Evaluator(modules)
 
@@ -694,7 +684,7 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 2/2/2/2
         fin`
 
-        let modules = programFromSource(code).modules
+        let modules = parse(code).modules
 
         let evaluator = new Evaluator(modules)
 
@@ -714,7 +704,7 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 4/2/2/2
         fin`
 
-        let modules = programFromSource(code).modules
+        let modules = parse(code).modules
 
         let evaluator = new Evaluator(modules)
 
@@ -734,7 +724,7 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 2/2/2/4
         fin`
 
-        let modules = programFromSource(code).modules
+        let modules = parse(code).modules
 
         let evaluator = new Evaluator(modules)
 
@@ -756,7 +746,7 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 3-3-3
         fin`
 
-        let modules = programFromSource(code).modules
+        let modules = parse(code).modules
 
         let evaluator = new Evaluator(modules)
 
@@ -776,7 +766,7 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- (3-3-3)
         fin`
 
-        let modules = programFromSource(code).modules
+        let modules = parse(code).modules
 
         let evaluator = new Evaluator(modules)
 
@@ -798,7 +788,7 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 2+43
         fin`
 
-        let modules = programFromSource(code).modules
+        let modules = parse(code).modules
 
         let evaluator = new Evaluator(modules)
 
@@ -820,7 +810,7 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 2-(2-3)
         fin`
 
-        let modules = programFromSource(code).modules
+        let modules = parse(code).modules
 
         let evaluator = new Evaluator(modules)
 
@@ -840,7 +830,7 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 2+(2+3)
         fin`
 
-        let modules = programFromSource(code).modules
+        let modules = parse(code).modules
 
         let evaluator = new Evaluator(modules)
 
@@ -859,7 +849,7 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 2+(2+3*4)
         fin`
 
-        let modules = programFromSource(code).modules
+        let modules = parse(code).modules
 
         let evaluator = new Evaluator(modules)
 
@@ -879,7 +869,7 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- (3*2)-6
         fin`
 
-        let modules = programFromSource(code).modules
+        let modules = parse(code).modules
 
         let evaluator = new Evaluator(modules)
 
@@ -899,7 +889,7 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- (-(-(2+2)))
         fin`
 
-        let modules = programFromSource(code).modules
+        let modules = parse(code).modules
 
         let evaluator = new Evaluator(modules)
 
@@ -919,7 +909,7 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 2+8/2
         fin`
 
-        let modules = programFromSource(code).modules
+        let modules = parse(code).modules
 
         let evaluator = new Evaluator(modules)
 
@@ -941,7 +931,7 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 2 = 2
         fin`
 
-        let modules = programFromSource(code).modules
+        let modules = parse(code).modules
 
         let evaluator = new Evaluator(modules)
 
@@ -961,7 +951,7 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 2 <> 2
         fin`
 
-        let modules = programFromSource(code).modules
+        let modules = parse(code).modules
 
         let evaluator = new Evaluator(modules)
 
@@ -981,7 +971,7 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 2 >= 2
         fin`
 
-        let modules = programFromSource(code).modules
+        let modules = parse(code).modules
 
         let evaluator = new Evaluator(modules)
 
@@ -1001,7 +991,7 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 2 <= 2
         fin`
 
-        let modules = programFromSource(code).modules
+        let modules = parse(code).modules
 
         let evaluator = new Evaluator(modules)
 
@@ -1021,7 +1011,7 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 5 > 4
         fin`
 
-        let modules = programFromSource(code).modules
+        let modules = parse(code).modules
 
         let evaluator = new Evaluator(modules)
 
@@ -1041,7 +1031,7 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 2 < 4
         fin`
 
-        let modules = programFromSource(code).modules
+        let modules = parse(code).modules
 
         let evaluator = new Evaluator(modules)
 
@@ -1061,7 +1051,7 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- verdadero or falso
         fin`
 
-        let modules = programFromSource(code).modules
+        let modules = parse(code).modules
 
         let evaluator = new Evaluator(modules)
 
@@ -1081,7 +1071,7 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- verdadero and falso
         fin`
 
-        let modules = programFromSource(code).modules
+        let modules = parse(code).modules
 
         let evaluator = new Evaluator(modules)
 
@@ -1102,7 +1092,7 @@ describe('Evaluacion de programas y expresiones', () => {
         a <- 2 + 2 = 4
       fin`
 
-      let modules = programFromSource(code).modules
+      let modules = parse(code).modules
 
       let evaluator = new Evaluator(modules)
 
@@ -1128,7 +1118,7 @@ describe('Evaluacion de programas y expresiones', () => {
         escribir(a)
       finprocedimiento
       `
-      let modules = programFromSource(code).modules
+      let modules = parse(code).modules
 
       let evaluator = new Evaluator(modules)
 
