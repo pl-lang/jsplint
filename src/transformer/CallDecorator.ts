@@ -175,26 +175,61 @@ function transform_assignment (assignment: PI.Assignment, ast: S1.AST, module_na
   }
 }
 
-function transform_call (call: PI.Call, ast: S1.AST, module_name: string) : IError<S2.UndefinedModule[]> | ISuccess<S2.Call> {
-  // si es una de las funciones especiales del lenguaje, no hay que transformarla
-  if (is_builtin(call.name)) return {error:false, result:call as S2.IOCall}
+export type SuccesfulCall = ISuccess<S2.ReadCall> | ISuccess<S2.WriteCall> | ISuccess<S2.ModuleCall>
 
-  const info = get_module_info(call.name, ast)
+function transform_call (call: PI.Call, ast: S1.AST, module_name: string) : IError<S2.Error[]> | SuccesfulCall {
+  // si es la funcion leer, no hay que transformarla
+  if (call.name == 'leer') {return {error:false, result: call as S2.ReadCall}}
 
-  if (info.error) {
-    return info
-  }
-  else if (info.error == false) {
-    const new_call: S2.ModuleCall = {
-      type: 'call',
-      args: call.args,
-      name: call.name,
-      module_type: info.result.module_type,
-      parameters: info.result.parameters,
-      return_type: info.result.return_type
+  const errors_found: S2.Error[] = []
+
+  const args: PI.ExpElement[][] = []
+
+  for (let arg of call.args) {
+    const new_arg= transform_expression(arg, ast, module_name)
+    if (new_arg.error) {
+      errors_found.push(...new_arg.result)
     }
+    else if (new_arg.error == false) {
+      args.push(new_arg.result)
+    }
+  }
 
-    return {error:false, result:new_call}
+  let info: IError<S2.UndefinedModule[]> | ISuccess<S1.Module> = null
+
+  if (call.name != 'escribir') {
+    info = get_module_info(call.name, ast)
+
+    if (info.error) {
+      errors_found.push(...info.result)
+    }
+  }
+
+  if (errors_found.length > 0) {
+    return {error: true, result: errors_found}
+  }
+  else {
+    if (call.name == 'escribir') {
+      const new_call: S2.WriteCall = {
+        args: args,
+        name: 'escribir',
+        type: 'call'
+      }
+
+      return {error: false, result: new_call}
+    }
+    else {
+      const new_call: S2.ModuleCall = {
+        type: 'call',
+        args: call.args,
+        name: call.name,
+        module_type: (info.result as (S1.Function | S1.Procedure)).module_type,
+        parameters: (info.result as (S1.Function | S1.Procedure)).parameters,
+        return_type: (info.result as (S1.Function | S1.Procedure)).return_type
+      }
+
+      return {error:false, result:new_call}
+    }
   }
 }
 
