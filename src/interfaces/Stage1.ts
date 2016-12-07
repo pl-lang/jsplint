@@ -11,6 +11,7 @@ export interface AST {
     [p: string]: any
   }
   local_variables: {
+    main: VariableDict
     [m: string]: VariableDict
   }
 }
