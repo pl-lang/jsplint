@@ -3,9 +3,9 @@ import 'should'
 
 import Parser from '../src/parser/Parser.js'
 
-import stage1_transform from '../src/transformer/Declarator'
-import stage2_transform from '../src/transformer/CallDecorator'
-import stage3_transform from '../src/transformer/Interpretable'
+import {ParsedProgram} from '../src/interfaces/ParsingInterfaces'
+import {Program} from '../src/interfaces/Program'
+import {ArrayVariable, RegularVariable} from '../src/interfaces/Stage1'
 
 import {Evaluator} from '../src/interpreter/Evaluator'
 
@@ -22,51 +22,52 @@ function parse (s: string) {
 
 describe('Evaluacion de programas y expresiones', () => {
   it('programa sin enunciados', () => {
-    let code = `variables
+    const code = `variables
     inicio
     fin
     `
-    let modules = parse(code)
+    const p = transform(parse(code).result as ParsedProgram)
 
-    let evaluator = new Evaluator(modules)
+    const evaluator = new Evaluator(p.result as Program)
 
-    let output = evaluator.step()
+    const output = evaluator.step()
 
-    output.should.deepEqual({
-      done:true,
-      error:false,
-      output:null
+    output.result.should.deepEqual({
+      action: 'none',
+      done:true
     })
   })
 
   it('programa con una asignacion a una variable', () => {
-    let code = `variables
+    const code = `variables
       entero a
     inicio
       a <- 2
     fin`
 
-    let modules = parse(code).modules
+    const p = transform(parse(code).result as ParsedProgram)
 
-    let evaluator = new Evaluator(modules)
+    const evaluator = new Evaluator(p.result as Program)
 
     let output = evaluator.step()
 
-    output.should.deepEqual({done:false, error:false, output:null})
+    output.result.should.deepEqual({done:false, action: 'none'})
 
     output = evaluator.step()
 
-    output.should.deepEqual({done:false, error:false, output:null})
+    output.result.should.deepEqual({done:false, action: 'none'})
 
     output = evaluator.step()
 
-    output.should.deepEqual({done:true, error:false, output:null})
+    output.result.should.deepEqual({done:true, action: 'none'})
 
-    evaluator.getLocals('main').a.values[0].should.equal(2)
+    const a = evaluator.get_locals('main')['a'] as RegularVariable
+
+    a.value.should.equal(2)
   })
 
   it('programa con una asignacion a un vector', () => {
-    let code = `variables
+    const code = `variables
       entero v[5]
     inicio
       v[1] <- 5
@@ -76,25 +77,27 @@ describe('Evaluacion de programas y expresiones', () => {
       v[5] <- 3
     fin`
 
-    let modules = parse(code).modules
+    const p = transform(parse(code).result as ParsedProgram)
 
-    let evaluator = new Evaluator(modules)
+    const evaluator = new Evaluator(p.result as Program)
 
     let output = evaluator.step()
 
-    while (output.done == false) {
+    while (output.result.done == false) {
       output = evaluator.step()
     }
 
-    evaluator.getLocals('main').v.values[0].should.equal(5)
-    evaluator.getLocals('main').v.values[1].should.equal(8)
-    evaluator.getLocals('main').v.values[2].should.equal(7)
-    evaluator.getLocals('main').v.values[3].should.equal(9)
-    evaluator.getLocals('main').v.values[4].should.equal(3)
+    const v = evaluator.get_locals('main')['v'] as ArrayVariable
+
+    v.values[0].should.equal(5)
+    v.values[1].should.equal(8)
+    v.values[2].should.equal(7)
+    v.values[3].should.equal(9)
+    v.values[4].should.equal(3)
   })
 
   it('programa con una asignacion a una matriz', () => {
-    let code = `variables
+    const code = `variables
       entero m[2, 2]
     inicio
       m[1, 1] <- 5
@@ -103,99 +106,100 @@ describe('Evaluacion de programas y expresiones', () => {
       m[2, 2] <- 9
     fin`
 
-    let modules = parse(code).modules
+    const p = transform(parse(code).result as ParsedProgram)
 
-    let evaluator = new Evaluator(modules)
+    const evaluator = new Evaluator(p.result as Program)
 
     let output = evaluator.step()
 
-    while (output.done == false) {
+    while (output.result.done == false) {
       output = evaluator.step()
     }
 
-    evaluator.getLocals('main').m.values[0].should.equal(5)
-    evaluator.getLocals('main').m.values[1].should.equal(8)
-    evaluator.getLocals('main').m.values[2].should.equal(7)
-    evaluator.getLocals('main').m.values[3].should.equal(9)
+    const m = evaluator.get_locals('main')['m'] as ArrayVariable 
+
+    m.values[0].should.equal(5)
+    m.values[1].should.equal(8)
+    m.values[2].should.equal(7)
+    m.values[3].should.equal(9)
   })
 
   it('programa con un llamado a escribir de un solo argumento', () => {
-    let code = `variables
+    const code = `variables
     inicio
       escribir(4)
     fin`
 
-    let modules = parse(code).modules
+    const p = transform(parse(code).result as ParsedProgram)
 
-    let evaluator = new Evaluator(modules)
+    const evaluator = new Evaluator(p.result as Program)
 
     evaluator.step()
 
     let output = evaluator.step()
 
-    output.should.deepEqual({done:true, error:false, output:{action:'write', value:4}})
+    output.error.should.equal(false)
+    output.result.should.deepEqual({done:true, action:'write', value:4})
   })
 
   it('programa con un llamado a escribir con varios argumentos', () => {
-    let code = `variables
+    const code = `variables
     inicio
       escribir(4, 3, 2, 1)
     fin`
 
-    let modules = parse(code).modules
+    const p = transform(parse(code).result as ParsedProgram)
 
-    let evaluator = new Evaluator(modules)
+    const evaluator = new Evaluator(p.result as Program)
 
-    let output
+    let output = evaluator.step()
+
+    output = evaluator.step()
+
+    output.result.should.deepEqual({done:false, action:'write', value:4})
 
     evaluator.step()
 
     output = evaluator.step()
 
-    output.should.deepEqual({done:false, error:false, output:{action:'write', value:4}})
+    output.result.should.deepEqual({done:false, action:'write', value:3})
 
     evaluator.step()
 
     output = evaluator.step()
 
-    output.should.deepEqual({done:false, error:false, output:{action:'write', value:3}})
+    output.result.should.deepEqual({done:false, action:'write', value:2})
 
     evaluator.step()
 
     output = evaluator.step()
 
-    output.should.deepEqual({done:false, error:false, output:{action:'write', value:2}})
-
-    evaluator.step()
-
-    output = evaluator.step()
-
-    output.should.deepEqual({done:true, error:false, output:{action:'write', value:1}})
+    output.result.should.deepEqual({done:true, action:'write', value:1})
   })
 
   it('programa que escribe el valor de una variable', () => {
-    let code = `variables
+    const code = `variables
       entero a
     inicio
       a <- 32
       escribir(a)
     fin`
 
-    let modules = parse(code).modules
+    const p = transform(parse(code).result as ParsedProgram)
 
-    let evaluator = new Evaluator(modules)
+    const evaluator = new Evaluator(p.result as Program)
 
     let output = evaluator.step()
 
-    while (output.done == false) {
+    while (output.result.done == false) {
       output = evaluator.step()
     }
 
-    output.should.deepEqual({done:true, error:false, output:{action:'write', value:32}})
+    output.result.should.deepEqual({done:true, error:false, output:{action:'write', value:32}})
   })
 
   it('programa que escribe los valores de un vector', () => {
-    let code = `variables
+    const code = `variables
       entero v[2]
     inicio
       v[1] <- 5
@@ -204,29 +208,29 @@ describe('Evaluacion de programas y expresiones', () => {
       escribir(v[2])
     fin`
 
-    let modules = parse(code).modules
+    const p = transform(parse(code).result as ParsedProgram)
 
-    let evaluator = new Evaluator(modules)
+    const evaluator = new Evaluator(p.result as Program)
 
     let output = evaluator.step()
 
-    while (output.done == false && output.output == null) {
+    while (output.result.done == false && output.output == null) {
       output = evaluator.step()
     }
 
-    output.should.deepEqual({done:false, error:false, output:{action:'write', value:5}})
+    output.result.should.deepEqual({done:false, error:false, output:{action:'write', value:5}})
 
     output = evaluator.step()
 
-    while (output.done == false && output.output == null) {
+    while (output.result.done == false && output.output == null) {
       output = evaluator.step()
     }
 
-    output.should.deepEqual({done:true, error:false, output:{action:'write', value:8}})
+    output.result.should.deepEqual({done:true, error:false, output:{action:'write', value:8}})
   })
 
   it('programa que escribe los valores de una matriz', () => {
-    let code = `variables
+    const code = `variables
       entero m[2, 2]
     inicio
       m[1, 1] <- 5
@@ -235,106 +239,108 @@ describe('Evaluacion de programas y expresiones', () => {
       escribir(m[1, 2])
     fin`
 
-    let modules = parse(code).modules
+    const p = transform(parse(code).result as ParsedProgram)
 
-    let evaluator = new Evaluator(modules)
+    const evaluator = new Evaluator(p.result as Program)
 
     let output = evaluator.step()
 
-    while (output.done == false && output.output === null) {
+    while (output.result.done == false && output.output === null) {
       output = evaluator.step()
     }
 
-    output.should.deepEqual({done:false, error:false, output:{action:'write', value:5}})
+    output.result.should.deepEqual({done:false, error:false, output:{action:'write', value:5}})
 
     output = evaluator.step()
 
-    while (output.done == false && output.output === null) {
+    while (output.result.done == false && output.output === null) {
       output = evaluator.step()
     }
 
-    output.should.deepEqual({done:true, error:false, output:{action:'write', value:8}})
+    output.result.should.deepEqual({done:true, error:false, output:{action:'write', value:8}})
   })
 
-  it('programa con una llamada a leer', () => {
-    let code = `variables
+  it.skip('programa con una llamada a leer', () => {
+    const code = `variables
       entero m
     inicio
       leer(m)
     fin`
 
-    let modules = parse(code).modules
+    const p = transform(parse(code).result as ParsedProgram)
 
-    let evaluator = new Evaluator(modules)
+    const evaluator = new Evaluator(p.result as Program)
 
     let output = evaluator.step()
 
-    while (output.done == false && output.output === null) {
+    while (output.result.done == false) {
       output = evaluator.step()
     }
 
-    output.should.deepEqual({done:false, error:false, output:{action:'read', type:'entero'}})
+    output.result.should.deepEqual({done:false, action:'read', type:'entero'})
 
     evaluator.input(9)
 
     output = evaluator.step()
 
-    output.should.deepEqual({done:true, error:false, output:null})
+    output.result.should.deepEqual({done:true, error:false, output:null})
 
-    evaluator.getLocals('main').m.values[0].should.equal(9)
+    const m = evaluator.get_locals('main')['m'] as ArrayVariable
+
+    m.values[0].should.equal(9)
   })
 
   it('programa con una llamada a leer una celda de un vector', () => {
-    let code = `variables
+    const code = `variables
       entero v[2]
     inicio
       leer(v[1])
     fin`
 
-    let modules = parse(code).modules
+    const p = transform(parse(code).result as ParsedProgram)
 
-    let evaluator = new Evaluator(modules)
+    const evaluator = new Evaluator(p.result as Program)
 
     let output = evaluator.step()
 
-    while (output.done == false && output.output === null) {
+    while (output.result.done == false && output.output === null) {
       output = evaluator.step()
     }
 
-    output.should.deepEqual({done:false, error:false, output:{action:'read', type:'entero'}})
+    output.result.should.deepEqual({done:false, error:false, output:{action:'read', type:'entero'}})
 
     evaluator.input(9)
 
     output = evaluator.step()
 
-    output.should.deepEqual({done:true, error:false, output:null})
+    output.result.should.deepEqual({done:true, error:false, output:null})
 
-    evaluator.getLocals('main').v.values[0].should.equal(9)
+    evaluator.get_locals('main').v.values[0].should.equal(9)
   })
 
   it('programa con un enunciado si', () => {
-    let code = `variables
+    const code = `variables
     inicio
       si (verdadero) entonces
         escribir(3)
       finsi
     fin`
 
-    let modules = parse(code).modules
+    const p = transform(parse(code).result as ParsedProgram)
 
-    let evaluator = new Evaluator(modules)
+    const evaluator = new Evaluator(p.result as Program)
 
     let output = evaluator.step() // evalua la condicion
 
-    while (output.done == false && output.output === null) {
+    while (output.result.done == false) {
       output = evaluator.step()
     }
 
-    output.should.deepEqual({done:true, error:false, output:{action:'write', value:3}})
+    output.result.should.deepEqual({done:true, action:'write', value:3})
   })
 
   it('programa con un enunciado si/sino', () => {
-    let code = `variables
+    const code = `variables
     inicio
       si (verdadero = falso) entonces
         escribir(3)
@@ -343,21 +349,21 @@ describe('Evaluacion de programas y expresiones', () => {
       finsi
     fin`
 
-    let modules = parse(code).modules
+    const p = transform(parse(code).result as ParsedProgram)
 
-    let evaluator = new Evaluator(modules)
+    const evaluator = new Evaluator(p.result as Program)
 
     let output = evaluator.step()
 
-    while (output.done == false && output.output === null) {
+    while (output.result.done == false && output.output === null) {
       output = evaluator.step()
     }
 
-    output.should.deepEqual({done:true, error:false, output:{action:'write', value:4}})
+    output.result.should.deepEqual({done:true, error:false, output:{action:'write', value:4}})
   })
 
   it('programa con un bucle mientras', () => {
-    let code = `variables
+    const code = `variables
       entero i
     inicio
       i <- 0
@@ -368,37 +374,37 @@ describe('Evaluacion de programas y expresiones', () => {
       escribir(i)
     fin`
 
-    let modules = parse(code).modules
+    const p = transform(parse(code).result as ParsedProgram)
 
-    let evaluator = new Evaluator(modules)
+    const evaluator = new Evaluator(p.result as Program)
 
     let output = evaluator.step()
 
-    while (output.done == false && output.output === null) {
+    while (output.result.done == false && output.output === null) {
       output = evaluator.step()
     }
 
-    output.should.deepEqual({done:false, error:false, output:{action:'write', value:0}})
+    output.result.should.deepEqual({done:false, error:false, output:{action:'write', value:0}})
 
     output = evaluator.step()
 
-    while (output.done == false && output.output === null) {
+    while (output.result.done == false && output.output === null) {
       output = evaluator.step()
     }
 
-    output.should.deepEqual({done:false, error:false, output:{action:'write', value:1}})
+    output.result.should.deepEqual({done:false, error:false, output:{action:'write', value:1}})
 
     output = evaluator.step()
 
-    while (output.done == false && output.output === null) {
+    while (output.result.done == false && output.output === null) {
       output = evaluator.step()
     }
 
-    output.should.deepEqual({done:true, error:false, output:{action:'write', value:2}})
+    output.result.should.deepEqual({done:true, error:false, output:{action:'write', value:2}})
   })
 
   it('programa con un bucle para', () => {
-    let code = `variables
+    const code = `variables
       entero i
     inicio
       para i <- 0 hasta 2
@@ -406,45 +412,45 @@ describe('Evaluacion de programas y expresiones', () => {
       finpara
     fin`
 
-    let modules = parse(code).modules
+    const p = transform(parse(code).result as ParsedProgram)
 
-    let evaluator = new Evaluator(modules)
+    const evaluator = new Evaluator(p.result as Program)
 
     let output = evaluator.step()
 
-    while (output.done == false && output.output === null) {
+    while (output.result.done == false && output.output === null) {
       output = evaluator.step()
     }
 
-    output.should.deepEqual({done:false, error:false, output:{action:'write', value:0}})
+    output.result.should.deepEqual({done:false, error:false, output:{action:'write', value:0}})
 
     output = evaluator.step()
 
-    while (output.done == false && output.output === null) {
+    while (output.result.done == false && output.output === null) {
       output = evaluator.step()
     }
 
-    output.should.deepEqual({done:false, error:false, output:{action:'write', value:1}})
+    output.result.should.deepEqual({done:false, error:false, output:{action:'write', value:1}})
 
     output = evaluator.step()
 
-    while (output.done == false && output.output === null) {
+    while (output.result.done == false && output.output === null) {
       output = evaluator.step()
     }
 
-    output.should.deepEqual({done:false, error:false, output:{action:'write', value:2}})
+    output.result.should.deepEqual({done:false, error:false, output:{action:'write', value:2}})
 
     output = evaluator.step()
 
-    while (output.done == false && output.output === null) {
+    while (output.result.done == false && output.output === null) {
       output = evaluator.step()
     }
 
-    output.should.deepEqual({done:true, error:false, output:null})
+    output.result.should.deepEqual({done:true, error:false, output:null})
   })
 
   it('programa con un bucle repetir', () => {
-    let code = `variables
+    const code = `variables
       entero i
     inicio
       i <- 0
@@ -455,104 +461,104 @@ describe('Evaluacion de programas y expresiones', () => {
       escribir(i)
     fin`
 
-    let modules = parse(code).modules
+    const p = transform(parse(code).result as ParsedProgram)
 
-    let evaluator = new Evaluator(modules)
+    const evaluator = new Evaluator(p.result as Program)
 
     let output
 
     output = evaluator.step()
 
-    while (output.done == false && output.output === null) {
+    while (output.result.done == false && output.output === null) {
       output = evaluator.step()
     }
 
-    output.should.deepEqual({done:false, error:false, output:{action:'write', value:0}})
+    output.result.should.deepEqual({done:false, error:false, output:{action:'write', value:0}})
 
     output = evaluator.step()
 
-    while (output.done == false && output.output === null) {
+    while (output.result.done == false && output.output === null) {
       output = evaluator.step()
     }
 
-    output.should.deepEqual({done:false, error:false, output:{action:'write', value:1}})
+    output.result.should.deepEqual({done:false, error:false, output:{action:'write', value:1}})
 
     output = evaluator.step()
 
-    while (output.done == false && output.output === null) {
+    while (output.result.done == false && output.output === null) {
       output = evaluator.step()
     }
 
-    output.should.deepEqual({done:true, error:false, output:{action:'write', value:2}})
+    output.result.should.deepEqual({done:true, error:false, output:{action:'write', value:2}})
   })
 
   describe('Evaluacion de expresiones', () => {
     it('multiplicacion', () => {
       // 2*3
       {
-        let code = `variables
+        const code = `variables
           entero a
         inicio
           a <- 2*3
         fin`
 
-        let modules = parse(code).modules
+        const p = transform(parse(code).result as ParsedProgram)
 
-        let evaluator = new Evaluator(modules)
+        const evaluator = new Evaluator(p.result as Program)
 
         let output = evaluator.step()
 
-        while (output.done == false && output.output === null) {
+        while (output.result.done == false && output.output === null) {
           output = evaluator.step()
         }
 
-        evaluator.getLocals('main').a.values[0].should.equal(2*3)
+        evaluator.get_locals('main').a.values[0].should.equal(2*3)
       }
 
       // -2*-3
       {
-        let code = `variables
+        const code = `variables
           entero a
         inicio
           a <- -2*-3
         fin`
 
-        let modules = parse(code).modules
+        const p = transform(parse(code).result as ParsedProgram)
 
-        let evaluator = new Evaluator(modules)
+        const evaluator = new Evaluator(p.result as Program)
 
         let output = evaluator.step()
 
-        while (output.done == false && output.output === null) {
+        while (output.result.done == false && output.output === null) {
           output = evaluator.step()
         }
 
-        evaluator.getLocals('main').a.values[0].should.equal(-2*-3)
+        evaluator.get_locals('main').a.values[0].should.equal(-2*-3)
       }
 
       // 2*2*2
       {
-        let code = `variables
+        const code = `variables
           entero a
         inicio
           a <- 2*2*2
         fin`
 
-        let modules = parse(code).modules
+        const p = transform(parse(code).result as ParsedProgram)
 
-        let evaluator = new Evaluator(modules)
+        const evaluator = new Evaluator(p.result as Program)
 
         let output = evaluator.step()
 
-        while (output.done == false && output.output === null) {
+        while (output.result.done == false && output.output === null) {
           output = evaluator.step()
         }
 
-        evaluator.getLocals('main').a.values[0].should.equal(2*2*2)
+        evaluator.get_locals('main').a.values[0].should.equal(2*2*2)
       }
 
       {
-        let code = `variables
+        const code = `variables
           entero a, b, c
         inicio
           a <- 2
@@ -560,21 +566,21 @@ describe('Evaluacion de programas y expresiones', () => {
           c <- a * b
         fin`
 
-        let modules = parse(code).modules
+        const p = transform(parse(code).result as ParsedProgram)
 
-        let evaluator = new Evaluator(modules)
+        const evaluator = new Evaluator(p.result as Program)
 
         let output = evaluator.step()
 
-        while (output.done == false && output.output === null) {
+        while (output.result.done == false && output.output === null) {
           output = evaluator.step()
         }
 
-        evaluator.getLocals('main').c.values[0].should.equal(12)
+        evaluator.get_locals('main').c.values[0].should.equal(12)
       }
 
       {
-        let code = `variables
+        const code = `variables
           entero v[3]
         inicio
           v[1] <- 2
@@ -582,533 +588,533 @@ describe('Evaluacion de programas y expresiones', () => {
           v[3] <- v[1] * v[2]
         fin`
 
-        let modules = parse(code).modules
+        const p = transform(parse(code).result as ParsedProgram)
 
-        let evaluator = new Evaluator(modules)
+        const evaluator = new Evaluator(p.result as Program)
 
         let output = evaluator.step()
 
-        while (output.done == false && output.output === null) {
+        while (output.result.done == false && output.output === null) {
           output = evaluator.step()
         }
 
-        evaluator.getLocals('main').v.values[2].should.equal(12)
+        evaluator.get_locals('main').v.values[2].should.equal(12)
       }
     })
 
     it('division', () => {
       {
-        let code = `variables
+        const code = `variables
           entero a
         inicio
           a <- 3/2
         fin`
 
-        let modules = parse(code).modules
+        const p = transform(parse(code).result as ParsedProgram)
 
-        let evaluator = new Evaluator(modules)
+        const evaluator = new Evaluator(p.result as Program)
 
         let output = evaluator.step()
 
-        while (output.done == false && output.output === null) {
+        while (output.result.done == false && output.output === null) {
           output = evaluator.step()
         }
 
-        evaluator.getLocals('main').a.values[0].should.equal(3/2)
+        evaluator.get_locals('main').a.values[0].should.equal(3/2)
       }
 
       {
-        let code = `variables
+        const code = `variables
           entero a
         inicio
           a <- -3/-2
         fin`
 
-        let modules = parse(code).modules
+        const p = transform(parse(code).result as ParsedProgram)
 
-        let evaluator = new Evaluator(modules)
+        const evaluator = new Evaluator(p.result as Program)
 
         let output = evaluator.step()
 
-        while (output.done == false && output.output === null) {
+        while (output.result.done == false && output.output === null) {
           output = evaluator.step()
         }
 
-        evaluator.getLocals('main').a.values[0].should.equal(-3/-2)
+        evaluator.get_locals('main').a.values[0].should.equal(-3/-2)
       }
 
       {
-        let code = `variables
+        const code = `variables
           entero a
         inicio
           a <- 2+3/3+4
         fin`
 
-        let modules = parse(code).modules
+        const p = transform(parse(code).result as ParsedProgram)
 
-        let evaluator = new Evaluator(modules)
+        const evaluator = new Evaluator(p.result as Program)
 
         let output = evaluator.step()
 
-        while (output.done == false && output.output === null) {
+        while (output.result.done == false && output.output === null) {
           output = evaluator.step()
         }
 
-        evaluator.getLocals('main').a.values[0].should.equal(2+3/3+4)
+        evaluator.get_locals('main').a.values[0].should.equal(2+3/3+4)
       }
 
       {
-        let code = `variables
+        const code = `variables
           entero a
         inicio
           a <- 3/2/2
         fin`
 
-        let modules = parse(code).modules
+        const p = transform(parse(code).result as ParsedProgram)
 
-        let evaluator = new Evaluator(modules)
+        const evaluator = new Evaluator(p.result as Program)
 
         let output = evaluator.step()
 
-        while (output.done == false && output.output === null) {
+        while (output.result.done == false && output.output === null) {
           output = evaluator.step()
         }
 
-        evaluator.getLocals('main').a.values[0].should.equal(3/2/2)
+        evaluator.get_locals('main').a.values[0].should.equal(3/2/2)
       }
 
       {
-        let code = `variables
+        const code = `variables
           entero a
         inicio
           a <- 2/2/2/2
         fin`
 
-        let modules = parse(code).modules
+        const p = transform(parse(code).result as ParsedProgram)
 
-        let evaluator = new Evaluator(modules)
+        const evaluator = new Evaluator(p.result as Program)
 
         let output = evaluator.step()
 
-        while (output.done == false && output.output === null) {
+        while (output.result.done == false && output.output === null) {
           output = evaluator.step()
         }
 
-        evaluator.getLocals('main').a.values[0].should.equal(2/2/2/2)
+        evaluator.get_locals('main').a.values[0].should.equal(2/2/2/2)
       }
 
       {
-        let code = `variables
+        const code = `variables
           entero a
         inicio
           a <- 4/2/2/2
         fin`
 
-        let modules = parse(code).modules
+        const p = transform(parse(code).result as ParsedProgram)
 
-        let evaluator = new Evaluator(modules)
+        const evaluator = new Evaluator(p.result as Program)
 
         let output = evaluator.step()
 
-        while (output.done == false && output.output === null) {
+        while (output.result.done == false && output.output === null) {
           output = evaluator.step()
         }
 
-        evaluator.getLocals('main').a.values[0].should.equal(4/2/2/2)
+        evaluator.get_locals('main').a.values[0].should.equal(4/2/2/2)
       }
 
       {
-        let code = `variables
+        const code = `variables
           entero a
         inicio
           a <- 2/2/2/4
         fin`
 
-        let modules = parse(code).modules
+        const p = transform(parse(code).result as ParsedProgram)
 
-        let evaluator = new Evaluator(modules)
+        const evaluator = new Evaluator(p.result as Program)
 
         let output = evaluator.step()
 
-        while (output.done == false && output.output === null) {
+        while (output.result.done == false && output.output === null) {
           output = evaluator.step()
         }
 
-        evaluator.getLocals('main').a.values[0].should.equal(2/2/2/4)
+        evaluator.get_locals('main').a.values[0].should.equal(2/2/2/4)
       }
     })
 
     it('resta', () => {
       {
-        let code = `variables
+        const code = `variables
           entero a
         inicio
           a <- 3-3-3
         fin`
 
-        let modules = parse(code).modules
+        const p = transform(parse(code).result as ParsedProgram)
 
-        let evaluator = new Evaluator(modules)
+        const evaluator = new Evaluator(p.result as Program)
 
         let output = evaluator.step()
 
-        while (output.done == false && output.output === null) {
+        while (output.result.done == false && output.output === null) {
           output = evaluator.step()
         }
 
-        evaluator.getLocals('main').a.values[0].should.equal(3-3-3)
+        evaluator.get_locals('main').a.values[0].should.equal(3-3-3)
       }
 
       {
-        let code = `variables
+        const code = `variables
           entero a
         inicio
           a <- (3-3-3)
         fin`
 
-        let modules = parse(code).modules
+        const p = transform(parse(code).result as ParsedProgram)
 
-        let evaluator = new Evaluator(modules)
+        const evaluator = new Evaluator(p.result as Program)
 
         let output = evaluator.step()
 
-        while (output.done == false && output.output === null) {
+        while (output.result.done == false && output.output === null) {
           output = evaluator.step()
         }
 
-        evaluator.getLocals('main').a.values[0].should.equal((3-3-3))
+        evaluator.get_locals('main').a.values[0].should.equal((3-3-3))
       }
     })
 
     it('suma', () => {
       {
-        let code = `variables
+        const code = `variables
           entero a
         inicio
           a <- 2+43
         fin`
 
-        let modules = parse(code).modules
+        const p = transform(parse(code).result as ParsedProgram)
 
-        let evaluator = new Evaluator(modules)
+        const evaluator = new Evaluator(p.result as Program)
 
         let output = evaluator.step()
 
-        while (output.done == false && output.output === null) {
+        while (output.result.done == false && output.output === null) {
           output = evaluator.step()
         }
 
-        evaluator.getLocals('main').a.values[0].should.equal(2+43)
+        evaluator.get_locals('main').a.values[0].should.equal(2+43)
       }
     })
 
     it('operaciones combinadas', () => {
       {
-        let code = `variables
+        const code = `variables
           entero a
         inicio
           a <- 2-(2-3)
         fin`
 
-        let modules = parse(code).modules
+        const p = transform(parse(code).result as ParsedProgram)
 
-        let evaluator = new Evaluator(modules)
+        const evaluator = new Evaluator(p.result as Program)
 
         let output = evaluator.step()
 
-        while (output.done == false && output.output === null) {
+        while (output.result.done == false && output.output === null) {
           output = evaluator.step()
         }
 
-        evaluator.getLocals('main').a.values[0].should.equal(2-(2-3))
+        evaluator.get_locals('main').a.values[0].should.equal(2-(2-3))
       }
 
       {
-        let code = `variables
+        const code = `variables
           entero a
         inicio
           a <- 2+(2+3)
         fin`
 
-        let modules = parse(code).modules
+        const p = transform(parse(code).result as ParsedProgram)
 
-        let evaluator = new Evaluator(modules)
+        const evaluator = new Evaluator(p.result as Program)
 
         let output = evaluator.step()
 
-        while (output.done == false && output.output === null) {
+        while (output.result.done == false && output.output === null) {
           output = evaluator.step()
         }
-        evaluator.getLocals('main').a.values[0].should.equal(2+(2+3))
+        evaluator.get_locals('main').a.values[0].should.equal(2+(2+3))
       }
 
       {
-        let code = `variables
+        const code = `variables
           entero a
         inicio
           a <- 2+(2+3*4)
         fin`
 
-        let modules = parse(code).modules
+        const p = transform(parse(code).result as ParsedProgram)
 
-        let evaluator = new Evaluator(modules)
+        const evaluator = new Evaluator(p.result as Program)
 
         let output = evaluator.step()
 
-        while (output.done == false && output.output === null) {
+        while (output.result.done == false && output.output === null) {
           output = evaluator.step()
         }
 
-        evaluator.getLocals('main').a.values[0].should.equal(2+(2+3*4))
+        evaluator.get_locals('main').a.values[0].should.equal(2+(2+3*4))
       }
 
       {
-        let code = `variables
+        const code = `variables
           entero a
         inicio
           a <- (3*2)-6
         fin`
 
-        let modules = parse(code).modules
+        const p = transform(parse(code).result as ParsedProgram)
 
-        let evaluator = new Evaluator(modules)
+        const evaluator = new Evaluator(p.result as Program)
 
         let output = evaluator.step()
 
-        while (output.done == false && output.output === null) {
+        while (output.result.done == false && output.output === null) {
           output = evaluator.step()
         }
 
-        evaluator.getLocals('main').a.values[0].should.equal((3*2)-6)
+        evaluator.get_locals('main').a.values[0].should.equal((3*2)-6)
       }
 
       {
-        let code = `variables
+        const code = `variables
           entero a
         inicio
           a <- (-(-(2+2)))
         fin`
 
-        let modules = parse(code).modules
+        const p = transform(parse(code).result as ParsedProgram)
 
-        let evaluator = new Evaluator(modules)
+        const evaluator = new Evaluator(p.result as Program)
 
         let output = evaluator.step()
 
-        while (output.done == false && output.output === null) {
+        while (output.result.done == false && output.output === null) {
           output = evaluator.step()
         }
 
-        evaluator.getLocals('main').a.values[0].should.equal((-(-(2+2))))
+        evaluator.get_locals('main').a.values[0].should.equal((-(-(2+2))))
       }
 
       {
-        let code = `variables
+        const code = `variables
           entero a
         inicio
           a <- 2+8/2
         fin`
 
-        let modules = parse(code).modules
+        const p = transform(parse(code).result as ParsedProgram)
 
-        let evaluator = new Evaluator(modules)
+        const evaluator = new Evaluator(p.result as Program)
 
         let output = evaluator.step()
 
-        while (output.done == false && output.output === null) {
+        while (output.result.done == false && output.output === null) {
           output = evaluator.step()
         }
 
-        evaluator.getLocals('main').a.values[0].should.equal(2+8/2)
+        evaluator.get_locals('main').a.values[0].should.equal(2+8/2)
       }
     })
 
     it('relacionales', () => {
       {
-        let code = `variables
+        const code = `variables
           entero a
         inicio
           a <- 2 = 2
         fin`
 
-        let modules = parse(code).modules
+        const p = transform(parse(code).result as ParsedProgram)
 
-        let evaluator = new Evaluator(modules)
+        const evaluator = new Evaluator(p.result as Program)
 
         let output = evaluator.step()
 
-        while (output.done == false && output.output === null) {
+        while (output.result.done == false && output.output === null) {
           output = evaluator.step()
         }
 
-        evaluator.getLocals('main').a.values[0].should.equal(true)
+        evaluator.get_locals('main').a.values[0].should.equal(true)
       }
 
       {
-        let code = `variables
+        const code = `variables
           entero a
         inicio
           a <- 2 <> 2
         fin`
 
-        let modules = parse(code).modules
+        const p = transform(parse(code).result as ParsedProgram)
 
-        let evaluator = new Evaluator(modules)
+        const evaluator = new Evaluator(p.result as Program)
 
         let output = evaluator.step()
 
-        while (output.done == false && output.output === null) {
+        while (output.result.done == false && output.output === null) {
           output = evaluator.step()
         }
 
-        evaluator.getLocals('main').a.values[0].should.equal(false)
+        evaluator.get_locals('main').a.values[0].should.equal(false)
       }
 
       {
-        let code = `variables
+        const code = `variables
           entero a
         inicio
           a <- 2 >= 2
         fin`
 
-        let modules = parse(code).modules
+        const p = transform(parse(code).result as ParsedProgram)
 
-        let evaluator = new Evaluator(modules)
+        const evaluator = new Evaluator(p.result as Program)
 
         let output = evaluator.step()
 
-        while (output.done == false && output.output === null) {
+        while (output.result.done == false && output.output === null) {
           output = evaluator.step()
         }
 
-        evaluator.getLocals('main').a.values[0].should.equal(true)
+        evaluator.get_locals('main').a.values[0].should.equal(true)
       }
 
       {
-        let code = `variables
+        const code = `variables
           entero a
         inicio
           a <- 2 <= 2
         fin`
 
-        let modules = parse(code).modules
+        const p = transform(parse(code).result as ParsedProgram)
 
-        let evaluator = new Evaluator(modules)
+        const evaluator = new Evaluator(p.result as Program)
 
         let output = evaluator.step()
 
-        while (output.done == false && output.output === null) {
+        while (output.result.done == false && output.output === null) {
           output = evaluator.step()
         }
 
-        evaluator.getLocals('main').a.values[0].should.equal(true)
+        evaluator.get_locals('main').a.values[0].should.equal(true)
       }
 
       {
-        let code = `variables
+        const code = `variables
           entero a
         inicio
           a <- 5 > 4
         fin`
 
-        let modules = parse(code).modules
+        const p = transform(parse(code).result as ParsedProgram)
 
-        let evaluator = new Evaluator(modules)
+        const evaluator = new Evaluator(p.result as Program)
 
         let output = evaluator.step()
 
-        while (output.done == false && output.output === null) {
+        while (output.result.done == false && output.output === null) {
           output = evaluator.step()
         }
 
-        evaluator.getLocals('main').a.values[0].should.equal(true)
+        evaluator.get_locals('main').a.values[0].should.equal(true)
       }
 
       {
-        let code = `variables
+        const code = `variables
           entero a
         inicio
           a <- 2 < 4
         fin`
 
-        let modules = parse(code).modules
+        const p = transform(parse(code).result as ParsedProgram)
 
-        let evaluator = new Evaluator(modules)
+        const evaluator = new Evaluator(p.result as Program)
 
         let output = evaluator.step()
 
-        while (output.done == false && output.output === null) {
+        while (output.result.done == false && output.output === null) {
           output = evaluator.step()
         }
 
-        evaluator.getLocals('main').a.values[0].should.equal(true)
+        evaluator.get_locals('main').a.values[0].should.equal(true)
       }
 
       {
-        let code = `variables
+        const code = `variables
           entero a
         inicio
           a <- verdadero or falso
         fin`
 
-        let modules = parse(code).modules
+        const p = transform(parse(code).result as ParsedProgram)
 
-        let evaluator = new Evaluator(modules)
+        const evaluator = new Evaluator(p.result as Program)
 
         let output = evaluator.step()
 
-        while (output.done == false && output.output === null) {
+        while (output.result.done == false && output.output === null) {
           output = evaluator.step()
         }
 
-        evaluator.getLocals('main').a.values[0].should.equal(true)
+        evaluator.get_locals('main').a.values[0].should.equal(true)
       }
 
       {
-        let code = `variables
+        const code = `variables
           entero a
         inicio
           a <- verdadero and falso
         fin`
 
-        let modules = parse(code).modules
+        const p = transform(parse(code).result as ParsedProgram)
 
-        let evaluator = new Evaluator(modules)
+        const evaluator = new Evaluator(p.result as Program)
 
         let output = evaluator.step()
 
-        while (output.done == false && output.output === null) {
+        while (output.result.done == false && output.output === null) {
           output = evaluator.step()
         }
 
-        evaluator.getLocals('main').a.values[0].should.equal(false)
+        evaluator.get_locals('main').a.values[0].should.equal(false)
       }
     })
 
     it('prueba que no deberia fallar', () => {
-      let code = `variables
+      const code = `variables
         entero a
       inicio
         a <- 2 + 2 = 4
       fin`
 
-      let modules = parse(code).modules
+      const p = transform(parse(code).result as ParsedProgram)
 
-      let evaluator = new Evaluator(modules)
+      const evaluator = new Evaluator(p.result as Program)
 
       let output = evaluator.step()
 
-      while (output.done == false && output.output === null) {
+      while (output.result.done == false && output.output === null) {
         output = evaluator.step()
       }
 
-      evaluator.getLocals('main').a.values[0].should.equal(true)
+      evaluator.get_locals('main').a.values[0].should.equal(true)
     })
   })
 
   describe('Programas con funciones o procedimientos', () => {
     it('procedimiento sencillo', () => {
-      let code = `variables
+      const code = `variables
       inicio
         informar(2)
       fin
@@ -1118,17 +1124,17 @@ describe('Evaluacion de programas y expresiones', () => {
         escribir(a)
       finprocedimiento
       `
-      let modules = parse(code).modules
+      const p = transform(parse(code).result as ParsedProgram)
 
-      let evaluator = new Evaluator(modules)
+      const evaluator = new Evaluator(p.result as Program)
 
       let output = evaluator.step()
 
-      while (output.done == false && output.output === null) {
+      while (output.result.done == false && output.output === null) {
         output = evaluator.step()
       }
 
-      output.should.deepEqual({done:true, error:false, output:{action:'write', value:2}})
+      output.result.should.deepEqual({done:true, error:false, output:{action:'write', value:2}})
     })
   })
 })
