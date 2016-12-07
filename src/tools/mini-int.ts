@@ -29,12 +29,12 @@ if (args.length > 0) {
         } 
         else if (parsed.error == false) {
             const p = transform(parsed.result)
-            if ('error' in p) {
+            if (p.error == true) {
                 console.log('Hubo un error al transformar el programa')
                 console.log(p)
             }
-            else {
-                const interpreter = new Interpreter(p as Program)
+            else if (p.error == false) {
+                const interpreter = new Interpreter(p.result)
 
                 interpreter.on('program-started', () => {
                     console.log('Evento: program-started\n')

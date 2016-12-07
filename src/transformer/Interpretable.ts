@@ -4,9 +4,11 @@ import * as S2 from '../interfaces/Stage2'
 
 import * as P from '../interfaces/Program'
 
+import {ISuccess as Success} from '../interfaces/Utility'
+
 import {ExpElement, OperatorElement, LiteralValue, InvocationValue, Return} from '../interfaces/ParsingInterfaces'
 
-export default function transform (ast: S2.AST) : P.Program {
+export default function transform (ast: S2.AST) : Success<P.Program> {
     const result = {
         entry_point: null,
         modules: {},
@@ -23,7 +25,7 @@ export default function transform (ast: S2.AST) : P.Program {
 
     result.local_variables = ast.local_variables
 
-    return result
+    return {error: false, result}
 }
 
 function transform_main (old_module: S2.Main) : P.Statement {

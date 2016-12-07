@@ -1,7 +1,7 @@
 import {ParsedProgram} from '../interfaces/ParsingInterfaces'
 import {RepeatedVarError} from '../interfaces/Stage1'
 import {UndefinedModule, UndefinedVariable} from '../interfaces/Stage2'
-import {IError, ISuccess} from '../interfaces/Utility'
+import {IError as Failure, ISuccess as Success} from '../interfaces/Utility'
 import {AST as s1AST} from '../interfaces/Stage1'
 import {AST as s2AST} from '../interfaces/Stage2'
 import {Program} from '../interfaces/Program'
@@ -9,9 +9,9 @@ import stage1 from '../transformer/Declarator'
 import stage2 from '../transformer/CallDecorator'
 import stage3 from '../transformer/Interpretable'
 
-export type TransformError = IError<RepeatedVarError[]> | IError<(UndefinedModule | UndefinedVariable)[]>
+export type TransformError = Failure<RepeatedVarError[]> | Failure<(UndefinedModule | UndefinedVariable)[]>
 
-export default function transform (p: ParsedProgram) : TransformError | Program {
+export default function transform (p: ParsedProgram) : TransformError | Success<Program> {
     const s1 = stage1(p)
 
     if (s1.error) {

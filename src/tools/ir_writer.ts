@@ -38,12 +38,12 @@ if (args.length > 0) {
         }
         else if (parsed.error == false) {
             const ir = transform(parsed.result)
-            if ('error' in ir) {
+            if (ir.error == true) {
                 console.log(`Error al procesar el archivo ${total + 1} durante las transformaciones`)
                 console.log(ir)
             }
-            else {
-                const irs = procesar(ir as S4.Program)
+            else if (ir.error == false) {
+                const irs = procesar(ir.result)
                 console.log(`Archivo ${total + 1} procesado exitosamente`)
                 if (guardar_resultado) {
                     writeFileSync(arg + '_procesado', irs, {encoding:'utf8'})
