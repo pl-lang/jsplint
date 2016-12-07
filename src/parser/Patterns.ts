@@ -539,7 +539,7 @@ export function ParameterList (source: TokenQueue) : IError<PI.PatternError> | I
  * Captura un parametro de una funcion o procedimiento
  */
 export function Parameter (source: TokenQueue) : IError<PI.PatternError> | ISuccess<PI.Parameter> {
-  const result: PI.Parameter = {name: '', by_ref: false, type: null}
+  const result: PI.Parameter = {name: '', by_ref: false, type: null, is_array: false, dimensions: []}
 
   let type_r = TypeName(source)
 
@@ -561,6 +561,26 @@ export function Parameter (source: TokenQueue) : IError<PI.PatternError> | ISucc
     }
     else {
       result.name = name.result as string
+    }
+
+    if (source.current().kind === SymbolKind.LeftBracket) {
+      source.next()
+      const dimension = ArrayDimension(source)
+      if (dimension.error) {
+        return dimension
+      }
+      else {
+        result.is_array = true
+        result.dimensions = dimension.result as number[]
+
+        if (source.current().kind == SymbolKind.RightBracket) {
+          source.next()
+          return {error: false, result}
+        }
+        else {
+          return UnexpectedTokenReport(source.current(), ['right-bracket'], '@parameter-expected-closing-bracket')
+        }
+      }
     }
 
     return {error:false, result}
@@ -1268,6 +1288,28 @@ export function FunctionModule (source: TokenQueue) : IError<PI.PatternError> | 
 
   if (parameters.error) return parameters;
 
+  /**
+   * Ahora hay que crear un DeclarationStatement donde se declaren las variables
+   * de los parametros.
+   */
+  const par_declaration: PI.Declaration = {type: 'declaration', variables: []}
+  for (let par of (parameters.result as PI.Parameter[])) {
+    /**
+     * Extraer las propiedades del parametro que son necesarias
+     * para crear la variable
+     */
+    const {name, is_array, dimensions, type} = par
+    /**
+     * Meter los datos de la variable en el arreglo del enunciado de declaracion.
+     */
+    par_declaration.variables.push({name, is_array, dimensions, datatype:type})
+
+    /**
+     * Luego, cuando el programa sea transformado por Declarator.ts, las variables de los
+     * parametros seran declaradas.
+     */
+  }
+
   if (source.current().kind != SymbolKind.RightPar) return UnexpectedTokenReport(source.current(), [')'], 'missing-right-par');
 
   source.next()
@@ -1316,7 +1358,7 @@ export function FunctionModule (source: TokenQueue) : IError<PI.PatternError> | 
 
   source.next() // consumir 'finfuncion'
 
-  const function_body: PI.Statement[] = [...declarations, ...statements]
+  const function_body: PI.Statement[] = [par_declaration, ...declarations, ...statements]
 
   const result: PI.Function = {
     type: 'module',
@@ -1348,6 +1390,28 @@ export function ProcedureModule (source: TokenQueue) : IError<PI.PatternError> |
   const parameters = ParameterList(source)
 
   if (parameters.error) return parameters;
+
+  /**
+   * Ahora hay que crear un DeclarationStatement donde se declaren las variables
+   * de los parametros.
+   */
+  const par_declaration: PI.Declaration = {type: 'declaration', variables: []}
+  for (let par of (parameters.result as PI.Parameter[])) {
+    /**
+     * Extraer las propiedades del parametro que son necesarias
+     * para crear la variable
+     */
+    const {name, is_array, dimensions, type} = par
+    /**
+     * Meter los datos de la variable en el arreglo del enunciado de declaracion.
+     */
+    par_declaration.variables.push({name, is_array, dimensions, datatype:type})
+
+    /**
+     * Luego, cuando el programa sea transformado por Declarator.ts, las variables de los
+     * parametros seran declaradas.
+     */
+  }
 
   if (source.current().kind != SymbolKind.RightPar) return UnexpectedTokenReport(source.current(), [')'], 'missing-right-par');
 
@@ -1397,7 +1461,7 @@ export function ProcedureModule (source: TokenQueue) : IError<PI.PatternError> |
 
   source.next() // consumir 'finprocedimiento'
 
-  const function_body: PI.Statement[] = [...declarations, ...statements]
+  const function_body: PI.Statement[] = [par_declaration, ...declarations, ...statements]
 
   const result: PI.Procedure = {
     type: 'module',

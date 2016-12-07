@@ -64,6 +64,8 @@ export interface Parameter {
   name: string
   by_ref: boolean
   type: TypeNameString
+  is_array: boolean
+  dimensions: number[]
 }
 
 export interface Call {
