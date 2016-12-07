@@ -37,26 +37,25 @@ if (args.length > 0) {
                 const interpreter = new Interpreter(p as Program)
 
                 interpreter.on('program-started', () => {
-                    console.log('program-started')
+                    console.log('Evento: program-started\n')
                 })
 
                 interpreter.on('program-paused', () => {
-                    console.log('program-paused')
+                    console.log('Evento: program-paused\n')
                 })
 
                 interpreter.on('program-finished', () => {
-                    console.log('program-finished')
+                    console.log('Evento: program-finished\n')
                 })
 
                 interpreter.on('evaluation-error', () => {
-                    console.log('evaluation-error')
+                    console.log('Evento: evaluation-error\n')
                 })
 
                 interpreter.on('write', (v) => {
                     console.log(v)
                 })
 
-                interpreter.on('any', console.log)
                 interpreter.run()
             }
         }
