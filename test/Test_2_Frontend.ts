@@ -1,18 +1,19 @@
 'use strict'
 
 import SourceWrapper from '../src/parser/SourceWrapper.js'
-import { WordToken, NumberToken, StringToken, SpecialSymbolToken } from '../src/parser/TokenTypes.js'
+import { Token, WordToken, NumberToken, StringToken, SpecialSymbolToken } from '../src/parser/TokenTypes.js'
+import { ValueKind, SymbolKind, ReservedKind, OtherKind } from '../src/parser/TokenTypes.js'
 import Lexer from '../src/parser/Lexer.js'
 import TokenQueue from '../src/parser/TokenQueue.js'
 
-import should from 'should'
-import fs from 'fs'
-
-
+import 'should'
 
 describe('SourceWrapper:', () => {
   it('funciona correctamente', () => {
-    let string = fs.readFileSync('./test/ejemplo.md', 'utf-8')
+    let string = `1
+2
+34
+`
 
     let source = new SourceWrapper(string)
 
@@ -137,7 +138,7 @@ describe('WordToken', () => {
 
     let token = new WordToken(source)
 
-    token.kind.should.equal('word')
+    token.kind.should.equal(OtherKind.Word)
     token.text.should.equal('palabra123')
 
   })
@@ -146,7 +147,7 @@ describe('WordToken', () => {
     let source = new SourceWrapper('variables')
     let token = new WordToken(source)
 
-    token.kind.should.equal('variables')
+    token.kind.should.equal(ReservedKind.Variables)
     token.text.should.equal('variables')
   })
 
@@ -154,7 +155,7 @@ describe('WordToken', () => {
     let source = new SourceWrapper('nombre24 chau')
     let token = new WordToken(source)
 
-    token.kind.should.equal('word')
+    token.kind.should.equal(OtherKind.Word)
     token.text.should.equal('nombre24')
   })
 
@@ -162,7 +163,7 @@ describe('WordToken', () => {
     let source = new SourceWrapper('costo_total')
     let token = new WordToken(source)
 
-    token.kind.should.equal('word')
+    token.kind.should.equal(OtherKind.Word)
     token.text.should.equal('costo_total')
   })
 })
@@ -173,7 +174,7 @@ describe('NumberToken', () => {
 
     let token = new NumberToken(source)
 
-    token.kind.should.equal('entero')
+    token.kind.should.equal(ValueKind.Integer)
     token.text.should.equal('22')
     token.value.should.equal(22)
   })
@@ -182,7 +183,7 @@ describe('NumberToken', () => {
     let source = new SourceWrapper('3.1487')
     let token = new NumberToken(source)
 
-    token.kind.should.equal('real')
+    token.kind.should.equal(ValueKind.Real)
     token.text.should.equal('3.1487')
     token.value.should.equal(3.1487)
   })
@@ -191,11 +192,11 @@ describe('NumberToken', () => {
     let source = new SourceWrapper('3.A')
     let token = new NumberToken(source)
 
-    token.kind.should.equal('LEXICAL_ERROR')
+    token.kind.should.equal(ValueKind.Integer)
     token.text.should.equal('3.')
-    token.unexpectedChar.should.equal('A')
-    token.line.should.equal(0)
-    token.column.should.equal(2)
+    token.error_info.unexpected.should.equal('A')
+    token.error_info.line.should.equal(0)
+    token.error_info.column.should.equal(2)
   })
 })
 
@@ -205,18 +206,18 @@ describe('StringToken', () => {
       let source = new SourceWrapper('"Hola Mundo"')
       let token = new StringToken(source)
 
-      token.kind.should.equal('string')
+      token.kind.should.equal(ValueKind.String)
       token.text.should.equal('"Hola Mundo"')
       token.value.should.equal('Hola Mundo')
     }
 
     {
-      let source = new SourceWrapper('"hasta que los chanchos vuelen..."')
+      let source = new SourceWrapper('"hasta que los chanchos vuelen.."')
       let token = new StringToken(source)
 
-      token.kind.should.equal('string')
-      token.text.should.equal('"hasta que los chanchos vuelen..."')
-      token.value.should.equal('hasta que los chanchos vuelen...')
+      token.kind.should.equal(ValueKind.String)
+      token.text.should.equal('"hasta que los chanchos vuelen.."')
+      token.value.should.equal('hasta que los chanchos vuelen..')
     }
   })
 
@@ -224,10 +225,10 @@ describe('StringToken', () => {
     let source = new SourceWrapper('"Hola \n Mundo"')
     let token = new StringToken(source)
 
-    token.kind.should.equal('LEXICAL_ERROR')
-    token.unexpectedChar.should.equal('\n')
-    token.line.should.equal(0)
-    token.column.should.equal(6)
+    token.kind.should.equal(ValueKind.String)
+    token.error_info.unexpected.should.equal('\n')
+    token.error_info.line.should.equal(0)
+    token.error_info.column.should.equal(6)
   })
 })
 
@@ -240,31 +241,31 @@ describe('SpecialSymbolToken', () => {
     let source = new SourceWrapper('+')
     let token = new SpecialSymbolToken(source)
 
-    token.kind.should.equal('plus')
+    token.kind.should.equal(SymbolKind.Plus)
     token.text.should.equal('+')
 
     source = new SourceWrapper('-')
     token = new SpecialSymbolToken(source)
 
-    token.kind.should.equal('minus')
+    token.kind.should.equal(SymbolKind.Minus)
     token.text.should.equal('-')
 
     source = new SourceWrapper('*')
     token = new SpecialSymbolToken(source)
 
-    token.kind.should.equal('times')
+    token.kind.should.equal(SymbolKind.Times)
     token.text.should.equal('*')
 
     source = new SourceWrapper('/')
     token = new SpecialSymbolToken(source)
 
-    token.kind.should.equal('divide')
+    token.kind.should.equal(SymbolKind.Slash)
     token.text.should.equal('/')
 
     source = new SourceWrapper('^')
     token = new SpecialSymbolToken(source)
 
-    token.kind.should.equal('power')
+    token.kind.should.equal(SymbolKind.Power)
     token.text.should.equal('^')
 
   })
@@ -272,64 +273,64 @@ describe('SpecialSymbolToken', () => {
   it('lee operadores relacionales', () => {
     let source = new SourceWrapper('<')
     let token = new SpecialSymbolToken(source)
-    token.kind.should.equal('minor-than')
+    token.kind.should.equal(SymbolKind.Minor)
     token.text.should.equal('<')
 
     source = new SourceWrapper('=')
     token = new SpecialSymbolToken(source)
-    token.kind.should.equal('equal')
+    token.kind.should.equal(SymbolKind.Equal)
     token.text.should.equal('=')
 
     source = new SourceWrapper('<=')
     token = new SpecialSymbolToken(source)
-    token.kind.should.equal('minor-equal')
+    token.kind.should.equal(SymbolKind.MinorEq)
     token.text.should.equal('<=')
 
     source = new SourceWrapper('<>')
     token = new SpecialSymbolToken(source)
-    token.kind.should.equal('diff-than')
+    token.kind.should.equal(SymbolKind.Different)
     token.text.should.equal('<>')
 
     source = new SourceWrapper('>')
     token = new SpecialSymbolToken(source)
-    token.kind.should.equal('major-than')
+    token.kind.should.equal(SymbolKind.Major)
     token.text.should.equal('>')
 
     source = new SourceWrapper('>=')
     token = new SpecialSymbolToken(source)
-    token.kind.should.equal('major-equal')
+    token.kind.should.equal(SymbolKind.MajorEq)
     token.text.should.equal('>=')
   })
 
   it('lee otros simbolos', () => {
     let source = new SourceWrapper('(')
     let token = new SpecialSymbolToken(source)
-    token.kind.should.equal('left-par')
+    token.kind.should.equal(SymbolKind.LeftPar)
     token.text.should.equal('(')
 
     source = new SourceWrapper(')')
     token = new SpecialSymbolToken(source)
-    token.kind.should.equal('right-par')
+    token.kind.should.equal(SymbolKind.RightPar)
     token.text.should.equal(')')
 
     source = new SourceWrapper('[')
     token = new SpecialSymbolToken(source)
-    token.kind.should.equal('left-bracket')
+    token.kind.should.equal(SymbolKind.LeftBracket)
     token.text.should.equal('[')
 
     source = new SourceWrapper(']')
     token = new SpecialSymbolToken(source)
-    token.kind.should.equal('right-bracket')
+    token.kind.should.equal(SymbolKind.RightBracket)
     token.text.should.equal(']')
 
     source = new SourceWrapper(',')
     token = new SpecialSymbolToken(source)
-    token.kind.should.equal('comma')
+    token.kind.should.equal(SymbolKind.Comma)
     token.text.should.equal(',')
 
     source = new SourceWrapper('<-')
     token = new SpecialSymbolToken(source)
-    token.kind.should.equal('assignment')
+    token.kind.should.equal(SymbolKind.Assignment)
     token.text.should.equal('<-')
   })
 })
@@ -338,11 +339,11 @@ describe('Lexer', () => {
   it('deberia fichar un numero, una palabra y otro numero para: "1a 2.3"', () => {
     let source = new SourceWrapper('1a 2.3')
     let tokenizer = new Lexer(source)
-    let tokenArray = []
+    let tokenArray: Token[] = []
 
     let t = tokenizer.nextToken()
 
-    while ( t.kind !== 'eof' ) {
+    while ( t.kind !== SymbolKind.EOF ) {
       tokenArray.push(t)
       t = tokenizer.nextToken()
     }
@@ -350,10 +351,10 @@ describe('Lexer', () => {
     // guarda el token EOF
     tokenArray.push(t)
 
-    tokenArray[0].kind.should.equal('entero')
-    tokenArray[1].kind.should.equal('word')
-    tokenArray[2].kind.should.equal('real')
-    tokenArray[3].kind.should.equal('eof')
+    tokenArray[0].kind.should.equal(ValueKind.Integer)
+    tokenArray[1].kind.should.equal(OtherKind.Word)
+    tokenArray[2].kind.should.equal(ValueKind.Real)
+    tokenArray[3].kind.should.equal(SymbolKind.EOF)
   })
 
   it('deberia saltearse los comentarios', () => {
@@ -361,85 +362,97 @@ describe('Lexer', () => {
     let tokenizer = new Lexer(source)
 
     let t = tokenizer.nextToken()
-    let tokenArray = []
+    let tokenArray: Token[] = []
 
-    while ( t.kind !== 'eof' ) {
+    while ( t.kind !== SymbolKind.EOF ) {
       tokenArray.push(t)
       t = tokenizer.nextToken()
     }
     tokenArray.push(t)
 
-    tokenArray[0].kind.should.equal('eol')
-    tokenArray[1].kind.should.equal('eof')
+    tokenArray[0].kind.should.equal(SymbolKind.EOL)
+    tokenArray[1].kind.should.equal(SymbolKind.EOF)
   })
 
   it('deberia fichar todos los tokens de un programa modelo', () => {
-    let programa = fs.readFileSync('./test/programa.md', 'utf-8')
+    let programa = `//comentario
+
+variables
+  entero a, b
+inicio
+  a <- 3
+  b <- 7
+  si (a > b) entonces
+    escribir("a es mayor que b")
+  sino
+    escribir("b es mayor que a")
+fin
+`
     let source = new SourceWrapper(programa)
     let tokenizer = new Lexer(source)
 
-    let tokenArray = []
+    let tokenArray: Token[] = []
     let t = tokenizer.nextToken()
 
-    while ( t.kind !== 'eof') {
+    while ( t.kind !== SymbolKind.EOF) {
       tokenArray.push(t)
       t = tokenizer.nextToken()
     }
     tokenArray.push(t)
 
-    tokenArray[0].kind.should.equal('eol')
+    tokenArray[0].kind.should.equal(SymbolKind.EOL)
 
-    tokenArray[1].kind.should.equal('eol')
+    tokenArray[1].kind.should.equal(SymbolKind.EOL)
 
-    tokenArray[2].kind.should.equal('variables')
-    tokenArray[3].kind.should.equal('eol')
+    tokenArray[2].kind.should.equal(ReservedKind.Variables)
+    tokenArray[3].kind.should.equal(SymbolKind.EOL)
 
-    tokenArray[4].kind.should.equal('entero')
-    tokenArray[5].kind.should.equal('word')
-    tokenArray[6].kind.should.equal('comma')
-    tokenArray[7].kind.should.equal('word')
-    tokenArray[8].kind.should.equal('eol')
+    tokenArray[4].kind.should.equal(ReservedKind.Entero)
+    tokenArray[5].kind.should.equal(OtherKind.Word)
+    tokenArray[6].kind.should.equal(SymbolKind.Comma)
+    tokenArray[7].kind.should.equal(OtherKind.Word)
+    tokenArray[8].kind.should.equal(SymbolKind.EOL)
 
-    tokenArray[9].kind.should.equal('inicio')
-    tokenArray[10].kind.should.equal('eol')
+    tokenArray[9].kind.should.equal(ReservedKind.Inicio)
+    tokenArray[10].kind.should.equal(SymbolKind.EOL)
 
-    tokenArray[11].kind.should.equal('word')
-    tokenArray[12].kind.should.equal('assignment')
-    tokenArray[13].kind.should.equal('entero')
-    tokenArray[14].kind.should.equal('eol')
+    tokenArray[11].kind.should.equal(OtherKind.Word)
+    tokenArray[12].kind.should.equal(SymbolKind.Assignment)
+    tokenArray[13].kind.should.equal(ValueKind.Integer)
+    tokenArray[14].kind.should.equal(SymbolKind.EOL)
 
-    tokenArray[15].kind.should.equal('word')
-    tokenArray[16].kind.should.equal('assignment')
-    tokenArray[17].kind.should.equal('entero')
-    tokenArray[18].kind.should.equal('eol')
+    tokenArray[15].kind.should.equal(OtherKind.Word)
+    tokenArray[16].kind.should.equal(SymbolKind.Assignment)
+    tokenArray[17].kind.should.equal(ValueKind.Integer)
+    tokenArray[18].kind.should.equal(SymbolKind.EOL)
 
-    tokenArray[19].kind.should.equal('si')
-    tokenArray[20].kind.should.equal('left-par')
-    tokenArray[21].kind.should.equal('word')
-    tokenArray[22].kind.should.equal('major-than')
-    tokenArray[23].kind.should.equal('word')
-    tokenArray[24].kind.should.equal('right-par')
-    tokenArray[25].kind.should.equal('entonces')
-    tokenArray[26].kind.should.equal('eol')
+    tokenArray[19].kind.should.equal(ReservedKind.Si)
+    tokenArray[20].kind.should.equal(SymbolKind.LeftPar)
+    tokenArray[21].kind.should.equal(OtherKind.Word)
+    tokenArray[22].kind.should.equal(SymbolKind.Major)
+    tokenArray[23].kind.should.equal(OtherKind.Word)
+    tokenArray[24].kind.should.equal(SymbolKind.RightPar)
+    tokenArray[25].kind.should.equal(ReservedKind.Entonces)
+    tokenArray[26].kind.should.equal(SymbolKind.EOL)
 
-    tokenArray[27].kind.should.equal('word')
-    tokenArray[28].kind.should.equal('left-par')
-    tokenArray[29].kind.should.equal('string')
-    tokenArray[30].kind.should.equal('right-par')
-    tokenArray[31].kind.should.equal('eol')
+    tokenArray[27].kind.should.equal(OtherKind.Word)
+    tokenArray[28].kind.should.equal(SymbolKind.LeftPar)
+    tokenArray[29].kind.should.equal(ValueKind.String)
+    tokenArray[30].kind.should.equal(SymbolKind.RightPar)
+    tokenArray[31].kind.should.equal(SymbolKind.EOL)
 
-    tokenArray[32].kind.should.equal('sino')
-    tokenArray[33].kind.should.equal('eol')
+    tokenArray[32].kind.should.equal(ReservedKind.Sino)
+    tokenArray[33].kind.should.equal(SymbolKind.EOL)
 
-    tokenArray[34].kind.should.equal('word')
-    tokenArray[35].kind.should.equal('left-par')
-    tokenArray[36].kind.should.equal('string')
-    tokenArray[37].kind.should.equal('right-par')
-    tokenArray[38].kind.should.equal('eol')
+    tokenArray[34].kind.should.equal(OtherKind.Word)
+    tokenArray[35].kind.should.equal(SymbolKind.LeftPar)
+    tokenArray[36].kind.should.equal(ValueKind.String)
+    tokenArray[37].kind.should.equal(SymbolKind.RightPar)
+    tokenArray[38].kind.should.equal(SymbolKind.EOL)
 
-    tokenArray[39].kind.should.equal('fin')
-    tokenArray[40].kind.should.equal('eol')
-    tokenArray[41].kind.should.equal('eof')
+    tokenArray[39].kind.should.equal(ReservedKind.Fin)
+    tokenArray[40].kind.should.equal(SymbolKind.EOL)
+    tokenArray[41].kind.should.equal(SymbolKind.EOF)
   })
 })
 
@@ -451,6 +464,6 @@ describe('TokenQueue', () => {
     q.next().should.equal(2)
     q.next().should.equal(3)
     // devuelve un EoFToken cuando se alcanzó el final del arreglo
-    q.peek().kind.should.equal('eof')
+    q.peek().kind.should.equal(SymbolKind.EOF)
   })
 })
