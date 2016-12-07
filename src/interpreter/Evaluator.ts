@@ -299,6 +299,8 @@ export class Evaluator {
       const value = this.state.value_stack.pop()
       const variable = this.get_var(s.varname) as ArrayVariable
       variable.values[index] = value
+
+      return {error:false, result: {action: 'none', done: false}}
     }
     else {
       const bad_index = this.get_bad_index(indexes, s.dimensions)
@@ -326,8 +328,11 @@ export class Evaluator {
        * (como los indices de JS) y no en 1
        */
       const index = this.calculate_index(indexes.map(i => i-1), s.dimensions)
-      const value = this.state.value_stack.pop()
+      const variable = this.get_var(s.varname) as ArrayVariable
+      const value = variable.values[index]
       this.state.value_stack.push(value)
+
+      return {error:false, result: {action: 'none', done: false}}
     }
     else {
       const bad_index = this.get_bad_index(indexes, s.dimensions)
