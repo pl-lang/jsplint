@@ -54,10 +54,8 @@ export function set_exit (s: Statement, new_exit: Statement) : void {
 
 export interface Module {
     name: string
-    module_type: 'function' | 'procedure'
     entry_point: Statement
     parameters: string[] // por ahora solo voy a poner los nombres de los parametros aca
-    return_type?: string // por ahora esto no se usa...si no sirve lo saco
 }
 
 export type Statement = While | If | Until | UserModuleCall | ReadCall | WriteCall | Assign | Get | Operation | AssignV | GetV | Push | Pop  
