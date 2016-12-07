@@ -1,836 +1,566 @@
 'use strict'
 import should from 'should'
+import fs from 'fs'
 
-import expressionFromString from '../src/parser/expressionFromString.js'
-
-import TypeChecker from '../src/typechecker/TypeChecker.js'
+import {bind} from '../src/utility/helpers.js'
 
 import Parser from '../src/parser/Parser.js'
 
-describe('TypeChecker', () => {
+import CallDecorator from '../src/transformer/CallDecorator.js'
+import Declarator from '../src/transformer/Declarator.js'
+import Typer from '../src/transformer/Typer.js'
 
-  let globals = {
-    a:{
-      type:'entero',
-      isArray:false,
-      dimension:null
-    },
-    b:{
-      type:'entero',
-      isArray:true,
-      dimension:[3, 4]
-    }
-  }
+import * as Types from '../src/typechecker/Types.js'
+import * as TC from '../src/typechecker/TypeChecker.js'
 
-  let checker = new TypeChecker()
+function parse(string) {
+  let parser = new Parser()
 
-  // este 'hack' establece 'a mano' las variables globales y las locales del
-  // modulo main. Ademas establece el nombre del modulo que se esta 'analizando'
-  checker.locals_by_module.main = globals
-  checker.globals = globals
-  checker.current_module_name = 'main'
+  let parser_output = parser.parse(string).result
 
-  describe('#getExpressionReturnType', () => {
-    it('literal', () => {
-      let exp = expressionFromString('2').result
-      let type = checker.getExpressionReturnType(exp)
-      type.result.should.equal('entero')
-    })
+  return parser_output
+}
 
-    it('operacion', () => {
-      {
-        let exp = expressionFromString('verdadero AND falso').result
-        let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('logico')
-      }
-    })
 
-    it('expresion entre parentesis', () => {
-      {
-        let exp = expressionFromString('(verdadero AND falso)').result
-        let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('logico')
-      }
-    })
-
-    it('expresion de invocacion', () => {
-      {
-        let exp = expressionFromString('a').result
-        let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('entero')
-      }
-    })
-
-    it('2 parametros enteros en operadores matematicos', () => {
-      {
-        let exp = expressionFromString('2 + 2').result
-        let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('entero')
-      }
-
-      {
-        let exp = expressionFromString('2 * 2').result
-        let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('entero')
-      }
-
-      {
-        let exp = expressionFromString('2 - 2').result
-        let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('entero')
-      }
-
-      {
-        let exp = expressionFromString('2 ^ 2').result
-        let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('entero')
-      }
-
-      {
-        let exp = expressionFromString('2 + verdadero').result
-        let type = checker.getExpressionReturnType(exp)
-        type.error.should.equal(true)
-      }
-    })
-
-    it('1 entero y un real en operadores matematicos', () => {
-      {
-        let exp = expressionFromString('2 + 2.3').result
-        let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('real')
-      }
-
-      {
-        let exp = expressionFromString('2 * 2.3').result
-        let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('real')
-      }
-
-      {
-        let exp = expressionFromString('2 - 2.3').result
-        let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('real')
-      }
-
-      {
-        let exp = expressionFromString('2 ^ 2.3').result
-        let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('real')
-      }
-    })
-
-    it('operadores de comparasion', () => {
-      {
-        let exp = expressionFromString('2 = 2.3').result
-        let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('logico')
-      }
-
-      {
-        let exp = expressionFromString('2 + 2 = 4').result
-        let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('logico')
-      }
-
-      {
-        let exp = expressionFromString('2 <> 2.3').result
-        let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('logico')
-      }
-
-      {
-        let exp = expressionFromString('2 < 2.3').result
-        let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('logico')
-      }
-
-      {
-        let exp = expressionFromString('2 > 2.3').result
-        let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('logico')
-      }
-
-      {
-        let exp = expressionFromString('2 <= 2.3').result
-        let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('logico')
-      }
-
-      {
-        let exp = expressionFromString('2 >= 2.3').result
-        let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('logico')
-      }
-    })
-
-    it('operadores que solo toman enteros', () => {
-      {
-        let exp = expressionFromString('2 div 2').result
-        let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('entero')
-      }
-
-      {
-        let exp = expressionFromString('2 mod 2').result
-        let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('entero')
-      }
-    })
-
-    it('operador de division', () => {
-      {
-        let exp = expressionFromString('2.0 / 2.0').result
-        let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('real')
-      }
-    })
-
-    it('operadores logicos', () => {
-      {
-        let exp = expressionFromString('verdadero AND falso').result
-        let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('logico')
-      }
-
-      {
-        let exp = expressionFromString('verdadero OR falso').result
-        let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('logico')
-      }
-
-      {
-        let exp = expressionFromString('NOT verdadero').result
-        let type = checker.getExpressionReturnType(exp)
-        type.result.should.equal('logico')
-      }
-    })
+describe('Comparar tipos', () => {
+  it('Integer == Integer', () => {
+    Types.equals(Types.Integer, Types.Integer).should.equal(true)
   })
 
-  it('encontrar variables duplicadas', (done) => {
-    let parser = new Parser()
-
-    let code = `
-    variables
-      real var_uno
-      entero var_uno
-    inicio
-    fin
-    `
-
-    let parsing_report = parser.parse(code)
-
-    let program = parsing_report.result
-
-    let checker = new TypeChecker()
-
-    let repeated_vars_found = false
-
-    checker.on('type-error', (ev, error_info) => {
-
-      // NOTE: antes de cambiar esta prueba, error_info contenia las siguientes
-      // props:
-      // let original = {
-      //   name:'var_uno',
-      //   type:'real',
-      //   isArray:false,
-      //   dimension:null
-      // }
-      //
-      // let repeated = {
-      //   name:'var_uno',
-      //   type:'entero',
-      //   isArray:false,
-      //   dimension:null
-      // }
-      //
-      // Ahora contiene {name, original_type, repeated_type}
-
-      error_info.name.should.equal('var_uno')
-      error_info.original_type.should.equal('real')
-      error_info.repeated_type.should.equal('entero')
-
-      repeated_vars_found = true
-    })
-
-    checker.on('type-check-finished', () => {
-      repeated_vars_found.should.equal(true)
-      done()
-    })
-
-    checker.check(program)
+  it('Integer != Float', () => {
+    Types.equals(Types.Integer, Types.Float).should.equal(false)
   })
 
-  it('verificar enunciados de asignacion', (done) => {
-    let parser = new Parser()
-
-    let code = `
-    variables
-      real a
-      entero b
-    inicio
-      a <- 2.0 + verdadero
-      b <- a
-    fin
-    `
-
-    let parsing_report = parser.parse(code)
-
-    parsing_report.error.should.equal(false)
-
-    let program = parsing_report.result
-
-    let error_list = []
-
-    let checker = new TypeChecker()
-
-    checker.on('type-error', (ev_info, error) => {
-      error_list.push(error)
-    })
-
-    checker.on('type-check-finished', () => {
-      error_list.length.should.equal(2)
-      error_list[0].reason.should.equal('@expression-incompatible-operator-types')
-      error_list[1].reason.should.equal('incompatible-types-at-assignment')
-      done()
-    })
-
-    checker.check(program)
+  it('Integer != Array<3, Integer>', () => {
+    Types.equals(Types.Integer, new Types.ArrayType(Types.Integer, 3)).should.equal(false)
   })
 
-  describe('Estructura si', () => {
-    it('verificar un programa con un enunciado si..sino', (done) => {
-      let parser = new Parser()
+  it('Array<3, Integer> == Array<3, Integer>', () => {
+    Types.equals(new Types.ArrayType(Types.Integer, 3), new Types.ArrayType(Types.Integer, 3)).should.equal(true)
+  })
+})
 
-      let code = `
-      variables
-      inicio
-        si (2 + 2 = 4) entonces
-          escribir("hola")
-        sino
-          escribir("error")
-        finsi
-        escribir("chau")
-      fin
-      `
+describe('calculate type', () => {
+  it('expresion logica', () => {
+    let exp = [ {kind:'type', type_info:Types.Bool}, {kind:'operator', name:'not'} ]
 
-      let parsing_report = parser.parse(code)
-
-      parsing_report.error.should.equal(false)
-
-      let program = parsing_report.result
-
-      let checker = new TypeChecker()
-
-      let condition_error = false
-
-      checker.on('type-error', (ev, error) => {
-        if (error.reason === '@condition-invalid-expression') condition_error = true;
-      })
-
-      checker.on('type-check-finished', () => {
-        condition_error.should.equal(false)
-        done()
-      })
-
-      checker.check(program)
-    })
+    let report = TC.calculate_type(exp)
+    report.error.should.equal(false)
+    report.result.should.equal(Types.Bool)
   })
 
-  describe('Bucles mientras', () => {
-    it('verificar condicion de un bucle mientras', (done) => {
+  it('comparasion de entero con real', () => {
+    let exp = [ {kind:'type', type_info:Types.Integer}, {kind:'type', type_info:Types.Float}, {kind:'operator', name:'equal'} ]
 
-      let code = `
-      variables
-        logico a
-      inicio
-        a <- verdadero
-        mientras (a)
-          escribir("dentro del bucle")
-          a <- falso
-        finmientras
-        escribir("fuera del bucle")
-      fin
-      `
-
-      let parser = new Parser()
-
-      let parsing_report = parser.parse(code)
-
-      parsing_report.error.should.equal(false)
-
-      let program = parsing_report.result
-
-      let checker = new TypeChecker()
-
-      let condition_error = false
-
-      checker.on('type-error', (ev, error) => {
-        if (error.reason === '@condition-invalid-expression') condition_error = true;
-      })
-
-      checker.on('type-check-finished', () => {
-        condition_error.should.equal(false)
-        done()
-      })
-
-      checker.check(program)
-    })
-
-    it('verificar enunciados de un bucle mientras', (done) => {
-
-      let code = `
-      variables
-        logico a
-      inicio
-        a <- verdadero
-        mientras (a)
-          a <- 34
-          a <- falso
-        finmientras
-      fin
-      `
-
-      let parser = new Parser()
-
-      let parsing_report = parser.parse(code)
-
-      parsing_report.error.should.equal(false)
-
-      let program = parsing_report.result
-
-      let checker = new TypeChecker()
-
-      let assigment_error = false
-
-      checker.on('type-error', (ev, error) => {
-        if (error.reason === 'incompatible-types-at-assignment') assigment_error = true;
-      })
-
-      checker.on('type-check-finished', () => {
-        assigment_error.should.equal(true)
-        done()
-      })
-
-      checker.check(program)
-    })
+    let report = TC.calculate_type(exp)
+    report.error.should.equal(false)
+    report.result.should.equal(Types.Bool)
   })
 
-  describe('Bucles repetir', () => {
-    it('verificar que no haya errores en un bucle repetir', (done) => {
+  it('suma de entero con real', () => {
+    let exp = [ {kind:'type', type_info:Types.Integer}, {kind:'type', type_info:Types.Float}, {kind:'operator', name:'plus'} ]
 
-      let code = `
-      variables
-        logico a
-      inicio
-        a <- verdadero
-        repetir
-          escribir("dentro del bucle")
-          a <- falso
-        hasta que (a = falso)
-        escribir("fuera del bucle")
-      fin
-      `
-
-      let parser = new Parser()
-
-      let parsing_report = parser.parse(code)
-
-      parsing_report.error.should.equal(false)
-
-      let program = parsing_report.result
-
-      let checker = new TypeChecker()
-
-      let condition_error = false
-
-      checker.on('type-error', (ev, error) => {
-        if (error.reason === '@condition-invalid-expression') condition_error = true;
-      })
-
-      checker.on('type-check-finished', () => {
-        condition_error.should.equal(false)
-        done()
-      })
-
-      checker.check(program)
-    })
+    let report = TC.calculate_type(exp)
+    report.error.should.equal(false)
+    report.result.should.equal(Types.Float)
   })
 
-  describe('Bucles para', () => {
-    it('verificar que no haya errores en un bucle para', (done) => {
-      let code = `
-      variables
-        entero i
-      inicio
-        para i <- 1 hasta 10
-          escribir(i)
-        finpara
-      fin
-      `
+  it('suma de entero con entero', () => {
+    let exp = [ {kind:'type', type_info:Types.Integer}, {kind:'type', type_info:Types.Integer}, {kind:'operator', name:'plus'} ]
 
-      let parser = new Parser()
-
-      let parser_report = parser.parse(code)
-
-      parser_report.error.should.equal(false)
-
-      let program = parser_report.result
-
-      let checker = new TypeChecker()
-
-      let error_found = false
-
-      checker.on('type-error', () => {error_found = true})
-
-      checker.on('type-check-finished', () => {
-        error_found.should.equal(false)
-        done()
-      })
-
-      checker.check(program)
-    })
-
-    it('se detecta un error cuando el contador no es de tipo entero', (done) => {
-      let code = `
-      variables
-        real i
-      inicio
-        para i <- 1 hasta 10
-          escribir(i)
-        finpara
-      fin
-      `
-
-      let parser = new Parser()
-
-      let parser_report = parser.parse(code)
-
-      parser_report.error.should.equal(false)
-
-      let program = parser_report.result
-
-      let checker = new TypeChecker()
-
-      let error_found = false
-
-      checker.on('type-error', (ev_name, error_name) => {
-        if (error_name === '@for-counter-must-be-entero') {
-          error_found = true
-        }
-      })
-
-      checker.on('type-check-finished', () => {
-        error_found.should.equal(true)
-        done()
-      })
-
-      checker.check(program)
-    })
-
-    it('emite un error si el primer valor no es de tipo entero', (done) => {
-      let code = `
-      variables
-        entero i
-      inicio
-        para i <- 2.8 hasta 10
-          escribir(i)
-        finpara
-      fin
-      `
-
-      let parser = new Parser()
-
-      let parser_report = parser.parse(code)
-
-      parser_report.error.should.equal(false)
-
-      let program = parser_report.result
-
-      let checker = new TypeChecker()
-
-      let error_found = false
-
-      checker.on('type-error', (ev_name, error_name) => {
-        if (error_name === '@for-init-value-must-be-entero') {
-          error_found = true
-        }
-      })
-
-      checker.on('type-check-finished', () => {
-        error_found.should.equal(true)
-        done()
-      })
-
-      checker.check(program)
-    })
-
-    it('se detecta un error cuando el ultimo valor no es entero', (done) => {
-      let code = `
-      variables
-        entero i
-      inicio
-        para i <- 1 hasta 12.4
-          escribir(i)
-        finpara
-      fin
-      `
-
-      let parser = new Parser()
-
-      let parser_report = parser.parse(code)
-
-      parser_report.error.should.equal(false)
-
-      let program = parser_report.result
-
-      let checker = new TypeChecker()
-
-      let error_found = false
-
-      checker.on('type-error', (ev_name, error_name) => {
-        if (error_name === '@for-last-value-must-be-entero') {
-          error_found = true
-        }
-      })
-
-      checker.on('type-check-finished', () => {
-        error_found.should.equal(true)
-        done()
-      })
-
-      checker.check(program)
-    })
+    let report = TC.calculate_type(exp)
+    report.error.should.equal(false)
+    report.result.should.equal(Types.Integer)
   })
 
-  describe('Modulos', () => {
-    it('detecta un retornar utilizado fuera de una funcion', (done) => {
-      let code = `
-      variables
-        entero i
-      inicio
-        retornar i
-      fin
-      `
-
-      let parser = new Parser()
-
-      let parser_report = parser.parse(code)
-
-      parser_report.error.should.equal(false)
-
-      let program = parser_report.result
-
-      let checker = new TypeChecker()
-
-      let error_found = false
-
-      checker.on('type-error', (ev_name, error_info) => {
-        if (error_info.reason === '@procedure-return') {
-          error_found = true
-        }
-      })
-
-      checker.on('type-check-finished', () => {
-        error_found.should.equal(true)
-        done()
-      })
-
-      checker.check(program)
-    })
-  })
-
-  it('checkCondition', () => {
-    let checker = new TypeChecker()
-
+  it('division', () => {
     {
-      let exp = expressionFromString('2 + verdadero').result
+      let exp = [ {kind:'type', type_info:Types.Integer}, {kind:'type', type_info:Types.Integer}, {kind:'operator', name:'divide'} ]
 
-      let condition_check = checker.checkCondition(exp)
-
-      condition_check.error.should.equal(true)
-      condition_check.result.reason.should.equal('@expression-incompatible-operator-types')
-    }
-
-    {
-      let exp = expressionFromString('4.78').result
-
-      let condition_check = checker.checkCondition(exp)
-
-      condition_check.error.should.equal(true)
-      condition_check.result.reason.should.equal('@condition-invalid-expression')
-      condition_check.result.expected.should.equal('logico')
-      condition_check.result.unexpected.should.equal('real')
-    }
-  })
-
-  it('checkArrayInvocation', () => {
-    let globals = {
-      a:{
-        type:'entero',
-        isArray:false,
-        dimension:null
-      },
-      b:{
-        type:'entero',
-        isArray:true,
-        dimension:[3, 4]
-      }
-    }
-
-    {
-      // invalid index
-
-      let target = globals.b
-      let invocation = {
-        name:'b',
-        isArray:true,
-        indexes:[{expression_type:'literal', type:'entero', value:2}, {expression_type:'literal', type:'logico', value:true}]
-      }
-
-      let report = checker.checkArrayInvocation(target, invocation)
-
-      report.error.should.equal(true)
-      report.result.reason.should.equal('non-integer-index')
-      report.result.bad_index.should.equal(1)
-    }
-
-    {
-      // not enough indexes
-
-      let target = globals.b
-      let invocation = {
-        name:'b',
-        isArray:true,
-        indexes:[{expression_type:'literal', type:'entero', value:2}]
-      }
-
-      let report = checker.checkArrayInvocation(target, invocation)
-
-      report.error.should.equal(true)
-      report.result.reason.should.equal('@array-not-enough-indexes')
-      report.result.dimensions.should.equal(2)
-      report.result.indexes.should.equal(1)
-    }
-
-    {
-      // too many indexes
-
-      let target = globals.b
-      let invocation = {
-        name:'b',
-        isArray:true,
-        indexes:[
-          {expression_type:'literal', type:'entero', value:1},
-          {expression_type:'literal', type:'entero', value:2},
-          {expression_type:'literal', type:'entero', value:3}
-        ]
-      }
-
-      let report = checker.checkArrayInvocation(target, invocation)
-
-      report.error.should.equal(true)
-      report.result.reason.should.equal('@array-too-many-indexes')
-      report.result.dimensions.should.equal(2)
-      report.result.indexes.should.equal(3)
-    }
-
-    {
-      // not an array
-
-      let target = globals.a
-      let invocation = {
-        name:'a',
-        isArray:true,
-        indexes:[
-          {expression_type:'literal', type:'entero', value:1},
-          {expression_type:'literal', type:'entero', value:2},
-          {expression_type:'literal', type:'entero', value:3}
-        ]
-      }
-
-      let report = checker.checkArrayInvocation(target, invocation)
-
-      report.error.should.equal(true)
-      report.result.reason.should.equal('var-isnt-array')
-      report.result.name.should.equal('a')
-    }
-
-    {
-      // missing index
-
-      let target = globals.b
-      let invocation = {
-        name:'b',
-        isArray:false,
-        indexes:null
-      }
-
-      let report = checker.checkArrayInvocation(target, invocation)
-
-      report.error.should.equal(true)
-      report.result.reason.should.equal('@array-missing-index')
-      report.result.name.should.equal('b')
-    }
-
-    {
-      // out of bounds index/es
-
-      let target = globals.b
-      let invocation = {
-        name:'b',
-        isArray:true,
-        indexes:[
-          {expression_type:'literal', type:'entero', value:2},
-          {expression_type:'literal', type:'entero', value:7}
-        ]
-      }
-
-      let report = checker.checkArrayInvocation(target, invocation)
-
-      report.error.should.equal(true)
-      report.result.reason.should.equal('index-out-of-bounds')
-      report.result.bad_index.should.equal(2)
-      report.result.expected.should.equal(4)
-    }
-
-    {
-      // index < 1
-
-      let target = globals.b
-      let invocation = {
-        name:'b',
-        isArray:true,
-        indexes:[
-          {expression_type:'literal', type:'entero', value:0},
-          {expression_type:'literal', type:'entero', value:3}
-        ]
-      }
-
-      let report = checker.checkArrayInvocation(target, invocation)
-
-      report.error.should.equal(true)
-      report.result.reason.should.equal('index-out-of-bounds')
-      report.result.bad_index.should.equal(1)
-    }
-
-    {
-      // can't check bounds at compile time
-
-      let target = globals.b
-      let invocation = {
-        name:'b',
-        isArray:true,
-        indexes:[
-          expressionFromString('2 + 3').result,
-          {expression_type:'literal', type:'entero', value:3}
-        ]
-      }
-
-      let report = checker.checkArrayInvocation(target, invocation)
-
+      let report = TC.calculate_type(exp)
       report.error.should.equal(false)
-
-      invocation.bounds_checked.should.equal(false)
+      report.result.should.equal(Types.Float)
     }
+
+    {
+      let exp = [ {kind:'type', type_info:Types.Float}, {kind:'type', type_info:Types.Float}, {kind:'operator', name:'divide'} ]
+
+      let report = TC.calculate_type(exp)
+      report.error.should.equal(false)
+      report.result.should.equal(Types.Float)
+    }
+  })
+
+  it('binary_logic_operators', () => {
+    let exp = [ {kind:'type', type_info:Types.Bool}, {kind:'type', type_info:Types.Bool}, {kind:'operator', name:'and'} ]
+
+    let report = TC.calculate_type(exp)
+    report.error.should.equal(false)
+    report.result.should.equal(Types.Bool)
+  })
+})
+
+describe('invocation rule', () => {
+  it('good invocation', () => {
+    let invocation = {
+      type:Types.Integer,
+      indextypes:[[{kind:'type', type_info:Types.Integer}], [{kind:'type', type_info:Types.Integer}]]
+    }
+
+    let report = TC.invocation_rule(invocation)
+
+    report.error.should.equal(false)
+    report.result.should.deepEqual(Types.Integer)
+  })
+
+  it('bad invocation', () => {
+    let invocation = {
+      type:Types.Integer,
+      indextypes:[[{kind:'type', type_info:Types.Integer}], [{kind:'type', type_info:Types.Float}]]
+    }
+
+    let report = TC.invocation_rule(invocation)
+
+    report.error.should.equal(true)
+  })
+})
+
+describe('assignment rule', () => {
+  it('asignar un valor entero a una variable entera', () => {
+    let invocation = {
+      type:Types.Integer,
+      indextypes:[[{kind:'type', type_info:Types.Integer}], [{kind:'type', type_info:Types.Integer}]]
+    }
+
+    let assignment = {
+      left: invocation,
+      right: [{kind:'type', type_info:Types.Integer}]
+    }
+
+    let report = TC.assignment_rule(assignment)
+
+    report.error.should.equal(false)
+  })
+})
+
+describe.skip('call rule', () => {
+  it('verificar una llamada correcta', () => {
+    let call = {
+      args:[[{kind:'type', type_info:Types.Integer}], [{kind:'type', type_info:Types.Float}]],
+      argtypes: [Types.Integer, Types.Float],
+      return_type: Types.Integer
+    }
+
+    let report = TC.call_rule(call)
+
+    report.error.should.equal(false)
+    report.result.should.deepEqual(Types.Integer)
+  })
+})
+
+describe('Integracion con Typer', () => {
+  it('asignacion a una variable', () => {
+    let code = `variables
+      entero a
+    inicio
+      a <- 2
+    fin
+    `
+
+    let parser_output = parse(code)
+
+    let transformed_ast = bind(Typer, Declarator(parser_output))
+
+    let check_result = bind(TC.check, transformed_ast)
+
+    check_result.should.deepEqual([])
+  })
+
+  it('asignar a las celdas de un vector ', () => {
+    let code = `variables
+      entero v[5]
+    inicio
+      v[1] <- 5
+      v[2] <- 8
+      v[3] <- 7
+      v[4] <- 9
+      v[5] <- 3
+    fin`
+
+    let parser_output = parse(code)
+
+    let transformed_ast = bind(Typer, Declarator(parser_output))
+
+    let check_result = bind(TC.check, transformed_ast)
+
+    check_result.should.deepEqual([])
+  })
+
+  it('asignacion a las celda de una matriz', () => {
+    let code = `variables
+      entero m[2, 2]
+    inicio
+      m[1, 1] <- 5
+      m[1, 2] <- 8
+      m[2, 1] <- 7
+      m[2, 2] <- 9
+    fin`
+
+    let parser_output = parse(code)
+
+    let transformed_ast = bind(Typer, Declarator(parser_output))
+
+    let check_result = bind(TC.check, transformed_ast)
+
+    check_result.should.deepEqual([])
+  })
+
+  it('asignar vector a fila de matriz', () => {
+    let code = `variables
+      entero m[2, 2], v[2]
+    inicio
+      m[1] <- v
+      m[2] <- m[1]
+    fin`
+
+    let parser_output = parse(code)
+
+    let transformed_ast = bind(Typer, Declarator(parser_output))
+
+    let check_result = bind(TC.check, transformed_ast)
+
+    check_result.should.deepEqual([])
+  })
+
+  it('asignar a una "cadena"', () => {
+    let code = `variables
+      caracter cadena[4]
+    inicio
+      cadena <- "hola"
+    fin`
+
+    let parser_output = parse(code)
+
+    let transformed_ast = bind(Typer, Declarator(parser_output))
+
+    let check_result = bind(TC.check, transformed_ast)
+
+    check_result.should.deepEqual([])
+  })
+
+  it('asignar retorno de funcion', () => {
+    let code = `variables
+      entero a
+    inicio
+      a <- sumar(2, 3)
+    fin
+
+    entero funcion sumar(entero a, entero b)
+      entero a, b
+    inicio
+      retornar a + b
+    finfuncion
+    `
+
+    let parser_output = parse(code)
+
+    let transformed_ast = bind(Typer, bind(CallDecorator, Declarator(parser_output)))
+
+    let check_result = bind(TC.check, transformed_ast)
+
+    check_result.should.deepEqual([])
+  })
+
+  it('bucle para correcto', () => {
+    let code = `variables
+      entero i
+    inicio
+      para i <- 1 hasta 10
+      finpara
+    fin`
+
+    let parser_output = parse(code)
+
+    let transformed_ast = bind(Typer, bind(CallDecorator, Declarator(parser_output)))
+
+    let check_result = bind(TC.check, transformed_ast)
+
+    check_result.should.deepEqual([])
+  })
+})
+
+describe('Programas que deberian devolver errores', () => {
+  it('tipo de retorno distinto al declarado', () => {
+    let code = `variables
+      entero a
+    inicio
+      a <- sumar(2, 3)
+    fin
+
+    entero funcion sumar(entero a, entero b)
+      entero a, b
+    inicio
+      retornar 2.78
+    finfuncion
+    `
+
+    let parser_output = parse(code)
+
+    let transformed_ast = bind(Typer, bind(CallDecorator, Declarator(parser_output)))
+
+    let check_result = bind(TC.check, transformed_ast)
+
+    check_result.should.deepEqual([
+      {
+        reason: '@function-bad-return-type',
+        expected: 'entero',
+        returned: 'real'
+      }
+    ])
+  })
+
+  it('asignar real a variable de tipo entero', () => {
+    let code = `variables
+      entero a
+    inicio
+      a <- 2.36
+    fin
+    `
+
+    let parser_output = parse(code)
+
+    let transformed_ast = bind(Typer, bind(CallDecorator, Declarator(parser_output)))
+
+    let check_result = bind(TC.check, transformed_ast)
+
+    check_result.should.deepEqual([
+      {
+        reason: 'assignment-error',
+        errors: [
+          {reason: '@assignment-incompatible-types', expected: 'entero', received: 'real'}
+        ]
+      }
+    ])
+  })
+
+  it('asignar entero a variable de tipo logico', () => {
+    let code = `variables
+      logico a
+    inicio
+      a <- 2
+    fin
+    `
+
+    let parser_output = parse(code)
+
+    let transformed_ast = bind(Typer, bind(CallDecorator, Declarator(parser_output)))
+
+    let check_result = bind(TC.check, transformed_ast)
+
+    check_result.should.deepEqual([
+      {
+        reason: 'assignment-error',
+        errors: [
+          {reason: '@assignment-incompatible-types', expected: 'logico', received: 'entero'}
+        ]
+      }
+    ])
+  })
+
+  it('llamar funcion con menos o mas argumentos de los necesarios', () => {
+    let code = `variables
+      entero a
+    inicio
+      a <- sumar(2)
+    fin
+
+    entero funcion sumar(entero a, entero b)
+      entero a, b
+    inicio
+      retornar a + b
+    finfuncion
+    `
+
+    let parser_output = parse(code)
+
+    let transformed_ast = bind(Typer, bind(CallDecorator, Declarator(parser_output)))
+
+    let check_result = bind(TC.check, transformed_ast)
+
+    check_result.should.deepEqual([
+      {
+        reason: 'assignment-error',
+        errors: [
+          {
+            reason: '@call-errors-found',
+            name: 'sumar',
+            errors: [
+              {reason: '@call-incorrect-arg-number', expected: 2, received: 1}
+            ]
+          }
+        ]
+      }
+    ])
+  })
+
+  it('llamar funcion con argumentos del tipo equivocado', () => {
+    let code = `variables
+      entero a
+    inicio
+      a <- sumar(2.89, 4.6)
+    fin
+
+    entero funcion sumar(entero a, entero b)
+      entero a, b
+    inicio
+      retornar a + b
+    finfuncion
+    `
+
+    let parser_output = parse(code)
+
+    let transformed_ast = bind(Typer, bind(CallDecorator, Declarator(parser_output)))
+
+    let check_result = bind(TC.check, transformed_ast)
+
+    check_result.should.deepEqual([
+      {
+        reason: 'assignment-error',
+        errors: [
+          {
+            reason: '@call-errors-found',
+            name: 'sumar',
+            errors: [
+              {reason: '@call-wrong-argument-type', expected: 'entero', received: 'real', at: 1},
+              {reason: '@call-wrong-argument-type', expected: 'entero', received: 'real', at: 2}
+            ]
+          }
+        ]
+      }
+    ])
+  })
+
+  it.skip('invocar arreglo con un indice de tipo real', () => {
+    let code = `variables
+      entero m[5, 3]
+    inicio
+      m[2.78, verdadero] <- 2
+    fin
+    `
+
+    let parser_output = parse(code)
+
+    let transformed_ast = bind(Typer, bind(CallDecorator, Declarator(parser_output)))
+
+    let check_result = bind(TC.check, transformed_ast)
+
+    check_result.should.deepEqual([
+      {
+        reason: 'non-integer-index',
+        bad_type: 'real',
+        at: 1
+      }
+    ])
+  })
+
+  it('condicionar una estructura con un valor entero', () => {
+    let code = `variables
+      entero a
+    inicio
+      si (2) entonces
+        a <- 3
+      finsi
+    fin
+    `
+
+    let parser_output = parse(code)
+
+    let transformed_ast = bind(Typer, bind(CallDecorator, Declarator(parser_output)))
+
+    let check_result = bind(TC.check, transformed_ast)
+
+    check_result.should.deepEqual([
+      {
+        reason: 'control-error',
+        errors: [{reason: '@condition-invalid-expression', received: 'entero'}]
+      }
+    ])
+  })
+
+  it('llamar a escribir con un valor "escribible"', () => {
+    let code = `variables
+      entero v[2, 2, 3]
+    inicio
+      escribir(v)
+    fin
+    `
+
+    let parser_output = parse(code)
+
+    let transformed_ast = bind(Typer, bind(CallDecorator, Declarator(parser_output)))
+
+    let check_result = bind(TC.check, transformed_ast)
+
+    check_result.should.deepEqual([{
+      reason: '@io-errors-found',
+      name: 'escribir',
+      errors: [{reason: '@io-wrong-argument-type', at: 1, received: 'entero[2, 2, 3]'}]
+    }])
+  })
+
+  it('llamar a escribir con un valor no "escribible"', () => {
+    let code = `variables
+      entero v[2, 2, 3]
+    inicio
+      escribir(v)
+    fin
+    `
+
+    let parser_output = parse(code)
+
+    let transformed_ast = bind(Typer, bind(CallDecorator, Declarator(parser_output)))
+
+    let check_result = bind(TC.check, transformed_ast)
+
+    check_result.should.deepEqual([{
+      reason: '@io-errors-found',
+      name: 'escribir',
+      errors: [{reason: '@io-wrong-argument-type', at: 1, received: 'entero[2, 2, 3]'}]
+    }])
+  })
+
+  it('bucle para correcto', () => {
+    let code = `variables
+      real i
+    inicio
+      para i <- 2.6 hasta verdadero
+      finpara
+    fin`
+
+    let parser_output = parse(code)
+
+    let transformed_ast = bind(Typer, bind(CallDecorator, Declarator(parser_output)))
+
+    let check_result = bind(TC.check, transformed_ast)
+
+    check_result.should.deepEqual([
+      {
+        reason: 'for-loop-error',
+        errors: [
+          {
+            reason: '@for-non-integer-counter',
+            received: 'real'
+          },
+          {
+            reason: '@for-non-integer-init',
+            received: 'real'
+          },
+          {
+            reason: '@for-non-integer-goal',
+            received: 'logico'
+          }
+        ]
+      }
+    ])
   })
 })

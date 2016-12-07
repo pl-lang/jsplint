@@ -1,0 +1,20 @@
+{
+    "compilerOptions": {
+        "allowJs": true,
+        "noImplicitAny": true,
+        "outDir": "./dist",
+        "target" : "es5",
+        "declaration": true
+    },
+    "files": [
+        "index.ts",
+        "./src/parser/ast/List.ts",
+        "./src/parser/ast/Nodes.ts",
+        "./src/tools/ir_writer.ts",
+        "./src/tools/mini-int.ts",
+        "./test/*"
+    ],
+    "include": [
+        "test/*"
+    ]
+}

@@ -1,9 +1,14 @@
 'use strict'
 
-import should from 'should'
+const should = require('should')
 
-import { LinkedList, getChainLenght, getLastNode } from '../src/parser/ast/List.js'
-import { GenericNode, WhileNode, IfNode } from '../src/parser/ast/Nodes.js'
+const LinkedList = require('../dist/src/parser/ast/List.js').LinkedList
+const getChainLenght = require('../dist/src/parser/ast/List.js').getChainLenght
+const getLastNode = require('../dist/src/parser/ast/List.js').getLastNode
+
+const GenericNode = require('../dist/src/parser/ast/Nodes.js').GenericNode
+const WhileNode = require('../dist/src/parser/ast/Nodes.js').WhileNode
+const IfNode = require('../dist/src/parser/ast/Nodes.js').IfNode
 
 describe("Metodos auxiliares de listas", () => {
   it('getChainLenght funciona bien', () => {
@@ -45,7 +50,7 @@ describe('LinkedList', () => {
 
     list.addNode(node)
 
-    list.firstNode.should.equal(list.lastNode)
+    list.first.should.equal(list.last)
   })
 
   it('Los datos de una lista se guardan bien', () => {
@@ -59,7 +64,7 @@ describe('LinkedList', () => {
       list.addNode(node)
     }
 
-    let current = list.firstNode
+    let current = list.first
     let index = 0
     while (current !== null) {
       current.data.should.equal(data[index])
@@ -78,13 +83,15 @@ describe('IfNode', () => {
 
     let ifNode = new IfNode()
 
-    ifNode.leftBranchNode = leftNode
-    ifNode.rightBranchNode = rightNode
+    ifNode.false_branch_root = leftNode
+    ifNode.true_branch_root = rightNode
 
     ifNode.setNext(testNode)
 
-    ifNode.leftBranchNode.getNext().should.equal(testNode)
-    ifNode.rightBranchNode.getNext().should.equal(testNode)
+    console.log(ifNode.false_branch_root.getNext())
+
+    ifNode.false_branch_root.getNext().should.equal(testNode)
+    ifNode.true_branch_root.getNext().should.equal(testNode)
   })
 
   it('Cuando solo existe la rama verdadera, el nodo de la rama izquierda es el que le sigue al bloque if', () => {
@@ -94,11 +101,11 @@ describe('IfNode', () => {
 
     let ifNode = new IfNode()
 
-    ifNode.rightBranchNode = rightNode
+    ifNode.true_branch_root = rightNode
 
     ifNode.setNext(testNode)
 
-    ifNode.leftBranchNode.should.equal(testNode)
+    ifNode.false_branch_root.should.equal(testNode)
   })
 
   it('setCurrentBranchTo cambia el nodo que getNext devuelve', () => {
@@ -108,8 +115,8 @@ describe('IfNode', () => {
 
     let ifNode = new IfNode()
 
-    ifNode.rightBranchNode = rightNode
-    ifNode.leftBranchNode = leftNode
+    ifNode.true_branch_root = rightNode
+    ifNode.false_branch_root = leftNode
     ifNode.setNext(next)
 
     ifNode.setCurrentBranchTo('false_branch')

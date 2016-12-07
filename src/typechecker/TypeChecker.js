@@ -1,773 +1,619 @@
-'use strict'
+import {last} from 'ramda'
 
-// TODO: agregar el nombre de la variable (y el tipo que deberia tener?))
-// al error (renglon 170)
+import * as Types from './Types.js'
 
-// TODO: hacer que tenga en cuenta el tipo de retorno de funciones (renglon 176)
+const equals = Types.equals
 
-// TODO: agregar el nombre de la variable (y el tipo que deberia tener?))
-// al error (renglon 192)
+export function check (modules) {
+  let errors_found = []
 
-// TODO: cual hay q devolver si los dos tienen errores? (renglon 232)
+  for (let module_name in modules) {
+    let module = modules[module_name]
+    let report = check_module(module)
+    if (report.error) errors_found.push(...report.result)
+  }
 
-import { WhileNode, UntilNode, IfNode } from '../parser/ast/Nodes.js'
+  return errors_found
+}
 
-import Emitter   from '../utility/Emitter.js'
-
-let math_operators = [
-    'plus'
-  , 'minus'
-  , 'times'
-  , 'power'
-]
-
-function isMathOperator(token_name) {
-  switch (token_name) {
-    case 'plus':
-    case 'minus':
-    case 'times':
-    case 'power':
-      return true
-    default:
-      return false
+function check_module (module) {
+  switch (module.module_type) {
+    case 'main':
+    case 'procedure':
+      return check_procedure(module)
+    case 'function':
+      return check_function(module)
   }
 }
 
-let integer_operators = [
-    'mod'
-  , 'div'
-]
+function check_procedure (procedure) {
+  let errors_found = []
 
-function isIntegerOperator(token_name) {
-  return token_name === 'mod' || token_name === 'div' ? true:false
+  for (let statement of procedure.body) {
+    let report = check_statement(statement)
+
+    if (report.error)
+      errors_found.push(report.result)
+  }
+
+  let error = errors_found.length > 0
+
+  return {error, result:errors_found}
 }
 
-let comparison_operators = [
-    'equal'
-  , 'diff-than'
-  , 'major-than'
-  , 'minor-than'
-  , 'major-equal'
-  , 'minor-equal'
-]
+function check_function (func) {
+  let errors_found = []
 
-function isComparisonOperator(token_name) {
-  switch (token_name) {
+  for (let statement of func.body) {
+    let report = check_statement(statement)
+
+    if (report.error)
+      errors_found.push(report.result)
+  }
+
+  let return_exp_type = calculate_type(last(func.body).exptype)
+
+  if (!return_exp_type.error) {
+    if (!Types.equals(func.type.return_type, return_exp_type.result)) {
+      let error_info = {
+        reason: '@function-bad-return-type',
+        expected: stringify(func.type.return_type),
+        returned: stringify(return_exp_type.result)
+      }
+      errors_found.push(error_info)
+    }
+  }
+  else errors_found.push(return_exp_type.result)
+
+  let error = errors_found.length > 0
+
+  return {error, result:errors_found}
+}
+
+export function check_statement (statement) {
+  switch (statement.type) {
+    case 'call':
+      switch (statement.name) {
+        case 'escribir':
+        case 'escribir_linea':
+        case 'leer':
+          return io_rule(statement)
+        default:
+          return call_rule(statement)
+      }
+    case 'assignment':
+      return assignment_rule(statement)
+    case 'for_loop':
+      return for_rule(statement)
+    case 'control':
+      return ctrl_rule(statement)
+    case 'return':
+      return {error:false}
+    default:
+      throw new Error(`@TypeChecker: no se como verificar enunciados de tipo ${statement.type}`)
+  }
+}
+
+// assignment_error:: error_report
+//
+// Informacion sobre los errores encontrados en la asignacion a una variable
+//
+//  reason: 'assignment-error'
+//
+//  errors: [error]
+//  Arreglo con todos los errores encontrados en el llamado
+//
+// :: (assignment) -> report<assignment_error, type>
+// Encuentra errores en una asignacion a una variable
+export function assignment_rule (assignment) {
+  let errors = []
+
+  let variable_type = invocation_rule(assignment.left)
+
+  let type_report = calculate_type(assignment.right)
+
+  if (variable_type.error) errors.push(variable_type.result)
+
+  if (type_report.error) errors.push(type_report.result)
+
+  let error = errors.length > 0
+
+  if (error) {
+    let result = {reason: 'assignment-error', errors}
+    return {error, result}
+  }
+  else {
+    let right_type = type_report.result
+
+    if (equals(variable_type.result, right_type)) {
+      return {error:false}
+    }
+
+    if (right_type.atomic == 'entero' && variable_type.result.atomic == 'real')
+      if (equal_dimensions(variable_type.result, right_type)) {
+        return {error:false}
+      }
+
+    let reason = '@assignment-incompatible-types'
+    let expected = stringify(variable_type.result)
+    let received = stringify(right_type)
+    errors.push({reason, expected, received})
+
+    let result = {reason: 'assignment-error', errors}
+
+    return {error:true, result}
+  }
+}
+
+// call_error:: error_report
+//
+// Informacion sobre los errores encontrados en el llamado a un modulo
+//
+//  reason: '@call-errors-found'
+//
+//  name: string
+//  Nombre del modulo llamado
+//
+//  errors: [error]
+//  Arreglo con todos los errores encontrados en el llamado
+//
+// :: (call) -> report<call_error, type>
+// Encuentra errores en una llamada a un modulo
+export function call_rule (call) {
+  let errors = []
+
+  // ver si se llamó al modulo con la cantidad correcta de argumentos
+  if (call.argtypes.length != call.type_info.parameters.amount) {
+    let reason = '@call-incorrect-arg-number'
+    let expected = call.type_info.parameters.amount
+    let received = call.argtypes.length
+    errors.push({reason, expected, received})
+  }
+
+  // calcular los tipos de los argumentos
+  let argument_types = []
+  for (let i = 0; i < call.argtypes.length; i++) {
+    let type = calculate_type(call.argtypes[i])
+    if (type.error) errors.push(type.result)
+    argument_types.push(type.result)
+  }
+
+  // verificar que los tipos de los argumentos coincidan con los tipos de los
+  // parametros
+  for (let i = 0; i < argument_types.length; i++) {
+    let expected_type = call.type_info.parameters.types[i]
+
+    if (!equals(argument_types[i], expected_type)) {
+      let reason = '@call-wrong-argument-type'
+      let expected = stringify(expected_type)
+      let received = stringify(argument_types[i])
+      let at = i + 1
+
+      errors.push({reason, expected, received, at})
+    }
+  }
+
+  let error = errors.length > 0
+
+  // Si se encontro algun error se retorna informacion sobre ellos
+  // si no se retorna el tipo de retorno declarado por el modulo
+  let result
+  if (error) {
+    let reason = '@call-errors-found'
+    let name = call.name
+    result = {reason, name, errors}
+  }
+  else
+    result = call.type_info.return_type
+
+  return {error, result}
+}
+
+// io_error:: error_report
+//
+// Informacion sobre los errores encontrados en el llamado a un modulo de IO
+//
+//  reason: '@io-errors-found'
+//
+//  name: string
+//  Nombre del modulo llamado (escribir, escribir_linea, leer)
+//
+//  errors: [error]
+//  Arreglo con todos los arreglos encontrados en el llamado
+//
+// :: (call) -> report<io_error, type>
+// Encuentra errores en una llamada a un modulo
+function io_rule (call) {
+  let errors = []
+
+  let argument_types = []
+
+  for (let i = 0; i < call.argtypes.length; i++) {
+    let type = calculate_type(call.argtypes[i])
+    if (type.error) errors.push(type.result)
+    argument_types.push(type.result)
+  }
+
+  let constraint = call.type_info.parameter_constraint
+
+  for (let i = 0; i < argument_types.length; i++) {
+    if (!constraint(argument_types[i])) {
+      let reason = '@io-wrong-argument-type'
+      let received = stringify(argument_types[i])
+      let name = call.name
+      let at = i + 1
+
+      errors.push({reason, received, at})
+    }
+  }
+
+  let error = errors.length > 0
+
+  let result
+  if (error) {
+    let reason = '@io-errors-found'
+    let name = call.name
+    result = {reason, name, errors}
+  }
+  else
+    result = call.type_info.return_type
+
+  return {error, result}
+}
+
+// for_loop_error:: error_report
+//
+// Informacion sobre los errores encontrados en un bucle para.
+//
+//  reason: 'for-loop-error'
+//
+//  errors: [error]
+//  Arreglo con todos los arreglos encontrados en el bucle.
+//
+// :: (for_statement) -> report<for_loop_error, type>
+// Encuentra errores en un bucle para.
+function for_rule (for_loop) {
+  let errors = []
+
+  let counter_type = invocation_rule(for_loop.counter_invocation)
+
+  if (counter_type.error) errors.push(counter_type.result)
+
+  let init_value_type =  calculate_type(for_loop.init_value)
+
+  if (init_value_type.error) errors.push(init_value_type.result)
+
+  let last_value_type =  calculate_type(for_loop.last_value)
+
+  if (last_value_type.error) errors.push(last_value_type.result)
+
+  if (!counter_type.error && !equals(Types.Integer, counter_type.result)) {
+    let error_info = {
+      reason: '@for-non-integer-counter',
+      received: stringify(counter_type.result)
+    }
+    errors.push(error_info)
+  }
+
+  if (!init_value_type.error && !equals(Types.Integer, init_value_type.result)) {
+    let error_info = {
+      reason: '@for-non-integer-init',
+      received: stringify(init_value_type.result)
+    }
+    errors.push(error_info)
+  }
+
+  if (!last_value_type.error && !equals(Types.Integer, last_value_type.result)) {
+    let error_info = {
+      reason: '@for-non-integer-goal',
+      received: stringify(last_value_type.result)
+    }
+    errors.push(error_info)
+  }
+
+  for (let statement of for_loop.body) {
+    let report = check_statement(statement)
+    if (report.error) {
+      if (statement.type == 'control')  errors.push(report.result)
+      else errors.push(report.result)
+    }
+  }
+
+  if (errors.length > 0) {
+    let result = {reason: 'for-loop-error', errors}
+    return {error:true, result}
+  }
+  else
+    return {error:false}
+}
+
+// TODO: adaptar esta funcion al nuevo formato de errores
+export function invocation_rule (invocation) {
+  let error = false
+
+  let errors_found = []
+
+  let indexnum = 1
+
+  for (let type_expression of invocation.indextypes) {
+    let type_report = calculate_type(type_expression)
+
+    if (type_report.error) return type_report
+
+    if (!equals(Types.Integer, type_report.result)) {
+      error = true
+      let error_info = {
+        reason:'non-integer-index', at:indexnum, bad_type:stringify(type_report.result)
+      }
+      errors_found.push(error_info)
+    }
+    indexnum++
+  }
+
+  if (error) return {error, result:errors_found}
+  else return {error, result:invocation.type}
+}
+
+export function ctrl_rule (ctrl_statement) {
+  let errors = []
+
+  let condition_type = calculate_type(ctrl_statement.condition)
+
+  if (!condition_type.error) {
+    if (!equals(condition_type.result, Types.Bool)) {
+      let reason = '@condition-invalid-expression'
+      let received = stringify(condition_type.result)
+      errors.push({reason, received})
+    }
+  }
+  else
+    errors.push(condition_type.result)
+
+  for (let statement of ctrl_statement.body) {
+    let report = check_statement(statement)
+    if (report.error)
+      errors.push(report.result)
+  }
+
+  if (errors.length > 0) {
+    let result = {reason: 'control-error', errors}
+    return {error:true, result}
+  }
+  else
+    return {error:false}
+}
+
+// el argumento de esta funcion es un arreglo de tipos y operadores
+// su tarea es reducir ese arreglo a un tipo
+export function calculate_type (expression) {
+  let stack = []
+
+  for (let elt of expression) {
+    if (elt.kind == 'operator') {
+      let report = apply_operator(stack, elt.name)
+      if (report.error) return report
+      stack = report.result
+    }
+    else if (elt.kind == 'call') {
+      let report = call_rule(elt.type_info)
+      if (report.error) return report
+      stack.push(report.result)
+    }
+    else if (elt.kind == 'invocation') {
+      let report = invocation_rule(elt.type_info)
+      if (report.error) return report
+      stack.push(report.result)
+    }
+    else stack.push(elt.type_info)
+  }
+
+  return {error:false, result:stack.pop()}
+}
+
+function apply_operator (stack, opname) {
+  switch (opname) {
+    case 'plus':
+    case 'times':
+    case 'power':
+    return real_operators(stack)
+    case 'divide':
+    return division(stack)
+    case 'minus':
+    return minus(stack)
+    case 'mod':
+    case 'div':
+    return integer_operators(stack)
     case 'equal':
     case 'diff-than':
     case 'major-than':
     case 'minor-than':
     case 'major-equal':
     case 'minor-equal':
-      return true
+     return comparison_operators(stack)
+    case 'and':
+    case 'or':
+    return binary_logic_operators(stack)
+    case 'not':
+    return not(stack)
     default:
-      return false
+    throw new Error(`No se como verificar los tipos del operador ${opname}`)
   }
 }
 
-let logico_operators = [
-    'and'
-  , 'or'
-  , 'not'
-]
+function division (stack) {
+  let booth_are_integers = false
 
-function isLogicOperator(token_name) {
-  return token_name === 'and' || token_name === 'or' || token_name === 'not' ? true: false
+  let new_stack = stack
+
+  let a = new_stack.pop()
+
+  let b = new_stack.pop()
+
+  if (!equals(a, Types.Integer) && !equals(a, Types.Float)) {
+    let reason = '@expression-incompatible-type'
+    let received = stringify(a)
+    return {error:true, result:{reason, received}}
+  }
+
+  if (!equals(b, Types.Integer) && !equals(b, Types.Float)) {
+    let reason = '@expression-incompatible-type'
+    let received = stringify(b)
+    return {error:true, result:{reason, received}}
+  }
+
+  new_stack.push(Types.Float)
+
+  return {error:false, result:new_stack}
 }
 
-let type_data_by_category = {
-  math_operators:{
-    supported_types:['entero', 'real'],
-    calculate_return_type: (a, b) => {
-      let result = a === 'entero' && b === 'entero' ? 'entero' : 'real'
-      return {error:false, result}
-    }
-  },
+function minus (stack) {
+  let new_stack = stack
+  let a = new_stack.pop()
 
-  integer_operators:{
-    supported_types: ['entero'],
-    calculate_return_type: () => ({error:false, result:'entero'})
-  },
-
-  comparison_operators:{
-    supported_types:['entero', 'real', 'character', 'logico'],
-    calculate_return_type: (a, b) => {
-      let comparable_types = a === 'entero' && b === 'real' || a === 'real' && b === 'entero'
-      let equal_types = a === b
-      let result = comparable_types || equal_types ? 'logico':null
-      let error = result === null ? true:false
-      return {error, result}
-    }
-  },
-
-  logico_operators:{
-    supported_types: ['logico'],
-    calculate_return_type: () => {
-      return {error:false, result:'logico'}
-    }
-  },
-
-  unary_minus:{
-    supported_types:['entero', 'real'],
-    calculate_return_type:a => ({error:false, result:a})
-  },
-
-  divide:{
-    supported_types:['real'],
-    calculate_return_type: () => ({error:false, result:'real'})
+  if (!equals(a, Types.Integer) && !equals(a, Types.Float)) {
+    let reason = '@expression-incompatible-type'
+    let received = stringify(a)
+    return {error:true, result:{reason, received}}
   }
+
+  // hay que devolver el mismo tipo de dato que se recibio
+  new_stack.push(a)
+
+  return {error:false, result:new_stack}
 }
 
-function getOperatorInfo(operator) {
-  if (isMathOperator(operator))
-    return type_data_by_category.math_operators;
+function real_operators (stack) {
+  let new_stack = stack
 
-  else if (isIntegerOperator(operator))
-    return type_data_by_category.integer_operators;
+  let a = new_stack.pop()
+  let b = new_stack.pop()
 
-  else if (isComparisonOperator(operator))
-    return type_data_by_category.comparison_operators;
+  let a_is_integer = equals(a, Types.Integer)
+  let b_is_integer = equals(b, Types.Integer)
 
-  else if (isLogicOperator(operator))
-    return type_data_by_category.logico_operators;
+  let a_is_float = equals(a, Types.Float)
+  let b_is_float = equals(b, Types.Float)
 
-  else if (operator === 'divide')
-    return type_data_by_category.divide;
+  if (!a_is_integer && !a_is_float) {
+    let reason = '@expression-incompatible-types'
+    let received = stringify(a)
+    return {error:true, result:{reason, received}}
+  }
 
-  else
-    return type_data_by_category.unary_minus;
+  if (!b_is_integer && !b_is_float) {
+    let reason = '@expression-incompatible-types'
+    let received = stringify(b)
+    return {error:true, result:{reason, received}}
+  }
+
+  let return_type = a_is_integer && b_is_integer ? Types.Integer:Types.Float
+
+  new_stack.push(return_type)
+
+  return {error:false, result:new_stack}
 }
 
-function includes(array, target_value) {
+function integer_operators (stack) {
+  let new_stack = stack
 
-  for (let value of array) {
-    if (value === target_value) return true;
+  let a = new_stack.pop()
+  let b = new_stack.pop()
+
+  if (!equals(a, Types.Integer)) {
+    let reason = '@expression-incompatible-types'
+    let received = stringify(a)
+    return {error:true, result:{reason, received}}
   }
 
-  return false
+  if (!equals(b, Types.Integer)) {
+    let reason = '@expression-incompatible-types'
+    let received = stringify(b)
+    return {error:true, result:{reason, received}}
+  }
+
+  new_stack.push(Types.Integer)
+
+  return {error:false, result:new_stack}
 }
 
-export default class TypeChecker extends Emitter {
-  constructor() {
-    super(['type-check-started', 'type-error', 'type-check-finished'])
-    this.locals_by_module = {
-      main : {}
-    }
-    this.globals = this.locals_by_module.main
-    this.current_module_name = ''
-  }
+function comparison_operators (stack) {
+  let new_stack = stack
 
-  variableExists(varname) {
-    let is_local_variable = varname in this.locals_by_module[this.current_module_name]
-    let is_global_variable = varname in this.globals
+  let a = new_stack.pop()
+  let b = new_stack.pop()
 
-    return is_local_variable || is_global_variable
-  }
-
-  /**
-   * Busca y devuelve el objeto que representa a una variable especifica
-   * @param  {string} varname el nombre de la variable deseada
-   * @return {object}         el objeto que representa a la variable
-   */
-  getVariable(varname) {
-    if (varname in this.locals_by_module[this.current_module_name]) {
-      return this.locals_by_module[this.current_module_name][varname]
-    }
-    else {
-      return this.globals[varname]
-    }
-  }
-
-  /**
-   * Dice si el tipo de una variable es compatible con lo que se le quiere
-   * asignar
-   * @param  {string} target_type  el tipo de la variable objetvio
-   * @param  {string} payload_type el tipo de la expresion que se quiere asignar
-   * @return {boolean}              true cuando son compatibles, si no, falso
-   */
-  typesAreCompatible(target_type, payload_type) {
-    if (target_type === payload_type) {
-      return true
-    } else if (target_type === 'real' && payload_type === 'entero') {
-      return true
-    } else return false;
-  }
-
-  /**
-   * Revisa todos los nodos de un programa en busca de errores
-   * @emits TypeChecker#type-error
-   * @emits TypeChecker#type-check-started
-   * @emits TypeChecker#type-check-finished
-   * @return {Report} Si se encontró algun error la propiedad "error" será true
-   */
-  check(program) {
-    this.emit('type-check-started')
-
-    for (let module of program.modules) {
-      this.current_module_name = module.name
-
-      if (module.name != 'main') {
-        this.locals_by_module[module.name] = {}
-      }
-      
-      for (let statement of module.body) {
-        this.checkStatement(statement, module.module_type)
-      }
-    }
-
-    this.emit('type-check-finished')
-
-    // esto elimina todas las variables que fueron registradas
-    this.locals_by_module = {main : {}}
-    this.globals = this.locals_by_module.main
-    this.current_module_name = ''
-  }
-
-  checkStatement(statement, module_type) {
-    switch (statement.type) {
-      case 'declaration':
-        this.DeclareVariable(statement)
-        break
-      case 'assignment':
-        this.checkAssignment(statement)
-        break
-      case 'if':
-        this.checkIf(statement)
-        break
-      case 'while':
-        this.checkWhile(statement)
-        break
-      case 'until':
-        this.checkUntil(statement)
-        break
-      case 'for':
-        this.checkFor(statement)
-        break
-      case 'return':
-        if (module_type == 'function') {
-          //
-        }
-        else {
-          this.emit('type-error', {reason:'@procedure-return'})
-        }
-      case 'call':
-        if (statement.name === 'leer') {
-          this.checkLeer(statement)
-        }
-        break
-      default:
-        break
-    }
-  }
-
-  DeclareVariable(declaration) {
-    for (let variable of declaration.variables) {
-      if (variable.name in this.locals_by_module[this.current_module_name]) {
-        let original = this.locals_by_module[this.current_module_name][variable.name]
-        let repeated = variable
-        this.emit('type-error', {reason:'repeated-variable', name:variable.name, original_type:original.type, repeated_type:repeated.type})
-      }
-      else {
-        this.locals_by_module[this.current_module_name][variable.name] = variable
-      }
-    }
-  }
-
-  /**
-   * Revisa un nodo en busca de errores
-   * @param  {Node|IfNode|WhileNode|UntilNode} node nodo de un programa
-   * @emits TypeChecker#type-error
-   * @return {void}
-   */
-  checkNode(node) {
-    if (node instanceof IfNode) {
-      this.checkIfNode(node)
-    }
-    else if (node instanceof WhileNode) {
-      this.checkWhileNode(node)
-    }
-    else if (node instanceof UntilNode) {
-      this.checkUntilNode(node)
-    }
-    else if (node.data.action === 'assignment') {
-      this.checkAssignment(node.data)
-    }
-  }
-
-  /**
-   * Revisa un IfNode en busca de errores
-   * @emits TypeChecker#type-error
-   * @param {IfNode} node El nodo en cuestion
-   * @return {Report} Si se encontró algun error la propiedad "error" será true
-   */
-  checkIf (if_statement) {
-    let condition_report = this.checkCondition(if_statement.condition)
-
-    if (condition_report.error === true) {
-      this.emit('type-error', condition_report.result)
-    }
-
-    for (let statement of if_statement.true_branch) {
-      this.checkStatement(statement)
-    }
-
-    for (let statement of if_statement.false_branch) {
-      this.checkStatement(statement)
-    }
-  }
-
-  /**
-   * Revisa un WhileNode en busca de errores
-   * @emits TypeChecker#type-error
-   * @param {WhileNode} node El nodo en cuestion
-   * @return {Report} Si se encontró algun error la propiedad "error" será true
-   */
-  checkWhile (while_statement) {
-    let condition_report = this.checkCondition(while_statement.condition)
-
-    if (condition_report.error === true) {
-      this.emit('type-error', condition_report.result)
-    }
-
-    for (let statement of while_statement.body) {
-      this.checkStatement(statement)
-    }
-  }
-
-  /**
-   * Revisa un UntilNode en busca de errores
-   * @emits TypeChecker#type-error
-   * @param {UntilNode} node El nodo en cuestion
-   * @return {Report} Si se encontró algun error la propiedad "error" será true
-   */
-  checkUntil (until_statement) {
-    let condition_report = this.checkCondition(until_statement.condition)
-
-    if (condition_report.error === true) {
-      this.emit('type-error', condition_report.result)
-    }
-
-    for (let statement of until_statement.body) {
-      this.checkStatement(statement)
-    }
-  }
-
-  checkFor (for_statement) {
-    let counter_var = for_statement.counter_init.left
-
-    let fake_exp = {expression_type: 'invocation', name:counter_var.name, indexes:counter_var.indexes, isArray:counter_var.indexes}
-
-    let type_report = this.getExpressionReturnType(fake_exp)
-    // comprobar que el tipo del contador sea 'entero'
-    if (type_report.error) {
-      this.emit('type-error', type_report.result)
-    }
-    else {
-      if (type_report.result !== 'entero') {
-        this.emit('type-error', '@for-counter-must-be-entero')
-      }
-    }
-
-    let init_value_type = this.getExpressionReturnType(for_statement.counter_init.right)
-
-    // comprobar que el valor que inicializa al contador sea 'entero'
-    if (init_value_type.error) {
-      this.emit('type-error', init_value_type.result)
-    }
-    else {
-      if (init_value_type.result !== 'entero') {
-        this.emit('type-error', '@for-init-value-must-be-entero')
-      }
-    }
-
-    let last_value_type = this.getExpressionReturnType(for_statement.last_value)
-
-    // comprobar que el valor que debe alcanzar el contador sea 'entero'
-    if (last_value_type.error) {
-      this.emit('type-error', last_value_type.result)
-    }
-    else {
-      if (last_value_type.result !== 'entero') {
-        this.emit('type-error', '@for-last-value-must-be-entero')
-      }
-    }
-
-    // buscar errores en el cuerpo del bucle
-    for (let statement of for_statement.body) {
-      this.checkStatement(statement)
-    }
-  }
-
-  checkLeer(leer_call) {
-    for (let argument of leer_call.args) {
-      if (argument.expression_type !== 'invocation') {
-        let report = {
-          reason: '@leer-non-invocation-argument'
-          // column
-          // line
-        }
-        this.emit('type-error', report)
-      }
-      else {
-        if (this.variableExists(argument.name) === false) {
-          let report = {
-            reason: '@leer-variable-doesnt-exist',
-            name: argument.name
-            // column
-            // line
-          }
-          this.emit('type-error', report)
-        }
-      }
-    }
-  }
-
-  /**
-   * Revisa que la expresion de la condicion de una estructura de control sea
-   * correcta
-   * @param  {expression} condition la condicion de la estructura
-   * @return {Report}
-   */
-  checkCondition(condition) {
-    let condition_type = this.getExpressionReturnType(condition)
-
-    if (condition_type.error) {
-      return {error:true, result:condition_type.result}
-    }
-    else {
-      if (condition_type.result !== 'logico') {
-        let reason = '@condition-invalid-expression'
-        let expected = 'logico'
-        let unexpected = condition_type.result
-
-        return {error:true, result:{reason, expected, unexpected}}
-      }
-      else {
-        return {error:false}
-      }
-    }
-  }
-
-  /**
-   * Revisa que no haya errores en un enunciado de asignacion dado
-   * @param  {object} assignment_data propiedad data de un nodo de asignacion
-   * @return {void}
-   */
-  checkAssignment(assignment) {
-    if (this.variableExists(assignment.left.name) === true) {
-      let target = this.getVariable(assignment.left.name)
-
-      if (target.isArray === true || assignment.left.isArray === true) {
-        let report = this.checkArrayInvocation(target, assignment.left)
-
-        if (report.error === true) {
-          this.emit('type-error', report.result)
-        }
-      }
-
-      let expression_type_report = this.getExpressionReturnType(assignment.right)
-
-      if (expression_type_report.error === true) {
-        this.emit('type-error', expression_type_report.result)
-      }
-      else {
-        let payload_data_type = expression_type_report.result
-
-        if (this.typesAreCompatible(target.type, payload_data_type) === false) {
-          let reason = 'incompatible-types-at-assignment'
-          let target_type = target.type, payload_type = payload_data_type
-          let error_info = {reason, target_type, payload_type}
-          this.emit('type-error', error_info)
-        }
-      }
-
-    }
-    else {
-      let payload_type_report = this.getExpressionReturnType(assignment.right)
-
-      if (payload_type_report.error) {
-        this.emit('type-error', payload_type_report.result)
-      }
-
-      let error_info
-      let name = assignment.left.name
-      if (payload_type_report.error) {
-        let reason = '@assignment-undefined-variable'
-        error_info = {reason, name}
-      }
-      else {
-        let reason = '@assignment-undefined-variable-with-type'
-        let type = payload_type_report.result
-        error_info = {reason, name, type}
-      }
-
-      this.emit('type-error', error_info)
-    }
-  }
-
-  /**
-   * Revisa que no haya errores en una invocacion a un arreglo
-   * @param  {object} variable        la variable  que se quiere invocar como arreglo
-   * @param  {object} invocation_info datos para la invocacion (indices y demas)
-   * @return {Report}                 si la propiedad error es true entonces result contiene info sobre el error
-   */
-  checkArrayInvocation(variable, invocation_info) {
-    if (variable.isArray === true && invocation_info.isArray === true) {
-      if (variable.dimension.length === invocation_info.indexes.length) {
-        let indexes_types = invocation_info.indexes.map(exp => this.getExpressionReturnType(exp)).map(report => report.result)
-
-        let invalid_type_found = false, i = 0
-
-        while (!invalid_type_found && i < indexes_types.length) {
-          if (indexes_types[i] !== 'entero') {
-            invalid_type_found = true
-          }
-          else {
-            i++
-          }
-        }
-
-        if (invalid_type_found === true) {
-          let reason = 'non-integer-index', bad_index = i
-          return {error:true, result:{reason, bad_index}}
-        }
-        else {
-          if (this.canCheckBounds(invocation_info.indexes) === true) {
-            let index_values = invocation_info.indexes.map(index => index.value)
-            let i = 0, out_of_bounds_index = false
-
-            while (i < index_values.length && !out_of_bounds_index) {
-              if (index_values[i] < 1 || index_values[i] > variable.dimension[i]) {
-                let reason = 'index-out-of-bounds'
-                let bad_index = i + 1
-                let expected = variable.dimension[i]
-                return {error:true, result:{reason, bad_index, expected, name:variable.name, bad_value:index_values[i]}}
-              }
-              i++
-            }
-            invocation_info.bounds_checked = true
-          }
-          else {
-            invocation_info.bounds_checked = false
-          }
-
-          return {error:false}
-        }
-      }
-      else {
-        let reason
-        if (variable.dimension.length > invocation_info.indexes.length) {
-          reason = '@array-not-enough-indexes'
-        }
-        else {
-          reason = '@array-too-many-indexes'
-        }
-        let dimensions = variable.dimension.length
-        let indexes = invocation_info.indexes.length
-
-        return {error:true, result:{reason, dimensions, indexes, name:variable.name}}
+  if (!equals(a, b)) {
+    if (equals(a, Types.Integer) || equals(a, Types.Float)) {
+      if (!equals(b, Types.Integer) && !equals(b, Types.Float)) {
+        let reason = '@expression-incompatible-comparison'
+        let first = stringify(a)
+        let second = stringify(b)
+        return {error:true, result:{reason, first, second}}
       }
     }
     else {
-      let name = invocation_info.name
-      if (variable.isArray === true) {
-        let reason = '@array-missing-index'
-
-        return {error:true, result:{reason, name, expected:variable.dimension.length}}
-      }
-      else {
-        let reason = 'var-isnt-array'
-
-        return {error:true, result:{reason, name}}
-      }
+      let reason = '@expression-incompatible-comparison'
+      let first = stringify(a)
+      let second = stringify(b)
+      return {error:true, result:{reason, first, second}}
     }
   }
 
-  checkAssigmentNodes(module_root) {
-    let current_node = module_root
+  new_stack.push(Types.Bool)
 
-    let error_found = false
+  return {error:false, result:new_stack}
+}
 
-    this.emit('type-check-started')
+function binary_logic_operators (stack) {
+  let new_stack = stack
 
-    while (current_node !== null) {
-      if (current_node.data.action === 'assignment') {
-        let report = this.validateAssignment(current_node.data)
-        if (report.error) {
-          error_found = true
-          this.emit('type-error', report.result)
-        }
-      }
-      current_node = current_node.getNext()
-    }
+  let a = new_stack.pop()
+  let b = new_stack.pop()
 
-    this.emit('type-check-started')
-
-    return {errof:error_found}
-
+  if (!equals(a, Types.Bool)) {
+    let reason = '@expression-incompatible-types'
+    let received = stringify(a)
+    return {error:true, result:{reason, received}}
   }
 
-  validateAssignment(assignment) {
-    if (this.variableExists(assignment.target.name)) {
-      let target = this.getVariable(assignment.target.name)
-
-      let target_type = target.type
-
-      let payload_type_report = this.getExpressionReturnType(assignment.payload)
-
-      if (payload_type_report.error) {
-        return payload_type_report
-      }
-      else {
-        let payload_type = payload_type_report.result
-        if (!this.typesAreCompatible(target_type, payload_type)) {
-          let error = true
-          let reason = 'incompatible-types-at-assignment'
-          let result = {reason, target_type, payload_type}
-          return {error, result}
-        }
-        else {
-          return {error:false}
-        }
-      }
-    }
-    else {
-      let error = true
-
-      let payload_type_report = this.getExpressionReturnType(assignment.payload)
-
-      let result
-      let name = assignment.target.name
-      if (payload_type_report.error) {
-        let reason = 'undefined-variable'
-        result = {reason, name}
-      }
-      else {
-        let reason = 'undefined-variable-with-type'
-        let type = payload_type_report.result
-        result = {reason, name, type}
-      }
-
-      return {error, result}
-    }
+  if (!equals(b, Types.Bool)) {
+    let reason = '@expression-incompatible-types'
+    let unexpected = stringify(b)
+    return {error:true, result:{reason, received}}
   }
 
-  /**
-   * Dado un arreglo de indices para un arreglo, revisa si se puede garantizar
-   * (antes de ejecutar el programa) que dichos indices estén dentro del rango
-   * dado por las dimensiones del arreglo.
-   * @param  {[expression]} index_array indices que se usan para acceder al arreglo
-   * @return {bool}             true si se puede garantizar, falso si no.
-   */
-  canCheckBounds(index_array) {
-    // La condicion para devolver true es que todas las expresiones dentro del
-    // arreglo sean de tipo 'literal'
+  new_stack.push(Types.Bool)
 
-    for (let exp of index_array) {
-      if (exp.expression_type !== 'literal') {
-        return false
-      }
-    }
+  return {error:false, result:new_stack}
+}
 
-    return true
+function not (stack) {
+  let new_stack = stack
+  let a = new_stack.pop()
+
+  if (!equals(a, Types.Bool)) {
+    let reason = '@expression-incompatible-type'
+    let received = stringify(a)
+    return {error:true, result:{reason, received}}
   }
 
-  getExpressionReturnType(expression) {
-    if (expression.expression_type === 'literal') {
-      let error = false
-      let result = expression.type
-      return {error, result}
+  new_stack.push(Types.Bool)
+
+  return {error:false, result:new_stack}
+}
+
+function stringify (type) {
+  if (type.kind == 'array') {
+    let dimensions = ''
+    let ct = type
+    while (ct.kind == 'array') {
+      dimensions += ct.length
+      if (ct.contains.kind == 'array') dimensions += ', '
+      ct = ct.contains
     }
-    else if (expression.expression_type === 'invocation') {
-      if (this.variableExists(expression.name)) {
-        let error = false
-        let result = this.getVariable(expression.name).type
-        return {error, result}
-      } else {
-        let error = true
-        let reason = '@expression-undefined-variable'
-        let result = {reason, name:expression.name}
-        return {error, result}
-      }
-    }
-    else if (expression.expression_type === 'expression') {
-      return this.getExpressionReturnType(expression.expression)
-    }
-    else if (expression.expression_type === 'operation' || expression.expression_type === 'unary-operation') {
-      let operator_info = getOperatorInfo(expression.op)
-
-      if (expression.op === 'unary-minus' || expression.op === 'not') {
-        let type_report = this.getExpressionReturnType(expression.operand)
-
-        if (type_report.error) {
-          return type_report
-        }
-        else {
-          let operand_type = type_report.result
-          if (includes(operator_info.supported_types, operand_type)) {
-            let error = false
-            let result = operator_info.calculate_return_type(operand_type).result
-            return {error, result}
-          }
-          else {
-            let error = true
-            let result = {
-              reason:'@expression-incompatible-operator-types',
-              expected:operator_info.supported_types,
-              unexpected:operand_type,
-              operator:expression.op
-            }
-            return {error, result}
-          }
-        }
-      }
-      else {
-        let type_a_report = this.getExpressionReturnType(expression.operands[0])
-        let type_b_report = this.getExpressionReturnType(expression.operands[1])
-
-        if (type_a_report.error || type_b_report.error) {
-          return type_a_report.error ? type_a_report:type_b_report
-        }
-        else {
-          let op_a_type = type_a_report.result
-          let op_b_type = type_b_report.result
-
-          if (includes(operator_info.supported_types, op_a_type)) {
-            if (includes(operator_info.supported_types, op_b_type)) {
-              let error = false, result = null
-              let exp_type_report = operator_info.calculate_return_type(op_a_type, op_b_type)
-
-              if (exp_type_report.error) {
-                return exp_type_report
-              }
-              else {
-                result = exp_type_report.result
-              }
-              return {error, result}
-            }
-            else {
-              let error = true
-              let result = {
-                reason:'@expression-incompatible-operator-types',
-                expected:operator_info.supported_types,
-                unexpected:op_b_type,
-                operator:expression.op
-              }
-              return {error, result}
-            }
-          }
-          else {
-            let error = true
-            let result = {
-              reason:'@expression-incompatible-operator-types',
-              expected:operator_info.supported_types,
-              unexpected:op_a_type,
-              operator:expression.op
-            }
-            return {error, result}
-          }
-        }
-      }
-    }
+    return `${ct.atomic}[${dimensions}]`
+  }
+  else {
+    return type.atomic
   }
 }
