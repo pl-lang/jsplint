@@ -1,71 +1,43 @@
 
 'use strict'
-import should from 'should'
-import fs from 'fs'
+import 'should'
 
 import SourceWrapper from '../src/parser/SourceWrapper.js'
+
 import Lexer from '../src/parser/Lexer.js'
 
 import TokenQueue from '../src/parser/TokenQueue.js'
+
+import {ValueKind, ReservedKind, SymbolKind, OtherKind, Token} from '../src/parser/TokenTypes'
+
+import {PatternError} from '../src/interfaces/ParsingInterfaces'
+
 import * as Patterns from '../src/parser/Patterns.js'
 
-const match = Patterns.match
+function queueFromSource (string: string) {
+  const source = new SourceWrapper(string)
+  const tokenizer = new Lexer(source)
 
-function queueFromSource(string) {
-  let source = new SourceWrapper(string)
-  let tokenizer = new Lexer(source)
+  const tokenArray: Token[] = []
 
-  let tokenArray = []
   let t = tokenizer.nextToken()
 
-  while ( t.kind !== 'eof') {
+  while ( t.kind !== SymbolKind.EOF) {
     tokenArray.push(t)
     t = tokenizer.nextToken()
   }
   tokenArray.push(t)
 
-  let q = new TokenQueue(tokenArray)
+  const q = new TokenQueue(tokenArray)
 
   return q
 }
 
-describe('Funciones que agrupan patrones', () => {
-  describe('until', () => {
-    it('recolecta palabras hasta encontrar fin', () => {
-      let code = 'uno dos una_variable otra_variable fin'
-
-      let q = queueFromSource(code)
-
-      let pattern = Patterns.until(Patterns.Word, tk => tk == 'fin')
-
-      let report = match(pattern).from(q)
-
-      report.error.should.equal(false)
-      report.result.should.deepEqual(['uno', 'dos', 'una_variable', 'otra_variable'])
-    })
-  })
-
-  describe('concat', () => {
-    it('crea un patron que busca una palabra seguida de un numero', () => {
-      let code = 'un_nombre 25'
-
-      let q = queueFromSource(code)
-
-      let pattern = Patterns.concat([Patterns.Word, Patterns.Integer])
-
-      let report = match(pattern).from(q)
-
-      report.error.should.equal(false)
-      report.result.should.deepEqual(['un_nombre', 25])
-    })
-  })
-})
-
 describe('IntegerPattern', () => {
   it('captura token entero', () => {
-    let q = queueFromSource('36 a')
+    const q = queueFromSource('36 a')
 
-    let number = match(Patterns.Integer).from(q)
+    const number = Patterns.Integer(q)
 
     number.error.should.equal(false)
     number.result.should.equal(36)
@@ -73,27 +45,27 @@ describe('IntegerPattern', () => {
   })
 
   it('devuelve un error cuando el primer token en la cola no coincide', () => {
-    let q = queueFromSource('papa 389'
-  )
-    let number = match(Patterns.Integer).from(q)
+    const q = queueFromSource('papa 389')
+
+    const number = Patterns.Integer(q)
 
     number.error.should.equal(true)
 
-    let info = number.result
-    info.expected.should.equal('entero')
-    info.unexpected.should.equal('word')
+    const info = number.result as PatternError
+    info.expected.should.equal(['entero'])
+    info.unexpected.should.equal(OtherKind.Word)
     info.line.should.equal(0)
     info.column.should.equal(0)
-    q.current().kind.should.equal('word')
+    q.current().kind.should.equal(OtherKind.Word)
   })
 })
 
 describe('ArrayDimension', () => {
 
   it('captura el indice de un vector', () => {
-    let q = queueFromSource('3')
+    const q = queueFromSource('3')
 
-    let capture = match(Patterns.ArrayDimension).from(q)
+    const capture = Patterns.ArrayDimension(q)
 
     capture.error.should.equal(false)
     capture.result.should.deepEqual([3])
@@ -101,9 +73,9 @@ describe('ArrayDimension', () => {
   })
 
   it('captura los indices de una matriz', () => {
-    let q = queueFromSource('3, 7')
+    const q = queueFromSource('3, 7')
 
-    let capture = match(Patterns.ArrayDimension).from(q)
+    const capture = Patterns.ArrayDimension(q)
 
     capture.error.should.equal(false)
     capture.result.should.deepEqual([3, 7])
@@ -111,13 +83,15 @@ describe('ArrayDimension', () => {
   })
 
   it('devuelve un error al encontrar un token inesperado', () => {
-    let q = queueFromSource('3, 7, 2.78')
-    let capture = match(Patterns.ArrayDimension).from(q)
+    const q = queueFromSource('3, 7, 2.78')
+    const capture = Patterns.ArrayDimension(q)
 
     capture.error.should.equal(true)
-    capture.result.unexpected.should.equal('real')
-    capture.result.line.should.equal(0)
-    capture.result.column.should.equal(6)
+
+    const info = capture.result as PatternError
+    info.unexpected.should.equal(ValueKind.Real)
+    info.line.should.equal(0)
+    info.column.should.equal(6)
     q.current().kind.should.equal('real')
   })
 })
@@ -125,9 +99,9 @@ describe('ArrayDimension', () => {
 describe('WordPattern', () => {
 
   it('captura una palabra', () => {
-    let q = queueFromSource('rodrigo')
+    const q = queueFromSource('rodrigo')
 
-    let capture = match(Patterns.Word).from(q)
+    const capture = Patterns.Word(q)
 
     capture.error.should.equal(false)
     capture.result.should.equal('rodrigo')
@@ -135,9 +109,9 @@ describe('WordPattern', () => {
   })
 
   it('devuelve un error cuando el patron no coincide', () => {
-    let q = queueFromSource('32')
+    const q = queueFromSource('32')
 
-    let capture = match(Patterns.Word).from(q)
+    const capture = Patterns.Word(q)
 
     capture.error.should.equal(true)
     capture.result.should.deepEqual({
@@ -153,26 +127,26 @@ describe('WordPattern', () => {
 describe('Kind', () => {
   it('captura distintos tipos de token', () => {
     {
-      let q = queueFromSource('rmb')
+      const q = queueFromSource('rmb')
 
-      let captura = match(Patterns.Kind("word")).from(q)
+      const captura = match(Patterns.Kind("word")).from(q)
 
       captura.error.should.equal(false)
     }
 
     {
-      let q = queueFromSource('123')
+      const q = queueFromSource('123')
 
-      let captura = match(Patterns.Kind("entero")).from(q)
+      const captura = match(Patterns.Kind("entero")).from(q)
 
       captura.error.should.equal(false)
     }
   })
 
   it('devuelve un error al encontrar un token inesperado', () => {
-    let q = queueFromSource('rmb')
+    const q = queueFromSource('rmb')
 
-    let captura = match(Patterns.Kind("entero")).from(q)
+    const captura = match(Patterns.Kind("entero")).from(q)
 
     captura.error.should.equal(true)
     captura.result.should.deepEqual({
@@ -186,9 +160,9 @@ describe('Kind', () => {
 describe('VariableDeclaration', () => {
 
   it('captura el nombre de una variable', () => {
-    let q = queueFromSource('sueldo')
+    const q = queueFromSource('sueldo')
 
-    let capture = match(Patterns.VariableDeclaration).from(q)
+    const capture = match(Patterns.VariableDeclaration).from(q)
 
     capture.error.should.equal(false)
     capture.result.should.deepEqual({
@@ -199,9 +173,9 @@ describe('VariableDeclaration', () => {
   })
 
   it('captura el nombre de una matriz y sus dimensiones', () => {
-    let q = queueFromSource('vuelos[3, 12]')
+    const q = queueFromSource('vuelos[3, 12]')
 
-    let capture = match(Patterns.VariableDeclaration).from(q)
+    const capture = match(Patterns.VariableDeclaration).from(q)
 
     capture.error.should.equal(false)
     capture.result.should.deepEqual({
@@ -215,9 +189,9 @@ describe('VariableDeclaration', () => {
 describe('VariableList', () => {
 
   it('lee las variables de una lista', () => {
-    let q = queueFromSource('a, b, matriz[3, 3], v[8]')
+    const q = queueFromSource('a, b, matriz[3, 3], v[8]')
 
-    let capture = match(Patterns.VariableList).from(q)
+    const capture = match(Patterns.VariableList).from(q)
 
     capture.error.should.equal(false)
     capture.result[0].should.deepEqual({name:'a', isArray:false, dimension:[]})
@@ -231,9 +205,9 @@ describe('VariableList', () => {
 describe('TypeName', () => {
 
   it('extrae un token de tipo', () => {
-    let q = queueFromSource('entero, real')
+    const q = queueFromSource('entero, real')
 
-    let capture = match(Patterns.TypeName).from(q)
+    const capture = match(Patterns.TypeName).from(q)
 
     capture.error.should.equal(false)
     capture.result.should.equal('entero')
@@ -241,9 +215,9 @@ describe('TypeName', () => {
   })
 
   it('extrae un token de tipo', () => {
-    let q = queueFromSource('gatp, real')
+    const q = queueFromSource('gatp, real')
 
-    let capture = match(Patterns.TypeName).from(q)
+    const capture = match(Patterns.TypeName).from(q)
 
     capture.error.should.equal(true)
     capture.result.should.deepEqual({
@@ -260,10 +234,10 @@ describe('TypeName', () => {
 
 describe('Assignment pattern', () => {
   it('captura un enunciado de asignacion', () => {
-    let asignacion = 'var <- 48'
+    const asignacion = 'var <- 48'
 
-    let q = queueFromSource(asignacion)
-    let assignment_match = match(Patterns.Assignment).from(q)
+    const q = queueFromSource(asignacion)
+    const assignment_match = match(Patterns.Assignment).from(q)
 
     assignment_match.error.should.equal(false)
     assignment_match.result.payload.should.deepEqual([
@@ -275,11 +249,11 @@ describe('Assignment pattern', () => {
 
 describe('ArgumentList', () => {
   it('captura dos expresiones', () => {
-    let test_string = '2, verdadero'
+    const test_string = '2, verdadero'
 
-    let q = queueFromSource(test_string)
+    const q = queueFromSource(test_string)
 
-    let argument_match = match(Patterns.ArgumentList).from(q)
+    const argument_match = match(Patterns.ArgumentList).from(q)
 
     argument_match.error.should.equal(false)
     argument_match.result.should.deepEqual([
@@ -291,11 +265,11 @@ describe('ArgumentList', () => {
 
 describe('ParameterList', () => {
   it('captura varios parametros', () => {
-    let list = 'entero a, entero ref b'
+    const list = 'entero a, entero ref b'
 
-    let q = queueFromSource(list)
+    const q = queueFromSource(list)
 
-    let report =  match(Patterns.ParameterList).from(q)
+    const report =  match(Patterns.ParameterList).from(q)
 
     report.error.should.equal(false)
     report.result.should.deepEqual([
@@ -307,10 +281,10 @@ describe('ParameterList', () => {
 
 describe('ModuleCall pattern', () => {
   it('captura la llamada a un modulo', () => {
-    let asignacion = 'escribir(42)'
+    const asignacion = 'escribir(42)'
 
-    let q = queueFromSource(asignacion)
-    let capt = match(Patterns.ModuleCall).from(q)
+    const q = queueFromSource(asignacion)
+    const capt = match(Patterns.ModuleCall).from(q)
 
     capt.error.should.equal(false)
     capt.result.name.should.equal('escribir')
@@ -323,9 +297,9 @@ describe('ModuleCall pattern', () => {
 describe('VariablePattern', () => {
 
   it('captura la variable en una asignacion', () => {
-    let dato = 'mi_variable <- 2'
-    let q = queueFromSource(dato)
-    let report = match(Patterns.Variable).from(q)
+    const dato = 'mi_variable <- 2'
+    const q = queueFromSource(dato)
+    const report = match(Patterns.Variable).from(q)
 
     report.error.should.equal(false)
     report.result.should.deepEqual({
@@ -336,9 +310,9 @@ describe('VariablePattern', () => {
   })
 
   it('captura la variable (un arreglo) en una asignacion', () => {
-    let dato = 'mi_vector[2] <- 2'
-    let q = queueFromSource(dato)
-    let report = match(Patterns.Variable).from(q)
+    const dato = 'mi_vector[2] <- 2'
+    const q = queueFromSource(dato)
+    const report = match(Patterns.Variable).from(q)
 
     report.error.should.equal(false)
     report.result.should.deepEqual({
@@ -351,9 +325,9 @@ describe('VariablePattern', () => {
   })
 
   it('captura la variable (una matriz) en una asignacion', () => {
-    let dato = 'mi_matriz[i, j] <- 2'
-    let q = queueFromSource(dato)
-    let report = match(Patterns.Variable).from(q)
+    const dato = 'mi_matriz[i, j] <- 2'
+    const q = queueFromSource(dato)
+    const report = match(Patterns.Variable).from(q)
 
     report.error.should.equal(false)
     report.result.should.deepEqual({
@@ -367,9 +341,9 @@ describe('VariablePattern', () => {
   })
 
   it('captura la variable (un arreglo3) en una asignacion', () => {
-    let dato = 'mi_matriz[i, j, k] <- 2'
-    let q = queueFromSource(dato)
-    let report = match(Patterns.Variable).from(q)
+    const dato = 'mi_matriz[i, j, k] <- 2'
+    const q = queueFromSource(dato)
+    const report = match(Patterns.Variable).from(q)
 
     report.error.should.equal(false)
     report.result.should.deepEqual({
@@ -387,12 +361,12 @@ describe('VariablePattern', () => {
 
 describe('If', () => {
   it('captura una estructura si bien escrita', () => {
-    let code = `si (verdadero) entonces
+    const code = `si (verdadero) entonces
     var <- 32
     finsi
     `
-    let q = queueFromSource(code)
-    let report = match(Patterns.If).from(q)
+    const q = queueFromSource(code)
+    const report = match(Patterns.If).from(q)
 
     report.error.should.equal(false)
     report.result.should.deepEqual({
@@ -408,14 +382,14 @@ describe('If', () => {
   })
 
   it('captura una estructura si...sino bien escrita', () => {
-    let code = `si (verdadero) entonces
+    const code = `si (verdadero) entonces
     var <- 32
     sino
     var <- 16
     finsi
     `
-    let q = queueFromSource(code)
-    let report = match(Patterns.If).from(q)
+    const q = queueFromSource(code)
+    const report = match(Patterns.If).from(q)
 
     report.error.should.equal(false)
     report.result.should.deepEqual({
@@ -435,7 +409,7 @@ describe('If', () => {
   })
 
   it('captura una estructura si...sino sin enunciados', () => {
-    let code = `si (verdadero) entonces
+    const code = `si (verdadero) entonces
 
 
     sino
@@ -443,8 +417,8 @@ describe('If', () => {
 
     finsi
     `
-    let q = queueFromSource(code)
-    let report = match(Patterns.If).from(q)
+    const q = queueFromSource(code)
+    const report = match(Patterns.If).from(q)
 
     report.error.should.equal(false)
     report.result.should.deepEqual({
@@ -456,14 +430,14 @@ describe('If', () => {
   })
 
   it('falta el parentesis izquierdo', () => {
-    let code = `si verdadero) entonces
+    const code = `si verdadero) entonces
     var <- 32
     sino
     var <- 16
     finsi
     `
-    let q = queueFromSource(code)
-    let report = match(Patterns.If).from(q)
+    const q = queueFromSource(code)
+    const report = match(Patterns.If).from(q)
 
     report.error.should.equal(true)
     report.result.should.deepEqual({
@@ -476,14 +450,14 @@ describe('If', () => {
   })
 
   it.skip('falta el parentesis derecho', () => {
-    let code = `si (verdadero entonces
+    const code = `si (verdadero entonces
     var <- 32
     sino
     var <- 16
     finsi
     `
-    let q = queueFromSource(code)
-    let report = match(Patterns.If).from(q)
+    const q = queueFromSource(code)
+    const report = match(Patterns.If).from(q)
 
     report.error.should.equal(true)
     report.result.should.deepEqual({
@@ -496,14 +470,14 @@ describe('If', () => {
   })
 
   it('falta entonces', () => {
-    let code = `si (verdadero)
+    const code = `si (verdadero)
     var <- 32
     sino
     var <- 16
     finsi
     `
-    let q = queueFromSource(code)
-    let report = match(Patterns.If).from(q)
+    const q = queueFromSource(code)
+    const report = match(Patterns.If).from(q)
 
     report.error.should.equal(true)
     report.result.should.deepEqual({
@@ -516,13 +490,13 @@ describe('If', () => {
   })
 
   it('falta finsi', () => {
-    let code = `si (verdadero) entonces
+    const code = `si (verdadero) entonces
     var <- 32
     sino
     var<-16
     `
-    let q = queueFromSource(code)
-    let report = match(Patterns.If).from(q)
+    const q = queueFromSource(code)
+    const report = match(Patterns.If).from(q)
 
     report.error.should.equal(true)
     report.result.should.deepEqual({
@@ -537,12 +511,12 @@ describe('If', () => {
 
 describe('While', () => {
   it('captura un bucle mientras bien escrito', () => {
-    let code = `mientras (verdadero)
+    const code = `mientras (verdadero)
     var <- 32
     finmientras
     `
-    let q = queueFromSource(code)
-    let report = match(Patterns.While).from(q)
+    const q = queueFromSource(code)
+    const report = match(Patterns.While).from(q)
 
     report.error.should.equal(false)
     report.result.should.deepEqual({
@@ -557,14 +531,14 @@ describe('While', () => {
   })
 
   it('captura un bucle mientras vacio', () => {
-    let code = `mientras (verdadero)
+    const code = `mientras (verdadero)
 
 
 
     finmientras
     `
-    let q = queueFromSource(code)
-    let report = match(Patterns.While).from(q)
+    const q = queueFromSource(code)
+    const report = match(Patterns.While).from(q)
 
     report.error.should.equal(false)
     report.result.should.deepEqual({
@@ -575,11 +549,11 @@ describe('While', () => {
   })
 
   it('falta el parentesis izquierdo en la condicion', () => {
-    let code = `mientras verdadero)
+    const code = `mientras verdadero)
     finmientras
     `
-    let q = queueFromSource(code)
-    let report = match(Patterns.While).from(q)
+    const q = queueFromSource(code)
+    const report = match(Patterns.While).from(q)
 
     report.error.should.equal(true)
     report.result.should.deepEqual({
@@ -592,9 +566,9 @@ describe('While', () => {
   })
 
   it('falta el parentesis izquierdo en la condicion', () => {
-    let code = `mientras (verdadero)`
-    let q = queueFromSource(code)
-    let report = match(Patterns.While).from(q)
+    const code = `mientras (verdadero)`
+    const q = queueFromSource(code)
+    const report = match(Patterns.While).from(q)
 
     report.error.should.equal(true)
     report.result.should.deepEqual({
@@ -610,12 +584,12 @@ describe('While', () => {
 
 describe('Until', () => {
   it('captura un bucle repetir bien escrito', () => {
-    let code = `repetir
+    const code = `repetir
     var <- 32
     hasta que (verdadero)
     `
-    let q = queueFromSource(code)
-    let report = match(Patterns.Until).from(q)
+    const q = queueFromSource(code)
+    const report = match(Patterns.Until).from(q)
 
     report.error.should.equal(false)
     report.result.should.deepEqual({
@@ -630,7 +604,7 @@ describe('Until', () => {
   })
 
   it('captura un bucle repetir vacio', () => {
-    let code = `repetir
+    const code = `repetir
 
 
 
@@ -638,8 +612,8 @@ describe('Until', () => {
 
     hasta que (verdadero)
     `
-    let q = queueFromSource(code)
-    let report = match(Patterns.Until).from(q)
+    const q = queueFromSource(code)
+    const report = match(Patterns.Until).from(q)
 
     report.error.should.equal(false)
     report.result.should.deepEqual({
@@ -650,12 +624,12 @@ describe('Until', () => {
   })
 
   it('falta hasta al final del bucle', () => {
-    let code = `repetir
+    const code = `repetir
     var <- 32
     que (verdadero)
     `
-    let q = queueFromSource(code)
-    let report = match(Patterns.Until).from(q)
+    const q = queueFromSource(code)
+    const report = match(Patterns.Until).from(q)
 
     report.error.should.equal(true)
     report.result.should.deepEqual({
@@ -668,12 +642,12 @@ describe('Until', () => {
   })
 
   it('falta que al final del bucle', () => {
-    let code = `repetir
+    const code = `repetir
     var <- 32
     hasta (verdadero)
     `
-    let q = queueFromSource(code)
-    let report = match(Patterns.Until).from(q)
+    const q = queueFromSource(code)
+    const report = match(Patterns.Until).from(q)
 
     report.error.should.equal(true)
     report.result.should.deepEqual({
@@ -688,12 +662,12 @@ describe('Until', () => {
 
 describe('For', () => {
   it('para bien escrito', () => {
-    let code = `para i <- 1 hasta 10
+    const code = `para i <- 1 hasta 10
     j <- 2
     finpara
     `
-    let q = queueFromSource(code)
-    let report = match(Patterns.For).from(q)
+    const q = queueFromSource(code)
+    const report = match(Patterns.For).from(q)
 
     report.error.should.equal(false)
     report.result.should.deepEqual({
@@ -715,47 +689,47 @@ describe('For', () => {
 
 describe('Statement', () => {
   it('captura un si', () => {
-    let code = `si (falso) entonces
+    const code = `si (falso) entonces
     var <- 32
     finsi
     `
-    let q = queueFromSource(code)
-    let report = match(Patterns.Statement).from(q)
+    const q = queueFromSource(code)
+    const report = match(Patterns.Statement).from(q)
 
     report.error.should.equal(false)
     report.result.type.should.equal('if')
   })
 
   it('captura un mientras', () => {
-    let code = `mientras (falso)
+    const code = `mientras (falso)
     var <- 32
     finmientras
     `
-    let q = queueFromSource(code)
-    let report = match(Patterns.Statement).from(q)
+    const q = queueFromSource(code)
+    const report = match(Patterns.Statement).from(q)
 
     report.error.should.equal(false)
     report.result.type.should.equal('while')
   })
 
   it('captura un repetir', () => {
-    let code = `repetir
+    const code = `repetir
     var <- 32
     hasta que (verdadero)
     `
-    let q = queueFromSource(code)
-    let report = match(Patterns.Statement).from(q)
+    const q = queueFromSource(code)
+    const report = match(Patterns.Statement).from(q)
 
     report.error.should.equal(false)
     report.result.type.should.equal('until')
   })
 
   it('captura un retornar', () => {
-    let code = `retornar 25`
+    const code = `retornar 25`
 
-    let q = queueFromSource(code)
+    const q = queueFromSource(code)
 
-    let report = match(Patterns.Statement).from(q)
+    const report = match(Patterns.Statement).from(q)
 
     report.error.should.equal(false)
     report.result.should.deepEqual({
@@ -765,9 +739,9 @@ describe('Statement', () => {
   })
 
   it('devuelve un error cuando no encuentra un enunciado', () => {
-    let code = `2 + 3`
-    let q = queueFromSource(code)
-    let report = match(Patterns.Statement).from(q)
+    const code = `2 + 3`
+    const q = queueFromSource(code)
+    const report = match(Patterns.Statement).from(q)
 
     report.error.should.equal(true)
     report.result.should.deepEqual({
@@ -782,9 +756,9 @@ describe('Statement', () => {
 
 describe('DeclarationStatement', () => {
   it('captura tres variables del mismo tipo', () => {
-    let code = `entero a, b, c\n`
-    let q = queueFromSource(code)
-    let report = match(Patterns.DeclarationStatement).from(q)
+    const code = `entero a, b, c\n`
+    const q = queueFromSource(code)
+    const report = match(Patterns.DeclarationStatement).from(q)
 
     report.error.should.equal(false)
     report.result.should.deepEqual({
@@ -798,9 +772,9 @@ describe('DeclarationStatement', () => {
   })
 
   it('captura variable de distintos tipos en el mismo renglon', () => {
-    let code = `entero var_entera1, var_entera2, real var_real\n`
-    let q = queueFromSource(code)
-    let report = match(Patterns.DeclarationStatement).from(q)
+    const code = `entero var_entera1, var_entera2, real var_real\n`
+    const q = queueFromSource(code)
+    const report = match(Patterns.DeclarationStatement).from(q)
 
     report.error.should.equal(false)
     report.result.should.deepEqual({
@@ -814,12 +788,12 @@ describe('DeclarationStatement', () => {
   })
 
   it('captura tres varaibles declaradas en distintos renglones', () => {
-    let code = `entero var_entera1, var_entera2\nreal var_real\n`
-    let q = queueFromSource(code)
+    const code = `entero var_entera1, var_entera2\nreal var_real\n`
+    const q = queueFromSource(code)
 
-    let first_line = match(Patterns.DeclarationStatement).from(q)
+    const first_line = match(Patterns.DeclarationStatement).from(q)
 
-    let second_line = match(Patterns.DeclarationStatement).from(q)
+    const second_line = match(Patterns.DeclarationStatement).from(q)
 
     first_line.error.should.equal(false)
     first_line.result.should.deepEqual({
@@ -842,15 +816,15 @@ describe('DeclarationStatement', () => {
 
 describe('MainModule', () => {
   it('captura un modulo principal bien escrito y con variables', () => {
-    let code = `variables
+    const code = `variables
     entero var_entera1, var_entera2
     inicio
     var<-32
     fin
     `
-    let q = queueFromSource(code)
+    const q = queueFromSource(code)
 
-    let report = match(Patterns.MainModule).from(q)
+    const report = match(Patterns.MainModule).from(q)
 
     report.error.should.equal(false)
     report.result.should.deepEqual({
@@ -879,14 +853,14 @@ describe('MainModule', () => {
   })
 
   it('captura un modulo principal bien escrito y sin variables', () => {
-    let code = `variables
+    const code = `variables
     inicio
     var<-32
     fin
     `
-    let q = queueFromSource(code)
+    const q = queueFromSource(code)
 
-    let report = match(Patterns.MainModule).from(q)
+    const report = match(Patterns.MainModule).from(q)
 
     report.error.should.equal(false)
     report.result.should.deepEqual({
@@ -906,13 +880,13 @@ describe('MainModule', () => {
   })
 
   it('programa sin encabezado ("variables") para el modulo principal', () => {
-    let code = `inicio
+    const code = `inicio
     var<-32
     fin
     `
-    let q = queueFromSource(code)
+    const q = queueFromSource(code)
 
-    let report = match(Patterns.MainModule).from(q)
+    const report = match(Patterns.MainModule).from(q)
 
     report.error.should.equal(true)
     report.result.should.deepEqual({
@@ -925,14 +899,14 @@ describe('MainModule', () => {
   })
 
   it('programa sin "inicio" pero con varibles declaradas', () => {
-    let code = `variables
+    const code = `variables
     entero var
     var<-32
     fin
     `
-    let q = queueFromSource(code)
+    const q = queueFromSource(code)
 
-    let report = match(Patterns.MainModule).from(q)
+    const report = match(Patterns.MainModule).from(q)
 
     report.error.should.equal(true)
     report.result.should.deepEqual({
@@ -945,13 +919,13 @@ describe('MainModule', () => {
   })
 
   it('programa sin "inicio" sin varibles declaradas', () => {
-    let code = `variables
+    const code = `variables
     var<-32
     fin
     `
-    let q = queueFromSource(code)
+    const q = queueFromSource(code)
 
-    let report = match(Patterns.MainModule).from(q)
+    const report = match(Patterns.MainModule).from(q)
 
     report.error.should.equal(true)
     report.result.should.deepEqual({
@@ -964,10 +938,10 @@ describe('MainModule', () => {
   })
 
   it('programa sin "fin"', () => {
-    let code = `variables\ninicio\nvar<-32`
-    let q = queueFromSource(code)
+    const code = `variables\ninicio\nvar<-32`
+    const q = queueFromSource(code)
 
-    let report = match(Patterns.MainModule).from(q)
+    const report = match(Patterns.MainModule).from(q)
 
     report.error.should.equal(true)
     report.result.should.deepEqual({
@@ -982,7 +956,7 @@ describe('MainModule', () => {
 
 describe('FunctionModule', () => {
   it('captura parte de una funcion correctamente', () => {
-    let code = `entero funcion mi_funcion (entero a, entero ref b)
+    const code = `entero funcion mi_funcion (entero a, entero ref b)
     entero a, b, c
     inicio
       escribir(42)
@@ -990,9 +964,9 @@ describe('FunctionModule', () => {
     finfuncion
     `
 
-    let q = queueFromSource(code)
+    const q = queueFromSource(code)
 
-    let report = match(Patterns.FunctionModule).from(q)
+    const report = match(Patterns.FunctionModule).from(q)
 
     report.error.should.equal(false)
     report.result.should.deepEqual({
@@ -1026,16 +1000,16 @@ describe('FunctionModule', () => {
 
 describe('ProcedureModule', () => {
   it('captura un procedimiento correctamente', () => {
-    let code = `procedimiento mi_proc (entero a, entero ref b)
+    const code = `procedimiento mi_proc (entero a, entero ref b)
     entero a, b, c
     inicio
       escribir(42)
     finprocedimiento
     `
 
-    let q = queueFromSource(code)
+    const q = queueFromSource(code)
 
-    let report = match(Patterns.ProcedureModule).from(q)
+    const report = match(Patterns.ProcedureModule).from(q)
 
     report.error.should.equal(false)
     report.result.should.deepEqual({
