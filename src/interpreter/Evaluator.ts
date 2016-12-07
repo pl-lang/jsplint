@@ -29,6 +29,12 @@ export interface OutOfBounds {
   name: string
   bad_index: number
   dimensions: number[]
+  /**
+   * Sirve para indicar que el evaluador terminó la ejecución.
+   * Está acá para que todos los retornos del evaluador tengan
+   * esta prop.
+   */
+  done: boolean
 }
 
 export interface Read {
@@ -65,7 +71,6 @@ export class Evaluator {
   private readonly locals: {[p:string]: VariableDict}
   private readonly state: {
     done: boolean
-    error: boolean
     value_stack: Value[]
     module_stack: string[]
     statement_stack: S4.Statement[]
@@ -84,7 +89,6 @@ export class Evaluator {
 
     this.state = {
       done: this.entry_point === null ? true:false,
-      error: false,
       value_stack: [],
       module_stack: [],
       statement_stack: [],
@@ -126,11 +130,8 @@ export class Evaluator {
       return {error: false, result: {action: 'paused', done: this.state.done}}
     }
 
-    if (this.state.done || this.state.error || this.state.next_statement === null) {
+    if (this.state.done) {
       return this.state.last_report
-    }
-    else {
-      this.current_statement = this.state.next_statement
     }
 
     const report = this.evaluate(this.current_statement)
@@ -138,40 +139,45 @@ export class Evaluator {
     this.state.last_report = report
 
     /**
-     * Determinar si se llegó al final del programa.
+     * Determinar si la ejecución terminó:
+     * Pudo haber terminado porque se llegó al fin del
+     * programa o porque hubo un error al evaluar el
+     * enunciado anterior.
      */
-    if (report.error || this.state.next_statement == null) {
-      /**
-       * Si hay enunciados en la pila...
-       */
-      if (this.state.statement_stack.length > 0) {
-        let next_statement = this.state.statement_stack.pop()
-        /**
-         * Buscar un enunciado ejecutable
-         */
-        while (this.state.statement_stack.length > 0 && next_statement == null) {
-          next_statement = this.state.statement_stack.pop()
-          this.state.module_stack.pop()
-        }
-        /**
-         * Si hay uno, establecerlo como el siguiente
-         */
-        if (next_statement == null) {
-          this.state.next_statement = next_statement
-        }
-        else {
-          /**
-           * Si no, se llego al fin del programa
-           */
-          this.state.done = true
-        }
-      }
-      else {
-        this.state.done = true
-      }
-    }
 
-    return report
+    if (report.error) {
+      this.state.done = true
+      return this.state.last_report
+    }
+    else if (report.error == false) {
+      /**
+       * Determinar si se llegó al fin del programa.
+       * this.state.next_statement ya fue establecido
+       * durante la llamada a this.evaluate
+       */
+
+      /**
+       * Si se llegó al final del modulo actual, desapilar modulos hasta
+       * que se encuentre uno que todavia no haya finalizado.
+       */
+      while (this.state.next_statement == null && this.state.statement_stack.length > 0) {
+        this.state.next_statement = this.state.statement_stack.pop()
+        this.current_module = this.state.module_stack.pop()
+      }
+
+      /**
+       * Si aun despues de desapilar todo se encuentra que no hay
+       * un enunciado para ejecutar, se llegó al fin del programa.
+       */
+      if (this.state.next_statement == null) {
+        this.state.done = true
+        report.result.done = this.state.done
+      }
+
+      this.current_statement = this.state.next_statement
+
+      return report
+    } 
   }
 
   /**
@@ -179,6 +185,17 @@ export class Evaluator {
    * ejecuta los enunciados y establece el proximo enunciado
    */
   private evaluate (s: S4.Statement) : Failure<OutOfBounds> | SuccessfulReturn {
+    /**
+     * Bandera que indica si el control del proximo enunciado se cede
+     * a la función que lo evalua. Esto es verdadero para las estructuras
+     * de control y  para las llamadas a funciones/procedimientos.
+     */
+    const controls_next = s.kind == S4.StatementKinds.UserModuleCall || s.kind == S4.StatementKinds.If || s.kind == S4.StatementKinds.While || s.kind == S4.StatementKinds.Until
+
+    if (!controls_next) {
+      this.state.next_statement = s.exit_point
+    }
+
     switch (s.kind) {
        case S4.StatementKinds.Plus:
         return this.plus()
@@ -290,7 +307,8 @@ export class Evaluator {
         bad_index: bad_index,
         dimensions: s.dimensions,
         name: s.varname,
-        reason: '@assignment-index-out-of-bounds' 
+        reason: '@assignment-index-out-of-bounds',
+        done: true
       }
 
       return {error: true, result}
@@ -318,7 +336,8 @@ export class Evaluator {
         bad_index: bad_index,
         dimensions: s.dimensions,
         name: s.varname,
-        reason: '@invocation-index-out-of-bounds' 
+        reason: '@invocation-index-out-of-bounds',
+        done: true 
       }
 
       return {error: true, result}
