@@ -19,9 +19,10 @@ export default function transform (ast: S2.AST) : Success<P.Program> {
 
     result.entry_point = new_main
 
-    /**
-     * Falta transformar los modulos
-     */
+    for (let name in ast.modules.user_modules) {
+        const module = transform_module(ast.modules.user_modules[name], ast)
+        result.modules[name] = module
+    }
 
     result.local_variables = ast.local_variables
 
@@ -30,6 +31,57 @@ export default function transform (ast: S2.AST) : Success<P.Program> {
 
 function transform_main (old_module: S2.Main) : P.Statement {
     return transform_body(old_module.body)
+}
+
+function transform_module (old_module: S2.Module, ast: S2.AST) : P.Module {
+    /**
+     * Copio los parametros
+     */
+    const parameters: {[p: string]: P.Parameter} = {}
+    for (let par of old_module.parameters) {
+        const {name, by_ref, is_array, dimensions} = par
+        parameters[name] = {name, by_ref, is_array}
+    }
+
+    /**
+     * Inicializo los parametros. Tienen que ser inicializados
+     * de atras para adelante (del ultimo al primero).
+     */
+    let first_init: P.Statement
+    let last_statement: P.Statement
+    for (let i = old_module.parameters.length - 1; i >= 0; i--) {
+        const param = old_module.parameters[i]
+        const fake_inv: S2.InvocationValue = {
+            dimensions: param.dimensions,
+            indexes: [],
+            is_array: param.is_array,
+            name: param.name,
+            type: 'invocation'
+        }
+        const assignment = create_assignment(fake_inv)
+        if (i == old_module.parameters.length - 1) {
+            first_init = assignment
+        }
+        else {
+            last_statement.exit_point = assignment
+        }
+        last_statement = P.get_last(assignment)
+    }
+
+    const body_entry = transform_body(old_module.body)
+
+    /**
+     * Enlazar la ultima inicializacion al primer enunciado del cuerpo
+     */
+    last_statement.exit_point = body_entry
+
+    const new_module: P.Module = {
+        entry_point: first_init,
+        name: old_module.name,
+        parameters: parameters
+    }
+
+    return new_module
 }
 
 function transform_if (statement: S2.If) : P.Statement {

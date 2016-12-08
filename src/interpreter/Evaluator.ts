@@ -248,7 +248,11 @@ export class Evaluator {
        case S4.StatementKinds.Until:
         return this.until_st(s)
        case S4.StatementKinds.UserModuleCall:
-        break
+        /**
+         * Metodo rapido para probar las llamadas
+         */
+        this.state.next_statement = s.exit_point
+        return {error: false, result: {action: 'write', value: `LLAMASTE AL MODULO ${s.name}`, done: this.state.done}}
        case S4.StatementKinds.ReadCall:
         return this.read(s)
        case S4.StatementKinds.WriteCall:

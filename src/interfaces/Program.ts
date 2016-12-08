@@ -55,7 +55,15 @@ export function set_exit (s: Statement, new_exit: Statement) : void {
 export interface Module {
     name: string
     entry_point: Statement
-    parameters: string[] // por ahora solo voy a poner los nombres de los parametros aca
+    parameters: {
+        [p: string]: Parameter
+    }
+}
+
+export interface Parameter {
+    name: string
+    by_ref: boolean
+    is_array: boolean
 }
 
 export type Statement = While | If | Until | UserModuleCall | ReadCall | WriteCall | Assign | Get | Operation | AssignV | GetV | Push | Pop  
