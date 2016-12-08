@@ -1298,7 +1298,10 @@ export function FunctionModule (source: TokenQueue) : IError<PI.PatternError> | 
      * Extraer las propiedades del parametro que son necesarias
      * para crear la variable
      */
-    const {name, is_array, dimensions, type} = par
+    const name = par.name
+    const is_array = par.is_array
+    const dimensions = par.dimensions
+    const type = par.type
     /**
      * Meter los datos de la variable en el arreglo del enunciado de declaracion.
      */
@@ -1315,6 +1318,8 @@ export function FunctionModule (source: TokenQueue) : IError<PI.PatternError> | 
   source.next()
 
   // Fin del encabezado
+
+  skipWhiteSpace(source)
 
   // Leer declaraciones de variables
   const declarations: PI.Declaration[] = []
@@ -1375,7 +1380,7 @@ export function FunctionModule (source: TokenQueue) : IError<PI.PatternError> | 
 export function ProcedureModule (source: TokenQueue) : IError<PI.PatternError> | ISuccess<PI.Procedure> {
   // Lectura del encabezado: procedimiento <nombre>(<parametros>)
 
-  if (source.current().kind != ReservedKind.Funcion) return UnexpectedTokenReport(source.current(), ['procedimiento'], 'missing-procedimiento');
+  if (source.current().kind != ReservedKind.Procedimiento) return UnexpectedTokenReport(source.current(), ['procedimiento'], 'missing-procedimiento');
 
   source.next()
 
@@ -1401,7 +1406,10 @@ export function ProcedureModule (source: TokenQueue) : IError<PI.PatternError> |
      * Extraer las propiedades del parametro que son necesarias
      * para crear la variable
      */
-    const {name, is_array, dimensions, type} = par
+    const name = par.name
+    const is_array = par.is_array
+    const dimensions = par.dimensions
+    const type = par.type
     /**
      * Meter los datos de la variable en el arreglo del enunciado de declaracion.
      */
@@ -1418,6 +1426,8 @@ export function ProcedureModule (source: TokenQueue) : IError<PI.PatternError> |
   source.next()
 
   // Fin del encabezado
+
+  skipWhiteSpace(source)
 
   // Leer declaraciones de variables
   const declarations: PI.Declaration[] = []
@@ -1457,7 +1467,7 @@ export function ProcedureModule (source: TokenQueue) : IError<PI.PatternError> |
     skipWhiteSpace(source)
   }
 
-  if (source.current().kind != ReservedKind.FinFuncion) return UnexpectedTokenReport(source.current(), ['finprocedimiento'], 'missing-finprocedimiento')
+  if (source.current().kind != ReservedKind.FinProcedimiento) return UnexpectedTokenReport(source.current(), ['finprocedimiento'], 'missing-finprocedimiento')
 
   source.next() // consumir 'finprocedimiento'
 

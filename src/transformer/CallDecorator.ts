@@ -34,7 +34,7 @@ export default function transform (ast: S1.AST) : IError<S2.Error[]> | ISuccess<
   }
 
   for (let module_name in ast.modules.user_modules) {
-    const old_module = ast.modules[module_name]
+    const old_module = ast.modules.user_modules[module_name]
     const report = transform_module(old_module, ast, module_name)
     if (report.error) {
       errors_found.push(...report.result)
@@ -518,7 +518,7 @@ function get_module_info (name: string, ast: S1.AST) : IError<S2.UndefinedModule
     return {error:true, result:[{reason: '@call-undefined-module', name}]}
   }
   else {
-    return {error:false, result:ast.modules[name]}
+    return {error:false, result:ast.modules.user_modules[name]}
   }
 }
 
