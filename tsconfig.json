@@ -8,11 +8,8 @@
     },
     "files": [
         "index.ts",
-        "./src/parser/ast/List.ts",
-        "./src/parser/ast/Nodes.ts",
         "./src/tools/ir_writer.ts",
-        "./src/tools/mini-int.ts",
-        "./test/*"
+        "./src/tools/mini-int.ts"
     ],
     "include": [
         "test/*"
