@@ -82,8 +82,52 @@ function procesar (p: S4.Program) : string {
         c = c.exit_point
     }
 
-    s += `FIN`
+    s += `FIN\n`
 
+    for (let mn in p.modules) {
+        s += `\n${mn} (${procesar_parametros(p.modules[mn].parameters)})\n`
+
+        let variables = ''   
+        /**
+         * imprimir las variables
+         */
+        for (let vn in p.local_variables[mn]) {
+            const v = p.local_variables[mn][vn] 
+            variables += `${repetir(' ', espacios*2)}${v.datatype} ${vn}`
+            if (v.is_array) {
+                variables += `[${v.dimensions.toString()}]`
+            }
+            variables += '\n'
+        }
+
+        s += `${variables}INICIO\n`
+
+        /**
+         * Procesar main
+         */
+        let c = p.modules[mn].entry_point
+        while (c != null) {
+            s += procesar_enunciado(c, 1) + '\n'
+            c = c.exit_point
+        }
+
+        s += `FIN\n`
+    }
+
+    return s
+}
+
+function procesar_parametros (ps: {[p: string]: S4.Parameter}) {
+    let s = ''
+    const length = Object.keys(ps).length
+    let i = 0
+    for (let pn in ps) {
+         s += `${ps[pn].by_ref ? 'ref ':''}${pn}${ps[pn].is_array ? '[]':''}`
+         if (i < length - 1) {
+             s += ', '
+         }
+         i++
+    }
     return s
 }
 

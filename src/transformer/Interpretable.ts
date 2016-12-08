@@ -6,6 +6,8 @@ import * as P from '../interfaces/Program'
 
 import {ISuccess as Success} from '../interfaces/Utility'
 
+import {drop, arr_counter, arr_counter_inc, arr_counter_dec, arr_minor, arr_major, arr_equal} from '../utility/helpers'
+
 import {ExpElement, OperatorElement, LiteralValue, InvocationValue, Return} from '../interfaces/ParsingInterfaces'
 
 export default function transform (ast: S2.AST) : Success<P.Program> {
@@ -320,25 +322,76 @@ function transform_read (rc: S2.ReadCall) : P.Statement {
 
 function create_assignment (v: S2.InvocationValue) : P.Statement {
     if (v.is_array) {
-        const first_index = transform_expression(v.indexes[0])
-        let last_statement = P.get_last(first_index)
-        for (let i = 0; i < v.indexes.length - 1; i++) {
-            const next_index = transform_expression(v.indexes[i + 1])
-            last_statement.exit_point =  next_index
-            last_statement = P.get_last(next_index)
+        if (v.dimensions.length > v.indexes.length) {
+            /**
+             * "grados de libertad"
+             */
+            const g = v.dimensions.length - v.indexes.length
+            /**
+             * tamaño de las dimensiones cuyos indices van a ir variando
+             */
+            const dv = drop(v.indexes.length, v.dimensions)
+            
+            let first_index: P.Statement
+            let last_statement: P.Statement
+            for (let i = arr_counter(g, 1); arr_minor(i, dv) || arr_equal(i, dv); arr_counter_inc(i, dv, 1)) {
+                /**
+                 * Los indices que no fueron proprocionados seran completados con los del
+                 * contador `i`
+                 */
+                const missing_indexes: ExpElement[][] = i.map(create_literal_number_exp)
+                const final_indexes = [...v.indexes, ...missing_indexes]
+
+                for (let j = 0; j < final_indexes.length; j++) {
+                    const index_exp = transform_expression(final_indexes[j])
+
+                    /**
+                     * Si esta es la primer iteracion de ambos bucles...
+                     */
+                    if (arr_equal(i, arr_counter(i.length, 1))) {
+                        first_index = index_exp
+                    }
+                    else {
+                        last_statement.exit_point = index_exp
+                    }
+
+                    last_statement = P.get_last(index_exp)
+
+                    const assignment = new P.AssignV(final_indexes.length, v.dimensions, v.name)
+
+                    last_statement.exit_point = assignment
+
+                    last_statement = assignment
+                }
+            }
+
+            return first_index
         }
+        else {
+            const first_index = transform_expression(v.indexes[0])
+            let last_statement = P.get_last(first_index)
+            for (let i = 0; i < v.indexes.length - 1; i++) {
+                const next_index = transform_expression(v.indexes[i + 1])
+                last_statement.exit_point =  next_index
+                last_statement = P.get_last(next_index)
+            }
 
-        const assignment = new P.AssignV(v.indexes.length, v.dimensions, v.name)
+            const assignment = new P.AssignV(v.indexes.length, v.dimensions, v.name)
 
-        last_statement.exit_point = assignment
+            last_statement.exit_point = assignment
 
-        return first_index
+            return first_index
+        }
     }
     else {
         const assignment = new P.Assign(v.name)
 
         return assignment
     }
+}
+
+function create_literal_number_exp (n: number) : LiteralValue[] {
+    return [{type: 'literal', value: n}]
 }
 
 function transform_return (ret: Return) : P.Statement {
@@ -468,19 +521,73 @@ function transform_assignment (assignment: S2.Assignment) : P.Statement {
 
 function transform_invocation (i: S2.InvocationValue) : P.Statement {
     if (i.is_array) {
-        const first_index = transform_expression(i.indexes[0])
-        let last_statement = P.get_last(first_index)
-        for (let j = 1; j < i.indexes.length; j++) {
-            const next_index = transform_expression(i.indexes[j])
-            last_statement.exit_point = next_index
-            last_statement = P.get_last(next_index)
+        if (i.dimensions.length > i.indexes.length) {
+            /**
+             * "grados de libertad"
+             */
+            const g = i.dimensions.length - i.indexes.length
+            /**
+             * tamaño de las dimensiones cuyos indices van a ir variando
+             */
+            const dv = drop(i.indexes.length, i.dimensions)
+            /**
+             * el indice mas pequeño posible
+             */
+            const smallest_index = arr_counter(g, 1)
+            
+            let first_index: P.Statement
+            let last_statement: P.Statement
+            /**
+             * dv.slice(0) hace una copia de dv
+             */
+            for (let j = dv.slice(0); arr_major(j, smallest_index) || arr_equal(j, smallest_index); arr_counter_dec(j, dv)) {
+                /**
+                 * Los indices que no fueron proprocionados seran completados con los del
+                 * contador `i`
+                 */
+                const missing_indexes: ExpElement[][] = j.map(create_literal_number_exp)
+                const final_indexes = [...i.indexes, ...missing_indexes]
+
+                for (let k = 0; k < final_indexes.length; k++) {
+                    const index_exp = transform_expression(final_indexes[k])
+
+                    /**
+                     * Si esta es la primer iteracion de ambos bucles...
+                     */
+                    if (arr_equal(j, dv)) {
+                        first_index = index_exp
+                    }
+                    else {
+                        last_statement.exit_point = index_exp
+                    }
+
+                    last_statement = P.get_last(index_exp)
+
+                    const invocation = new P.GetV(final_indexes.length, i.dimensions, i.name)
+
+                    last_statement.exit_point = invocation
+
+                    last_statement = invocation
+                }
+            }
+
+            return first_index
         }
-        
-        const getv = new P.GetV(i.indexes.length, i.dimensions, i.name)
+        else {
+            const first_index = transform_expression(i.indexes[0])
+            let last_statement = P.get_last(first_index)
+            for (let j = 1; j < i.indexes.length; j++) {
+                const next_index = transform_expression(i.indexes[j])
+                last_statement.exit_point = next_index
+                last_statement = P.get_last(next_index)
+            }
+            
+            const getv = new P.GetV(i.indexes.length, i.dimensions, i.name)
 
-        last_statement.exit_point = getv
+            last_statement.exit_point = getv
 
-        return first_index
+            return first_index
+        }
     }
     else {
         const geti = new P.Get(i.name)

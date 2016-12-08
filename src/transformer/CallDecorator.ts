@@ -221,7 +221,7 @@ function transform_call (call: PI.Call, ast: S1.AST, module_name: string) : IErr
     else {
       const new_call: S2.ModuleCall = {
         type: 'call',
-        args: call.args,
+        args: args,
         name: call.name,
         module_type: (info.result as (S1.Function | S1.Procedure)).module_type,
         parameters: (info.result as (S1.Function | S1.Procedure)).parameters,
@@ -369,7 +369,7 @@ function transform_invocation(invocation: PI.InvocationInfo, ast: S1.AST, module
     else if (varinfo.error == false) {
       const new_invocation: S2.InvocationInfo = {
         name: invocation.name,
-        is_array: invocation.is_array,
+        is_array: varinfo.result.is_array,
         indexes: invocation.indexes,
         dimensions: varinfo.result.dimensions
       }
@@ -403,7 +403,7 @@ function transform_invocation(invocation: PI.InvocationInfo, ast: S1.AST, module
       if (errors_found.length == 0) {
         const new_invocation: S2.InvocationInfo = {
           name: invocation.name,
-          is_array: invocation.is_array,
+          is_array: varinfo.result.is_array,
           indexes: new_indexes,
           dimensions: varinfo.result.dimensions
         }
@@ -428,7 +428,7 @@ function transform_invocation_exp(invocation: PI.InvocationValue, ast: S1.AST, m
       const new_invocation: S2.InvocationValue = {
         type: 'invocation',
         name: invocation.name,
-        is_array: invocation.is_array,
+        is_array: varinfo.result.is_array,
         indexes: invocation.indexes,
         dimensions: varinfo.result.dimensions
       }
@@ -522,12 +522,12 @@ function get_module_info (name: string, ast: S1.AST) : IError<S2.UndefinedModule
   }
 }
 
-function get_variable_info (name: string, variables: {[m:string]: S1.VariableDict}, module_name: string) : IError<S2.UndefinedVariable[]> | ISuccess<S2.VarDimensions> {
-  if (name in variables[module_name]) {
-    return {error:false, result:{dimensions:variables[module_name][name].dimensions}}
-  }
-  else if (name in variables['main']) {
-    return {error:false, result:{dimensions: variables['main'][name].dimensions}}
+function get_variable_info (name: string, variables: {[m:string]: S1.VariableDict}, module_name: string) : IError<S2.UndefinedVariable[]> | ISuccess<S2.VarInfo> {
+  const exists = name in variables[module_name] || name in variables['main']
+  const variable = name in variables[module_name] ? variables[module_name][name]:variables['main'][name]
+
+  if (exists) {
+    return {error:false, result:{dimensions: variable.dimensions, is_array: variable.is_array}}
   }
   else return {error:true, result:[{reason:'undefined-variable', name}]}
 }

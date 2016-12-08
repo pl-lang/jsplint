@@ -100,8 +100,9 @@ export interface Procedure {
   return_type: 'ninguno'
 }
 
-export interface VarDimensions {
+export interface VarInfo {
   dimensions: number[]
+  is_array: boolean
 }
 
 export interface InvocationInfo extends PI.InvocationInfo {
