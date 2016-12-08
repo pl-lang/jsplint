@@ -104,3 +104,11 @@ export function zip<A, B> (a : A[], b : B[]) : [A, B][] {
 export function take<T> (n : number, list : T[]) : T[] {
   return list.slice(0, n)
 }
+
+/**
+ * drop
+ * toma los ultimos n elementos de un arreglo
+ */
+export function drop<T> (n: number, list: T[]) : T[] {
+  return list.slice(list.length - n)
+}
