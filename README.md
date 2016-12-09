@@ -16,7 +16,7 @@ const p = new Parser()
 ```
 
 Durante la ejecución de un programa pueden ocurrir cosas a las que debemos reaccionar, como un error sintáctico o de tipado o la escritura 
-de alguna valor en la salida. Para responder a estos eventos debemos asignarles funciones que se ejecuten cuando estos ocurran:
+de algún valor en la salida. Para responder a estos eventos debemos asignarles funciones que se ejecuten cuando estos ocurran:
 
 ```js
 // Parser e Interpreter son emisores de eventos y se puede asignar funciones a sus eventos
@@ -64,8 +64,8 @@ Y listo. El programa fue ejecutado.
 
 Los eventos `read` y `write` son los eventos mas importantes que emiten los interpretes porque permiten al programa interactuar con el usuario. La funcion (o funciones)
 que se enganche a ellos depende mucho del entorno donde se ejecuta el programa, pero, en escencia, la funcion que responda a `write` debe escribir cosas en la pantalla
-y la que responda a `read` debe permitir al que usuario ingrese un valor, enviarselo al interprete, y resumir la ejecucion del programa.
+y la que responda a `read` debe permitir al que usuario ingrese un valor, debe enviarselo al interprete, y debe resumir la ejecucion del programa.
 
 Mas adelante cuando el chequeo de errores de tipado sea implementado cambiará un poco la etapa de la transformación porque se deberá aplicar dos transformaciones.
 La primera analiza el programa y le asigna tipos de datos a sus expresiones, lo cual permite que `TypeChecker` revise que todo esté en orden. Hecho esto, si no se
-encontraron erroes, se procede aplicar la segunda (la que fue aplicada mas arriba por `transform`) que hace que *correcto* pueda ser ejecutado.
+encontraron erroes, se procede aplicar la segunda (la que fue aplicada mas arriba por `transform`) que hace que un programa *correcto* pueda ser ejecutado.
