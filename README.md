@@ -4,51 +4,68 @@ Este paquete es un interprete para un lenguaje de programacion diseñado para se
 Este documento detalla la mínima cantidad de pasos necesarios para ejecutar un programa.
 
 # Cómo se usa?
-El modulo está dividido en dos clases: Compiler e Interpreter. La primera es la encargada de transformar el codigo del usuario a una estructura de datos que la
-segunda puede utilizar para ejecutar el programa.
-
-Primero se deben importar ambas clases y luego crear una instancia del compilador.
+La ejecución de un program tiene 3 pasos: la lectura, la transformación, y la interpretación. Este modulo exporta "herramientas" para cada una de esas tareas:
+la clase `Parser`, la función `transform`, y la clase `Interpreter`. Antes de usarlas hay que importarlas: 
 
 ```js
-const Compiler = require('interprete-pl').Compiler
-const Interpreter = require('interprete-pl').Interpreter
+import {Parser, Interpreter, transform} from 'interprete-pl'
 
-const compilador = new Compiler()
+// A continuacion, creo una instancia de Parser.
+
+const p = new Parser()
 ```
 
-Luego hay que compilar un programa. Asumiendo que la cadena de texto del codigo está en la variable `programa`:
-```js
-let reporte_del_compilador = compiler.compile(programa, true)
-```
-
-`reporte_del_compilador` tiene dos propiedades: error y result. Si se encontró un error en el código, error será `true` y result contendrá una cadena con la clase
-de error que se encontró. Si no, error será `false` y result será el programa compilado.
-
-Asumiendo que no haya errores podemos crear una instancia de Interpreter, la clase que se encarga de ejecutar programas.
+Durante la ejecución de un programa pueden ocurrir cosas a las que debemos reaccionar, como un error sintáctico o de tipado o la escritura 
+de alguna valor en la salida. Para responder a estos eventos debemos asignarles funciones que se ejecuten cuando estos ocurran:
 
 ```js
-// Al crear una instancia de Interpreter se le pasa como parametro un programa compilado.
-let interprete = new Interpreter(reporte_del_compilador.result)
+// Parser e Interpreter son emisores de eventos y se puede asignar funciones a sus eventos
+// a traves del método on.
+
+// El evento any es un evento especial cuya funcion se ejecuta cuando el emisor emite cualquiera
+// de sus eventos.
+
+p.on('any', () => {console.log('El Parser emitió un evento...')})
 ```
 
-Durante la compilación y ejecución de un programa ocurren eventos. Al compilar un programa puede suceder, por ejemplo, que se encuentre un error de tipado
-mientras que al ejecutarlo puede ocurrir que el programa ordene pedir datos o mostrarlos  en pantalla. El compilador y el interprete emiten estos
-eventos y nos permiten reaccionar a ellos. Hay una descripcion detallada de los eventos (los datos que proveen y quien los emite) en [OTRO ARCHIVO].
+*Nota: los eventos que emite cada clase estan listados en [OTRO DOCUMENTO]*
 
-Para reaccionar a los eventos se deben asignar funciones que seran ejecutadas cuando estos sean emitidos.
+Con los eventos "enganchados" a sus funciones podemos leer un programa. Asumiendo que dicho programa es una cadena en la variable `prog` hacemos:
 
 ```js
-// Para ejecutar correctamente un programa se debe reaccionar, como mínimo, a dos eventos:
-// write y read
-// Ambos emitidos por Interpreter
-interprete.on('write', (ev_info, lista_de_valores) => {})
-interprete.on('read', (ev_info, lista_de_valores) => {})
+const programa_leido = p.parse(prog)
 ```
-Qué deben hacer las funciones que reaccionen a ellos no es pertinente a este documento. Esa información se puede encontrar en [OTRO ARCHIVO].
 
-Una vez que se han registrado todas las funciones necesarias se puede llamar a la funcion `interprete.run()` y nuestro programa será ejecutado.
+El método `parse` devuelve un *reporte*, un objeto con dos propiedades: `error` y `result`. Si `error` es verdadero, entonces `result` contiene una cadena con
+el nombre del error que se encontró (a esta altura se emitieron datos adicionales sobre el error a traves del evento `syntax-error` o `lexical-error`). En cambio,
+si `error` es falso, `result` contiene una estructura que representa al programa. Ahora, esta estructura debe ser transformada para que pueda interpretarse:
 
-## Ejemplo
-Se puede ver una implementación de una interfaz de consola para el interprete en [OTRO REPO?]
+```js
+const programa_ejecutable = transform(programa_leido.result)
+```
 
-# Desarrollo
+`transform` también devuelve un reporte. Asumiendo que `error` es falso, `programa_ejecutable.result` es un objeto que debemos usar para crear el interprete:
+
+```js
+const i = new Interprete(programa_ejecutable.result)
+
+// Agregamos funciones para los eventos read y write del interpete:
+
+i.on('read', () => {/*funcion que hace algo...*/})
+
+i.on('write', console.log)
+
+// Y ejecutamos el programa:
+
+i.run()
+```
+
+Y listo. El programa fue ejecutado.
+
+Los eventos `read` y `write` son los eventos mas importantes que emiten los interpretes porque permiten al programa interactuar con el usuario. La funcion (o funciones)
+que se enganche a ellos depende mucho del entorno donde se ejecuta el programa, pero, en escencia, la funcion que responda a `write` debe escribir cosas en la pantalla
+y la que responda a `read` debe permitir al que usuario ingrese un valor, enviarselo al interprete, y resumir la ejecucion del programa.
+
+Mas adelante cuando el chequeo de errores de tipado sea implementado cambiará un poco la etapa de la transformación porque se deberá aplicar dos transformaciones.
+La primera analiza el programa y le asigna tipos de datos a sus expresiones, lo cual permite que `TypeChecker` revise que todo esté en orden. Hecho esto, si no se
+encontraron erroes, se procede aplicar la segunda (la que fue aplicada mas arriba por `transform`) que hace que *correcto* pueda ser ejecutado.
