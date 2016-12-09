@@ -134,49 +134,49 @@ function procesar_parametros (ps: {[p: string]: S4.Parameter}) {
 function procesar_enunciado (e: S4.Statement, nivel: number) : string {
     switch (e.kind) {
         case S4.StatementKinds.Plus:
-            return `${repetir(' ', nivel*espacios)} SUMAR`
+            return `${repetir(' ', nivel*espacios)}SUMAR`
         case S4.StatementKinds.Minus:
-            return `${repetir(' ', nivel*espacios)} RESTAR`
+            return `${repetir(' ', nivel*espacios)}RESTAR`
         case S4.StatementKinds.Times:
-            return `${repetir(' ', nivel*espacios)} MULTIPLICAR`
+            return `${repetir(' ', nivel*espacios)}MULTIPLICAR`
         case S4.StatementKinds.Slash:
-            return `${repetir(' ', nivel*espacios)} DIVIDIR`
+            return `${repetir(' ', nivel*espacios)}DIVIDIR`
         case S4.StatementKinds.Div:
-            return `${repetir(' ', nivel*espacios)} DIV`
+            return `${repetir(' ', nivel*espacios)}DIV`
         case S4.StatementKinds.Mod:
-            return `${repetir(' ', nivel*espacios)} MODULO`
+            return `${repetir(' ', nivel*espacios)}MODULO`
         case S4.StatementKinds.Power:
-            return `${repetir(' ', nivel*espacios)} POTENCIA`
+            return `${repetir(' ', nivel*espacios)}POTENCIA`
         case S4.StatementKinds.Assign:
-            return `${repetir(' ', nivel*espacios)} ASIGNAR ${e.varname}`
+            return `${repetir(' ', nivel*espacios)}ASIGNAR ${e.varname}`
         case S4.StatementKinds.Get:
-            return `${repetir(' ', nivel*espacios)} INVOCAR ${e.varname}`
+            return `${repetir(' ', nivel*espacios)}INVOCAR ${e.varname}`
         case S4.StatementKinds.AssignV:
-            return `${repetir(' ', nivel*espacios)} ASIGNARV ${e.varname} ${e.total_indexes}`
+            return `${repetir(' ', nivel*espacios)}ASIGNARV ${e.varname} ${e.total_indexes}`
         case S4.StatementKinds.GetV:
-            return `${repetir(' ', nivel*espacios)} INVOCARV ${e.varname} ${e.total_indexes}`
+            return `${repetir(' ', nivel*espacios)}INVOCARV ${e.varname} ${e.total_indexes}`
         case S4.StatementKinds.Push:
-            return `${repetir(' ', nivel*espacios)} APILAR ${e.value}`
+            return `${repetir(' ', nivel*espacios)}APILAR ${e.value}`
         case S4.StatementKinds.Pop:
-            return `${repetir(' ', nivel*espacios)} DESAPILAR`
+            return `${repetir(' ', nivel*espacios)}DESAPILAR`
         case S4.StatementKinds.Minor:
-            return `${repetir(' ', nivel*espacios)} MENOR`
+            return `${repetir(' ', nivel*espacios)}MENOR`
         case S4.StatementKinds.MinorEq:
-            return `${repetir(' ', nivel*espacios)} MENOR IGUAL`
+            return `${repetir(' ', nivel*espacios)}MENOR IGUAL`
         case S4.StatementKinds.Different:
-            return `${repetir(' ', nivel*espacios)} DISTINTO`
+            return `${repetir(' ', nivel*espacios)}DISTINTO`
         case S4.StatementKinds.Equal:
-            return `${repetir(' ', nivel*espacios)} IGUAL`
+            return `${repetir(' ', nivel*espacios)}IGUAL`
         case S4.StatementKinds.Major:
-            return `${repetir(' ', nivel*espacios)} MAYOR`
+            return `${repetir(' ', nivel*espacios)}MAYOR`
         case S4.StatementKinds.MajorEq:
-            return `${repetir(' ', nivel*espacios)} MAYOR IGUAL`
+            return `${repetir(' ', nivel*espacios)}MAYOR IGUAL`
         case S4.StatementKinds.Not:
-            return `${repetir(' ', nivel*espacios)} NOT`
+            return `${repetir(' ', nivel*espacios)}NOT`
         case S4.StatementKinds.And:
-            return `${repetir(' ', nivel*espacios)} AND`
+            return `${repetir(' ', nivel*espacios)}AND`
         case S4.StatementKinds.Or:
-            return `${repetir(' ', nivel*espacios)} O`
+            return `${repetir(' ', nivel*espacios)}O`
         case S4.StatementKinds.If:
             return procesar_si(e, nivel + 1)
         case S4.StatementKinds.While:
@@ -185,11 +185,11 @@ function procesar_enunciado (e: S4.Statement, nivel: number) : string {
             // return procesar_hasta(e, nivel + 1)
             return '"REPETIR HASTA QUE" NO IMPLEMENTADO'
         case S4.StatementKinds.UserModuleCall:
-            return `${repetir(' ', nivel*espacios)} LLAMAR ${e.name} ${e.total_args}`
+            return `${repetir(' ', nivel*espacios)}LLAMAR ${e.name} ${e.total_args}`
         case S4.StatementKinds.ReadCall:
-            return `${repetir(' ', nivel*espacios)} LEER ${e.varname}`
+            return `${repetir(' ', nivel*espacios)}LEER ${e.varname}`
         case S4.StatementKinds.WriteCall:
-            return `${repetir(' ', nivel*espacios)} ESCRIBIR`
+            return `${repetir(' ', nivel*espacios)}ESCRIBIR`
     }
 }
 
@@ -202,7 +202,7 @@ function procesar_si(e: S4.If, nivel: number) : string {
      */
     let c = e.true_branch_entry
     while (c != null) {
-        s += repetir(' ', nivel*espacios) + procesar_enunciado(c, 0) + '\n'
+        s += procesar_enunciado(c, nivel + 1) + '\n'
         c = c.exit_point
     }
 
@@ -210,7 +210,7 @@ function procesar_si(e: S4.If, nivel: number) : string {
         s += `${repetir(' ', (nivel - 1)*espacios)}SI FALSO:\n`
         let c = e.false_branch_entry
         while (c != null) {
-            s += repetir(' ', nivel*espacios) + procesar_enunciado(c, 0) + '\n'
+            s += procesar_enunciado(c, nivel + 1) + '\n'
             c = c.exit_point
         }   
     }
@@ -229,7 +229,7 @@ function procesar_mientras(e: S4.While, nivel: number) : string {
      */
     let c = e.entry_point
     while (c != null) {
-        s += repetir(' ', nivel*espacios) + procesar_enunciado(c, 0) + '\n'
+        s += procesar_enunciado(c, nivel + 1) + '\n'
         c = c.exit_point
     }
 
