@@ -398,9 +398,15 @@ function transform_return (ret: Return) : P.Statement {
     /**
      * Para transformar 'retornar' solo hay que transformar
      * su expresion. Una vez que se evalue eso, el retorno de
-     * la funcion queda al tope de la pila.
+     * la funcion queda al tope de la pila. Luego de eso
+     * viene el enunciado 'retornar' que termina la ejecucion
+     * de la funcion donde se encuentra.
      */
-    return transform_expression(ret.expression)
+    const entry = transform_expression(ret.expression)
+    const ret_statement = new P.Return()
+    P.get_last(entry).exit_point = ret_statement
+
+    return entry
 }
 
 function transform_body (body: S2.Statement[]) : P.Statement {

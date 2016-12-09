@@ -190,6 +190,8 @@ function procesar_enunciado (e: S4.Statement, nivel: number) : string {
             return `${repetir(' ', nivel*espacios)}LEER ${e.varname}`
         case S4.StatementKinds.WriteCall:
             return `${repetir(' ', nivel*espacios)}ESCRIBIR`
+        case S4.StatementKinds.Return:
+            return `${repetir(' ', nivel*espacios)}RETORNAR`
     }
 }
 

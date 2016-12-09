@@ -66,7 +66,7 @@ export interface Parameter {
     is_array: boolean
 }
 
-export type Statement = While | If | Until | UserModuleCall | ReadCall | WriteCall | Assign | Get | Operation | AssignV | GetV | Push | Pop  
+export type Statement = While | If | Until | UserModuleCall | ReadCall | WriteCall | Assign | Get | Operation | AssignV | GetV | Push | Pop | Return
 
 export class While extends BaseStatement {
     readonly kind: StatementKinds.While
@@ -114,6 +114,15 @@ export class If extends BaseStatement {
     get exit_point () : Statement {
         return this._exit_point
     }    
+}
+
+export class Return extends BaseStatement {
+    readonly kind: StatementKinds.Return
+
+    constructor() {
+        super()
+        this.kind = StatementKinds.Return
+    }
 }
 
 export class UserModuleCall extends BaseStatement {
@@ -244,5 +253,6 @@ export enum StatementKinds {
   Until,
   UserModuleCall,
   ReadCall,
-  WriteCall
+  WriteCall,
+  Return
 }

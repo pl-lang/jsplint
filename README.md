@@ -3,6 +3,27 @@
 Este paquete es un interprete para un lenguaje de programacion diseñado para ser facil de aprender y para introducir el paradigma de la programacion estructurada.
 Este documento detalla la mínima cantidad de pasos necesarios para ejecutar un programa.
 
+### Algoritmo recursivo para la secuencia Fibonacci:
+
+```
+variables
+    entero a
+inicio
+    a <- fibo(4)
+    escribir("El cuarto termino de la secuencia Fibonacci es:", a)
+fin
+
+entero funcion fibo (entero n)
+    entero r
+inicio
+    si (n < 2) entonces
+        retornar n
+    sino
+        retornar fibo(n-1) + fibo(n-2)
+    finsi
+finfuncion
+```
+
 # Cómo se usa?
 La ejecución de un program tiene 3 pasos: la lectura, la transformación, y la interpretación. Este modulo exporta "herramientas" para cada una de esas tareas:
 la clase `Parser`, la función `transform`, y la clase `Interpreter`. Antes de usarlas hay que importarlas: 

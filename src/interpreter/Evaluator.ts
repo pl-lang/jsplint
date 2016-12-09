@@ -69,6 +69,7 @@ export class Evaluator {
   private current_module: string
   private readonly globals: VariableDict
   private readonly locals: {[p:string]: VariableDict}
+  private readonly locals_stack: VariableDict[]
   private readonly state: {
     done: boolean
     value_stack: Value[]
@@ -84,6 +85,7 @@ export class Evaluator {
     this.modules = program.modules
     this.globals = program.local_variables.main
     this.locals = program.local_variables
+    this.locals_stack = [this.globals]
     this.current_statement = this.entry_point
     this.current_module = 'main'
 
@@ -104,6 +106,11 @@ export class Evaluator {
    */
   get_locals (module_name: string) {
     return this.locals[module_name]
+  }
+
+  private get_current_locals () {
+    const current_locals = this.locals_stack[this.locals_stack.length - 1]
+    return current_locals
   }
 
   /**
@@ -163,6 +170,7 @@ export class Evaluator {
       while (this.state.next_statement == null && this.state.statement_stack.length > 0) {
         this.state.next_statement = this.state.statement_stack.pop()
         this.current_module = this.state.module_stack.pop()
+        this.locals_stack.pop()
       }
 
       /**
@@ -190,7 +198,11 @@ export class Evaluator {
      * a la función que lo evalua. Esto es verdadero para las estructuras
      * de control y  para las llamadas a funciones/procedimientos.
      */
-    const controls_next = s.kind == S4.StatementKinds.UserModuleCall || s.kind == S4.StatementKinds.If || s.kind == S4.StatementKinds.While || s.kind == S4.StatementKinds.Until
+    const controls_next = s.kind == S4.StatementKinds.UserModuleCall ||
+    s.kind == S4.StatementKinds.If ||
+    s.kind == S4.StatementKinds.While ||
+    s.kind == S4.StatementKinds.Until ||
+    s.kind == S4.StatementKinds.Return;
 
     if (!controls_next) {
       this.state.next_statement = s.exit_point
@@ -248,16 +260,17 @@ export class Evaluator {
        case S4.StatementKinds.Until:
         return this.until_st(s)
        case S4.StatementKinds.UserModuleCall:
-        /**
-         * Metodo rapido para probar las llamadas
-         */
-        // this.state.next_statement = s.exit_point
-        // return {error: false, result: {action: 'write', value: `LLAMASTE AL MODULO ${s.name}`, done: this.state.done}}
         return this.call(s)
        case S4.StatementKinds.ReadCall:
         return this.read(s)
        case S4.StatementKinds.WriteCall:
         return this.write(s)
+       case S4.StatementKinds.Return:
+        /**
+         * Esto termina con la ejecucion de la funcion en curso
+         */
+        this.state.next_statement = null
+        return {error: false, result: {action: 'none', done: this.state.done}}
     }
   }
 
@@ -372,7 +385,7 @@ export class Evaluator {
   }
 
   private get_var (vn: string) : Variable {
-    const locals = this.get_locals(this.current_module)
+    const locals = this.get_current_locals()
     if (vn in locals) {
       return locals[vn]
     }
@@ -392,6 +405,7 @@ export class Evaluator {
     this.state.next_statement = this.modules[s.name].entry_point
     this.state.statement_stack.push(this.current_statement.exit_point)
     this.state.module_stack.push(this.current_module)
+    this.locals_stack.push(this.copy_locals(s.name))
     this.current_module = s.name
 
     return {error: false, result: {action: 'none', done: this.state.done}}
@@ -612,5 +626,38 @@ export class Evaluator {
       i++
     }
     return result
+  }
+
+  private copy_locals (module_name: string) : VariableDict {
+    const variables = this.locals[module_name]
+    const copy: VariableDict = {}
+
+    for (let vn in variables) {
+      const variable = variables[vn] 
+      if (variable.is_array) {
+        const {datatype, dimensions, is_array, name} = variable
+        const vcopy: ArrayVariable = {
+          datatype,
+          dimensions,
+          is_array,
+          name,
+          values: new Array(variable.values.length)
+        }
+        copy[vn] = vcopy 
+      }
+      else if (variable.is_array == false) {
+        const {datatype, dimensions, is_array, name} = variable
+        const vcopy: RegularVariable = {
+          datatype,
+          dimensions,
+          is_array,
+          name,
+          value: null
+        }
+        copy[vn] = vcopy
+      }
+    }
+
+    return copy
   }
 }
