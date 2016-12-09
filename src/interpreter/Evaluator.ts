@@ -251,8 +251,9 @@ export class Evaluator {
         /**
          * Metodo rapido para probar las llamadas
          */
-        this.state.next_statement = s.exit_point
-        return {error: false, result: {action: 'write', value: `LLAMASTE AL MODULO ${s.name}`, done: this.state.done}}
+        // this.state.next_statement = s.exit_point
+        // return {error: false, result: {action: 'write', value: `LLAMASTE AL MODULO ${s.name}`, done: this.state.done}}
+        return this.call(s)
        case S4.StatementKinds.ReadCall:
         return this.read(s)
        case S4.StatementKinds.WriteCall:
@@ -384,6 +385,16 @@ export class Evaluator {
     const v = this.state.value_stack.pop()
 
     return {error: false, result: {action: 'write', value: v, done: this.state.done}}
+  }
+
+  private call (s: S4.UserModuleCall) : Success<NullAction> {
+
+    this.state.next_statement = this.modules[s.name].entry_point
+    this.state.statement_stack.push(this.current_statement.exit_point)
+    this.state.module_stack.push(this.current_module)
+    this.current_module = s.name
+
+    return {error: false, result: {action: 'none', done: this.state.done}}
   }
 
   private read (s: S4.ReadCall) : Success<Read> {
