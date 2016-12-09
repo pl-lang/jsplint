@@ -1,6 +1,5 @@
 'use strict'
 
-export {default as Parser} from './src/parser/Parser.js'
-export {default as Declarator} from './src/transformer/Declarator'
-export {default as CallDecorator} from './src/transformer/CallDecorator'
-export {default as Interpretable} from './src/transformer/Interpretable'
+export {default as Parser} from './src/parser/Parser'
+export {default as Interpreter} from './src/interpreter/Interpreter'
+export {default as transform} from './src/transformer/transform'
