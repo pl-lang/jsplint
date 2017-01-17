@@ -8,6 +8,7 @@ import transform from '../transformer/transform'
 function parse (s: string) {
     const p = new Parser()
 
+    p.on('lexical-error', console.log)
     p.on('syntax-error', console.log)
 
     return p.parse(s)
@@ -64,7 +65,7 @@ function procesar (p: S4.Program) : string {
 
     for (let vn in p.local_variables['main']) {
         const v = p.local_variables['main'][vn] 
-        variables += `${repetir(' ', espacios*2)}${v.datatype} ${vn}`
+        variables += `${repetir(' ', espacios)}${v.datatype} ${vn}`
         if (v.is_array) {
             variables += `[${v.dimensions.toString()}]`
         }
@@ -93,7 +94,7 @@ function procesar (p: S4.Program) : string {
          */
         for (let vn in p.local_variables[mn]) {
             const v = p.local_variables[mn][vn] 
-            variables += `${repetir(' ', espacios*2)}${v.datatype} ${vn}`
+            variables += `${repetir(' ', espacios)}${v.datatype} ${vn}`
             if (v.is_array) {
                 variables += `[${v.dimensions.toString()}]`
             }
