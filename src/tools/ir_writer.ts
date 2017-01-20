@@ -1,7 +1,6 @@
 import {readdirSync, readFileSync, writeFileSync} from 'fs'
 import Parser from '../parser/Parser'
-import {IError, ISuccess} from '../interfaces/Utility'
-import {ParsedProgram} from '../interfaces/ParsingInterfaces'
+import {Failure, Success, ParsedProgram} from '../interfaces'
 import * as S4 from '../interfaces/Program'
 import transform from '../transformer/transform'
 

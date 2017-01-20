@@ -270,3 +270,116 @@ export interface ParsedProgram {
     [m: string]: S0.Module
   }
 }
+
+/**
+ * ====================================================
+ * TRANSFORMS' INTERFACES
+ * ====================================================
+ */
+
+/**
+ * Stage 1: given a program it returns the same program minus all the variable
+ * declaration statements plus the program's variables (declared in a separate object).
+ */
+
+export namespace S1 {
+
+  /**
+   * Interface of this stage's final result
+   */
+  export interface AST {
+    modules: {
+      main: Main
+      user_modules: {
+        [m: string]: Function | Procedure
+      }
+    }
+    local_variables: {
+      main: VariableDict
+      [m: string]: VariableDict
+    }
+  }
+
+  export interface TransformedModule {
+    new_module: Module
+    locals: VariableDict
+  }
+
+  export interface TransformedMain {
+    new_module: Main
+    locals: VariableDict
+  }
+
+  export type Module = Function | Procedure 
+
+  export interface Main {
+    type: 'module'
+    name: 'main'
+    module_type: 'main'
+    body: Statement[]
+  }
+
+  export interface Function {
+    type: 'module'
+    name: string
+    module_type: 'function'
+    body: Statement[]
+    parameters: S0.Parameter[]
+    return_type: 'entero' | 'real' | 'caracter' | 'logico'
+  }
+
+  export interface Procedure {
+    type: 'module'
+    name: string
+    module_type: 'procedure'
+    body: Statement[]
+    parameters: S0.Parameter[]
+    return_type: 'ninguno'
+  }
+
+  export type Statement = S0.Call | Assignment | If | While | For | Until | S0.Return
+
+  export interface Assignment extends S0.Assignment {
+    body: Statement[]
+  }
+
+  export interface If extends S0.If {
+    true_branch: Statement[]
+    false_branch: Statement[]
+  }
+
+  export interface While extends S0.While {
+    body: Statement[]
+  }
+
+  export interface For extends S0.For {
+    body: Statement[]
+  }
+
+  export interface Until extends S0.Until {
+    body: Statement[]
+  }
+
+  export interface ArrayVariable extends S0.TypedDeclaration {
+    is_array: true
+    values: any[]
+  }
+
+  export interface VariableDict {
+    [v:string]: Variable
+  }
+
+  export type Variable = ArrayVariable | RegularVariable
+
+  export interface RegularVariable extends S0.TypedDeclaration {
+    is_array: false
+    value: any
+  }
+
+  export interface RepeatedVarError {
+    reason: 'repeated-variable'
+    name: string
+    first_type: string
+    second_type: string
+  }
+}

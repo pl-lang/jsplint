@@ -1,10 +1,6 @@
-import * as PI from '../interfaces/ParsingInterfaces'
+import {Failure, Success, S0, S1, ParsedProgram} from '../interfaces'
 
-import * as S1 from '../interfaces/Stage1'
-
-import {IError, ISuccess} from '../interfaces/Utility'
-
-export default function transform (ast: PI.ParsedProgram) : IError<S1.RepeatedVarError[]> | ISuccess<S1.AST> {
+export default function transform (ast: ParsedProgram) : Failure<S1.RepeatedVarError[]> | Success<S1.AST> {
   const errors_found: S1.RepeatedVarError[] = [] 
 
   const new_main = transform_main(ast.main)
@@ -14,9 +10,7 @@ export default function transform (ast: PI.ParsedProgram) : IError<S1.RepeatedVa
   }
   else if (new_main.error == false) {
     const user_modules: {[m:string]: (S1.Function | S1.Procedure)} = {}
-    const local_variables: {[m:string]: S1.VariableDict} = {}
-
-    local_variables['main'] = new_main.result.locals
+    const local_variables: {main: S1.VariableDict, [m:string]: S1.VariableDict} = {main: new_main.result.locals}
 
     for (let module_name in ast.user_modules) {
       const old_module = ast.user_modules[module_name]
@@ -47,7 +41,7 @@ export default function transform (ast: PI.ParsedProgram) : IError<S1.RepeatedVa
   }
 }
 
-function transform_module (old_module: PI.Module) : IError<S1.RepeatedVarError[]> | ISuccess<S1.TransformedModule> {
+function transform_module (old_module: S0.Module) : Failure<S1.RepeatedVarError[]> | Success<S1.TransformedModule> {
   switch (old_module.module_type) {
     case 'procedure':
     case 'function':
@@ -55,8 +49,8 @@ function transform_module (old_module: PI.Module) : IError<S1.RepeatedVarError[]
   }
 }
 
-function transform_main (old_module: PI.Main) : IError<S1.RepeatedVarError[]> | ISuccess<S1.TransformedMain> {
-   const declarations = old_module.body.filter(statement => statement.type === 'declaration') as PI.Declaration[]
+function transform_main (old_module: S0.Main) : Failure<S1.RepeatedVarError[]> | Success<S1.TransformedMain> {
+   const declarations = old_module.body.filter(statement => statement.type === 'declaration') as S0.Declaration[]
 
    const locals = declare_variables(declarations)
 
@@ -74,8 +68,8 @@ function transform_main (old_module: PI.Main) : IError<S1.RepeatedVarError[]> | 
    }
 }
 
-function transform_user_module (old_module: PI.Function | PI.Procedure) : IError<S1.RepeatedVarError[]> | ISuccess<S1.TransformedModule> {
-   const declarations = old_module.body.filter(statement => statement.type === 'declaration') as PI.Declaration[]
+function transform_user_module (old_module: S0.Function | S0.Procedure) : Failure<S1.RepeatedVarError[]> | Success<S1.TransformedModule> {
+   const declarations = old_module.body.filter(statement => statement.type === 'declaration') as S0.Declaration[]
 
    const locals = declare_variables(declarations)
 
@@ -108,7 +102,7 @@ function transform_user_module (old_module: PI.Function | PI.Procedure) : IError
    }
 }
 
-function declare_variables (declarations: PI.Declaration[]) : IError<S1.RepeatedVarError[]> | ISuccess<S1.VariableDict> {
+function declare_variables (declarations: S0.Declaration[]) : Failure<S1.RepeatedVarError[]> | Success<S1.VariableDict> {
   const repeated_variables: S1.RepeatedVarError[] = []
   const declared_variables: S1.VariableDict = {}
 
