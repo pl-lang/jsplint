@@ -5,15 +5,11 @@
 // -  Los declaradores de sus parametros.
 //
 // Si la funcion no existe entonces devuelve un error.
-import * as PI from '../interfaces/ParsingInterfaces'
+// import * as S0 from '../interfaces/ParsingInterfaces'
 
-import * as S1 from '../interfaces/Stage1'
+import {Failure, Success, S0, S1, S2} from '../interfaces'
 
-import * as S2 from '../interfaces/Stage2'
-
-import {IError, ISuccess} from '../interfaces/Utility'
-
-export default function transform (ast: S1.AST) : IError<S2.Error[]> | ISuccess<S2.AST> {
+export default function transform (ast: S1.AST) : Failure<S2.Error[]> | Success<S2.AST> {
   const new_ast = {
     modules: {
       main: null,
@@ -54,7 +50,7 @@ export default function transform (ast: S1.AST) : IError<S2.Error[]> | ISuccess<
   }
 }
 
-function transform_main (old_module: S1.Main, ast: S1.AST, module_name: string) : IError<S2.Error[]> | ISuccess<S2.Main> {
+function transform_main (old_module: S1.Main, ast: S1.AST, module_name: string) : Failure<S2.Error[]> | Success<S2.Main> {
   const new_body = transform_body(old_module.body, ast, module_name)
 
   if (new_body.error) {
@@ -72,7 +68,7 @@ function transform_main (old_module: S1.Main, ast: S1.AST, module_name: string) 
   }
 }
 
-function transform_module (old_module: S1.Module, ast: S1.AST, module_name: string) : IError<S2.Error[]> | ISuccess<S2.Module> {
+function transform_module (old_module: S1.Module, ast: S1.AST, module_name: string) : Failure<S2.Error[]> | Success<S2.Module> {
   const new_body = transform_body(old_module.body, ast, module_name)
 
   if (new_body.error) {
@@ -106,7 +102,7 @@ function transform_module (old_module: S1.Module, ast: S1.AST, module_name: stri
   }
 }
 
-function transform_body (statements: S1.Statement[], ast: S1.AST, module_name: string) : IError<S2.Error[]> | ISuccess<S2.Statement[]> {
+function transform_body (statements: S1.Statement[], ast: S1.AST, module_name: string) : Failure<S2.Error[]> | Success<S2.Statement[]> {
   const errors_found: S2.Error[] = []
   const new_body: S2.Statement[] = []
 
@@ -128,7 +124,7 @@ function transform_body (statements: S1.Statement[], ast: S1.AST, module_name: s
   }
 }
 
-function transform_statement (statement: S1.Statement, ast: S1.AST, module_name: string) : IError<S2.Error[]> | ISuccess<S2.Statement> {
+function transform_statement (statement: S1.Statement, ast: S1.AST, module_name: string) : Failure<S2.Error[]> | Success<S2.Statement> {
   switch (statement.type) {
     case 'assignment':
       return transform_assignment(statement, ast, module_name)
@@ -146,7 +142,7 @@ function transform_statement (statement: S1.Statement, ast: S1.AST, module_name:
   }
 }
 
-function transform_assignment (assignment: PI.Assignment, ast: S1.AST, module_name: string) : IError<S2.Error[]> | ISuccess<S2.Assignment> {
+function transform_assignment (assignment: S0.Assignment, ast: S1.AST, module_name: string) : Failure<S2.Error[]> | Success<S2.Assignment> {
   const errors_found: S2.Error[] = []
 
   const variable = transform_invocation(assignment.left, ast, module_name)
@@ -165,7 +161,7 @@ function transform_assignment (assignment: PI.Assignment, ast: S1.AST, module_na
     const new_assignment: S2.Assignment = {
       type:'assignment',
       left:variable.result as S2.InvocationInfo,
-      right:payload.result as PI.ExpElement[]
+      right:payload.result as S0.ExpElement[]
     }
 
     return {error:false, result:new_assignment}
@@ -175,15 +171,15 @@ function transform_assignment (assignment: PI.Assignment, ast: S1.AST, module_na
   }
 }
 
-export type SuccesfulCall = ISuccess<S2.ReadCall> | ISuccess<S2.WriteCall> | ISuccess<S2.ModuleCall>
+export type SuccesfulCall = Success<S2.ReadCall> | Success<S2.WriteCall> | Success<S2.ModuleCall>
 
-function transform_call (call: PI.Call, ast: S1.AST, module_name: string) : IError<S2.Error[]> | SuccesfulCall {
+function transform_call (call: S0.Call, ast: S1.AST, module_name: string) : Failure<S2.Error[]> | SuccesfulCall {
   // si es la funcion leer, no hay que transformarla
   if (call.name == 'leer') {return {error:false, result: call as S2.ReadCall}}
 
   const errors_found: S2.Error[] = []
 
-  const args: PI.ExpElement[][] = []
+  const args: S0.ExpElement[][] = []
 
   for (let arg of call.args) {
     const new_arg= transform_expression(arg, ast, module_name)
@@ -195,7 +191,7 @@ function transform_call (call: PI.Call, ast: S1.AST, module_name: string) : IErr
     }
   }
 
-  let info: IError<S2.UndefinedModule[]> | ISuccess<S1.Module> = null
+  let info: Failure<S2.UndefinedModule[]> | Success<S1.Module> = null
 
   if (call.name != 'escribir') {
     info = get_module_info(call.name, ast)
@@ -233,7 +229,7 @@ function transform_call (call: PI.Call, ast: S1.AST, module_name: string) : IErr
   }
 }
 
-function transform_loop (statement: S1.While | S1.Until, ast: S1.AST, module_name: string) : IError<S2.Error[]> | ISuccess<S2.While | S2.Until> {
+function transform_loop (statement: S1.While | S1.Until, ast: S1.AST, module_name: string) : Failure<S2.Error[]> | Success<S2.While | S2.Until> {
   const errors_found: S2.Error[] = []
 
   const new_condition = transform_expression(statement.condition, ast, module_name)
@@ -255,7 +251,7 @@ function transform_loop (statement: S1.While | S1.Until, ast: S1.AST, module_nam
     if (statement.type == 'while') {
       const new_loop: S2.While = {
         type: statement.type,
-        condition: new_condition.result as PI.ExpElement[],
+        condition: new_condition.result as S0.ExpElement[],
         body: new_body.result as S2.Statement[]
       }
       return {error:false, result:new_loop}
@@ -263,7 +259,7 @@ function transform_loop (statement: S1.While | S1.Until, ast: S1.AST, module_nam
     else {
       const new_loop: S2.Until = {
         type: statement.type,
-        condition: new_condition.result as PI.ExpElement[],
+        condition: new_condition.result as S0.ExpElement[],
         body: new_body.result as S2.Statement[]
       }
       return {error:false, result:new_loop}
@@ -271,7 +267,7 @@ function transform_loop (statement: S1.While | S1.Until, ast: S1.AST, module_nam
   }
 }
 
-function transform_if (statement: S1.If, ast: S1.AST, module_name: string) : IError<S2.Error[]> | ISuccess<S2.If> {
+function transform_if (statement: S1.If, ast: S1.AST, module_name: string) : Failure<S2.Error[]> | Success<S2.If> {
   const errors_found: S2.Error[] = []
 
   const new_condition = transform_expression(statement.condition, ast, module_name)
@@ -298,7 +294,7 @@ function transform_if (statement: S1.If, ast: S1.AST, module_name: string) : IEr
   else {
     const new_if: S2.If = {
       type: 'if',
-      condition: new_condition.result as PI.ExpElement[],
+      condition: new_condition.result as S0.ExpElement[],
       true_branch: new_true_branch.result as S2.Statement[],
       false_branch: new_false_branch.result as S2.Statement[]
     }
@@ -307,7 +303,7 @@ function transform_if (statement: S1.If, ast: S1.AST, module_name: string) : IEr
   }
 }
 
-function transform_for (statement: S1.For, ast: S1.AST, module_name: string) : IError<S2.Error[]> | ISuccess<S2.For> {
+function transform_for (statement: S1.For, ast: S1.AST, module_name: string) : Failure<S2.Error[]> | Success<S2.For> {
   const errors_found: S2.Error[] = []
 
   const new_init = transform_assignment(statement.counter_init, ast, module_name)
@@ -335,7 +331,7 @@ function transform_for (statement: S1.For, ast: S1.AST, module_name: string) : I
     const new_for: S2.For = {
       type: 'for',
       counter_init: new_init.result as S2.Assignment,
-      last_value: new_goal.result as PI.ExpElement[],
+      last_value: new_goal.result as S0.ExpElement[],
       body: new_body.result as S2.Statement[]
     }
 
@@ -343,23 +339,23 @@ function transform_for (statement: S1.For, ast: S1.AST, module_name: string) : I
   }
 }
 
-function transform_return (ret_statement: PI.Return, ast: S1.AST, module_name: string) : IError<S2.Error[]>  | ISuccess<PI.Return> {
+function transform_return (ret_statement: S0.Return, ast: S1.AST, module_name: string) : Failure<S2.Error[]>  | Success<S0.Return> {
   const exp_returned = transform_expression(ret_statement.expression, ast, module_name)
 
   if (exp_returned.error) {
     return exp_returned
   }
   else {
-    const new_return: PI.Return = {
+    const new_return: S0.Return = {
       type: 'return',
-      expression: exp_returned.result as PI.ExpElement[]
+      expression: exp_returned.result as S0.ExpElement[]
     }
 
     return {error:false, result:new_return}
   }
 }
 
-function transform_invocation(invocation: PI.InvocationInfo, ast: S1.AST, module_name: string) : IError<S2.Error[]> | ISuccess<S2.InvocationInfo> {
+function transform_invocation(invocation: S0.InvocationInfo, ast: S1.AST, module_name: string) : Failure<S2.Error[]> | Success<S2.InvocationInfo> {
   if (invocation.indexes.length == 0) {
     const varinfo = get_variable_info(invocation.name, ast.local_variables, module_name)
 
@@ -379,7 +375,7 @@ function transform_invocation(invocation: PI.InvocationInfo, ast: S1.AST, module
   }
   else {
     const errors_found: S2.Error[] = []
-    const new_indexes: PI.ExpElement[][] = []
+    const new_indexes: S0.ExpElement[][] = []
 
     for (let index of invocation.indexes) {
       const new_index = transform_expression(index, ast, module_name)
@@ -417,7 +413,7 @@ function transform_invocation(invocation: PI.InvocationInfo, ast: S1.AST, module
   }
 }
 
-function transform_invocation_exp(invocation: PI.InvocationValue, ast: S1.AST, module_name: string) : IError<S2.Error[]> | ISuccess<S2.InvocationValue> {
+function transform_invocation_exp(invocation: S0.InvocationValue, ast: S1.AST, module_name: string) : Failure<S2.Error[]> | Success<S2.InvocationValue> {
   if (invocation.indexes.length == 0) {
     const varinfo = get_variable_info(invocation.name, ast.local_variables, module_name)
 
@@ -438,7 +434,7 @@ function transform_invocation_exp(invocation: PI.InvocationValue, ast: S1.AST, m
   }
   else {
     const errors_found: S2.Error[] = []
-    const new_indexes: PI.ExpElement[][] = []
+    const new_indexes: S0.ExpElement[][] = []
 
     for (let index of invocation.indexes) {
       const new_index = transform_expression(index, ast, module_name)
@@ -477,19 +473,19 @@ function transform_invocation_exp(invocation: PI.InvocationValue, ast: S1.AST, m
   }
 }
 
-function transform_expression (expression: PI.ExpElement[], ast: S1.AST, module_name: string) : IError<S2.Error[]> | ISuccess<PI.ExpElement[]>  {
+function transform_expression (expression: S0.ExpElement[], ast: S1.AST, module_name: string) : Failure<S2.Error[]> | Success<S0.ExpElement[]>  {
   const errors_found: S2.Error[] = []
-  const output: PI.ExpElement[] = []
+  const output: S0.ExpElement[] = []
 
   for (let element of expression) {
-    let new_element: IError<S2.Error[]> | ISuccess<PI.ExpElement>
+    let new_element: Failure<S2.Error[]> | Success<S0.ExpElement>
 
     switch (element.type) {
       case 'call':
-        new_element = transform_call(element as PI.Call, ast, module_name)
+        new_element = transform_call(element as S0.Call, ast, module_name)
         break
       case 'invocation':
-        new_element = transform_invocation_exp(element as PI.InvocationValue, ast, module_name)
+        new_element = transform_invocation_exp(element as S0.InvocationValue, ast, module_name)
       break
       case 'literal':
       case 'operator':
@@ -513,7 +509,7 @@ function transform_expression (expression: PI.ExpElement[], ast: S1.AST, module_
   }
 }
 
-function get_module_info (name: string, ast: S1.AST) : IError<S2.UndefinedModule[]> | ISuccess<S1.Module> {
+function get_module_info (name: string, ast: S1.AST) : Failure<S2.UndefinedModule[]> | Success<S1.Module> {
   if ( !(name in ast.modules.user_modules) ) {
     return {error:true, result:[{reason: '@call-undefined-module', name}]}
   }
@@ -522,7 +518,7 @@ function get_module_info (name: string, ast: S1.AST) : IError<S2.UndefinedModule
   }
 }
 
-function get_variable_info (name: string, variables: {[m:string]: S1.VariableDict}, module_name: string) : IError<S2.UndefinedVariable[]> | ISuccess<S2.VarInfo> {
+function get_variable_info (name: string, variables: {[m:string]: S1.VariableDict}, module_name: string) : Failure<S2.UndefinedVariable[]> | Success<S2.VarInfo> {
   const exists = name in variables[module_name] || name in variables['main']
   const variable = name in variables[module_name] ? variables[module_name][name]:variables['main'][name]
 

@@ -383,3 +383,117 @@ export namespace S1 {
     second_type: string
   }
 }
+
+/**
+ * Stage 2: decorates module calls with return type 
+ * and parameter info and variable invocations with
+ * variable dimensions.
+ */
+
+export namespace S2 {
+  export interface UndefinedModule {
+      name: string
+      reason: '@call-undefined-module'
+  }
+
+  export interface UndefinedVariable {
+    name: string
+    reason: 'undefined-variable'
+  }
+
+  export type Error = UndefinedModule | UndefinedVariable
+
+  export interface AST {
+    modules: {
+      main: Main
+      user_modules: {
+        [m: string]: Module
+      }
+    }
+    local_variables: {
+      main: S1.VariableDict
+      [m: string]: S1.VariableDict
+    }
+  }
+
+  // estas propiedades extra deben ser iguales a las de PI.UserModule 
+  export interface ModuleCall extends S0.Call {
+    module_type: 'function' | 'procedure'
+    parameters: S0.Parameter[]
+    return_type: 'entero' | 'real' | 'caracter' | 'logico' | 'ninguno' 
+  }
+
+  export interface Assignment {
+    type: 'assignment'
+    left: InvocationInfo
+    right: S0.ExpElement[]
+  }
+
+  export interface If extends S0.If {
+    true_branch: Statement[]
+    false_branch: Statement[]
+  }
+
+  export interface While extends S0.While {
+    body: Statement[]
+  }
+
+  export interface For extends S0.For {
+    body: Statement[]
+    counter_init: Assignment
+  }
+
+  export interface Until extends S0.Until {
+    body: Statement[]
+  }
+
+  export type Statement = ReadCall | WriteCall | ModuleCall | Assignment | If | While | For | Until | S0.Return 
+
+  export interface ReadCall extends S0.Call {
+    name: 'leer'
+  }
+
+  export interface WriteCall extends S0.Call {
+    name: 'escribir'
+  }
+  
+  export type Module = Function | Procedure 
+
+  export interface Main {
+    type: 'module'
+    name: 'main'
+    module_type: 'main'
+    body: Statement[]
+  }
+
+  export interface Function {
+    type: 'module'
+    name: string
+    module_type: 'function'
+    body: Statement[]
+    parameters: S0.Parameter[]
+    return_type: 'entero' | 'real' | 'caracter' | 'logico'
+  }
+
+  export interface Procedure {
+    type: 'module'
+    name: string
+    module_type: 'procedure'
+    body: Statement[]
+    parameters: S0.Parameter[]
+    return_type: 'ninguno'
+  }
+
+  export interface VarInfo {
+    dimensions: number[]
+    is_array: boolean
+  }
+
+  export interface InvocationInfo extends S0.InvocationInfo {
+    dimensions: number[]
+  }
+
+  export interface InvocationValue extends S0.InvocationValue {
+    dimensions: number[]
+  }
+}
