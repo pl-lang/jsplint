@@ -14,7 +14,7 @@ import {Evaluator, Value} from './Evaluator'
 
 import Emitter from '../utility/Emitter.js'
 
-import {Program} from '../interfaces/Program'
+import {S3} from '../interfaces'
 
 export default class Interpreter extends Emitter {
   private evaluator: Evaluator
@@ -22,7 +22,7 @@ export default class Interpreter extends Emitter {
   paused: boolean
   data_read: boolean
 
-  constructor(p: Program) {
+  constructor(p: S3.Program) {
     super(['program-started', 'program-resumed', 'program-paused', 'program-finished'])
 
     this.evaluator = new Evaluator(p)

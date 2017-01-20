@@ -1,8 +1,6 @@
 'use strict'
 
-import {Variable, RegularVariable, ArrayVariable, VariableDict} from '../interfaces/Stage1'
-import {IError as Failure, ISuccess as Success} from '../interfaces/Utility'
-import * as S4 from '../interfaces/Program'
+import {Failure, Success, S1, S3} from '../interfaces'
 
 /*
   Un evaluador sirve para ejecutar las acciones/enunciados de un modulo.
@@ -63,24 +61,24 @@ export interface Paused {
 export type SuccessfulReturn = Success<Read> | Success<Write> | Success<NullAction>
 
 export class Evaluator {
-  private readonly modules: {[p:string]: S4.Module}
-  private readonly entry_point: S4.Statement
-  private current_statement: S4.Statement
+  private readonly modules: {[p:string]: S3.Module}
+  private readonly entry_point: S3.Statement
+  private current_statement: S3.Statement
   private current_module: string
-  private readonly globals: VariableDict
-  private readonly locals: {[p:string]: VariableDict}
-  private readonly locals_stack: VariableDict[]
+  private readonly globals: S1.VariableDict
+  private readonly locals: {[p:string]: S1.VariableDict}
+  private readonly locals_stack: S1.VariableDict[]
   private readonly state: {
     done: boolean
     value_stack: Value[]
     module_stack: string[]
-    statement_stack: S4.Statement[]
+    statement_stack: S3.Statement[]
     last_report: Failure<OutOfBounds> | SuccessfulReturn | Success<Paused>
-    next_statement: S4.Statement
+    next_statement: S3.Statement
     paused: boolean
   }
 
-  constructor (program: S4.Program) {
+  constructor (program: S3.Program) {
     this.entry_point = program.entry_point
     this.modules = program.modules
     this.globals = program.local_variables.main
@@ -192,80 +190,80 @@ export class Evaluator {
    * evaluate
    * ejecuta los enunciados y establece el proximo enunciado
    */
-  private evaluate (s: S4.Statement) : Failure<OutOfBounds> | SuccessfulReturn {
+  private evaluate (s: S3.Statement) : Failure<OutOfBounds> | SuccessfulReturn {
     /**
      * Bandera que indica si el control del proximo enunciado se cede
      * a la función que lo evalua. Esto es verdadero para las estructuras
      * de control y  para las llamadas a funciones/procedimientos.
      */
-    const controls_next = s.kind == S4.StatementKinds.UserModuleCall ||
-    s.kind == S4.StatementKinds.If ||
-    s.kind == S4.StatementKinds.While ||
-    s.kind == S4.StatementKinds.Until ||
-    s.kind == S4.StatementKinds.Return;
+    const controls_next = s.kind == S3.StatementKinds.UserModuleCall ||
+    s.kind == S3.StatementKinds.If ||
+    s.kind == S3.StatementKinds.While ||
+    s.kind == S3.StatementKinds.Until ||
+    s.kind == S3.StatementKinds.Return;
 
     if (!controls_next) {
       this.state.next_statement = s.exit_point
     }
 
     switch (s.kind) {
-       case S4.StatementKinds.Plus:
+       case S3.StatementKinds.Plus:
         return this.plus()
-       case S4.StatementKinds.Minus:
+       case S3.StatementKinds.Minus:
         return this.minus()
-       case S4.StatementKinds.Times:
+       case S3.StatementKinds.Times:
         return this.times()
-       case S4.StatementKinds.Slash:
+       case S3.StatementKinds.Slash:
         return this.divide()
-       case S4.StatementKinds.Div:
+       case S3.StatementKinds.Div:
         return  this.div()
-       case S4.StatementKinds.Mod:
+       case S3.StatementKinds.Mod:
         return this.mod()
-       case S4.StatementKinds.Power:
+       case S3.StatementKinds.Power:
         return this.power()
-       case S4.StatementKinds.Assign:
+       case S3.StatementKinds.Assign:
         return this.assign(s)
-       case S4.StatementKinds.Get:
+       case S3.StatementKinds.Get:
         return this.get_value(s)
-       case S4.StatementKinds.AssignV:
+       case S3.StatementKinds.AssignV:
         return this.assignv(s)
-       case S4.StatementKinds.GetV:
+       case S3.StatementKinds.GetV:
         return this.getv_value(s)
-       case S4.StatementKinds.Push:
+       case S3.StatementKinds.Push:
         return this.push(s)
-       case S4.StatementKinds.Pop:
+       case S3.StatementKinds.Pop:
         return this.pop(s)
-       case S4.StatementKinds.Minor:
+       case S3.StatementKinds.Minor:
         return this.less()
-       case S4.StatementKinds.MinorEq:
+       case S3.StatementKinds.MinorEq:
         return this.less_or_equal()
-       case S4.StatementKinds.Different:
+       case S3.StatementKinds.Different:
         return this.different()
-       case S4.StatementKinds.Equal:
+       case S3.StatementKinds.Equal:
         return this.equal()
-       case S4.StatementKinds.Major:
+       case S3.StatementKinds.Major:
         return this.greater()
-       case S4.StatementKinds.MajorEq:
+       case S3.StatementKinds.MajorEq:
         return this.greater_or_equal()
-       case S4.StatementKinds.Not:
+       case S3.StatementKinds.Not:
         return this.not()
-       case S4.StatementKinds.And:
+       case S3.StatementKinds.And:
         return this.and()
-       case S4.StatementKinds.Or:
+       case S3.StatementKinds.Or:
         return this.or()
-       case S4.StatementKinds.If:
+       case S3.StatementKinds.If:
         return this.if_st(s)
-       case S4.StatementKinds.While:
+       case S3.StatementKinds.While:
         return this.while_st(s)
-       case S4.StatementKinds.Until:
+       case S3.StatementKinds.Until:
         return this.until_st(s)
-       case S4.StatementKinds.UserModuleCall:
+       case S3.StatementKinds.UserModuleCall:
         return this.call(s)
-       case S4.StatementKinds.ReadCall:
+       case S3.StatementKinds.ReadCall:
         return this.read(s)
-       case S4.StatementKinds.WriteCall:
+       case S3.StatementKinds.WriteCall:
         return this.write(s)
-       case S4.StatementKinds.Return:
+       case S3.StatementKinds.Return:
         /**
          * Esto termina con la ejecucion de la funcion en curso
          */
@@ -274,7 +272,7 @@ export class Evaluator {
     }
   }
 
-  private push (s: S4.Push) : Success<NullAction> {
+  private push (s: S3.Push) : Success<NullAction> {
     this.state.value_stack.push(s.value)
     return {error: false, result: {action: 'none', done: this.state.done}}
   }
@@ -282,28 +280,28 @@ export class Evaluator {
   /**
    * Creo que esta funcion no sirve. No se usa nunca.
    */
-  private pop (s: S4.Pop) : Success<NullAction> {
+  private pop (s: S3.Pop) : Success<NullAction> {
     this.state.value_stack.pop()
     return {error: false, result: {action: 'none', done: this.state.done}}
   }
 
-  private assign (s: S4.Assign) : Success<NullAction> {
-    const variable = this.get_var(s.varname) as RegularVariable
+  private assign (s: S3.Assign) : Success<NullAction> {
+    const variable = this.get_var(s.varname) as S1.RegularVariable
 
     variable.value = this.state.value_stack.pop()
 
     return {error: false, result: {action: 'none', done: this.state.done}}
   }
 
-  private get_value (s: S4.Get) : Success<NullAction> {
-    const variable = this.get_var(s.varname) as RegularVariable
+  private get_value (s: S3.Get) : Success<NullAction> {
+    const variable = this.get_var(s.varname) as S1.RegularVariable
 
     this.state.value_stack.push(variable.value)
 
     return {error: false, result: {action: 'none', done: this.state.done}}
   }
 
-  private assignv (s: S4.AssignV) : Failure<OutOfBounds> | Success<NullAction> {
+  private assignv (s: S3.AssignV) : Failure<OutOfBounds> | Success<NullAction> {
     const indexes = this.pop_indexes(s.total_indexes)
     
     if (this.is_whithin_bounds(indexes, s.dimensions)) {
@@ -315,7 +313,7 @@ export class Evaluator {
        */
       const index = this.calculate_index(indexes.map(i => i-1), s.dimensions)
       const value = this.state.value_stack.pop()
-      const variable = this.get_var(s.varname) as ArrayVariable
+      const variable = this.get_var(s.varname) as S1.ArrayVariable
       variable.values[index] = value
 
       return {error:false, result: {action: 'none', done: false}}
@@ -335,7 +333,7 @@ export class Evaluator {
     }
   }
 
-  private getv_value (s: S4.GetV) : Failure<OutOfBounds> | Success<NullAction> {
+  private getv_value (s: S3.GetV) : Failure<OutOfBounds> | Success<NullAction> {
     const indexes = this.pop_indexes(s.total_indexes)
     
     if (this.is_whithin_bounds(indexes, s.dimensions)) {
@@ -346,7 +344,7 @@ export class Evaluator {
        * (como los indices de JS) y no en 1
        */
       const index = this.calculate_index(indexes.map(i => i-1), s.dimensions)
-      const variable = this.get_var(s.varname) as ArrayVariable
+      const variable = this.get_var(s.varname) as S1.ArrayVariable
       const value = variable.values[index]
       this.state.value_stack.push(value)
 
@@ -384,7 +382,7 @@ export class Evaluator {
     return result.reverse()
   }
 
-  private get_var (vn: string) : Variable {
+  private get_var (vn: string) : S1.Variable {
     const locals = this.get_current_locals()
     if (vn in locals) {
       return locals[vn]
@@ -394,13 +392,13 @@ export class Evaluator {
     }
   }
 
-  private write (s: S4.WriteCall) : Success<Write> {
+  private write (s: S3.WriteCall) : Success<Write> {
     const v = this.state.value_stack.pop()
 
     return {error: false, result: {action: 'write', value: v, done: this.state.done}}
   }
 
-  private call (s: S4.UserModuleCall) : Success<NullAction> {
+  private call (s: S3.UserModuleCall) : Success<NullAction> {
 
     this.state.next_statement = this.modules[s.name].entry_point
     this.state.statement_stack.push(this.current_statement.exit_point)
@@ -411,12 +409,12 @@ export class Evaluator {
     return {error: false, result: {action: 'none', done: this.state.done}}
   }
 
-  private read (s: S4.ReadCall) : Success<Read> {
+  private read (s: S3.ReadCall) : Success<Read> {
     this.state.paused = true
     return {error: false, result: {action: 'read', done: this.state.done}}
   }
 
-  private if_st (s: S4.If) : Success<NullAction> {
+  private if_st (s: S3.If) : Success<NullAction> {
     const condition_result = this.state.value_stack.pop()
 
     this.state.next_statement = condition_result ? s.true_branch_entry:s.false_branch_entry
@@ -424,7 +422,7 @@ export class Evaluator {
     return {error: false, result: {action: 'none', done: this.state.done}}
   }
 
-  private while_st (s: S4.While) : Success<NullAction> {
+  private while_st (s: S3.While) : Success<NullAction> {
     const condition_result = this.state.value_stack.pop()
 
     this.state.next_statement = condition_result ? s.entry_point:s.exit_point
@@ -432,7 +430,7 @@ export class Evaluator {
     return {error: false, result: {action: 'none', done: this.state.done}}
   }
 
-  private until_st (s: S4.Until) : Success<NullAction> {
+  private until_st (s: S3.Until) : Success<NullAction> {
     const condition_result = this.state.value_stack.pop()
 
     this.state.next_statement = !condition_result ? s.entry_point:s.exit_point
@@ -628,15 +626,15 @@ export class Evaluator {
     return result
   }
 
-  private copy_locals (module_name: string) : VariableDict {
+  private copy_locals (module_name: string) : S1.VariableDict {
     const variables = this.locals[module_name]
-    const copy: VariableDict = {}
+    const copy: S1.VariableDict = {}
 
     for (let vn in variables) {
       const variable = variables[vn] 
       if (variable.is_array) {
         const {datatype, dimensions, is_array, name} = variable
-        const vcopy: ArrayVariable = {
+        const vcopy: S1.ArrayVariable = {
           datatype,
           dimensions,
           is_array,
@@ -647,7 +645,7 @@ export class Evaluator {
       }
       else if (variable.is_array == false) {
         const {datatype, dimensions, is_array, name} = variable
-        const vcopy: RegularVariable = {
+        const vcopy: S1.RegularVariable = {
           datatype,
           dimensions,
           is_array,
