@@ -1,5 +1,6 @@
 'use strict'
-import { EoFToken, Token } from './TokenTypes.js'
+import { EoFToken } from './TokenTypes'
+import {Token} from '../interfaces'
 
 export default class TokenQueue {
   private tokens : Token[]

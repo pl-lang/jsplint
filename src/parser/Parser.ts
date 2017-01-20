@@ -1,11 +1,10 @@
 'use strict'
 
 import Emitter from '../utility/Emitter'
-import {IError, ISuccess} from '../interfaces/Utility'
+import {Failure, Success, Token} from '../interfaces'
 import SourceWrapper from './SourceWrapper'
 import Lexer from './Lexer'
 import TokenQueue from './TokenQueue'
-import {Token} from './TokenTypes'
 import {MainModule as MainModulePattern, skipWhiteSpace} from './Patterns'
 import {FunctionModule as FunctionPattern, ProcedureModule as ProcedurePattern} from './Patterns'
 import {Main, Module, ParsedProgram, PatternError, Procedure, Function} from '../interfaces/ParsingInterfaces'
@@ -15,7 +14,7 @@ export default class Parser extends Emitter {
     super(['parsing-started', 'lexical-error', 'syntax-error', 'parsing-finished'])
   }
 
-  parse(code: string) : IError<string> | ISuccess<ParsedProgram>  {
+  parse(code: string) : Failure<string> | Success<ParsedProgram>  {
     this.emit('parsing-started')
 
     const source = new SourceWrapper(code)
@@ -53,7 +52,7 @@ export default class Parser extends Emitter {
       while (token_queue.current().name !== 'eof') {
         skipWhiteSpace(token_queue)
 
-        let module_match: (IError<PatternError> | ISuccess<Procedure>) | (IError<PatternError> | ISuccess<Function>)
+        let module_match: (Failure<PatternError> | Success<Procedure>) | (Failure<PatternError> | Success<Function>)
 
         if (token_queue.current().name == 'procedimiento') {
           module_match = ProcedurePattern(token_queue)

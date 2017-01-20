@@ -1,10 +1,8 @@
 'use strict'
 
-import { Token, EoFToken, WordToken, NumberToken, StringToken, SpecialSymbolToken, UnknownToken, SymbolKind } from './TokenTypes'
+import {Token, SymbolKind, LexicalError, Failure, Success} from '../interfaces'
 
-import { LexicalError } from './TokenTypes'
-
-import {IError, ISuccess} from '../interfaces/Utility'
+import { EoFToken, WordToken, NumberToken, StringToken, SpecialSymbolToken, UnknownToken } from './TokenTypes'
 
 import { isDigit, isLetter, isWhiteSpace } from '../utility/StringMethods'
 
@@ -26,7 +24,7 @@ export default class Lexer {
     if (source) this._source = source;
   }
 
-  tokenize(source : SourceWrapper) : IError<LexicalError[]> | ISuccess<Token[]> {
+  tokenize(source : SourceWrapper) : Failure<LexicalError[]> | Success<Token[]> {
     this.source = source;
 
     const tokens : Token[] = [];
