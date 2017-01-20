@@ -1,21 +1,23 @@
 'use strict'
 
-import * as S2 from '../interfaces/Stage2'
+// import * as S2 from '../interfaces/Stage2'
 
-import * as P from '../interfaces/Program'
+// import * as P from '../interfaces/Program'
 
-import {ISuccess as Success} from '../interfaces/Utility'
+// import {ISuccess as Success} from '../interfaces/Utility'
+
+// import {ExpElement, OperatorElement, LiteralValue, InvocationValue, Return} from '../interfaces/ParsingInterfaces'
+
+import {Success, S0, S2, S3} from '../interfaces'
 
 import {drop, arr_counter, arr_counter_inc, arr_counter_dec, arr_minor, arr_major, arr_equal} from '../utility/helpers'
 
-import {ExpElement, OperatorElement, LiteralValue, InvocationValue, Return} from '../interfaces/ParsingInterfaces'
-
-export default function transform (ast: S2.AST) : Success<P.Program> {
+export default function transform (ast: S2.AST) : Success<S3.Program> {
     const result = {
         entry_point: null,
         modules: {},
         local_variables: {}
-    } as P.Program
+    } as S3.Program
 
     const new_main = transform_main(ast.modules.main)
 
@@ -31,15 +33,15 @@ export default function transform (ast: S2.AST) : Success<P.Program> {
     return {error: false, result}
 }
 
-function transform_main (old_module: S2.Main) : P.Statement {
+function transform_main (old_module: S2.Main) : S3.Statement {
     return transform_body(old_module.body)
 }
 
-function transform_module (old_module: S2.Module, ast: S2.AST) : P.Module {
+function transform_module (old_module: S2.Module, ast: S2.AST) : S3.Module {
     /**
      * Copio los parametros
      */
-    const parameters: {[p: string]: P.Parameter} = {}
+    const parameters: {[p: string]: S3.Parameter} = {}
     for (let par of old_module.parameters) {
         const {name, by_ref, is_array, dimensions} = par
         parameters[name] = {name, by_ref, is_array}
@@ -49,8 +51,8 @@ function transform_module (old_module: S2.Module, ast: S2.AST) : P.Module {
      * Inicializo los parametros. Tienen que ser inicializados
      * de atras para adelante (del ultimo al primero).
      */
-    let first_init: P.Statement
-    let last_statement: P.Statement
+    let first_init: S3.Statement
+    let last_statement: S3.Statement
     for (let i = old_module.parameters.length - 1; i >= 0; i--) {
         const param = old_module.parameters[i]
         const fake_inv: S2.InvocationValue = {
@@ -67,7 +69,7 @@ function transform_module (old_module: S2.Module, ast: S2.AST) : P.Module {
         else {
             last_statement.exit_point = assignment
         }
-        last_statement = P.get_last(assignment)
+        last_statement = S3.get_last(assignment)
     }
 
     const body_entry = transform_body(old_module.body)
@@ -77,7 +79,7 @@ function transform_module (old_module: S2.Module, ast: S2.AST) : P.Module {
      */
     last_statement.exit_point = body_entry
 
-    const new_module: P.Module = {
+    const new_module: S3.Module = {
         entry_point: first_init,
         name: old_module.name,
         parameters: parameters
@@ -86,7 +88,7 @@ function transform_module (old_module: S2.Module, ast: S2.AST) : P.Module {
     return new_module
 }
 
-function transform_if (statement: S2.If) : P.Statement {
+function transform_if (statement: S2.If) : S3.Statement {
     /**
      * La condicion del if debe insertarse antes del propio if
      */
@@ -95,12 +97,12 @@ function transform_if (statement: S2.If) : P.Statement {
     /**
      * Ultimo enunciado de la condicion del if
      */
-    const last_statement = P.get_last(entry)
+    const last_statement = S3.get_last(entry)
 
     const true_entry = transform_body(statement.true_branch)
     const false_entry = transform_body(statement.false_branch)
 
-    const sif = new P.If(true_entry, false_entry)
+    const sif = new S3.If(true_entry, false_entry)
 
     /**
      * Hacer que la evaluacion de la condicion venga seguida del if
@@ -111,19 +113,19 @@ function transform_if (statement: S2.If) : P.Statement {
     return entry
 }
 
-function transform_while (statement: S2.While) : P.Statement {
+function transform_while (statement: S2.While) : S3.Statement {
     /**
      * condicion
      * bucle
      * condicion
      */
     const condition_entry = transform_expression(statement.condition)
-    const cond_last_st = P.get_last(condition_entry)
+    const cond_last_st = S3.get_last(condition_entry)
 
     const loop_body = transform_body(statement.body)
-    const body_last_st = P.get_last(loop_body)
+    const body_last_st = S3.get_last(loop_body)
 
-    const swhile = new P.While(loop_body)
+    const swhile = new S3.While(loop_body)
 
     cond_last_st.exit_point = swhile
 
@@ -132,9 +134,9 @@ function transform_while (statement: S2.While) : P.Statement {
     return condition_entry
 }
 
-function transform_until (statement: S2.Until) : P.Statement {
+function transform_until (statement: S2.Until) : S3.Statement {
     const body = transform_body(statement.body)
-    const body_last_st = P.get_last(body)
+    const body_last_st = S3.get_last(body)
 
     const condition = transform_expression(statement.condition)
     /**
@@ -143,16 +145,16 @@ function transform_until (statement: S2.Until) : P.Statement {
      */
     body_last_st.exit_point = condition
 
-    const last_st_condition = P.get_last(condition)
+    const last_st_condition = S3.get_last(condition)
 
-    const suntil = new P.Until(body)
+    const suntil = new S3.Until(body)
 
     last_st_condition.exit_point = suntil
 
     return body
 }
 
-function transform_for (statement: S2.For) : P.Statement {
+function transform_for (statement: S2.For) : S3.Statement {
     /**
      * Los bucles para tienen la siguiente estructura
      * 
@@ -176,30 +178,30 @@ function transform_for (statement: S2.For) : P.Statement {
      * Este es el enunciado de asignacion que inicializa el contador.
      */
     const init = transform_assignment(statement.counter_init)
-    const init_last = P.get_last(init)
+    const init_last = S3.get_last(init)
 
     /**
      * Ese debe engancharse con la condicion del while.
      * La condicion es <contador> <= <tope>
      */
     const left: S2.InvocationInfo = statement.counter_init.left
-    const counter_invocation: InvocationValue = {type:'invocation', name:left.name, is_array:left.is_array, indexes:left.indexes}
+    const counter_invocation: S0.InvocationValue = {type:'invocation', name:left.name, is_array:left.is_array, indexes:left.indexes}
 
-    const condition_exp: ExpElement[] = [counter_invocation, ...statement.last_value, {type:'operator', name:'minor-eq'}]
+    const condition_exp: S0.ExpElement[] = [counter_invocation, ...statement.last_value, {type:'operator', name:'minor-eq'}]
     const condition_entry = transform_expression(condition_exp)
-    const conditon_last = P.get_last(condition_entry)
+    const conditon_last = S3.get_last(condition_entry)
 
     /**
      * A la evaluacion de la condicion le sigue el cuerpo del bucle
      */
     const body = transform_body(statement.body)
-    const body_last = P.get_last(body)
+    const body_last = S3.get_last(body)
 
     /**
      * Y al cuepor del bucle le sigue el incremento del contador
      */
-    const increment_value: LiteralValue = {type:'literal', value:1}
-    const right: ExpElement[] = [counter_invocation, increment_value, {type:'operator', name:'plus'}]
+    const increment_value: S0.LiteralValue = {type:'literal', value:1}
+    const right: S0.ExpElement[] = [counter_invocation, increment_value, {type:'operator', name:'plus'}]
 
     /**
      * Enunciado S2 del incremento
@@ -214,7 +216,7 @@ function transform_for (statement: S2.For) : P.Statement {
      * Ahora ese enunciado de S2 debe convertirse en uno de Program
      */
     const incremement_entry = transform_assignment(assingment)
-    const increment_last = P.get_last(incremement_entry)
+    const increment_last = S3.get_last(incremement_entry)
 
     /**
      * Y ahora hay que enganchar todo:
@@ -226,7 +228,7 @@ function transform_for (statement: S2.For) : P.Statement {
      * -    condicion
      */
 
-    const swhile = new P.While(body)
+    const swhile = new S3.While(body)
 
     init_last.exit_point = condition_entry
     conditon_last.exit_point = swhile
@@ -236,47 +238,47 @@ function transform_for (statement: S2.For) : P.Statement {
     return init
 }
 
-function transform_call (call: S2.ModuleCall) : P.Statement {
+function transform_call (call: S2.ModuleCall) : S3.Statement {
     /**
      * Para transformar las llamadas solo hay que encadenar
      * la evaluacion de sus argumentos (en el orden en que aparecen)
      * con el Statement de llamada.
      */
-    const first_arg: P.Statement = transform_expression(call.args[0])
-    let last_statement = P.get_last(first_arg)
+    const first_arg: S3.Statement = transform_expression(call.args[0])
+    let last_statement = S3.get_last(first_arg)
 
     for (let i = 0; i < call.args.length - 1; i++) {
         const next_arg = transform_expression(call.args[i + 1])
         last_statement.exit_point = next_arg
-        last_statement = P.get_last(next_arg)
+        last_statement = S3.get_last(next_arg)
     }
 
-    const ucall = new P.UserModuleCall(call.name, call.args.length)
+    const ucall = new S3.UserModuleCall(call.name, call.args.length)
 
     last_statement.exit_point =  ucall
 
     return first_arg
 }
 
-function transform_write (wc: S2.WriteCall) : P.Statement {
+function transform_write (wc: S2.WriteCall) : S3.Statement {
     /**
      * Escribir es un procedimiento que toma solo un argumento,
      * en realidad.
      * Hay que hacer una llamada por cada argumento evaluado.
      */
-    const first_arg: P.Statement = transform_expression(wc.args[0])
-    let last_statement = P.get_last(first_arg)
+    const first_arg: S3.Statement = transform_expression(wc.args[0])
+    let last_statement = S3.get_last(first_arg)
 
-    const escribir_call = new P.WriteCall()
+    const escribir_call = new S3.WriteCall()
 
     last_statement.exit_point = escribir_call
     last_statement = escribir_call
 
     for (let i = 0; i < wc.args.length - 1; i++) {
         const next_arg = transform_expression(wc.args[i + 1])
-        const next_arg_last = P.get_last(next_arg)
+        const next_arg_last = S3.get_last(next_arg)
         last_statement.exit_point = next_arg
-        const wcall = new P.WriteCall()
+        const wcall = new S3.WriteCall()
         next_arg_last.exit_point = wcall
         last_statement = wcall
     }
@@ -284,15 +286,15 @@ function transform_write (wc: S2.WriteCall) : P.Statement {
     return first_arg
 }
 
-function transform_read (rc: S2.ReadCall) : P.Statement {
+function transform_read (rc: S2.ReadCall) : S3.Statement {
     /**
      * Leer tambien es un procedimiento de un solo argumento.
      * Por cada argumento hay que crear una llamada a leer y una asignacion.
      * La llamada a leer inserta el valor leido al tope de la pila.
      */
-    let first_call: P.Statement
-    let current_call: P.Statement
-    let last_statement: P.Statement
+    let first_call: S3.Statement
+    let current_call: S3.Statement
+    let last_statement: S3.Statement
     let current_var: S2.InvocationValue
     for (let i = 0; i < rc.args.length; i++) {
         /**
@@ -302,7 +304,7 @@ function transform_read (rc: S2.ReadCall) : P.Statement {
          */
         current_var = rc.args[i][0] as S2.InvocationValue
 
-        const lcall = new P.ReadCall(current_var.name)
+        const lcall = new S3.ReadCall(current_var.name)
 
         if (i == 0) {
             first_call = lcall
@@ -314,13 +316,13 @@ function transform_read (rc: S2.ReadCall) : P.Statement {
         const target_assignment = create_assignment(current_var)
 
         lcall.exit_point =  target_assignment
-        last_statement = P.get_last(target_assignment)
+        last_statement = S3.get_last(target_assignment)
     }
 
     return first_call
 }
 
-function create_assignment (v: S2.InvocationValue) : P.Statement {
+function create_assignment (v: S2.InvocationValue) : S3.Statement {
     if (v.is_array) {
         if (v.dimensions.length > v.indexes.length) {
             /**
@@ -332,14 +334,14 @@ function create_assignment (v: S2.InvocationValue) : P.Statement {
              */
             const dv = drop(v.indexes.length, v.dimensions)
             
-            let first_index: P.Statement
-            let last_statement: P.Statement
+            let first_index: S3.Statement
+            let last_statement: S3.Statement
             for (let i = arr_counter(g, 1); arr_minor(i, dv) || arr_equal(i, dv); arr_counter_inc(i, dv, 1)) {
                 /**
                  * Los indices que no fueron proprocionados seran completados con los del
                  * contador `i`
                  */
-                const missing_indexes: ExpElement[][] = i.map(create_literal_number_exp)
+                const missing_indexes: S0.ExpElement[][] = i.map(create_literal_number_exp)
                 const final_indexes = [...v.indexes, ...missing_indexes]
 
                 for (let j = 0; j < final_indexes.length; j++) {
@@ -355,9 +357,9 @@ function create_assignment (v: S2.InvocationValue) : P.Statement {
                         last_statement.exit_point = index_exp
                     }
 
-                    last_statement = P.get_last(index_exp)
+                    last_statement = S3.get_last(index_exp)
 
-                    const assignment = new P.AssignV(final_indexes.length, v.dimensions, v.name)
+                    const assignment = new S3.AssignV(final_indexes.length, v.dimensions, v.name)
 
                     last_statement.exit_point = assignment
 
@@ -369,14 +371,14 @@ function create_assignment (v: S2.InvocationValue) : P.Statement {
         }
         else {
             const first_index = transform_expression(v.indexes[0])
-            let last_statement = P.get_last(first_index)
+            let last_statement = S3.get_last(first_index)
             for (let i = 0; i < v.indexes.length - 1; i++) {
                 const next_index = transform_expression(v.indexes[i + 1])
                 last_statement.exit_point =  next_index
-                last_statement = P.get_last(next_index)
+                last_statement = S3.get_last(next_index)
             }
 
-            const assignment = new P.AssignV(v.indexes.length, v.dimensions, v.name)
+            const assignment = new S3.AssignV(v.indexes.length, v.dimensions, v.name)
 
             last_statement.exit_point = assignment
 
@@ -384,17 +386,17 @@ function create_assignment (v: S2.InvocationValue) : P.Statement {
         }
     }
     else {
-        const assignment = new P.Assign(v.name)
+        const assignment = new S3.Assign(v.name)
 
         return assignment
     }
 }
 
-function create_literal_number_exp (n: number) : LiteralValue[] {
+function create_literal_number_exp (n: number) : S0.LiteralValue[] {
     return [{type: 'literal', value: n}]
 }
 
-function transform_return (ret: Return) : P.Statement {
+function transform_return (ret: S0.Return) : S3.Statement {
     /**
      * Para transformar 'retornar' solo hay que transformar
      * su expresion. Una vez que se evalue eso, el retorno de
@@ -403,22 +405,22 @@ function transform_return (ret: Return) : P.Statement {
      * de la funcion donde se encuentra.
      */
     const entry = transform_expression(ret.expression)
-    const ret_statement = new P.Return()
-    P.get_last(entry).exit_point = ret_statement
+    const ret_statement = new S3.Return()
+    S3.get_last(entry).exit_point = ret_statement
 
     return entry
 }
 
-function transform_body (body: S2.Statement[]) : P.Statement {
+function transform_body (body: S2.Statement[]) : S3.Statement {
     if (body.length > 0) {
-        const entry_point: P.Statement = transform_statement(body[0])
+        const entry_point: S3.Statement = transform_statement(body[0])
 
-        let last_statement: P.Statement = P.get_last(entry_point)
+        let last_statement: S3.Statement = S3.get_last(entry_point)
 
         for (let i = 0; i < body.length - 1; i++) {
             const next_statement = transform_statement(body[i+1])
             last_statement.exit_point = next_statement
-            last_statement = P.get_last(next_statement)
+            last_statement = S3.get_last(next_statement)
         }
 
         return entry_point
@@ -428,7 +430,7 @@ function transform_body (body: S2.Statement[]) : P.Statement {
     }
 }
 
-function transform_statement (statement: S2.Statement) : P.Statement {
+function transform_statement (statement: S2.Statement) : S3.Statement {
     switch (statement.type) {
         case 'assignment':
             return transform_assignment(statement)
@@ -454,7 +456,7 @@ function transform_statement (statement: S2.Statement) : P.Statement {
     }
 }
 
-function transform_assignment (assignment: S2.Assignment) : P.Statement {
+function transform_assignment (assignment: S2.Assignment) : S3.Statement {
     /**
      * Primer enunciado de la evaluacion de la expresion que se debe asignar
      */
@@ -464,7 +466,7 @@ function transform_assignment (assignment: S2.Assignment) : P.Statement {
      * Este enunciado es el que finalmente pone el valor de la expresion en la
      * pila. Seguido de este va el enunciado de asignacion.
      */
-    let last_statement = P.get_last(entry_point)
+    let last_statement = S3.get_last(entry_point)
     
     if (assignment.left.dimensions.length > 0 && assignment.left.indexes.length < assignment.left.dimensions.length) {
         /**
@@ -480,7 +482,7 @@ function transform_assignment (assignment: S2.Assignment) : P.Statement {
          */
         for (let i = 0; i < assignment.left.indexes.length; i++) {
             const index_entry = transform_expression(assignment.left.indexes[i])
-            const index_last = P.get_last(index_entry)
+            const index_last = S3.get_last(index_entry)
             /**
              * Luego de apilar el valor de la expresion, hay que apilar el valor del indice
              */
@@ -504,20 +506,20 @@ function transform_assignment (assignment: S2.Assignment) : P.Statement {
             const v = assignment.left
 
             const first_index = transform_expression(v.indexes[0])
-            let index_last_st = P.get_last(first_index)
+            let index_last_st = S3.get_last(first_index)
 
             for (let i = 0; i < v.indexes.length - 1; i++) {
                 let next_index = transform_expression(v.indexes[i + 1])
                 index_last_st.exit_point = next_index
-                index_last_st = P.get_last(next_index) 
+                index_last_st = S3.get_last(next_index) 
             }
-            const assignv = new P.AssignV(v.indexes.length, v.dimensions, v.name)
+            const assignv = new S3.AssignV(v.indexes.length, v.dimensions, v.name)
 
             index_last_st.exit_point = assignv
             last_statement.exit_point = first_index
         }
         else {
-            const assign = new P.Assign(assignment.left.name)
+            const assign = new S3.Assign(assignment.left.name)
             last_statement.exit_point = assign
         }
     }
@@ -525,7 +527,7 @@ function transform_assignment (assignment: S2.Assignment) : P.Statement {
     return entry_point
 }
 
-function transform_invocation (i: S2.InvocationValue) : P.Statement {
+function transform_invocation (i: S2.InvocationValue) : S3.Statement {
     if (i.is_array) {
         if (i.dimensions.length > i.indexes.length) {
             /**
@@ -541,8 +543,8 @@ function transform_invocation (i: S2.InvocationValue) : P.Statement {
              */
             const smallest_index = arr_counter(g, 1)
             
-            let first_index: P.Statement
-            let last_statement: P.Statement
+            let first_index: S3.Statement
+            let last_statement: S3.Statement
             /**
              * dv.slice(0) hace una copia de dv
              */
@@ -551,7 +553,7 @@ function transform_invocation (i: S2.InvocationValue) : P.Statement {
                  * Los indices que no fueron proprocionados seran completados con los del
                  * contador `i`
                  */
-                const missing_indexes: ExpElement[][] = j.map(create_literal_number_exp)
+                const missing_indexes: S0.ExpElement[][] = j.map(create_literal_number_exp)
                 const final_indexes = [...i.indexes, ...missing_indexes]
 
                 for (let k = 0; k < final_indexes.length; k++) {
@@ -567,9 +569,9 @@ function transform_invocation (i: S2.InvocationValue) : P.Statement {
                         last_statement.exit_point = index_exp
                     }
 
-                    last_statement = P.get_last(index_exp)
+                    last_statement = S3.get_last(index_exp)
 
-                    const invocation = new P.GetV(final_indexes.length, i.dimensions, i.name)
+                    const invocation = new S3.GetV(final_indexes.length, i.dimensions, i.name)
 
                     last_statement.exit_point = invocation
 
@@ -581,14 +583,14 @@ function transform_invocation (i: S2.InvocationValue) : P.Statement {
         }
         else {
             const first_index = transform_expression(i.indexes[0])
-            let last_statement = P.get_last(first_index)
+            let last_statement = S3.get_last(first_index)
             for (let j = 1; j < i.indexes.length; j++) {
                 const next_index = transform_expression(i.indexes[j])
                 last_statement.exit_point = next_index
-                last_statement = P.get_last(next_index)
+                last_statement = S3.get_last(next_index)
             }
             
-            const getv = new P.GetV(i.indexes.length, i.dimensions, i.name)
+            const getv = new S3.GetV(i.indexes.length, i.dimensions, i.name)
 
             last_statement.exit_point = getv
 
@@ -596,63 +598,63 @@ function transform_invocation (i: S2.InvocationValue) : P.Statement {
         }
     }
     else {
-        const geti = new P.Get(i.name)
+        const geti = new S3.Get(i.name)
 
         return geti
     }
 }
 
-function transform_expression (expression: ExpElement[]) : P.Statement {
+function transform_expression (expression: S0.ExpElement[]) : S3.Statement {
     const statements = expression.map(transform_exp_element)
     const entry = statements[0]
-    let last_statement: P.Statement = P.get_last(entry)
+    let last_statement: S3.Statement = S3.get_last(entry)
     for (let i = 0; i < statements.length - 1; i++) {
         last_statement.exit_point = statements[i + 1]
-        last_statement = P.get_last(statements[i + 1])
+        last_statement = S3.get_last(statements[i + 1])
     }
     
     return entry
 }
 
-function transform_exp_element (element: ExpElement) : P.Statement {
+function transform_exp_element (element: S0.ExpElement) : S3.Statement {
   switch (element.type) {
     case 'operator':
-      switch ((element as OperatorElement).name) {
+      switch ((element as S0.OperatorElement).name) {
         case 'times':
-            return new P.Operation(P.StatementKinds.Times)
+            return new S3.Operation(S3.StatementKinds.Times)
         case 'slash':
-            return new P.Operation(P.StatementKinds.Slash)
+            return new S3.Operation(S3.StatementKinds.Slash)
         case 'power':
-            return new P.Operation(P.StatementKinds.Power)
+            return new S3.Operation(S3.StatementKinds.Power)
         case 'div':
-            return new P.Operation(P.StatementKinds.Div)
+            return new S3.Operation(S3.StatementKinds.Div)
         case 'mod':
-            return new P.Operation(P.StatementKinds.Mod)
+            return new S3.Operation(S3.StatementKinds.Mod)
         case 'minus':
-            return new P.Operation(P.StatementKinds.Minus)
+            return new S3.Operation(S3.StatementKinds.Minus)
         case 'plus':
-            return new P.Operation(P.StatementKinds.Plus)
+            return new S3.Operation(S3.StatementKinds.Plus)
         case 'minor':
-            return new P.Operation(P.StatementKinds.Minor)
+            return new S3.Operation(S3.StatementKinds.Minor)
         case 'minor-eq':
-            return new P.Operation(P.StatementKinds.MinorEq)
+            return new S3.Operation(S3.StatementKinds.MinorEq)
         case 'major':
-            return new P.Operation(P.StatementKinds.Major)
+            return new S3.Operation(S3.StatementKinds.Major)
         case 'major-eq':
-            return new P.Operation(P.StatementKinds.MajorEq)
+            return new S3.Operation(S3.StatementKinds.MajorEq)
         case 'equal':
-            return new P.Operation(P.StatementKinds.Equal)
+            return new S3.Operation(S3.StatementKinds.Equal)
         case 'not':
-            return new P.Operation(P.StatementKinds.Not)
+            return new S3.Operation(S3.StatementKinds.Not)
         case 'different':
-            return new P.Operation(P.StatementKinds.Different)
+            return new S3.Operation(S3.StatementKinds.Different)
         case 'and':
-            return new P.Operation(P.StatementKinds.And)
+            return new S3.Operation(S3.StatementKinds.And)
         case 'or':
-            return new P.Operation(P.StatementKinds.Or)
+            return new S3.Operation(S3.StatementKinds.Or)
       }
     case 'literal':
-        return new P.Push((element as LiteralValue).value)
+        return new S3.Push((element as S0.LiteralValue).value)
     case 'invocation':
         return transform_invocation(element as S2.InvocationValue)
     case 'call':
