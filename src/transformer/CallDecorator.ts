@@ -161,7 +161,7 @@ function transform_assignment (assignment: S0.Assignment, ast: S1.AST, module_na
     const new_assignment: S2.Assignment = {
       type:'assignment',
       left:variable.result as S2.InvocationInfo,
-      right:payload.result as S0.ExpElement[]
+      right:payload.result as S2.ExpElement[]
     }
 
     return {error:false, result:new_assignment}
@@ -179,7 +179,7 @@ function transform_call (call: S0.Call, ast: S1.AST, module_name: string) : Fail
 
   const errors_found: S2.Error[] = []
 
-  const args: S0.ExpElement[][] = []
+  const args: S2.ExpElement[][] = []
 
   for (let arg of call.args) {
     const new_arg= transform_expression(arg, ast, module_name)
@@ -251,7 +251,7 @@ function transform_loop (statement: S1.While | S1.Until, ast: S1.AST, module_nam
     if (statement.type == 'while') {
       const new_loop: S2.While = {
         type: statement.type,
-        condition: new_condition.result as S0.ExpElement[],
+        condition: new_condition.result as S2.ExpElement[],
         body: new_body.result as S2.Statement[]
       }
       return {error:false, result:new_loop}
@@ -259,7 +259,7 @@ function transform_loop (statement: S1.While | S1.Until, ast: S1.AST, module_nam
     else {
       const new_loop: S2.Until = {
         type: statement.type,
-        condition: new_condition.result as S0.ExpElement[],
+        condition: new_condition.result as S2.ExpElement[],
         body: new_body.result as S2.Statement[]
       }
       return {error:false, result:new_loop}
@@ -294,7 +294,7 @@ function transform_if (statement: S1.If, ast: S1.AST, module_name: string) : Fai
   else {
     const new_if: S2.If = {
       type: 'if',
-      condition: new_condition.result as S0.ExpElement[],
+      condition: new_condition.result as S2.ExpElement[],
       true_branch: new_true_branch.result as S2.Statement[],
       false_branch: new_false_branch.result as S2.Statement[]
     }
@@ -331,7 +331,7 @@ function transform_for (statement: S1.For, ast: S1.AST, module_name: string) : F
     const new_for: S2.For = {
       type: 'for',
       counter_init: new_init.result as S2.Assignment,
-      last_value: new_goal.result as S0.ExpElement[],
+      last_value: new_goal.result as S2.ExpElement[],
       body: new_body.result as S2.Statement[]
     }
 
@@ -473,23 +473,26 @@ function transform_invocation_exp(invocation: S0.InvocationValue, ast: S1.AST, m
   }
 }
 
-function transform_expression (expression: S0.ExpElement[], ast: S1.AST, module_name: string) : Failure<S2.Error[]> | Success<S0.ExpElement[]>  {
+function transform_expression (expression: S0.ExpElement[], ast: S1.AST, module_name: string) : Failure<S2.Error[]> | Success<S2.ExpElement[]>  {
   const errors_found: S2.Error[] = []
-  const output: S0.ExpElement[] = []
+  const output: S2.ExpElement[] = []
 
   for (let element of expression) {
-    let new_element: Failure<S2.Error[]> | Success<S0.ExpElement>
+    let new_element: Failure<S2.Error[]> | Success<S2.ExpElement>
 
     switch (element.type) {
       case 'call':
-        new_element = transform_call(element as S0.Call, ast, module_name)
+        new_element = transform_call(element as S0.Call, ast, module_name) as (Failure<S2.Error[]> | Success<S2.ModuleCall>)
         break
       case 'invocation':
         new_element = transform_invocation_exp(element as S0.InvocationValue, ast, module_name)
       break
       case 'literal':
+        new_element = {error:false, result:element as S0.LiteralValue}
+        break
       case 'operator':
-        new_element = {error:false, result:element}
+        new_element = {error:false, result:element as S0.OperatorElement}
+        break
     }
 
 

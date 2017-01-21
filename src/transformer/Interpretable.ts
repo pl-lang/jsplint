@@ -1,13 +1,5 @@
 'use strict'
 
-// import * as S2 from '../interfaces/Stage2'
-
-// import * as P from '../interfaces/Program'
-
-// import {ISuccess as Success} from '../interfaces/Utility'
-
-// import {ExpElement, OperatorElement, LiteralValue, InvocationValue, Return} from '../interfaces/ParsingInterfaces'
-
 import {Success, S0, S2, S3} from '../interfaces'
 
 import {drop, arr_counter, arr_counter_inc, arr_counter_dec, arr_minor, arr_major, arr_equal} from '../utility/helpers'
@@ -185,9 +177,15 @@ function transform_for (statement: S2.For) : S3.Statement {
      * La condicion es <contador> <= <tope>
      */
     const left: S2.InvocationInfo = statement.counter_init.left
-    const counter_invocation: S0.InvocationValue = {type:'invocation', name:left.name, is_array:left.is_array, indexes:left.indexes}
+    const counter_invocation: S2.InvocationValue = {
+        type:'invocation',
+        name:left.name,
+        is_array:left.is_array,
+        indexes:left.indexes,
+        dimensions: left.dimensions
+    }
 
-    const condition_exp: S0.ExpElement[] = [counter_invocation, ...statement.last_value, {type:'operator', name:'minor-eq'}]
+    const condition_exp: S2.ExpElement[] = [counter_invocation, ...statement.last_value, {type:'operator', name:'minor-eq'} as S0.OperatorElement]
     const condition_entry = transform_expression(condition_exp)
     const conditon_last = S3.get_last(condition_entry)
 
@@ -201,7 +199,7 @@ function transform_for (statement: S2.For) : S3.Statement {
      * Y al cuepor del bucle le sigue el incremento del contador
      */
     const increment_value: S0.LiteralValue = {type:'literal', value:1}
-    const right: S0.ExpElement[] = [counter_invocation, increment_value, {type:'operator', name:'plus'}]
+    const right: S2.ExpElement[] = [counter_invocation, increment_value, {type:'operator', name:'plus'} as S0.OperatorElement]
 
     /**
      * Enunciado S2 del incremento

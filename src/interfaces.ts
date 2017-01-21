@@ -385,9 +385,9 @@ export namespace S1 {
 }
 
 /**
- * Stage 2: decorates module calls with return type 
- * and parameter info and variable invocations with
- * variable dimensions.
+ * Stage 2: decorates module (calls with return type 
+ * and parameter info) and variable invocations (with
+ * their respective variables' dimension).
  */
 
 export namespace S2 {
@@ -418,6 +418,7 @@ export namespace S2 {
 
   // estas propiedades extra deben ser iguales a las de PI.UserModule 
   export interface ModuleCall extends S0.Call {
+    args: ExpElement[][]
     module_type: 'function' | 'procedure'
     parameters: S0.Parameter[]
     return_type: 'entero' | 'real' | 'caracter' | 'logico' | 'ninguno' 
@@ -426,34 +427,44 @@ export namespace S2 {
   export interface Assignment {
     type: 'assignment'
     left: InvocationInfo
-    right: S0.ExpElement[]
+    right: ExpElement[]
   }
 
+  export type ExpValue = InvocationValue | ModuleCall | S0.LiteralValue
+  
+  export type ExpElement = ExpValue | S0.OperatorElement
+
   export interface If extends S0.If {
+    condition: ExpElement[]
     true_branch: Statement[]
     false_branch: Statement[]
   }
 
   export interface While extends S0.While {
+    condition: ExpElement[]
     body: Statement[]
   }
 
   export interface For extends S0.For {
+    last_value: ExpElement[]
     body: Statement[]
     counter_init: Assignment
   }
 
   export interface Until extends S0.Until {
+    condition: ExpElement[]
     body: Statement[]
   }
 
   export type Statement = ReadCall | WriteCall | ModuleCall | Assignment | If | While | For | Until | S0.Return 
 
   export interface ReadCall extends S0.Call {
+    args: ExpElement[][]
     name: 'leer'
   }
 
   export interface WriteCall extends S0.Call {
+    args: ExpElement[][]
     name: 'escribir'
   }
 
