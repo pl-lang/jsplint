@@ -146,6 +146,11 @@ export namespace S0 {
     dimensions: number[] 
   }
 
+  /**
+   * InvocationInfo se usa del lado izquierdo de
+   * una asignacion, es decir, contiene informacion
+   * sobre la variable a la que se va a asignar algo.
+   */
   export interface InvocationInfo {
     name: string
     is_array: boolean
@@ -228,7 +233,7 @@ export namespace S0 {
   }
 
   export interface TypedDeclaration extends DeclarationInfo {
-    datatype: string
+    datatype: TypeNameString
   }
 
   export interface Declaration {
@@ -496,16 +501,21 @@ export namespace S2 {
   }
 
   export interface VarInfo {
+    datatype: TypeNameString
     dimensions: number[]
     is_array: boolean
   }
 
   export interface InvocationInfo extends S0.InvocationInfo {
+    datatype: TypeNameString
     dimensions: number[]
+    indexes: ExpElement[][]
   }
 
   export interface InvocationValue extends S0.InvocationValue {
     dimensions: number[]
+    datatype: TypeNameString
+    indexes: ExpElement[][]
   }
 }
 
@@ -764,4 +774,125 @@ export namespace S3 {
 
   export type Statement = While | If | Until | UserModuleCall | ReadCall | WriteCall | Assign | Get | Operation | AssignV | GetV | Push | Pop | Return
 
+}
+
+/**
+ * Stage 4:
+ */
+
+export namespace Typed {
+  export interface ExtraIndexesError {
+      reason: '@invocation-extra-indexes'
+      name: string
+      dimensions: number
+      indexes: number
+  }
+
+  export interface Program {
+      [m:string]: Module
+  }
+
+  export interface Module {
+      module_type: 'function' | 'procedure' | 'main'
+      body: Statement[]
+      return_type: 'entero' | 'real' | 'caracter' | 'logico' | 'ninguno'
+      parameters: S0.Parameter[]
+  }
+
+  export type Statement = For
+      | While
+      | Until
+      | If
+      | Assignment;
+      // | Call
+      // | Return
+      // | ReadCall
+      // | WriteCall;
+
+  export interface For {
+      type: 'for'
+      counter_init: ExpElement[]
+      last_value: ExpElement[]
+      body: Statement[]
+  }
+
+  export interface While {
+      type: 'while'
+      condition: ExpElement[]
+      body: Statement[]
+  }
+
+  export interface Until {
+      type: 'until'
+      condition: ExpElement[]
+      body: Statement[]
+  }
+
+  export interface If {
+      type: 'if'
+      condition: ExpElement[]
+      true_branch: Statement[]
+      false_branch: Statement[]
+  }
+
+  export interface Assignment {
+      type: 'assignment'
+      left: Invocation
+      right: ExpElement[]
+  }
+
+  export interface Invocation {
+    type: 'invocation'
+    datatype: Type
+    indextypes: ExpElement[][]
+  }
+
+  export type ExpElement = Type | Invocation | Operator
+
+  export interface Type {
+      type: 'type'
+      kind: 'atomic' | 'array'
+  }
+
+  export interface Operator {
+      type: 'operator'
+      name: string
+  }
+
+  export class ArrayType implements Type {
+      type: 'type'
+      kind: 'array'
+      length: number
+      cell_type: Type
+
+    constructor(element_type: Type, length: number) {
+        this.kind = 'array'
+        this.type = 'type'
+        this.length = length
+        this.cell_type = element_type
+    }
+  }
+
+  export class AtomicType implements Type {
+      type: 'type'
+      kind: 'atomic'
+      typename: 'entero' | 'real' | 'caracter' | 'logico'
+
+      constructor (tn: TypeNameString) {
+          this.typename = tn
+      }
+  }
+
+  export class StringType extends ArrayType {
+    constructor(length: number) {
+      super(new AtomicType('caracter'), length)
+    }
+  }
+}
+
+export type TransformError = Failure<S1.RepeatedVarError[]> | Failure<(S2.UndefinedModule | S2.UndefinedVariable)[]> | Failure<Typed.ExtraIndexesError[]>
+
+export interface TransformedProgram {
+    typed_program: Typed.Program,
+    program: S3.Program
 }
