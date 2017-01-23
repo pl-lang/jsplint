@@ -42,7 +42,7 @@ if (args.length > 0) {
                 console.log(ir)
             }
             else if (ir.error == false) {
-                const irs = procesar(ir.result)
+                const irs = procesar(ir.result.program)
                 console.log(`Archivo ${total + 1} procesado exitosamente`)
                 if (guardar_resultado) {
                     writeFileSync(arg + '_procesado', irs, {encoding:'utf8'})

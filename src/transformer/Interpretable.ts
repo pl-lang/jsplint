@@ -52,7 +52,8 @@ function transform_module (old_module: S2.Module, ast: S2.AST) : S3.Module {
             indexes: [],
             is_array: param.is_array,
             name: param.name,
-            type: 'invocation'
+            type: 'invocation',
+            datatype: param.type
         }
         const assignment = create_assignment(fake_inv)
         if (i == old_module.parameters.length - 1) {
@@ -182,7 +183,8 @@ function transform_for (statement: S2.For) : S3.Statement {
         name:left.name,
         is_array:left.is_array,
         indexes:left.indexes,
-        dimensions: left.dimensions
+        dimensions: left.dimensions,
+        datatype: left.datatype
     }
 
     const condition_exp: S2.ExpElement[] = [counter_invocation, ...statement.last_value, {type:'operator', name:'minor-eq'} as S0.OperatorElement]

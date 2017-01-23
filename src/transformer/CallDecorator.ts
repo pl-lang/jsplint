@@ -367,7 +367,8 @@ function transform_invocation(invocation: S0.InvocationInfo, ast: S1.AST, module
         name: invocation.name,
         is_array: varinfo.result.is_array,
         indexes: invocation.indexes,
-        dimensions: varinfo.result.dimensions
+        dimensions: varinfo.result.dimensions,
+        datatype: varinfo.result.datatype
       }
 
       return {error:false, result:new_invocation}
@@ -401,7 +402,8 @@ function transform_invocation(invocation: S0.InvocationInfo, ast: S1.AST, module
           name: invocation.name,
           is_array: varinfo.result.is_array,
           indexes: new_indexes,
-          dimensions: varinfo.result.dimensions
+          dimensions: varinfo.result.dimensions,
+          datatype: varinfo.result.datatype
         }
 
         return {error:false, result:new_invocation}
@@ -426,7 +428,8 @@ function transform_invocation_exp(invocation: S0.InvocationValue, ast: S1.AST, m
         name: invocation.name,
         is_array: varinfo.result.is_array,
         indexes: invocation.indexes,
-        dimensions: varinfo.result.dimensions
+        dimensions: varinfo.result.dimensions,
+        datatype: varinfo.result.datatype
       }
 
       return {error:false, result:new_invocation}
@@ -461,7 +464,8 @@ function transform_invocation_exp(invocation: S0.InvocationValue, ast: S1.AST, m
           name: invocation.name,
           is_array: invocation.is_array,
           indexes: new_indexes,
-          dimensions: varinfo.result.dimensions
+          dimensions: varinfo.result.dimensions,
+          datatype: varinfo.result.datatype
         }
 
         return {error:false, result:new_invocation}
@@ -526,7 +530,7 @@ function get_variable_info (name: string, variables: {[m:string]: S1.VariableDic
   const variable = name in variables[module_name] ? variables[module_name][name]:variables['main'][name]
 
   if (exists) {
-    return {error:false, result:{dimensions: variable.dimensions, is_array: variable.is_array}}
+    return {error:false, result:{datatype: variable.datatype, dimensions: variable.dimensions, is_array: variable.is_array}}
   }
   else return {error:true, result:[{reason:'undefined-variable', name}]}
 }

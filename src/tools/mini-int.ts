@@ -32,7 +32,7 @@ if (args.length > 0) {
                 console.log(p)
             }
             else if (p.error == false) {
-                const interpreter = new Interpreter(p.result)
+                const interpreter = new Interpreter(p.result.program)
 
                 interpreter.on('program-started', () => {
                     console.log('Evento: program-started\n')
