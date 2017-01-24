@@ -876,10 +876,12 @@ export namespace Typed {
   export class AtomicType implements Type {
       type: 'type'
       kind: 'atomic'
-      typename: 'entero' | 'real' | 'caracter' | 'logico'
+      typename: TypeNameString
 
       constructor (tn: TypeNameString) {
-          this.typename = tn
+        this.kind = 'atomic'
+        this.type = 'type'
+        this.typename = tn
       }
   }
 
@@ -895,4 +897,34 @@ export type TransformError = Failure<S1.RepeatedVarError[]> | Failure<(S2.Undefi
 export interface TransformedProgram {
     typed_program: Typed.Program,
     program: S3.Program
+}
+
+export interface TypeError {
+    where: 'typechecker'
+    reason: string
+}
+
+export interface MissingOperands extends TypeError {
+    reason: 'missing-operands'
+    operator: string
+    required: number
+}
+
+export interface IncompatibleOperand extends TypeError {
+    reason: 'incompatible-operand'
+    operator: string
+    bad_type: string
+}
+
+export interface IncompatibleOperands extends TypeError {
+    reason: 'incompatible-operands'
+    operator: string
+    bad_type_a: string
+    bad_type_b: string
+}
+
+export interface IncompatibleTypesError extends TypeError {
+    reason: '@assignment-incompatible-types'
+    expected: string
+    received: string
 }
