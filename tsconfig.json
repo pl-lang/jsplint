@@ -1,6 +1,5 @@
 {
     "compilerOptions": {
-        "allowJs": true,
         "noImplicitAny": true,
         "outDir": "./dist",
         "target" : "es5",
