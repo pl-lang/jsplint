@@ -32,7 +32,7 @@ export enum ValueKind {
 }
 
 export enum SymbolKind {
-  Plus = ValueKind.String + 1,
+  Plus = 3,
   Minus,
   Times,
   Slash,
@@ -54,7 +54,7 @@ export enum SymbolKind {
 }
 
 export enum ReservedKind {
-  Si = SymbolKind.EOL + 1,
+  Si = 22,
   Or,
   Fin,
   Que,
