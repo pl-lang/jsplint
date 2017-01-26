@@ -1369,7 +1369,7 @@ export function FunctionModule (source: TokenQueue) : Failure<PatternError> | Su
     name: name.result as string,
     parameters: parameters.result as S0.Parameter[],
     body: function_body,
-    return_type: typename.result as TypeNameString
+    return_type: typename.result as ('entero' | 'real' | 'caracter' | 'logico')
   }
 
   return {error:false, result}

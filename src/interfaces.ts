@@ -127,7 +127,7 @@ export interface PatternError {
 
 export type DataTypeKind = ReservedKind.Entero | ReservedKind.Real | ReservedKind.Logico | ReservedKind.Caracter
 
-export type TypeNameString = 'entero' | 'real' | 'logico' | 'caracter'
+export type TypeNameString = 'entero' | 'real' | 'logico' | 'caracter' | 'ninguno'
 
 /**
  * Stage0 (not yet transformed) statements and expressions
@@ -426,7 +426,7 @@ export namespace S2 {
     args: ExpElement[][]
     module_type: 'function' | 'procedure'
     parameters: S0.Parameter[]
-    return_type: 'entero' | 'real' | 'caracter' | 'logico' | 'ninguno' 
+    return_type: TypeNameString
   }
 
   export interface Assignment {
@@ -461,17 +461,7 @@ export namespace S2 {
     body: Statement[]
   }
 
-  export type Statement = ReadCall | WriteCall | ModuleCall | Assignment | If | While | For | Until | S0.Return 
-
-  export interface ReadCall extends S0.Call {
-    args: ExpElement[][]
-    name: 'leer'
-  }
-
-  export interface WriteCall extends S0.Call {
-    args: ExpElement[][]
-    name: 'escribir'
-  }
+  export type Statement = ModuleCall | Assignment | If | While | For | Until | S0.Return 
 
   export type Module = Function | Procedure 
 
@@ -803,8 +793,8 @@ export namespace Typed {
       | While
       | Until
       | If
-      | Assignment;
-      // | Call
+      | Assignment
+      | Call;
       // | Return
       // | ReadCall
       // | WriteCall;
@@ -847,7 +837,15 @@ export namespace Typed {
     indextypes: ExpElement[][]
   }
 
-  export type ExpElement = Type | Invocation | Operator
+  export interface Call {
+    type: 'call'
+    datatype: AtomicType // tipo de dato del valor que esta llamada retorna
+    argtypes: ExpElement[][] // tipos de los argumentos usados en la llamada
+    paramtypes: Type[] // tipos de los parametros declarados para este modulo
+    name: string
+  }
+
+  export type ExpElement = Type | Invocation | Call | Operator
 
   export interface Type {
       type: 'type'
@@ -927,6 +925,19 @@ export interface IncompatibleTypesError extends TypeError {
     reason: '@assignment-incompatible-types'
     expected: string
     received: string
+}
+
+export interface IncompatibleArgumentError extends TypeError {
+    reason: '@call-incompatible-argument'
+    expected: string
+    received: string
+    index: number
+}
+
+export interface BadIOArgument extends TypeError {
+    reason: 'bad-io-argument'
+    received: string
+    index: number
 }
 
 /**

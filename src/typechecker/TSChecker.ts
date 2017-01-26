@@ -1,5 +1,6 @@
 import {Typed, Failure, Success} from '../interfaces'
-import {TypeError, MissingOperands, IncompatibleOperand, IncompatibleOperands, IncompatibleTypesError} from '../interfaces'
+import {TypeError, MissingOperands, IncompatibleOperand, IncompatibleOperands, IncompatibleTypesError, IncompatibleArgumentError} from '../interfaces'
+import {BadIOArgument} from '../interfaces'
 
 export default function check (p: Typed.Program): TypeError[] {
     let errors: TypeError[] = []
@@ -21,9 +22,132 @@ function check_statement (s: Typed.Statement): TypeError[] {
     switch (s.type) {
         case 'assignment':
             return check_assignment(s)
+        case 'call':
+            {
+                const report = check_call(s)
+                return report.error ? report.result:[]
+            }
         default:
-            console.log('hola')
+            console.log(`El chequeo de enunciados '${s.type}' todavia no fue implementado.`)
             break
+    }
+}
+
+function check_call (c: Typed.Call): Failure<TypeError[]>|Success<Typed.AtomicType> {
+    /**
+     * Para que la llamada no contenga errores:
+     *  - Tiene que haber tantos argumentos como parametros
+     *  - Sus argumentos no deben contener errores
+     *  - Los tipos de sus argumentos y sus parametros deben coincidir
+     */
+    if (c.name == 'escribir' || c.name == 'escribir_linea' || c.name == 'leer') {
+        return check_io(c)
+    }
+    else {
+        let errors: TypeError[] = []
+
+        /**
+         * Ver si la cantidad de argumentos coincide con la cantidad
+         * de parametros
+         */
+        if (c.argtypes.length != c.paramtypes.length) {
+            /**
+             * meter el error en errors
+             */
+        }
+
+        /**
+         * Calcular el tipo de cada argumento
+         */
+        const argtypes: Array<{index:number, type:Typed.Type}> = []
+        for (let i = 0; i < c.argtypes.length; i++) {
+            const report = calculate_type(c.argtypes[i])
+            if (report.error) {
+                errors = errors.concat(errors)
+            }
+            else {
+                argtypes.push({index: i, type: report.result as Typed.Type})
+            }
+        }
+
+        /**
+         * Comparar los tipos de los argumentos con los
+         * de los parametros
+         */
+        for (let arg of argtypes) {
+            if (!types_are_equal(arg.type, c.paramtypes[arg.index])) {
+
+                /**
+                 * Revisar que la expresion a asignar sea del mismo tipo
+                 * que la variable a la cual se asigna, a menos que la
+                 * expresion sea de tipo entero y la variable de tipo real.
+                 */
+                const param = c.paramtypes[arg.index]
+                const cond_a = param.kind != 'atomic' || arg.type.kind != 'atomic'
+                const cond_b = (param as Typed.AtomicType).typename != 'real' && (arg.type as Typed.AtomicType).typename != 'entero'
+                if (cond_a || cond_b) {
+                    const error: IncompatibleArgumentError = {
+                        reason: '@call-incompatible-argument',
+                        where: 'typechecker',
+                        expected: stringify(param),
+                        received: stringify(arg.type),
+                        index: arg.index + 1
+                    }
+                    errors.push(error)                    
+                }
+            }
+        }
+
+        if (errors.length > 0) {
+            return {error: true, result: errors}
+        }
+        else {
+            return {error: false, result: c.datatype}
+        }
+    }
+}
+
+function check_io (c: Typed.Call): Failure<TypeError[]>|Success<Typed.AtomicType> {
+    /**
+     * Para las tres funciones (leer, escribir, y escribir_linea) hay
+     * que revisar que los argumentos no tengan errores y ademas hay
+     * que revisar que esos argumentos puedan reducirse a tipos
+     * atomicos o cadenas. 
+     */
+    let errors: TypeError[] = []
+
+    for (let i = 0; i < c.argtypes.length; i++) {
+        const report = calculate_type(c.argtypes[i])
+        if (report.error) {
+            errors = errors.concat(errors)
+        }
+        else {
+            const type = report.result as Typed.Type
+
+            /**
+             * condiciones para el siguiente error
+             */
+            const cond_a = type.kind == 'atomic' && (type as Typed.AtomicType).typename == 'ninguno'
+            const cond_b = type.kind != 'atomic' && !(type instanceof Typed.StringType)
+
+            if (cond_a || cond_b) {
+                const e: BadIOArgument = {
+                    index: i,
+                    reason: 'bad-io-argument',
+                    received: stringify(type),
+                    where: 'typechecker'
+                }
+
+                errors.push(e)
+            }
+        }
+    }
+
+    if (errors.length > 0) {
+        return {error: true, result: errors}
+    }
+    else {
+        return {error: false, result: new Typed.AtomicType('ninguno')}
     }
 }
 
@@ -48,8 +172,17 @@ function check_assignment (a: Typed.Assignment): TypeError[] {
              * Revisar que la expresion a asignar sea del mismo tipo
              * que la variable a la cual se asigna, a menos que la
              * expresion sea de tipo entero y la variable de tipo real.
+             * 
+             * Es decir, NO hay error cuando:
+             * 
+             * inv_report es atomico && es de tipo real && exp_report es atomico && es de tipo entero
+             * 
+             * Entonces para saber si hay error uso el complemento de la expresion de arriba
              */
-            if ((inv_report.result as Typed.AtomicType).typename != 'real' || ((exp_report.result as Typed.AtomicType).typename != 'entero')) {
+            const cond_a = inv_report.result.kind != 'atomic' || exp_report.result.kind != 'atomic'
+            const cond_b = (inv_report.result as Typed.AtomicType).typename != 'real' && (exp_report.result as Typed.AtomicType).typename != 'entero'
+
+            if (cond_a || cond_b) {
                 const error: IncompatibleTypesError = {
                     reason: '@assignment-incompatible-types',
                     where: 'typechecker',
@@ -113,6 +246,24 @@ function calculate_type(exp: Typed.ExpElement[]): Failure<TypeError[]>|Success<T
                 }
             }
             break
+            case 'call':
+                {
+                    if (e.name == 'escribir' || e.name == 'escribir_linea' || e.name == 'leer') {
+                        /**
+                         * USUARIO MALO! COMO VAS A USAR UNA DE ESAS FUNCIONES EN UNA EXPRESION?!1!
+                         */
+                    }
+                    else {
+                        const report = check_call(e)
+                        if (report.error) {
+                            errors = errors.concat(report.result)
+                        }
+                        else {
+                            stack.push(report.result as Typed.AtomicType)
+                        }
+                    }
+                }
+                break
             case 'operator': {
                 const op_report = operators[e.name](stack)
                 if (op_report.error) {

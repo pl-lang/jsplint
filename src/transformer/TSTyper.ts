@@ -77,12 +77,74 @@ function transform_statement (a: S2.Statement, mn: string, p: S2.AST): Failure<T
     switch (a.type) {
         case 'assignment':
             return transform_assignment (a, mn, p)
+        case 'call':
+            return type_call(a, mn, p)
         case 'for':
         case 'while':
         case 'until':
         case 'if':
         break
     }
+}
+
+function type_call (a: S2.ModuleCall, mn: string, p: S2.AST): Failure<Typed.ExtraIndexesError[]>|Success<Typed.Call> {
+    let errors: Typed.ExtraIndexesError[] = []
+
+    const argtypes: Typed.ExpElement[][] = []
+
+    for (let arg of a.args) {
+        const report = type_expression(arg, mn, p)
+
+        if (report.error) {
+            errors = errors.concat(report.result)
+        }
+        else {
+            argtypes.push(report.result as Typed.ExpElement[])
+        }
+    }
+
+    if (errors.length > 0) {
+        return {error: true, result: errors}
+    }
+    else {
+        const paramtypes = type_params(a.parameters)
+
+        const datatype = new Typed.AtomicType(a.return_type)
+
+        const result: Typed.Call = {
+            type: 'call',
+            name: a.name,
+            argtypes,
+            datatype,
+            paramtypes
+        }
+
+        return {error: false, result}
+    }
+}
+
+function type_params (params: S0.Parameter[]): Typed.Type[] {
+    const paramtypes: Typed.Type[] = []
+
+    for (let param of params) {
+        if (param.is_array) {
+            let type: Typed.ArrayType;
+            for (let i = params.length - 1; i >= 0; i--) {
+                if (i == params.length) {
+                    type = new Typed.ArrayType(new Typed.AtomicType(param.type), param.dimensions[i])
+                }
+                else {
+                    type = new Typed.ArrayType(type, param.dimensions[i])
+                }
+            }
+            paramtypes.push(type)
+        }
+        else {
+            paramtypes.push(new Typed.AtomicType(param.type))
+        }
+    }
+
+    return paramtypes
 }
 
 function transform_assignment (a: S2.Assignment, mn: string, p: S2.AST): Failure<Typed.ExtraIndexesError[]>|Success<Typed.Assignment> {
@@ -217,7 +279,16 @@ function type_expression (es: S2.ExpElement[], mn: string, p: S2.AST): Failure<T
                 typed_exp.push(type_literal(e))
                 break
             case 'call':
-            break
+                {
+                    const report = type_call(e, mn, p)
+                    if (report.error) {
+                        errors = errors.concat(report.result)
+                    }
+                    else {
+                        typed_exp.push(report.result as Typed.Call)
+                    }
+                }
+                break
             case 'operator':
                 typed_exp.push(e as S0.OperatorElement)
             break
