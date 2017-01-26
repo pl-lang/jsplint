@@ -10,7 +10,7 @@
         "./src/tools/ir_writer.ts",
         "./src/tools/mini-int.ts"
     ],
-    "include": [
-        "test/*"
+    "exclude": [
+      "test/*"  
     ]
 }
