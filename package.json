@@ -4,7 +4,8 @@
   "description": "interprete",
   "scripts": {
     "test": "mocha",
-    "m_watch": "mocha -w --reporter min"
+    "m_watch": "mocha -w --reporter min",
+    "build": "tsc -p . && cp ./index.d.ts ./dist"
   },
   "repository": {
     "type": "git",
@@ -22,6 +23,7 @@
     "should": "^7.1.0"
   },
   "dependencies": {
-    "tslib": "^1.5.0"
+    "tslib": "^1.5.0",
+    "typescript": "^2.1.5"
   }
 }
