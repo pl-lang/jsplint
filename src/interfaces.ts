@@ -88,7 +88,7 @@ export enum ReservedKind {
 }
 
 export enum OtherKind {
-  Word = ReservedKind.FinProcedimiento + 1,
+  Word = 53,
   Unknown
 }
 
