@@ -188,7 +188,7 @@ function transform_call (call: S0.Call, ast: S1.AST, module_name: string) : Fail
 
   let info: Failure<S2.UndefinedModule[]> | Success<S1.Module> = null
 
-  if (call.name != 'escribir') {
+  if (call.name != 'escribir' && call.name != 'escribir_linea' && call.name != 'leer') {
     info = get_module_info(call.name, ast)
 
     if (info.error) {
