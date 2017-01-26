@@ -366,7 +366,7 @@ function transform_invocation(invocation: S0.InvocationInfo, ast: S1.AST, module
       const new_invocation: S2.InvocationInfo = {
         name: invocation.name,
         is_array: varinfo.result.is_array,
-        indexes: invocation.indexes,
+        indexes: [],
         dimensions: varinfo.result.dimensions,
         datatype: varinfo.result.datatype
       }
@@ -376,7 +376,7 @@ function transform_invocation(invocation: S0.InvocationInfo, ast: S1.AST, module
   }
   else {
     const errors_found: S2.Error[] = []
-    const new_indexes: S0.ExpElement[][] = []
+    const new_indexes: S2.ExpElement[][] = []
 
     for (let index of invocation.indexes) {
       const new_index = transform_expression(index, ast, module_name)
@@ -427,7 +427,7 @@ function transform_invocation_exp(invocation: S0.InvocationValue, ast: S1.AST, m
         type: 'invocation',
         name: invocation.name,
         is_array: varinfo.result.is_array,
-        indexes: invocation.indexes,
+        indexes: [],
         dimensions: varinfo.result.dimensions,
         datatype: varinfo.result.datatype
       }
@@ -437,7 +437,7 @@ function transform_invocation_exp(invocation: S0.InvocationValue, ast: S1.AST, m
   }
   else {
     const errors_found: S2.Error[] = []
-    const new_indexes: S0.ExpElement[][] = []
+    const new_indexes: S2.ExpElement[][] = []
 
     for (let index of invocation.indexes) {
       const new_index = transform_expression(index, ast, module_name)
