@@ -171,12 +171,7 @@ function transform_assignment (assignment: S0.Assignment, ast: S1.AST, module_na
   }
 }
 
-export type SuccesfulCall = Success<S2.ReadCall> | Success<S2.WriteCall> | Success<S2.ModuleCall>
-
-function transform_call (call: S0.Call, ast: S1.AST, module_name: string) : Failure<S2.Error[]> | SuccesfulCall {
-  // si es la funcion leer, no hay que transformarla
-  if (call.name == 'leer') {return {error:false, result: call as S2.ReadCall}}
-
+function transform_call (call: S0.Call, ast: S1.AST, module_name: string) : Failure<S2.Error[]> | Success<S2.ModuleCall> {
   const errors_found: S2.Error[] = []
 
   const args: S2.ExpElement[][] = []
@@ -205,11 +200,14 @@ function transform_call (call: S0.Call, ast: S1.AST, module_name: string) : Fail
     return {error: true, result: errors_found}
   }
   else {
-    if (call.name == 'escribir') {
-      const new_call: S2.WriteCall = {
+    if (call.name == 'escribir' || call.name == 'leer') {
+      const new_call: S2.ModuleCall = {
         args: args,
-        name: 'escribir',
-        type: 'call'
+        name: call.name,
+        type: 'call',
+        module_type: 'procedure',
+        parameters: [],
+        return_type: 'ninguno'
       }
 
       return {error: false, result: new_call}
