@@ -260,7 +260,7 @@ function transform_call (call: S2.ModuleCall) : S3.Statement {
     return first_arg
 }
 
-function transform_write (wc: S2.WriteCall) : S3.Statement {
+function transform_write (wc: S2.ModuleCall) : S3.Statement {
     /**
      * Escribir es un procedimiento que toma solo un argumento,
      * en realidad.
@@ -286,7 +286,7 @@ function transform_write (wc: S2.WriteCall) : S3.Statement {
     return first_arg
 }
 
-function transform_read (rc: S2.ReadCall) : S3.Statement {
+function transform_read (rc: S2.ModuleCall) : S3.Statement {
     /**
      * Leer tambien es un procedimiento de un solo argumento.
      * Por cada argumento hay que crear una llamada a leer y una asignacion.
@@ -445,9 +445,9 @@ function transform_statement (statement: S2.Statement) : S3.Statement {
         case 'call':
             switch (statement.name) {
                 case 'leer':
-                    return transform_read(statement as S2.ReadCall)
+                    return transform_read(statement)
                 case 'escribir':
-                    return transform_write(statement as S2.WriteCall)
+                    return transform_write(statement)
                 default:
                     return transform_call(statement as S2.ModuleCall)
             }
