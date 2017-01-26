@@ -1,6 +1,7 @@
 'use strict'
 
 import {Failure, Success, S1, S3} from '../interfaces'
+import {Value, OutOfBounds, Read, Write, NullAction, Paused, SuccessfulReturn} from '../interfaces'
 
 /*
   Un evaluador sirve para ejecutar las acciones/enunciados de un modulo.
@@ -12,53 +13,6 @@ import {Failure, Success, S1, S3} from '../interfaces'
   Los evaluadores son eleiminados cuando terminan de ejecutar su modulo. Son de
   un solo uso.
 */
-
-/**
- * Value
- * representa un valor resultante de una expresion
- */
-export type Value = boolean | number | string 
-
-export interface OutOfBounds {
-  reason: '@invocation-index-out-of-bounds' | '@assignment-index-out-of-bounds'
-  // agregar estas mas adelante 
-  // line: number
-  // column: number
-  name: string
-  bad_index: number
-  dimensions: number[]
-  /**
-   * Sirve para indicar que el evaluador terminó la ejecución.
-   * Está acá para que todos los retornos del evaluador tengan
-   * esta prop.
-   */
-  done: boolean
-}
-
-export interface Read {
-  action: 'read'
-  // agregar esto mas adelante
-  // type: 'entero' | 'real' | 'caracter' | 'cadena'
-  done: boolean
-}
-
-export interface Write {
-  action: 'write',
-  value: Value
-  done: boolean
-}
-
-export interface NullAction {
-  action: 'none'
-  done: boolean
-}
-
-export interface Paused {
-  action: 'paused'
-  done: boolean
-}
-
-export type SuccessfulReturn = Success<Read> | Success<Write> | Success<NullAction>
 
 export class Evaluator {
   private readonly modules: {[p:string]: S3.Module}

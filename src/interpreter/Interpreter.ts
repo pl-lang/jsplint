@@ -10,11 +10,11 @@
  *  - read
  */
 
-import {Evaluator, Value} from './Evaluator'
+import {Evaluator} from './Evaluator'
 
 import Emitter from '../utility/Emitter.js'
 
-import {S3} from '../interfaces'
+import {S3, Value} from '../interfaces'
 
 export default class Interpreter extends Emitter {
   private evaluator: Evaluator

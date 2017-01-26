@@ -928,3 +928,50 @@ export interface IncompatibleTypesError extends TypeError {
     expected: string
     received: string
 }
+
+/**
+ * Value
+ * representa un valor resultante de una expresion
+ */
+export type Value = boolean | number | string 
+
+export interface OutOfBounds {
+  reason: '@invocation-index-out-of-bounds' | '@assignment-index-out-of-bounds'
+  // agregar estas mas adelante 
+  // line: number
+  // column: number
+  name: string
+  bad_index: number
+  dimensions: number[]
+  /**
+   * Sirve para indicar que el evaluador terminó la ejecución.
+   * Está acá para que todos los retornos del evaluador tengan
+   * esta prop.
+   */
+  done: boolean
+}
+
+export interface Read {
+  action: 'read'
+  // agregar esto mas adelante
+  // type: 'entero' | 'real' | 'caracter' | 'cadena'
+  done: boolean
+}
+
+export interface Write {
+  action: 'write',
+  value: Value
+  done: boolean
+}
+
+export interface NullAction {
+  action: 'none'
+  done: boolean
+}
+
+export interface Paused {
+  action: 'paused'
+  done: boolean
+}
+
+export type SuccessfulReturn = Success<Read> | Success<Write> | Success<NullAction>

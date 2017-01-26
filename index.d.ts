@@ -1,4 +1,11 @@
 declare namespace pli {
+    interface BaseError {
+        reason: string
+        pos?: {
+            column: number
+            line: number
+        }
+    }
     /**
      * Interfaces que representan el retorno de una funcion que puede fallar
      */
@@ -870,10 +877,75 @@ declare namespace pli {
 }
 
 declare namespace pli {
+    /**
+     * Value
+     * representa un valor resultante de una expresion
+     */
+    type Value = boolean | number | string 
+
+    interface OutOfBounds {
+    reason: '@invocation-index-out-of-bounds' | '@assignment-index-out-of-bounds'
+    // agregar estas mas adelante 
+    // line: number
+    // column: number
+    name: string
+    bad_index: number
+    dimensions: number[]
+    /**
+     * Sirve para indicar que el evaluador terminó la ejecución.
+     * Está acá para que todos los retornos del evaluador tengan
+     * esta prop.
+     */
+    done: boolean
+    }
+
+    interface Read {
+    action: 'read'
+    // agregar esto mas adelante
+    // type: 'entero' | 'real' | 'caracter' | 'cadena'
+    done: boolean
+    }
+
+    interface Write {
+    action: 'write',
+    value: Value
+    done: boolean
+    }
+
+    interface NullAction {
+    action: 'none'
+    done: boolean
+    }
+
+    interface Paused {
+    action: 'paused'
+    done: boolean
+    }
+
+    type SuccessfulReturn = Success<Read> | Success<Write> | Success<NullAction>
+}
+
+declare namespace pli {
     class Parser extends Emitter {
         constructor();
         parse(code: string): Failure<string> | Success<ParsedProgram>;
     }
+
+    class Interpreter extends Emitter {
+        private evaluator;
+        running: boolean;
+        paused: boolean;
+        data_read: boolean;
+        constructor(p: S3.Program);
+        run(): void;
+        send(value: Value): void;
+    }
+}
+
+declare namespace pli {
+    function transform (p: ParsedProgram) : TransformError | Success<TransformedProgram>
+    
+    function typecheck (p: Typed.Program): TypeError[]
 }
 
 export = pli;

@@ -24,5 +24,7 @@
     "nyc": "^6.4.0",
     "should": "^7.1.0"
   },
-  "dependencies": {}
+  "dependencies": {
+    "tslib": "^1.5.0"
+  }
 }
