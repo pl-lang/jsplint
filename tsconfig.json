@@ -3,7 +3,8 @@
         "noImplicitAny": true,
         "outDir": "./dist",
         "target" : "es5",
-        "importHelpers": true
+        "importHelpers": true,
+        "lib": "es2015"
     },
     "files": [
         "index.ts",

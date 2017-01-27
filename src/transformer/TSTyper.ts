@@ -394,15 +394,6 @@ function type_indexes (indexes: S2.ExpElement[][], mn: string, p: S2.AST): Failu
     }
 }
 
-/**
- * Fix para la falta de "trunc" en typescript/lib.d.ts (a la fecha 25/01/2017)
- */
-declare interface Math {
-    trunc(x: number): number
-}
-
-declare const Math: Math;
-
 function type_literal (l: S0.LiteralValue): Typed.Type {
     switch (typeof l.value) {
         case 'boolean':
