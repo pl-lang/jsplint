@@ -75,26 +75,24 @@ function check_call (c: Typed.Call): Failure<TypeError[]>|Success<Typed.AtomicTy
          * de los parametros
          */
         for (let arg of argtypes) {
-            if (!types_are_equal(arg.type, c.paramtypes[arg.index])) {
+            /**
+             * Revisar que la expresion a asignar sea del mismo tipo
+             * que la variable a la cual se asigna, a menos que la
+             * expresion sea de tipo entero y la variable de tipo real.
+             */
+            const param = c.paramtypes[arg.index]
+            const cond_a = param.kind != 'atomic' || arg.type.kind != 'atomic'
+            const cond_b = (param as Typed.AtomicType).typename != 'real' && (arg.type as Typed.AtomicType).typename != 'entero'
 
-                /**
-                 * Revisar que la expresion a asignar sea del mismo tipo
-                 * que la variable a la cual se asigna, a menos que la
-                 * expresion sea de tipo entero y la variable de tipo real.
-                 */
-                const param = c.paramtypes[arg.index]
-                const cond_a = param.kind != 'atomic' || arg.type.kind != 'atomic'
-                const cond_b = (param as Typed.AtomicType).typename != 'real' && (arg.type as Typed.AtomicType).typename != 'entero'
-                if (cond_a || cond_b) {
-                    const error: IncompatibleArgumentError = {
-                        reason: '@call-incompatible-argument',
-                        where: 'typechecker',
-                        expected: stringify(param),
-                        received: stringify(arg.type),
-                        index: arg.index + 1
-                    }
-                    errors.push(error)                    
+            if (!(types_are_equal(arg.type, param) && (cond_a || cond_b))) {
+                const error: IncompatibleArgumentError = {
+                    reason: '@call-incompatible-argument',
+                    where: 'typechecker',
+                    expected: stringify(param),
+                    received: stringify(arg.type),
+                    index: arg.index + 1
                 }
+                errors.push(error)
             }
         }
 
@@ -167,30 +165,23 @@ function check_assignment (a: Typed.Assignment): TypeError[] {
     }
 
     if (inv_report.error == false && exp_report.error == false) {
-        if (!types_are_equal(inv_report.result, exp_report.result)) {
-            /**
-             * Revisar que la expresion a asignar sea del mismo tipo
-             * que la variable a la cual se asigna, a menos que la
-             * expresion sea de tipo entero y la variable de tipo real.
-             * 
-             * Es decir, NO hay error cuando:
-             * 
-             * inv_report es atomico && es de tipo real && exp_report es atomico && es de tipo entero
-             * 
-             * Entonces para saber si hay error uso el complemento de la expresion de arriba
-             */
-            const cond_a = inv_report.result.kind != 'atomic' || exp_report.result.kind != 'atomic'
-            const cond_b = (inv_report.result as Typed.AtomicType).typename != 'real' && (exp_report.result as Typed.AtomicType).typename != 'entero'
+        /**
+         * Revisar que la expresion a asignar sea del mismo tipo
+         * que la variable a la cual se asigna, a menos que la
+         * expresion sea de tipo entero y la variable de tipo real.
+         */
+        const cond_a = inv_report.result.kind == 'atomic' && exp_report.result.kind == 'atomic'
+        const cond_b = (inv_report.result as Typed.AtomicType).typename == 'real' && (exp_report.result as Typed.AtomicType).typename == 'entero'
 
-            if (cond_a || cond_b) {
-                const error: IncompatibleTypesError = {
-                    reason: '@assignment-incompatible-types',
-                    where: 'typechecker',
-                    expected: stringify(inv_report.result),
-                    received: stringify(exp_report.result)
-                }
-                errors.push(error)
+        if (!(types_are_equal(inv_report.result, exp_report.result) || (cond_a && cond_b))) {
+            const error: IncompatibleTypesError = {
+                reason: '@assignment-incompatible-types',
+                where: 'typechecker',
+                expected: stringify(inv_report.result),
+                received: stringify(exp_report.result)
             }
+
+            errors.push(error)
         }
     }
 
