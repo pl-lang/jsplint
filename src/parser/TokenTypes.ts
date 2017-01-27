@@ -2,14 +2,14 @@
 
 import { isDigit, isLetter } from '../utility/StringMethods'
 import {default as SourceWrapper} from './SourceWrapper'
-import {LexicalError, Token, ValueKind, ReservedKind, OtherKind, SymbolKind} from '../interfaces'
+import {Errors, Token, ValueKind, ReservedKind, OtherKind, SymbolKind} from '../interfaces'
 
 export class EoFToken implements Token {
   kind : SymbolKind.EOF
   column : number
   line : number
   error_found : boolean
-  error_info : LexicalError
+  error_info : Errors.Lexical
   name = 'eof'
 
   constructor(source ?: SourceWrapper) {
@@ -26,7 +26,7 @@ export class NumberToken implements Token {
   column : number
   line : number
   error_found : boolean
-  error_info : LexicalError
+  error_info : Errors.Lexical
   name: string
 
   text: string
@@ -68,9 +68,9 @@ export class NumberToken implements Token {
         this.error_info = {
           unexpected: source.currentChar(),
           expected: ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'],
-          line: source._current_line,
-          column: source._current_column,
-          reason: 'unexpectedCharAtFloat'
+          pos: {line: source._current_line, column: source._current_column},
+          reason: 'unexpectedCharAtFloat',
+          where: 'lexer'
         }
       }
     }
@@ -87,7 +87,7 @@ export class SpecialSymbolToken implements Token {
   column : number
   line : number
   error_found : boolean
-  error_info : LexicalError
+  error_info : Errors.Lexical
   name: string
 
   text : string
@@ -222,7 +222,7 @@ export class StringToken {
   column: number
   line: number
   error_found: boolean
-  error_info: LexicalError
+  error_info: Errors.Lexical
   name = 'string'
 
   value: string
@@ -255,9 +255,9 @@ export class StringToken {
       this.error_info = {
         unexpected: '\n',
         expected: ['caracteres', '"'],
-        column: source._current_column,
-        line: source._current_line,
-        reason: 'unexpectedCharAtString'
+        pos: {line: source._current_line, column: source._current_column},
+        reason: 'unexpectedCharAtString',
+        where: 'lexer'
       }
     }
 
@@ -383,7 +383,7 @@ export class WordToken implements Token {
   column: number
   line: number
   error_found: boolean
-  error_info: LexicalError
+  error_info: Errors.Lexical
   name: string
 
   text: string
@@ -420,7 +420,7 @@ export class UnknownToken {
   column : number
   line : number
   error_found : boolean
-  error_info : LexicalError
+  error_info : Errors.Lexical
   name = 'unknown'
 
   constructor(source : SourceWrapper) {
@@ -429,9 +429,9 @@ export class UnknownToken {
     this.error_info = {
       unexpected: source.currentChar(),
       expected: null,
-      line: source._current_line,
-      column: source._current_column,
-      reason: 'unknownToken'
+      pos: {line: source._current_line, column: source._current_column},
+      reason: 'unknownToken',
+      where: 'lexer'
     }
     source.nextChar()
   }

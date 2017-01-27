@@ -1,8 +1,8 @@
-import {Failure, Success, S0, S1, S2, Typed} from '../interfaces'
+import {Failure, Success, S0, S1, S2, Typed, Errors} from '../interfaces'
 import {drop} from '../utility/helpers'
 
-export default function transform (ast: S2.AST): Failure<Typed.ExtraIndexesError[]>|Success<Typed.Program> {
-    let errors: Typed.ExtraIndexesError[] = []
+export default function transform (ast: S2.AST): Failure<Errors.ExtraIndexes[]>|Success<Typed.Program> {
+    let errors: Errors.ExtraIndexes[] = []
 
     const typed_program: Typed.Program = {}
 
@@ -33,8 +33,8 @@ export default function transform (ast: S2.AST): Failure<Typed.ExtraIndexesError
     }
 }
 
-function transfor_module (m: S2.Module | S2.Main, p: S2.AST): Failure<Typed.ExtraIndexesError[]>|Success<Typed.Module> {
-    let errors: Typed.ExtraIndexesError[] = []
+function transfor_module (m: S2.Module | S2.Main, p: S2.AST): Failure<Errors.ExtraIndexes[]>|Success<Typed.Module> {
+    let errors: Errors.ExtraIndexes[] = []
 
     let typed_module: Typed.Module
 
@@ -73,7 +73,7 @@ function transfor_module (m: S2.Module | S2.Main, p: S2.AST): Failure<Typed.Extr
     }
 }
 
-function transform_statement (a: S2.Statement, mn: string, p: S2.AST): Failure<Typed.ExtraIndexesError[]>|Success<Typed.Statement> {
+function transform_statement (a: S2.Statement, mn: string, p: S2.AST): Failure<Errors.ExtraIndexes[]>|Success<Typed.Statement> {
     switch (a.type) {
         case 'assignment':
             return transform_assignment (a, mn, p)
@@ -87,8 +87,8 @@ function transform_statement (a: S2.Statement, mn: string, p: S2.AST): Failure<T
     }
 }
 
-function type_call (a: S2.ModuleCall, mn: string, p: S2.AST): Failure<Typed.ExtraIndexesError[]>|Success<Typed.Call> {
-    let errors: Typed.ExtraIndexesError[] = []
+function type_call (a: S2.ModuleCall, mn: string, p: S2.AST): Failure<Errors.ExtraIndexes[]>|Success<Typed.Call> {
+    let errors: Errors.ExtraIndexes[] = []
 
     const argtypes: Typed.ExpElement[][] = []
 
@@ -147,8 +147,8 @@ function type_params (params: S0.Parameter[]): Typed.Type[] {
     return paramtypes
 }
 
-function transform_assignment (a: S2.Assignment, mn: string, p: S2.AST): Failure<Typed.ExtraIndexesError[]>|Success<Typed.Assignment> {
-    let errors: Typed.ExtraIndexesError[] = []
+function transform_assignment (a: S2.Assignment, mn: string, p: S2.AST): Failure<Errors.ExtraIndexes[]>|Success<Typed.Assignment> {
+    let errors: Errors.ExtraIndexes[] = []
 
     const left_type =  type_variable(a.left, mn, p)
 
@@ -170,15 +170,15 @@ function transform_assignment (a: S2.Assignment, mn: string, p: S2.AST): Failure
     }
 }
 
-function type_variable (iv: S2.InvocationInfo, mn: string, p: S2.AST): Failure<Typed.ExtraIndexesError[]>|Success<Typed.Invocation> {
-    let errors: Typed.ExtraIndexesError[] =  []
+function type_variable (iv: S2.InvocationInfo, mn: string, p: S2.AST): Failure<Errors.ExtraIndexes[]>|Success<Typed.Invocation> {
+    let errors: Errors.ExtraIndexes[] =  []
 
     if (iv.indexes.length > iv.dimensions.length)  {
         /**
          * Se esta invocando una variable con mas indices
          * de los permitidos.
          */
-        errors.push({reason:'@invocation-extra-indexes', name: iv.name, dimensions: iv.dimensions.length,indexes: iv.indexes.length})
+        errors.push({where: 'typer' ,reason:'@invocation-extra-indexes', name: iv.name, dimensions: iv.dimensions.length,indexes: iv.indexes.length})
 
         /**
          * Solo queda ver si tambien hay errores en esos indices...
@@ -216,7 +216,7 @@ function type_variable (iv: S2.InvocationInfo, mn: string, p: S2.AST): Failure<T
          * contiene dos vectores 3, cuyas celdas contienen vectores 2.  
          */
 
-        const remaining_dimensions = drop(iv.dimensions.length - iv.indexes.length, iv.dimensions)
+        const remaining_dimensions = drop(iv.indexes.length, iv.dimensions)
         let last_type: Typed.Type
         for (let i = remaining_dimensions.length - 1; i >= 0; i--) {
             if (i == remaining_dimensions.length - 1) {
@@ -258,9 +258,9 @@ function type_variable (iv: S2.InvocationInfo, mn: string, p: S2.AST): Failure<T
     }
 }
 
-function type_expression (es: S2.ExpElement[], mn: string, p: S2.AST): Failure<Typed.ExtraIndexesError[]>|Success<Typed.ExpElement[]> {
+function type_expression (es: S2.ExpElement[], mn: string, p: S2.AST): Failure<Errors.ExtraIndexes[]>|Success<Typed.ExpElement[]> {
     const typed_exp: Typed.ExpElement[] = []
-    let errors: Typed.ExtraIndexesError[] = []
+    let errors: Errors.ExtraIndexes[] = []
 
     for (let e of es) {
         switch (e.type) {
@@ -303,16 +303,17 @@ function type_expression (es: S2.ExpElement[], mn: string, p: S2.AST): Failure<T
     }
 }
 
-function type_invocation (i: S2.InvocationValue, mn: string, p: S2.AST): Failure<Typed.ExtraIndexesError[]>|Success<Typed.Invocation> {
-    let errors: Typed.ExtraIndexesError[] = []
+function type_invocation (i: S2.InvocationValue, mn: string, p: S2.AST): Failure<Errors.ExtraIndexes[]>|Success<Typed.Invocation> {
+    let errors: Errors.ExtraIndexes[] = []
     let datatype: Typed.Type
 
     if (i.is_array) {
         const indextypes_report = type_indexes(i.indexes, mn, p)
 
         if (i.indexes.length > i.dimensions.length) {
-            const error: Typed.ExtraIndexesError = {
+            const error: Errors.ExtraIndexes = {
                 reason: '@invocation-extra-indexes',
+                where: 'typer',
                 name: i.name,
                 indexes: i.indexes.length,
                 dimensions: i.dimensions.length
@@ -368,13 +369,13 @@ function type_invocation (i: S2.InvocationValue, mn: string, p: S2.AST): Failure
     }
 }
 
-function type_indexes (indexes: S2.ExpElement[][], mn: string, p: S2.AST): Failure<Typed.ExtraIndexesError[]>|Success<Typed.ExpElement[][]> {
+function type_indexes (indexes: S2.ExpElement[][], mn: string, p: S2.AST): Failure<Errors.ExtraIndexes[]>|Success<Typed.ExpElement[][]> {
     /**
      * arreglo con los tipos de los indices
      */
     const indextypes: Typed.ExpElement[][] = []
 
-    let errors: Typed.ExtraIndexesError[] = []
+    let errors: Errors.ExtraIndexes[] = []
 
     for (let index of indexes) {
         const report = type_expression(index, mn, p)

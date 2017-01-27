@@ -4,7 +4,7 @@ import {take, flatten, mergeObjs} from '../utility/helpers.js'
 
 import {Failure, Success, ValueKind, ReservedKind, SymbolKind, OtherKind, Token, TokenKind} from '../interfaces'
 
-import {PatternError, DataTypeKind, TypeNameString, S0} from '../interfaces'
+import {Errors, DataTypeKind, TypeNameString, S0} from '../interfaces'
 
 import {SpecialSymbolToken} from './TokenTypes'
 
@@ -14,7 +14,7 @@ import TokenQueue from './TokenQueue.js'
  * Funcion que intenta capturar un token numerico
  * @param {TokenQueue} source Fuente en la que hay que buscar el numero
  */
-export function Number(source : TokenQueue) : Failure<PatternError> | Success<S0.NumberInfo> {
+export function Number(source : TokenQueue) : Failure<Errors.Pattern> | Success<S0.NumberInfo> {
   let current = source.current()
 
   if (current.kind == ValueKind.Real || current.kind == ValueKind.Integer) {
@@ -30,7 +30,7 @@ export function Number(source : TokenQueue) : Failure<PatternError> | Success<S0
     let column      = current.column
     let line        = current.line
 
-    return {error:true, result:{unexpected, expected, column, line}}
+    return {error:true, result:{unexpected, expected, pos: {column, line}, where:'parser', reason:'syntax-error'}}
   }
 }
 
@@ -38,7 +38,7 @@ export function Number(source : TokenQueue) : Failure<PatternError> | Success<S0
  * Captura un token de tipo 'entero'
  * @param {TokenQueue} source fuente desde la cual se debe capturar
  */
-export function Integer(source: TokenQueue) : Failure<PatternError> | Success<number> {
+export function Integer(source: TokenQueue) : Failure<Errors.Pattern> | Success<number> {
   const current = source.current()
 
   if (current.kind === ValueKind.Integer) {
@@ -54,14 +54,14 @@ export function Integer(source: TokenQueue) : Failure<PatternError> | Success<nu
     const column = current.column
     const line = current.line
 
-    return {error:true, result:{unexpected, expected, column, line}}
+    return {error:true, result:{unexpected, expected, pos: {column, line}, where: 'parser', reason: 'syntax-error'}}
   }
 }
 
 /**
  * Captura la dimension de un arreglo
  */
-export function ArrayDimension(source: TokenQueue) : Failure<PatternError> | Success<number[]> {
+export function ArrayDimension(source: TokenQueue) : Failure<Errors.Pattern> | Success<number[]> {
   let indexes : number[] = []
 
   let index_report = Integer(source)
@@ -91,7 +91,7 @@ export function ArrayDimension(source: TokenQueue) : Failure<PatternError> | Suc
   }
 }
 
-export function Word (source: TokenQueue) : Failure<PatternError> | Success<string> {
+export function Word (source: TokenQueue) : Failure<Errors.Pattern> | Success<string> {
   let current = source.current()
 
   if (current.kind === OtherKind.Word) {
@@ -104,14 +104,14 @@ export function Word (source: TokenQueue) : Failure<PatternError> | Success<stri
     let column = current.column
     let line = current.line
 
-    return {error:true, result:{unexpected, expected, column, line}}
+    return {error:true, result:{unexpected, expected, pos: {column, line}, where: 'parser', reason: 'syntax-error'}}
   }
 }
 
 /**
  * Patron que consume la declaracion de una variable (nombre y dimension)
  */
-export function VariableDeclaration (source: TokenQueue) : Failure<PatternError> | Success<S0.DeclarationInfo> {
+export function VariableDeclaration (source: TokenQueue) : Failure<Errors.Pattern> | Success<S0.DeclarationInfo> {
 
   const variable : S0.DeclarationInfo = {name: '', is_array  : false, dimensions: []}
 
@@ -142,7 +142,7 @@ export function VariableDeclaration (source: TokenQueue) : Failure<PatternError>
           const column      = current.column
           const line        = current.line
 
-          return {error:true, result:{unexpected, expected, column, line}}
+          return {error:true, result:{unexpected, expected, pos: {column, line}, where: 'parser', reason: 'syntax-error'}}
         }
       }
     }
@@ -155,7 +155,7 @@ export function VariableDeclaration (source: TokenQueue) : Failure<PatternError>
 /**
  * Patron que consume una lista de declaraciones
  */
-export function VariableList (source: TokenQueue) : Failure<PatternError> | Success<S0.DeclarationInfo[]> {
+export function VariableList (source: TokenQueue) : Failure<Errors.Pattern> | Success<S0.DeclarationInfo[]> {
   const variables : S0.DeclarationInfo[] = []
 
   let partial_match = false
@@ -195,7 +195,7 @@ let isType = (k: TokenKind) => {
 /**
  * Patron que consume un tipo de datos.
  */
-export function TypeName (source: TokenQueue) : Failure<PatternError> | Success<TypeNameString> {
+export function TypeName (source: TokenQueue) : Failure<Errors.Pattern> | Success<TypeNameString> {
   const current = source.current()
 
   if ( isType(current.kind) ) {
@@ -209,14 +209,14 @@ export function TypeName (source: TokenQueue) : Failure<PatternError> | Success<
     const line        = current.line
     const reason      = 'nonexistent-type'
 
-    return {error:true, result:{unexpected, expected, column, line, reason}}
+    return {error:true, result:{unexpected, expected, pos: {column, line}, reason, where: 'parser'}}
   }
 }
 
 /**
  * Patron que consume un indice (una expresion) de un arreglo
  */
-export function IndexExpression (source: TokenQueue) : Failure<PatternError> | Success<S0.ExpElement[][]> {
+export function IndexExpression (source: TokenQueue) : Failure<Errors.Pattern> | Success<S0.ExpElement[][]> {
   let indexes: S0.ExpElement[][] = []
 
   const index_report = Expression(source)
@@ -250,7 +250,7 @@ export function IndexExpression (source: TokenQueue) : Failure<PatternError> | S
 /**
  * Captura la invocacion de una variable
  */
-export function Variable (source: TokenQueue) : Failure<PatternError> | Success<S0.InvocationInfo> {
+export function Variable (source: TokenQueue) : Failure<Errors.Pattern> | Success<S0.InvocationInfo> {
   let name = '', is_array = false, indexes: S0.ExpElement[][] = []
 
   let word_match = Word(source)
@@ -286,7 +286,7 @@ export function Variable (source: TokenQueue) : Failure<PatternError> | Success<
         const column      = current.column
         const line        = current.line
 
-        return {error:true, result:{unexpected, expected, column, line}}
+        return {error:true, result:{unexpected, expected, pos: {column, line}, where: 'parser', reason: 'syntax-error'}}
       }
     }
     else {
@@ -339,7 +339,7 @@ function is_operator (k: TokenKind) {
 /**
  * Captura una expresion
  */
-export function Expression (source: TokenQueue) : Failure<PatternError> | Success<S0.ExpElement[]> {
+export function Expression (source: TokenQueue) : Failure<Errors.Pattern> | Success<S0.ExpElement[]> {
   // Ubicacion del inicio de la expresion, en caso de que haya algun error
   const column = source.current().column
   const line = source.current().line
@@ -376,7 +376,7 @@ export function Expression (source: TokenQueue) : Failure<PatternError> | Succes
         const unexpected = SymbolKind.LeftPar;
         const expected = ['left-par']
         const reason = 'mismatched-parenthesis'
-        return {error:true, result:{unexpected, expected, reason, column, line}};
+        return {error:true, result:{unexpected, expected, reason, pos:{column, line}, where: 'parser'}};
       }
     }
     else if (is_operator(ctoken.kind)) {
@@ -412,7 +412,7 @@ export function Expression (source: TokenQueue) : Failure<PatternError> | Succes
 /**
  * Patron que captura un valor (literal o invocado)
  */
-export function Value (source: TokenQueue) : Failure<PatternError> | Success<S0.ExpValue> {
+export function Value (source: TokenQueue) : Failure<Errors.Pattern> | Success<S0.ExpValue> {
   let ctoken = source.current()
 
   if (ctoken.kind == OtherKind.Word) {
@@ -458,7 +458,7 @@ export function Value (source: TokenQueue) : Failure<PatternError> | Success<S0.
     const reason      = '@value-expected-expression' 
     const column      = ctoken.column
     const line        = ctoken.line
-    return {error:true, result:{unexpected, expected, reason, column, line}}
+    return {error:true, result:{unexpected, expected, reason, pos: {column, line}, where: 'parser'}}
   }
 }
 
@@ -472,7 +472,7 @@ function isLiteralTokenType (k: TokenKind) {
 /**
  * Captura una lista de argumentos, es decir, una lista de expresiones 
  */
-export function ArgumentList (source: TokenQueue) : Failure<PatternError> | Success<S0.ExpElement[][]>{
+export function ArgumentList (source: TokenQueue) : Failure<Errors.Pattern> | Success<S0.ExpElement[][]>{
   let args: S0.ExpElement[][] = []
   const exp = Expression(source)
 
@@ -502,7 +502,7 @@ export function ArgumentList (source: TokenQueue) : Failure<PatternError> | Succ
 /**
  * Captura una lista de parametros en la declaracion de una funcion o procedimiento
  */
-export function ParameterList (source: TokenQueue) : Failure<PatternError> | Success<S0.Parameter[]> {
+export function ParameterList (source: TokenQueue) : Failure<Errors.Pattern> | Success<S0.Parameter[]> {
   let result: S0.Parameter[] = []
 
   let parameter_report = Parameter(source)
@@ -536,7 +536,7 @@ export function ParameterList (source: TokenQueue) : Failure<PatternError> | Suc
 /**
  * Captura un parametro de una funcion o procedimiento
  */
-export function Parameter (source: TokenQueue) : Failure<PatternError> | Success<S0.Parameter> {
+export function Parameter (source: TokenQueue) : Failure<Errors.Pattern> | Success<S0.Parameter> {
   const result: S0.Parameter = {name: '', by_ref: false, type: null, is_array: false, dimensions: []}
 
   let type_r = TypeName(source)
@@ -590,7 +590,7 @@ export function Parameter (source: TokenQueue) : Failure<PatternError> | Success
 /**
  * Captura una llamada a una funcion o procedimiento
  */
-export function ModuleCall (source: TokenQueue) : Failure<PatternError> | Success<S0.Call> {
+export function ModuleCall (source: TokenQueue) : Failure<Errors.Pattern> | Success<S0.Call> {
   const name = Word(source)
 
   if (name.error) {
@@ -604,7 +604,7 @@ export function ModuleCall (source: TokenQueue) : Failure<PatternError> | Succes
       const column      = current.column
       const line        = current.line
 
-      return {error:true, result:{unexpected, expected, column, line}}
+      return {error:true, result:{unexpected, expected, column, line, where: 'parser', reason: 'syntax-error'}}
     }
     else {
       source.next()
@@ -630,7 +630,7 @@ export function ModuleCall (source: TokenQueue) : Failure<PatternError> | Succes
           const column      = current.column
           const line        = current.line
 
-          return {error:true, result:{unexpected, expected, column, line}}
+          return {error:true, result:{unexpected, expected, column, line, where: 'parser', reason: 'syntax-error'}}
         }
       }
     }
@@ -644,7 +644,7 @@ export function ModuleCall (source: TokenQueue) : Failure<PatternError> | Succes
 /**
  * Captura un enunciado de asignacion
  */
-export function Assignment (source: TokenQueue) : Failure<PatternError> | Success<S0.Assignment> {
+export function Assignment (source: TokenQueue) : Failure<Errors.Pattern> | Success<S0.Assignment> {
   const result: S0.Assignment = {type: 'assignment', left: null, right: null}
 
   const left_hand_match = Variable(source)
@@ -662,7 +662,7 @@ export function Assignment (source: TokenQueue) : Failure<PatternError> | Succes
       const line = current.line
       const column = current.column
       const reason = 'bad-assignment-operator'
-      return {error:true, result:{unexpected, expected, line, column, reason}}
+      return {error:true, result:{unexpected, expected, pos: {line, column}, reason, where: 'parser'}}
     }
     else {
       source.next()
@@ -684,7 +684,7 @@ export function Assignment (source: TokenQueue) : Failure<PatternError> | Succes
 /**
  * Captura un enunciado si
  */
-export function If (source: TokenQueue) : Failure<PatternError> | Success<S0.If> {
+export function If (source: TokenQueue) : Failure<Errors.Pattern> | Success<S0.If> {
   let result: S0.If = {
     type : 'if',
     condition : null,
@@ -702,7 +702,7 @@ export function If (source: TokenQueue) : Failure<PatternError> | Success<S0.If>
     let line = current.line
     let column = current.column
     let reason = 'missing-si'
-    return {error:true, result:{unexpected, expected, line, column, reason}}
+    return {error:true, result:{unexpected, expected, pos: {line, column}, reason, where: 'parser'}}
   }
 
   if (source.current().kind === SymbolKind.LeftPar) {
@@ -715,7 +715,7 @@ export function If (source: TokenQueue) : Failure<PatternError> | Success<S0.If>
     let line = current.line
     let column = current.column
     let reason = 'missing-par-at-condition'
-    return {error:true, result:{unexpected, expected, line, column, reason}}
+    return {error:true, result:{unexpected, expected, pos: {line, column}, reason, where: 'parser'}}
   }
 
   const queue: Token[] = []
@@ -743,7 +743,7 @@ export function If (source: TokenQueue) : Failure<PatternError> | Success<S0.If>
     let line = current.line
     let column = current.column
     let reason = 'missing-par-at-condition'
-    return {error:true, result:{unexpected, expected, line, column, reason}}
+    return {error:true, result:{unexpected, expected, pos: {line, column}, reason, where: 'parser'}}
   }
 
   if (source.current().kind === ReservedKind.Entonces) {
@@ -756,7 +756,7 @@ export function If (source: TokenQueue) : Failure<PatternError> | Success<S0.If>
     let line = current.line
     let column = current.column
     let reason = 'missing-entonces'
-    return {error:true, result:{unexpected, expected, line, column, reason}}
+    return {error:true, result:{unexpected, expected, pos: {line, column}, reason, where: 'parser'}}
   }
 
   skipWhiteSpace(source)
@@ -801,7 +801,7 @@ export function If (source: TokenQueue) : Failure<PatternError> | Success<S0.If>
     let line = current.line
     let column = current.column
     let reason = 'missing-finsi'
-    return {error:true, result:{unexpected, expected, line, column, reason}}
+    return {error:true, result:{unexpected, expected, pos: {line, column}, reason, where: 'parser'}}
   }
 
   if (source.current().kind === SymbolKind.EOL) {
@@ -811,7 +811,7 @@ export function If (source: TokenQueue) : Failure<PatternError> | Success<S0.If>
   return {error:false, result}
 }
 
-export function While (source: TokenQueue) : Failure<PatternError> | Success<S0.While> {
+export function While (source: TokenQueue) : Failure<Errors.Pattern> | Success<S0.While> {
   const result: S0.While = {
     type : 'while',
     condition : null,
@@ -828,7 +828,7 @@ export function While (source: TokenQueue) : Failure<PatternError> | Success<S0.
     const line = current.line
     const column = current.column
     const reason = 'missing-mientras'
-    return {error:true, result:{unexpected, expected, line, column, reason}}
+    return {error:true, result:{unexpected, expected, pos: {line, column}, reason, where: 'parser'}}
   }
 
   if (source.current().kind === SymbolKind.LeftPar) {
@@ -841,7 +841,7 @@ export function While (source: TokenQueue) : Failure<PatternError> | Success<S0.
     const line = current.line
     const column = current.column
     const reason = 'missing-par-at-condition'
-    return {error:true, result:{unexpected, expected, line, column, reason}}
+    return {error:true, result:{unexpected, expected, pos: {line, column}, reason, where: 'parser'}}
   }
 
   const queue: Token[] = []
@@ -869,7 +869,7 @@ export function While (source: TokenQueue) : Failure<PatternError> | Success<S0.
     const line = current.line
     const column = current.column
     const reason = 'missing-par-at-condition'
-    return {error:true, result:{unexpected, expected, line, column, reason}}
+    return {error:true, result:{unexpected, expected, pos: {line, column}, reason, where: 'parser'}}
   }
 
   skipWhiteSpace(source)
@@ -896,7 +896,7 @@ export function While (source: TokenQueue) : Failure<PatternError> | Success<S0.
     const line = current.line
     const column = current.column
     const reason = 'missing-finmientras'
-    return {error:true, result:{unexpected, expected, line, column, reason}}
+    return {error:true, result:{unexpected, expected, pos: {line, column}, reason, where: 'parser'}}
   }
 
   if (source.current().kind === SymbolKind.EOL) {
@@ -915,7 +915,7 @@ export function While (source: TokenQueue) : Failure<PatternError> | Success<S0.
 //    [<enunciado>]
 // 'finpara'
 
-export function For(source: TokenQueue) : Failure<PatternError> | Success<S0.For> {
+export function For(source: TokenQueue) : Failure<Errors.Pattern> | Success<S0.For> {
   const result: S0.For = {
     type: 'for',
     counter_init: null,
@@ -933,7 +933,7 @@ export function For(source: TokenQueue) : Failure<PatternError> | Success<S0.For
     const line = current.line
     const column = current.column
     const reason = 'missing-para'
-    return {error:true, result:{unexpected, expected, line, column, reason}}
+    return {error:true, result:{unexpected, expected, pos: {line, column}, reason, where: 'parser'}}
   }
 
   const queue: Token[] = []
@@ -960,7 +960,7 @@ export function For(source: TokenQueue) : Failure<PatternError> | Success<S0.For
       let line = current.line
       let column = current.column
       let reason = 'missing-hasta'
-      return {error:true, result:{unexpected, expected, line, column, reason}}
+      return {error:true, result:{unexpected, expected, pos: {line, column}, reason, where: 'parser'}}
     }
 
     const last_val_exp = Expression(source)
@@ -995,7 +995,7 @@ export function For(source: TokenQueue) : Failure<PatternError> | Success<S0.For
         let line = current.line
         let column = current.column
         let reason = 'missing-finpara'
-        return {error:true, result:{unexpected, expected, line, column, reason}}
+        return {error:true, result:{unexpected, expected, pos: {line, column}, reason, where: 'parser'}}
       }
 
       skipWhiteSpace(source)
@@ -1005,7 +1005,7 @@ export function For(source: TokenQueue) : Failure<PatternError> | Success<S0.For
   }
 }
 
-export function Until (source: TokenQueue) : Failure<PatternError> | Success<S0.Until> {
+export function Until (source: TokenQueue) : Failure<Errors.Pattern> | Success<S0.Until> {
   const result: S0.Until = {
     type : 'until',
     condition : null,
@@ -1022,7 +1022,7 @@ export function Until (source: TokenQueue) : Failure<PatternError> | Success<S0.
     let line = current.line
     let column = current.column
     let reason = 'missing-repetir'
-    return {error:true, result:{unexpected, expected, line, column, reason}}
+    return {error:true, result:{unexpected, expected, pos: {line, column}, reason, where: 'parser'}}
   }
 
   skipWhiteSpace(source)
@@ -1053,7 +1053,7 @@ export function Until (source: TokenQueue) : Failure<PatternError> | Success<S0.
     const line = current.line
     const column = current.column
     const reason = 'missing-hasta'
-    return {error:true, result:{unexpected, expected, line, column, reason}}
+    return {error:true, result:{unexpected, expected, pos: {line, column}, reason, where: 'parser'}}
   }
 
   if (source.current().kind === ReservedKind.Que) {
@@ -1066,7 +1066,7 @@ export function Until (source: TokenQueue) : Failure<PatternError> | Success<S0.
     const line = current.line
     const column = current.column
     const reason = 'missing-que'
-    return {error:true, result:{unexpected, expected, line, column, reason}}
+    return {error:true, result:{unexpected, expected, pos: {line, column}, reason, where: 'parser'}}
   }
 
   if (source.current().kind === SymbolKind.LeftPar) {
@@ -1079,7 +1079,7 @@ export function Until (source: TokenQueue) : Failure<PatternError> | Success<S0.
     const line = current.line
     const column = current.column
     const reason = 'missing-par-at-condition'
-    return {error:true, result:{unexpected, expected, line, column, reason}}
+    return {error:true, result:{unexpected, expected, pos: {line, column}, reason, where: 'parser'}}
   }
 
   const queue: Token[] = []
@@ -1106,7 +1106,7 @@ export function Until (source: TokenQueue) : Failure<PatternError> | Success<S0.
       const line = current.line
       const column = current.column
       const reason = 'missing-par-at-condition'
-      return {error:true, result:{unexpected, expected, line, column, reason}}
+      return {error:true, result:{unexpected, expected, pos: {line, column}, reason, where: 'parser'}}
     }
 
     if (source.current().kind === SymbolKind.EOL) {
@@ -1117,7 +1117,7 @@ export function Until (source: TokenQueue) : Failure<PatternError> | Success<S0.
   }
 }
 
-export function Return (source: TokenQueue) : Failure<PatternError> | Success<S0.Return> {
+export function Return (source: TokenQueue) : Failure<Errors.Pattern> | Success<S0.Return> {
   const result: S0.Return = {
     type:'return',
     expression:null
@@ -1130,7 +1130,7 @@ export function Return (source: TokenQueue) : Failure<PatternError> | Success<S0
     const line = current.line
     const column = current.column
     const reason = 'missing-retornar'
-    return {error:true, result:{unexpected, expected, line, column, reason}}
+    return {error:true, result:{unexpected, expected, pos: {line, column}, reason, where: 'parser'}}
   }
   else {
     source.next() // consumir 'retornar'
@@ -1148,7 +1148,7 @@ export function Return (source: TokenQueue) : Failure<PatternError> | Success<S0
   }
 }
 
-export function AnyStatement (source: TokenQueue) : Failure<PatternError> | Success<S0.Statement> {
+export function AnyStatement (source: TokenQueue) : Failure<Errors.Pattern> | Success<S0.Statement> {
   switch (source.current().kind) {
     case OtherKind.Word:
       if (source.peek().kind === SymbolKind.LeftPar) {
@@ -1174,12 +1174,12 @@ export function AnyStatement (source: TokenQueue) : Failure<PatternError> | Succ
       const expected = ['variable', 'funcion', 'procedimiento', 'si', 'mientras', 'repetir']
       const line = current.line
       const column = current.column
-      return {error:true, result:{unexpected, expected, line, column, reason}}
+      return {error:true, result:{unexpected, expected, pos: {line, column}, reason, where: 'parser'}}
     }
   }
 }
 
-export function MainModule (source: TokenQueue) : Failure<PatternError> | Success<S0.Main> {
+export function MainModule (source: TokenQueue) : Failure<Errors.Pattern> | Success<S0.Main> {
   const result: S0.Main = {
     type:'module',
     name:'main',
@@ -1197,7 +1197,7 @@ export function MainModule (source: TokenQueue) : Failure<PatternError> | Succes
     const line = current.line
     const column = current.column
     const reason = 'missing-variables'
-    return {error:true, result:{unexpected, expected, line, column, reason}}
+    return {error:true, result:{unexpected, expected, pos: {line, column}, reason, where: 'parser'}}
   }
 
   skipWhiteSpace(source)
@@ -1225,7 +1225,7 @@ export function MainModule (source: TokenQueue) : Failure<PatternError> | Succes
     let line = current.line
     let column = current.column
     let reason = 'missing-inicio'
-    return {error:true, result:{unexpected, expected, line, column, reason}}
+    return {error:true, result:{unexpected, expected, pos: {line, column}, reason, where: 'parser'}}
   }
 
   skipWhiteSpace(source)
@@ -1253,7 +1253,7 @@ export function MainModule (source: TokenQueue) : Failure<PatternError> | Succes
     let line = current.line
     let column = current.column
     let reason = 'missing-fin'
-    return {error:true, result:{unexpected, expected, line, column, reason}}
+    return {error:true, result:{unexpected, expected, pos: {line, column}, reason, where: 'parser'}}
   }
 
   if (source.current().kind === SymbolKind.EOL) {
@@ -1263,7 +1263,7 @@ export function MainModule (source: TokenQueue) : Failure<PatternError> | Succes
   return {error:false, result}
 }
 
-export function FunctionModule (source: TokenQueue) : Failure<PatternError> | Success<S0.Function> {
+export function FunctionModule (source: TokenQueue) : Failure<Errors.Pattern> | Success<S0.Function> {
   // Lectura del encabezado: <tipo> funcion <nombre>(<parametros>)
 
   const typename = TypeName(source)
@@ -1375,7 +1375,7 @@ export function FunctionModule (source: TokenQueue) : Failure<PatternError> | Su
   return {error:false, result}
 }
 
-export function ProcedureModule (source: TokenQueue) : Failure<PatternError> | Success<S0.Procedure> {
+export function ProcedureModule (source: TokenQueue) : Failure<Errors.Pattern> | Success<S0.Procedure> {
   // Lectura del encabezado: procedimiento <nombre>(<parametros>)
 
   if (source.current().kind != ReservedKind.Procedimiento) return UnexpectedTokenReport(source.current(), ['procedimiento'], 'missing-procedimiento');
@@ -1483,7 +1483,7 @@ export function ProcedureModule (source: TokenQueue) : Failure<PatternError> | S
   return {error:false, result}
 }
 
-export function DeclarationStatement (source: TokenQueue) : Failure<PatternError> | Success<S0.Declaration> {
+export function DeclarationStatement (source: TokenQueue) : Failure<Errors.Pattern> | Success<S0.Declaration> {
   const result: S0.Declaration = {
     type:'declaration',
     variables: []
@@ -1533,9 +1533,9 @@ export function DeclarationStatement (source: TokenQueue) : Failure<PatternError
         result:{
           unexpected:source .current().kind,
           expected: ['eol', 'comma'],
-          column: source.current().column,
-          line: source.current().line,
-          reason: '@declaration-unexpected-token' 
+          pos: {column: source.current().column, line: source.current().line},
+          reason: '@declaration-unexpected-token',
+          where: 'parser'
       }
     }
   }
@@ -1566,15 +1566,14 @@ export function skipWhiteSpace (source: TokenQueue) : void {
   }
 }
 
-function UnexpectedTokenReport(current_token: Token, expected:  string[], reason: string) : Failure<PatternError> {
-  const result: PatternError = {
+function UnexpectedTokenReport(current_token: Token, expected:  string[], reason: string) : Failure<Errors.Pattern> {
+  const result: Errors.Pattern = {
     unexpected: current_token.kind,
-    line: current_token.line,
-    column: current_token.column,
-    expected: expected
+    pos: {line: current_token.line, column: current_token.column},
+    expected: expected,
+    reason,
+    where: 'parser'
   }
-
-  result.reason = reason
 
   return {error:true, result}
 }

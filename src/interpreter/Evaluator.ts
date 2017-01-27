@@ -1,7 +1,7 @@
 'use strict'
 
 import {Failure, Success, S1, S3} from '../interfaces'
-import {Value, OutOfBounds, Read, Write, NullAction, Paused, SuccessfulReturn} from '../interfaces'
+import {Value, Errors, Read, Write, NullAction, Paused, SuccessfulReturn} from '../interfaces'
 
 /*
   Un evaluador sirve para ejecutar las acciones/enunciados de un modulo.
@@ -27,7 +27,7 @@ export class Evaluator {
     value_stack: Value[]
     module_stack: string[]
     statement_stack: S3.Statement[]
-    last_report: Failure<OutOfBounds> | SuccessfulReturn | Success<Paused>
+    last_report: Failure<Errors.OutOfBounds> | SuccessfulReturn | Success<Paused>
     next_statement: S3.Statement
     paused: boolean
   }
@@ -81,7 +81,7 @@ export class Evaluator {
     this.state.value_stack.push(v)
   }
 
-  step () : Failure<OutOfBounds> | SuccessfulReturn | Success<Paused> {
+  step () : Failure<Errors.OutOfBounds> | SuccessfulReturn | Success<Paused> {
     /**
      * El evaluador esta en pausa cuando esta esperando que sea realice alguna lectura.
      */
@@ -144,7 +144,7 @@ export class Evaluator {
    * evaluate
    * ejecuta los enunciados y establece el proximo enunciado
    */
-  private evaluate (s: S3.Statement) : Failure<OutOfBounds> | SuccessfulReturn {
+  private evaluate (s: S3.Statement) : Failure<Errors.OutOfBounds> | SuccessfulReturn {
     /**
      * Bandera que indica si el control del proximo enunciado se cede
      * a la función que lo evalua. Esto es verdadero para las estructuras
@@ -255,7 +255,7 @@ export class Evaluator {
     return {error: false, result: {action: 'none', done: this.state.done}}
   }
 
-  private assignv (s: S3.AssignV) : Failure<OutOfBounds> | Success<NullAction> {
+  private assignv (s: S3.AssignV) : Failure<Errors.OutOfBounds> | Success<NullAction> {
     const indexes = this.pop_indexes(s.total_indexes)
     
     if (this.is_whithin_bounds(indexes, s.dimensions)) {
@@ -275,11 +275,12 @@ export class Evaluator {
     else {
       const bad_index = this.get_bad_index(indexes, s.dimensions)
 
-      const result: OutOfBounds = {
+      const result: Errors.OutOfBounds = {
         bad_index: bad_index,
         dimensions: s.dimensions,
         name: s.varname,
-        reason: '@assignment-index-out-of-bounds',
+        reason: 'index-out-of-bounds',
+        where: 'evaluator',
         done: true
       }
 
@@ -287,7 +288,7 @@ export class Evaluator {
     }
   }
 
-  private getv_value (s: S3.GetV) : Failure<OutOfBounds> | Success<NullAction> {
+  private getv_value (s: S3.GetV) : Failure<Errors.OutOfBounds> | Success<NullAction> {
     const indexes = this.pop_indexes(s.total_indexes)
     
     if (this.is_whithin_bounds(indexes, s.dimensions)) {
@@ -307,11 +308,12 @@ export class Evaluator {
     else {
       const bad_index = this.get_bad_index(indexes, s.dimensions)
 
-      const result: OutOfBounds = {
+      const result: Errors.OutOfBounds = {
         bad_index: bad_index,
         dimensions: s.dimensions,
         name: s.varname,
-        reason: '@invocation-index-out-of-bounds',
+        reason: 'index-out-of-bounds',
+        where: 'evaluator',
         done: true 
       }
 

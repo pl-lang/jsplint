@@ -1,7 +1,7 @@
-import {Failure, Success, S0, S1, ParsedProgram} from '../interfaces'
+import {Failure, Success, S0, S1, ParsedProgram, Errors} from '../interfaces'
 
-export default function transform (ast: ParsedProgram) : Failure<S1.RepeatedVarError[]> | Success<S1.AST> {
-  const errors_found: S1.RepeatedVarError[] = [] 
+export default function transform (ast: ParsedProgram) : Failure<Errors.RepeatedVar[]> | Success<S1.AST> {
+  const errors_found: Errors.RepeatedVar[] = [] 
 
   const new_main = transform_main(ast.main)
 
@@ -37,11 +37,13 @@ export default function transform (ast: ParsedProgram) : Failure<S1.RepeatedVarE
     }
     else {
       return {error:false, result:new_ast}
-    } 
+    }
   }
+
+  return {error: true, result: errors_found}
 }
 
-function transform_module (old_module: S0.Module) : Failure<S1.RepeatedVarError[]> | Success<S1.TransformedModule> {
+function transform_module (old_module: S0.Module) : Failure<Errors.RepeatedVar[]> | Success<S1.TransformedModule> {
   switch (old_module.module_type) {
     case 'procedure':
     case 'function':
@@ -49,7 +51,7 @@ function transform_module (old_module: S0.Module) : Failure<S1.RepeatedVarError[
   }
 }
 
-function transform_main (old_module: S0.Main) : Failure<S1.RepeatedVarError[]> | Success<S1.TransformedMain> {
+function transform_main (old_module: S0.Main) : Failure<Errors.RepeatedVar[]> | Success<S1.TransformedMain> {
    const declarations = old_module.body.filter(statement => statement.type === 'declaration') as S0.Declaration[]
 
    const locals = declare_variables(declarations)
@@ -68,7 +70,7 @@ function transform_main (old_module: S0.Main) : Failure<S1.RepeatedVarError[]> |
    }
 }
 
-function transform_user_module (old_module: S0.Function | S0.Procedure) : Failure<S1.RepeatedVarError[]> | Success<S1.TransformedModule> {
+function transform_user_module (old_module: S0.Function | S0.Procedure) : Failure<Errors.RepeatedVar[]> | Success<S1.TransformedModule> {
    const declarations = old_module.body.filter(statement => statement.type === 'declaration') as S0.Declaration[]
 
    const locals = declare_variables(declarations)
@@ -102,8 +104,8 @@ function transform_user_module (old_module: S0.Function | S0.Procedure) : Failur
    }
 }
 
-function declare_variables (declarations: S0.Declaration[]) : Failure<S1.RepeatedVarError[]> | Success<S1.VariableDict> {
-  const repeated_variables: S1.RepeatedVarError[] = []
+function declare_variables (declarations: S0.Declaration[]) : Failure<Errors.RepeatedVar[]> | Success<S1.VariableDict> {
+  const repeated_variables: Errors.RepeatedVar[] = []
   const declared_variables: S1.VariableDict = {}
 
   for (let declaration of declarations) {
@@ -134,11 +136,12 @@ function declare_variables (declarations: S0.Declaration[]) : Failure<S1.Repeate
       else {
         const original = declared_variables[variable.name]
 
-        const error_info: S1.RepeatedVarError = {
+        const error_info: Errors.RepeatedVar = {
           reason: 'repeated-variable',
           name: original.name,
           first_type: original.datatype,
-          second_type: variable.datatype
+          second_type: variable.datatype,
+          where: 'declarator-transform'
         }
 
         repeated_variables.push(error_info)

@@ -7,7 +7,7 @@
 // Si la funcion no existe entonces devuelve un error.
 // import * as S0 from '../interfaces/ParsingInterfaces'
 
-import {Failure, Success, S0, S1, S2} from '../interfaces'
+import {Failure, Success, S0, S1, S2, Errors} from '../interfaces'
 
 export default function transform (ast: S1.AST) : Failure<S2.Error[]> | Success<S2.AST> {
   const new_ast = {
@@ -186,7 +186,7 @@ function transform_call (call: S0.Call, ast: S1.AST, module_name: string) : Fail
     }
   }
 
-  let info: Failure<S2.UndefinedModule[]> | Success<S1.Module> = null
+  let info: Failure<Errors.UndefinedModule[]> | Success<S1.Module> = null
 
   if (call.name != 'escribir' && call.name != 'escribir_linea' && call.name != 'leer') {
     info = get_module_info(call.name, ast)
@@ -514,23 +514,23 @@ function transform_expression (expression: S0.ExpElement[], ast: S1.AST, module_
   }
 }
 
-function get_module_info (name: string, ast: S1.AST) : Failure<S2.UndefinedModule[]> | Success<S1.Module> {
+function get_module_info (name: string, ast: S1.AST) : Failure<Errors.UndefinedModule[]> | Success<S1.Module> {
   if ( !(name in ast.modules.user_modules) ) {
-    return {error:true, result:[{reason: '@call-undefined-module', name}]}
+    return {error:true, result:[{reason: '@call-undefined-module', name, where: 'call-decorator-transform'}]}
   }
   else {
     return {error:false, result:ast.modules.user_modules[name]}
   }
 }
 
-function get_variable_info (name: string, variables: {[m:string]: S1.VariableDict}, module_name: string) : Failure<S2.UndefinedVariable[]> | Success<S2.VarInfo> {
+function get_variable_info (name: string, variables: {[m:string]: S1.VariableDict}, module_name: string) : Failure<Errors.UndefinedVariable[]> | Success<S2.VarInfo> {
   const exists = name in variables[module_name] || name in variables['main']
   const variable = name in variables[module_name] ? variables[module_name][name]:variables['main'][name]
 
   if (exists) {
     return {error:false, result:{datatype: variable.datatype, dimensions: variable.dimensions, is_array: variable.is_array}}
   }
-  else return {error:true, result:[{reason:'undefined-variable', name}]}
+  else return {error:true, result:[{reason:'undefined-variable', name, where: 'call-decorator-transform'}]}
 }
 
 function is_builtin (name:string) {

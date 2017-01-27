@@ -7,7 +7,7 @@ import Lexer from './Lexer'
 import TokenQueue from './TokenQueue'
 import {MainModule as MainModulePattern, skipWhiteSpace} from './Patterns'
 import {FunctionModule as FunctionPattern, ProcedureModule as ProcedurePattern} from './Patterns'
-import {S0, ParsedProgram, PatternError} from '../interfaces'
+import {S0, ParsedProgram, Errors} from '../interfaces'
 
 export default class Parser extends Emitter {
   constructor() {
@@ -52,7 +52,7 @@ export default class Parser extends Emitter {
       while (token_queue.current().name !== 'eof') {
         skipWhiteSpace(token_queue)
 
-        let module_match: (Failure<PatternError> | Success<S0.Procedure>) | (Failure<PatternError> | Success<S0.Function>)
+        let module_match: (Failure<Errors.Pattern> | Success<S0.Procedure>) | (Failure<Errors.Pattern> | Success<S0.Function>)
 
         if (token_queue.current().name == 'procedimiento') {
           module_match = ProcedurePattern(token_queue)

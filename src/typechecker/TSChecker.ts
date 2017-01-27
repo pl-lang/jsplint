@@ -1,9 +1,7 @@
-import {Typed, Failure, Success} from '../interfaces'
-import {TypeError, MissingOperands, IncompatibleOperand, IncompatibleOperands, IncompatibleTypesError, IncompatibleArgumentError} from '../interfaces'
-import {BadIOArgument} from '../interfaces'
+import {Typed, Failure, Success, Errors} from '../interfaces'
 
-export default function check (p: Typed.Program): TypeError[] {
-    let errors: TypeError[] = []
+export default function check (p: Typed.Program): Errors.TypeError[] {
+    let errors: Errors.TypeError[] = []
 
     for (let mn in p) {
         const mod = p[mn]
@@ -18,7 +16,7 @@ export default function check (p: Typed.Program): TypeError[] {
     return errors
 }
 
-function check_statement (s: Typed.Statement): TypeError[] {
+function check_statement (s: Typed.Statement): Errors.TypeError[] {
     switch (s.type) {
         case 'assignment':
             return check_assignment(s)
@@ -33,7 +31,7 @@ function check_statement (s: Typed.Statement): TypeError[] {
     }
 }
 
-function check_call (c: Typed.Call): Failure<TypeError[]>|Success<Typed.AtomicType> {
+function check_call (c: Typed.Call): Failure<Errors.TypeError[]>|Success<Typed.AtomicType> {
     /**
      * Para que la llamada no contenga errores:
      *  - Tiene que haber tantos argumentos como parametros
@@ -44,7 +42,7 @@ function check_call (c: Typed.Call): Failure<TypeError[]>|Success<Typed.AtomicTy
         return check_io(c)
     }
     else {
-        let errors: TypeError[] = []
+        let errors: Errors.TypeError[] = []
 
         /**
          * Ver si la cantidad de argumentos coincide con la cantidad
@@ -85,7 +83,7 @@ function check_call (c: Typed.Call): Failure<TypeError[]>|Success<Typed.AtomicTy
             const cond_b = (param as Typed.AtomicType).typename != 'real' && (arg.type as Typed.AtomicType).typename != 'entero'
 
             if (!(types_are_equal(arg.type, param) && (cond_a || cond_b))) {
-                const error: IncompatibleArgumentError = {
+                const error: Errors.IncompatibleArgument = {
                     reason: '@call-incompatible-argument',
                     where: 'typechecker',
                     expected: stringify(param),
@@ -105,14 +103,14 @@ function check_call (c: Typed.Call): Failure<TypeError[]>|Success<Typed.AtomicTy
     }
 }
 
-function check_io (c: Typed.Call): Failure<TypeError[]>|Success<Typed.AtomicType> {
+function check_io (c: Typed.Call): Failure<Errors.TypeError[]>|Success<Typed.AtomicType> {
     /**
      * Para las tres funciones (leer, escribir, y escribir_linea) hay
      * que revisar que los argumentos no tengan errores y ademas hay
      * que revisar que esos argumentos puedan reducirse a tipos
      * atomicos o cadenas. 
      */
-    let errors: TypeError[] = []
+    let errors: Errors.TypeError[] = []
 
     for (let i = 0; i < c.argtypes.length; i++) {
         const report = calculate_type(c.argtypes[i])
@@ -129,7 +127,7 @@ function check_io (c: Typed.Call): Failure<TypeError[]>|Success<Typed.AtomicType
             const cond_b = type.kind != 'atomic' && !(type instanceof Typed.StringType)
 
             if (cond_a || cond_b) {
-                const e: BadIOArgument = {
+                const e: Errors.BadIOArgument = {
                     index: i,
                     reason: 'bad-io-argument',
                     received: stringify(type),
@@ -149,8 +147,8 @@ function check_io (c: Typed.Call): Failure<TypeError[]>|Success<Typed.AtomicType
     }
 }
 
-function check_assignment (a: Typed.Assignment): TypeError[] {
-    let errors: TypeError[] = []
+function check_assignment (a: Typed.Assignment): Errors.TypeError[] {
+    let errors: Errors.TypeError[] = []
 
     const inv_report = check_invocation(a.left)
 
@@ -174,7 +172,7 @@ function check_assignment (a: Typed.Assignment): TypeError[] {
         const cond_b = (inv_report.result as Typed.AtomicType).typename == 'real' && (exp_report.result as Typed.AtomicType).typename == 'entero'
 
         if (!(types_are_equal(inv_report.result, exp_report.result) || (cond_a && cond_b))) {
-            const error: IncompatibleTypesError = {
+            const error: Errors.IncompatibleTypes = {
                 reason: '@assignment-incompatible-types',
                 where: 'typechecker',
                 expected: stringify(inv_report.result),
@@ -193,8 +191,8 @@ function check_assignment (a: Typed.Assignment): TypeError[] {
  * busca errores en los indices de una invocacion.
  * Si no hay errores devuelve el tipo del valor invocado.
  */
-function check_invocation(i: Typed.Invocation): Failure<TypeError[]>|Success<Typed.Type> {
-    let errors: TypeError[] = []
+function check_invocation(i: Typed.Invocation): Failure<Errors.TypeError[]>|Success<Typed.Type> {
+    let errors: Errors.TypeError[] = []
 
     for (let index of i.indextypes) {
         const exp_report = calculate_type(index)
@@ -218,9 +216,9 @@ function check_invocation(i: Typed.Invocation): Failure<TypeError[]>|Success<Typ
  * Por ejemplo: entero + entero = entero; entero + real = real
  */
 
-function calculate_type(exp: Typed.ExpElement[]): Failure<TypeError[]>|Success<Typed.Type> {
+function calculate_type(exp: Typed.ExpElement[]): Failure<Errors.TypeError[]>|Success<Typed.Type> {
     let stack: Typed.ExpElement[] = []
-    let errors: TypeError[] = []
+    let errors: Errors.TypeError[] = []
 
     for (let e of exp) {
         switch (e.type) {
@@ -285,7 +283,10 @@ function calculate_type(exp: Typed.ExpElement[]): Failure<TypeError[]>|Success<T
  * elementos en la pila o los tipos de estos no sean compatibles entre
  * si o con el operador.
  */
-const operators: {[o:string]: (s: Typed.ExpElement[])=> Failure<TypeError>|Success<Typed.ExpElement[]>} = {
+
+type OperatorFunction = (s: Typed.ExpElement[])=> Failure<Errors.TypeError>|Success<Typed.ExpElement[]>
+
+const operators: {[o:string]: OperatorFunction} = {
     plus: (s) => {
         const supported: string[] = ['entero', 'real']
 
@@ -307,13 +308,16 @@ const operators: {[o:string]: (s: Typed.ExpElement[])=> Failure<TypeError>|Succe
                  */
 
                 if (supported.indexOf(a) == -1 && supported.indexOf(b) == -1) {
-                    return {error: true, result: {reason: 'incompatible-operands', where: 'typechecker', bad_type_a: a, bad_type_b: b}}
+                    const result: Errors.IncompatibleOperands = {reason: 'incompatible-operands', where: 'typechecker', bad_type_a: a, bad_type_b: b, operator: '+'}
+                    return {error: true, result}
                 }
                 else if (supported.indexOf(a) == -1) {
-                    return  {error: true, result: {reason: 'incompatible-operand', where: 'typechecker', bad_type: a}}
+                    const result: Errors.IncompatibleOperand = {reason: 'incompatible-operand', where: 'typechecker', bad_type: a, operator: '+'}
+                    return  {error: true, result}
                 }
                 else {
-                    return  {error: true, result: {reason: 'incompatible-operand', where: 'typechecker', bad_type: b}}
+                    const result: Errors.IncompatibleOperand = {reason: 'incompatible-operand', where: 'typechecker', bad_type: b, operator: '+'}
+                    return  {error: true, result}
                 }
             }
 
@@ -336,7 +340,8 @@ const operators: {[o:string]: (s: Typed.ExpElement[])=> Failure<TypeError>|Succe
             return {error: false, result: s}
         }
         else {
-            return {error: true, result: {reason: 'missing-operands', where: 'typechecker', operator: 'plus', required: 2}}
+            const result: Errors.MissingOperands = {reason: 'missing-operands', where: 'typechecker', operator: '+', required: 2}
+            return {error: true, result}
         }
     }
 }
