@@ -967,12 +967,12 @@ export namespace Typed {
     indextypes: ExpElement[][]
   }
 
-  export interface Call {
-    type: 'call'
-    datatype: AtomicType // tipo de dato del valor que esta llamada retorna
-    argtypes: ExpElement[][] // tipos de los argumentos usados en la llamada
-    paramtypes: Type[] // tipos de los parametros declarados para este modulo
-    name: string
+  export interface Call extends S2.ModuleCall {
+    typings: {
+      args: Type[]
+      return: Type
+      parameters: Type
+    }
   }
 
   export type ExpElement = Type | Invocation | Call | Operator
