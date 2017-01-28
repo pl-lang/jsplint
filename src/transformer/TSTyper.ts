@@ -87,6 +87,8 @@ function transform_statement (a: S2.Statement, mn: string, p: S2.AST): Failure<E
             return transform_while(a, mn, p)
         case 'until':
             return transform_until(a, mn, p)
+        case 'return':
+            return transform_return(a, mn, p)
     }
 }
 
@@ -237,6 +239,25 @@ function transform_until (w: S2.Until, mn: string, p: S2.AST): Failure<Errors.Ex
             condition: c_report.result as Typed.ExpElement[],
             body
         }
+        return {error: false, result}
+    }
+}
+
+function transform_return (r: S2.Return, mn: string, p: S2.AST): Failure<Errors.ExtraIndexes[]>|Success<Typed.Return> {
+    const errors: Errors.ExtraIndexes[] = []
+
+    const exp = type_expression(r.expression, mn, p)
+
+    if (exp.error) {
+        return exp
+    }
+    else {
+        const result: Typed.Return = {
+            type: 'return',
+            actual: exp.result as Typed.ExpElement[],
+            expected: new Typed.AtomicType(r.expected)
+        }
+
         return {error: false, result}
     }
 }

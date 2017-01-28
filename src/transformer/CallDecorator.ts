@@ -337,16 +337,19 @@ function transform_for (statement: S1.For, ast: S1.AST, module_name: string) : F
   }
 }
 
-function transform_return (ret_statement: S0.Return, ast: S1.AST, module_name: string) : Failure<S2.Error[]>  | Success<S0.Return> {
+function transform_return (ret_statement: S0.Return, ast: S1.AST, module_name: string) : Failure<S2.Error[]>  | Success<S2.Return> {
   const exp_returned = transform_expression(ret_statement.expression, ast, module_name)
+
+  const ret_typename = ast.modules.user_modules[module_name].return_type
 
   if (exp_returned.error) {
     return exp_returned
   }
   else {
-    const new_return: S0.Return = {
+    const new_return: S2.Return = {
       type: 'return',
-      expression: exp_returned.result as S0.ExpElement[]
+      expression: exp_returned.result as S2.ExpElement[],
+      expected: ret_typename
     }
 
     return {error:false, result:new_return}

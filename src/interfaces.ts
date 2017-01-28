@@ -538,7 +538,13 @@ export namespace S2 {
     body: Statement[]
   }
 
-  export type Statement = ModuleCall | Assignment | If | While | For | Until | S0.Return
+  export interface Return {
+    type: 'return'
+    expression: ExpElement[]
+    expected: TypeNameString
+  }
+
+  export type Statement = ModuleCall | Assignment | If | While | For | Until | Return
 
   export type Module = Function | Procedure
 
@@ -864,10 +870,16 @@ export namespace Typed {
     | Until
     | If
     | Assignment
-    | Call;
-  // | Return
+    | Call
+    | Return;
   // | ReadCall
   // | WriteCall;
+
+  export interface Return {
+    type: 'return'
+    actual: ExpElement[]
+    expected: Type
+  }
 
   export interface For {
     type: 'for'
