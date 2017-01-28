@@ -14,7 +14,7 @@ export default class Parser extends Emitter {
     super(['parsing-started', 'lexical-error', 'syntax-error', 'parsing-finished'])
   }
 
-  parse(code: string) : Failure<string> | Success<ParsedProgram>  {
+  parse(code: string) : Failure<Errors.Lexical[] | Errors.Pattern[]> | Success<ParsedProgram>  {
     this.emit('parsing-started')
 
     const source = new SourceWrapper(code)
@@ -24,11 +24,7 @@ export default class Parser extends Emitter {
 
     // emitir eventos de error si hubo alguno y finalizar parseo
     if (lexer_report.error) {
-      for (let error_report of lexer_report.result) {
-        this.emit('lexical-error', error_report)
-      }
-      this.emit('parsing-finished', {error:true, result:'lexical-error'})
-      return {error:true, result:'lexical-error'}
+      return {error: true, result: lexer_report.result}
     }
 
     let token_queue = new TokenQueue(lexer_report.result as Token[])
@@ -39,8 +35,7 @@ export default class Parser extends Emitter {
     const main_match = MainModulePattern(token_queue)
 
     if (main_match.error) {
-      this.emit('syntax-error', main_match.result)
-      return {error:true, result:'syntax-error'}
+      return {error: true, result: [main_match.result]}
     }
     else if (main_match.error == false) {
       const result: ParsedProgram = {
@@ -65,8 +60,7 @@ export default class Parser extends Emitter {
 
         // si hubo un error emitir un error de sintaxis y finalizar parseo
         if (module_match.error) {
-          this.emit('syntax-error', module_match.result)
-          return {error:true, result:'syntax-error'}
+          return {error: true, result: [module_match.result]}
         }
         else if (module_match.error == false) {
           result.user_modules[module_match.result.name] = module_match.result
