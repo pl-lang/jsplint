@@ -1,8 +1,8 @@
-import {Failure, Success, S0, S1, S2, Typed, Errors} from '../interfaces'
-import {drop} from '../utility/helpers'
+import {Failure, Success, S0, S2, Typed, Errors} from '../interfaces'
+import {drop, types_are_equal, stringify} from '../utility/helpers'
 
-export default function transform (ast: S2.AST): Failure<Errors.ExtraIndexes[]>|Success<Typed.Program> {
-    let errors: Errors.ExtraIndexes[] = []
+export default function transform (ast: S2.AST): Failure<Typed.Error[]>|Success<Typed.Program> {
+    let errors: Typed.Error[] = []
 
     const typed_program: Typed.Program = {}
 
@@ -33,8 +33,8 @@ export default function transform (ast: S2.AST): Failure<Errors.ExtraIndexes[]>|
     }
 }
 
-function transfor_module (m: S2.Module | S2.Main, p: S2.AST): Failure<Errors.ExtraIndexes[]>|Success<Typed.Module> {
-    let errors: Errors.ExtraIndexes[] = []
+function transfor_module (m: S2.Module | S2.Main, p: S2.AST): Failure<Typed.Error[]>|Success<Typed.Module> {
+    let errors: Typed.Error[] = []
 
     let typed_module: Typed.Module
 
@@ -73,7 +73,7 @@ function transfor_module (m: S2.Module | S2.Main, p: S2.AST): Failure<Errors.Ext
     }
 }
 
-function transform_statement (a: S2.Statement, mn: string, p: S2.AST): Failure<Errors.ExtraIndexes[]>|Success<Typed.Statement> {
+function transform_statement (a: S2.Statement, mn: string, p: S2.AST): Failure<Typed.Error[]>|Success<Typed.Statement> {
     switch (a.type) {
         case 'assignment':
             return transform_assignment (a, mn, p)
@@ -92,8 +92,8 @@ function transform_statement (a: S2.Statement, mn: string, p: S2.AST): Failure<E
     }
 }
 
-function transform_if (a: S2.If, mn: string, p: S2.AST): Failure<Errors.ExtraIndexes[]> | Success<Typed.If> {
-    let errors: Errors.ExtraIndexes[] = []
+function transform_if (a: S2.If, mn: string, p: S2.AST): Failure<Typed.Error[]> | Success<Typed.If> {
+    let errors: Typed.Error[] = []
 
     const c_report = type_expression(a.condition, mn, p)
 
@@ -127,18 +127,28 @@ function transform_if (a: S2.If, mn: string, p: S2.AST): Failure<Errors.ExtraInd
         return {error: true, result: errors}
     }
     else {
-        const result: Typed.If = {
-            type: 'if',
-            condition: c_report.result as Typed.ExpElement[],
-            true_branch: typed_tb,
-            false_branch: typed_fb
+        const cond_type = calculate_type(c_report.result as Typed.ExpElement[])
+
+        if (cond_type.error) {
+            return {error: true, result: errors.concat(cond_type.result)}
         }
-        return {error: false, result}
+        else {
+            const result: Typed.If = {
+                type: 'if',
+                condition: c_report.result as Typed.ExpElement[],
+                true_branch: typed_tb,
+                false_branch: typed_fb,
+                typings: {
+                    condition: cond_type.result as Typed.Type
+                }
+            }
+            return {error: false, result}
+        }
     }
 }
 
-function transform_for (f: S2.For, mn: string, p: S2.AST): Failure<Errors.ExtraIndexes[]>|Success<Typed.For> {
-    let errors: Errors.ExtraIndexes[] = []
+function transform_for (f: S2.For, mn: string, p: S2.AST): Failure<Typed.Error[]>|Success<Typed.For> {
+    let errors: Typed.Error[] = []
 
     const init = transform_assignment(f.counter_init, mn, p)
 
@@ -167,18 +177,29 @@ function transform_for (f: S2.For, mn: string, p: S2.AST): Failure<Errors.ExtraI
         return {error: true, result: errors}
     }
     else {
-        const result: Typed.For = {
-            type: 'for',
-            counter_init: init.result as Typed.Assignment,
-            body: body,
-            last_value: last.result as Typed.ExpElement[]
+        const last_v_type = calculate_type(last.result as Typed.ExpElement[])
+
+        if (last_v_type.error) {
+            return {error: true, result: errors.concat(last_v_type.result)}
         }
-        return {error: false, result}
+        else {
+            const result: Typed.For = {
+                type: 'for',
+                counter_init: init.result as Typed.Assignment,
+                body: body,
+                last_value: last.result as Typed.ExpElement[],
+                typings: {
+                    init_value: (init.result as Typed.Assignment).typings.right,
+                    last_value: last_v_type.result as Typed.Type
+                }
+            }
+            return {error: false, result}
+        }
     }
 }
 
-function transform_while (w: S2.While, mn: string, p: S2.AST): Failure<Errors.ExtraIndexes[]> | Success<Typed.While> {
-    let errors: Errors.ExtraIndexes[] = []
+function transform_while (w: S2.While, mn: string, p: S2.AST): Failure<Typed.Error[]> | Success<Typed.While> {
+    let errors: Typed.Error[] = []
 
     const c_report = type_expression(w.condition, mn, p)
 
@@ -186,14 +207,14 @@ function transform_while (w: S2.While, mn: string, p: S2.AST): Failure<Errors.Ex
         errors = errors.concat(c_report.result)
     }
 
-    const body: Typed.Statement[] = []
+    const body_statements: Typed.Statement[] = []
     for (let e of w.body) {
         const report = transform_statement(e, mn, p)
         if (report.error) {
             errors = errors.concat(report.result)
         }
         else {
-            body.push(report.result as Typed.Statement)
+            body_statements.push(report.result as Typed.Statement)
         }
     }
 
@@ -201,32 +222,43 @@ function transform_while (w: S2.While, mn: string, p: S2.AST): Failure<Errors.Ex
         return {error: true, result: errors}
     }
     else {
-        const result: Typed.While = {
-            type: 'while',
-            condition: c_report.result as Typed.ExpElement[],
-            body
+        const condition_type = calculate_type(c_report.result as Typed.ExpElement[])
+
+        if (condition_type.error) {
+            return {error: true, result: errors.concat(condition_type.result)}
         }
-        return {error: false, result}
+        else {
+            const result: Typed.While = {
+                type: 'while',
+                condition: c_report.result as Typed.ExpElement[],
+                body: body_statements,
+                typings: {
+                    body: body_statements,
+                    condition: condition_type.result as Typed.Type
+                }
+            }
+            return {error: false, result}
+        }
     }
 }
 
-function transform_until (w: S2.Until, mn: string, p: S2.AST): Failure<Errors.ExtraIndexes[]> | Success<Typed.Until> {
-    let errors: Errors.ExtraIndexes[] = []
+function transform_until (u: S2.Until, mn: string, p: S2.AST): Failure<Typed.Error[]> | Success<Typed.Until> {
+    let errors: Typed.Error[] = []
 
-    const c_report = type_expression(w.condition, mn, p)
+    const c_report = type_expression(u.condition, mn, p)
 
     if (c_report.error) {
         errors = errors.concat(c_report.result)
     }
 
-    const body: Typed.Statement[] = []
-    for (let e of w.body) {
+    const body_statements: Typed.Statement[] = []
+    for (let e of u.body) {
         const report = transform_statement(e, mn, p)
         if (report.error) {
             errors = errors.concat(report.result)
         }
         else {
-            body.push(report.result as Typed.Statement)
+            body_statements.push(report.result as Typed.Statement)
         }
     }
 
@@ -234,17 +266,28 @@ function transform_until (w: S2.Until, mn: string, p: S2.AST): Failure<Errors.Ex
         return {error: true, result: errors}
     }
     else {
-        const result: Typed.Until = {
-            type: 'until',
-            condition: c_report.result as Typed.ExpElement[],
-            body
+        const condition_type = calculate_type(c_report.result as Typed.ExpElement[])
+
+        if (condition_type.error) {
+            return {error: true, result: errors.concat(condition_type.result)}
         }
-        return {error: false, result}
+        else {
+            const result: Typed.Until = {
+                type: 'until',
+                condition: c_report.result as Typed.ExpElement[],
+                body: body_statements,
+                typings: {
+                    body: body_statements,
+                    condition: condition_type.result as Typed.Type
+                }
+            }
+            return {error: false, result}
+        }
     }
 }
 
-function transform_return (r: S2.Return, mn: string, p: S2.AST): Failure<Errors.ExtraIndexes[]>|Success<Typed.Return> {
-    const errors: Errors.ExtraIndexes[] = []
+function transform_return (r: S2.Return, mn: string, p: S2.AST): Failure<Typed.Error[]>|Success<Typed.Return> {
+    const errors: Typed.Error[] = []
 
     const exp = type_expression(r.expression, mn, p)
 
@@ -252,20 +295,38 @@ function transform_return (r: S2.Return, mn: string, p: S2.AST): Failure<Errors.
         return exp
     }
     else {
-        const result: Typed.Return = {
-            type: 'return',
-            actual: exp.result as Typed.ExpElement[],
-            expected: new Typed.AtomicType(r.expected)
-        }
+        /**
+         * el tipo del valor de este enunciado 'retornar'
+         */
+        const report = calculate_type(exp.result as Typed.ExpElement[])
 
-        return {error: false, result}
+        if (report.error) {
+            return report
+        }
+        else {
+            const {type, expected} = r
+
+            const result: Typed.Return = {
+                type,
+                expression: exp.result as Typed.ExpElement[],
+                typings: {
+                    actual: report.result as Typed.Type,
+                    expected: new Typed.AtomicType(expected)
+                }
+            }
+
+            return {error: false, result}
+        }
     }
 }
 
-function type_call (a: S2.ModuleCall, mn: string, p: S2.AST): Failure<Errors.ExtraIndexes[]>|Success<Typed.Call> {
-    let errors: Errors.ExtraIndexes[] = []
+function type_call (a: S2.ModuleCall, mn: string, p: S2.AST): Failure<Typed.Error[]>|Success<Typed.Call> {
+    let errors: Typed.Error[] = []
 
-    const argtypes: Typed.ExpElement[][] = []
+    /**
+     * epxresiones de tipo de cada argumento
+     */
+    const transformed_args: Typed.ExpElement[][] = []
 
     for (let arg of a.args) {
         const report = type_expression(arg, mn, p)
@@ -274,7 +335,7 @@ function type_call (a: S2.ModuleCall, mn: string, p: S2.AST): Failure<Errors.Ext
             errors = errors.concat(report.result)
         }
         else {
-            argtypes.push(report.result as Typed.ExpElement[])
+            transformed_args.push(report.result as Typed.ExpElement[])
         }
     }
 
@@ -282,19 +343,48 @@ function type_call (a: S2.ModuleCall, mn: string, p: S2.AST): Failure<Errors.Ext
         return {error: true, result: errors}
     }
     else {
-        const paramtypes = type_params(a.parameters)
+        /**
+         * reducir las expresiones a tipos
+         */
 
-        const datatype = new Typed.AtomicType(a.return_type)
+        const type_reports = transformed_args.map(calculate_type)
+        const argtypes: Typed.Type[] = []
+        let error_found = false
 
-        const result: Typed.Call = {
-            type: 'call',
-            name: a.name,
-            argtypes,
-            datatype,
-            paramtypes
+        for (let report of type_reports) {
+            if (report.error) {
+                error_found = true
+                errors = errors.concat(report.result)
+            }
+            else {
+                argtypes.push(report.result as Typed.Type)
+            }
         }
 
-        return {error: false, result}
+        if (error_found) {
+            return {error: true, result: errors}
+        }
+        else {
+            const paramtypes = type_params(a.parameters)
+
+            const ret = new Typed.AtomicType(a.return_type)
+
+            const {type, name, parameters} = a
+
+            const result: Typed.Call = {
+                type,
+                name,
+                args: transformed_args,
+                parameters,
+                typings: {
+                    args: argtypes,
+                    parameters: paramtypes,
+                    return: ret
+                }
+            }
+
+            return {error: false, result}
+        }
     }
 }
 
@@ -322,120 +412,77 @@ function type_params (params: S0.Parameter[]): Typed.Type[] {
     return paramtypes
 }
 
-function transform_assignment (a: S2.Assignment, mn: string, p: S2.AST): Failure<Errors.ExtraIndexes[]>|Success<Typed.Assignment> {
-    let errors: Errors.ExtraIndexes[] = []
+function transform_invocation (i: S2.InvocationInfo | S2.InvocationValue, mn: string, p: S2.AST): Failure<Errors.ExtraIndexes[]> | Success<Typed.Invocation> {
+    let errors: any[] = []
 
-    const left_type =  type_variable(a.left, mn, p)
-
-    if (left_type.error) {
-        errors = errors.concat(left_type.result)
-    }
-
-    const right_type = type_expression(a.right, mn, p)
-
-    if (right_type.error) {
-        errors = errors.concat(right_type.result)
+    const index_exps: Typed.ExpElement[][] = []
+    for (let index of i.indexes) {
+        const report = type_expression(index, mn, p)
+        if (report.error) {
+            errors = errors.concat(report.result)
+        }
+        else {
+            index_exps.push(report.result as Typed.ExpElement[])
+        }
     }
 
     if (errors.length > 0) {
         return {error: true, result: errors}
     }
     else {
-        return {error: false, result: {type: 'assignment', left: left_type.result as Typed.Invocation, right: right_type.result as Typed.ExpElement[]}}
-    }
+        const type_reports = index_exps.map(calculate_type)
+    } 
 }
 
-function type_variable (iv: S2.InvocationInfo, mn: string, p: S2.AST): Failure<Errors.ExtraIndexes[]>|Success<Typed.Invocation> {
-    let errors: Errors.ExtraIndexes[] =  []
+function transform_assignment (a: S2.Assignment, mn: string, p: S2.AST): Failure<Typed.Error[]>|Success<Typed.Assignment> {
+    let errors: Typed.Error[] = []
 
-    if (iv.indexes.length > iv.dimensions.length)  {
-        /**
-         * Se esta invocando una variable con mas indices
-         * de los permitidos.
-         */
-        errors.push({where: 'typer' ,reason:'@invocation-extra-indexes', name: iv.name, dimensions: iv.dimensions.length,indexes: iv.indexes.length})
+    const left_type = type_invocation(a.left, mn, p)
 
-        /**
-         * Solo queda ver si tambien hay errores en esos indices...
-         */
-        for (let index of iv.indexes) {
-            const report = type_expression(index, mn, p)
-            if (report.error) {
-                for (let error of report.result) {
-                    errors.push(error)
-                }
-            }
-            /**
-             * Ignoro el caso donde no se encontro un error en el indice
-             * porque basta con que se encuentre un error para devolver
-             * Failure<...>
-             */
-        }
+    if (left_type.error) {
+        errors = errors.concat(left_type.result)
+    }
+
+    const typed_right = type_expression(a.right, mn, p)
+
+    if (typed_right.error) {
+        errors = errors.concat(typed_right.result)
 
         return {error: true, result: errors}
     }
-
-    if (iv.is_array) {
+    else {
         /**
-         * Se esta invocando una variable correctamente y la variable es un arreglo
-         * indexado.
+         * reducir la expresion tipada a un solo tipo
          */
 
-        /**
-         * Si la variable es un arreglo puede tener muchas dimensiones.
-         * Una variable de muchas dimensiones puede verse como un vector
-         * de vectores donde cada vector puede contener un vector o un tipo
-         * 'atomico'.
-         * 
-         * Un vector[2][3][2] puede verse como dos matrices 3x2 o un vector 2 que 
-         * contiene dos vectores 3, cuyas celdas contienen vectores 2.  
-         */
+        const right_type = calculate_type(typed_right.result as Typed.ExpElement[])
 
-        const remaining_dimensions = drop(iv.indexes.length, iv.dimensions)
-        let last_type: Typed.Type
-        for (let i = remaining_dimensions.length - 1; i >= 0; i--) {
-            if (i == remaining_dimensions.length - 1) {
-                last_type = new Typed.ArrayType(new Typed.AtomicType(iv.datatype), remaining_dimensions[i])
-            }
-            else {
-                last_type = new Typed.ArrayType(last_type, remaining_dimensions[i])
-            }
-        }
+        if (right_type.error) {
+            errors = errors.concat(right_type.result)
 
-        /**
-         * tipos de los indices o errores encontrados en ellos
-         */
-        const indextypes_report = type_indexes(iv.indexes, mn, p)
-
-        if (indextypes_report.error) {
-            return indextypes_report
+            return {error: true, result: errors}
         }
         else {
-            const result: Typed.Invocation = {
-                type: 'invocation',
-                datatype: last_type,
-                indextypes: indextypes_report.result as Typed.ExpElement[][]
+            /**
+             * copiar las propiedades que permanecen constantes
+             */
+            const {type, left, right} = a
+
+            const result: Typed.Assignment = {
+                type,
+                left: left_type.result as Typed.Invocation,
+                right: typed_right.result as Typed.ExpElement[],
+                typings: {left: (left_type.result as Typed.Invocation).typings.type, right: right_type.result as Typed.Type}
             }
+
             return {error: false, result}
         }
     }
-    else {
-        /**
-         * Se esta invocando una variable normal o un arreglo sin indices.
-         */
-        const result: Typed.Invocation = {
-            datatype: new Typed.AtomicType(iv.datatype),
-            indextypes: [],
-            type: 'invocation'
-        }
-
-        return {error: false, result}
-    }
 }
 
-function type_expression (es: S2.ExpElement[], mn: string, p: S2.AST): Failure<Errors.ExtraIndexes[]>|Success<Typed.ExpElement[]> {
+function type_expression (es: S2.ExpElement[], mn: string, p: S2.AST): Failure<Typed.Error[]>|Success<Typed.ExpElement[]> {
     const typed_exp: Typed.ExpElement[] = []
-    let errors: Errors.ExtraIndexes[] = []
+    let errors: Typed.Error[] = []
 
     for (let e of es) {
         switch (e.type) {
@@ -451,7 +498,7 @@ function type_expression (es: S2.ExpElement[], mn: string, p: S2.AST): Failure<E
                 }
                 break
             case 'literal':
-                typed_exp.push(type_literal(e))
+                typed_exp.push(e)
                 break
             case 'call':
                 {
@@ -478,12 +525,19 @@ function type_expression (es: S2.ExpElement[], mn: string, p: S2.AST): Failure<E
     }
 }
 
-function type_invocation (i: S2.InvocationValue, mn: string, p: S2.AST): Failure<Errors.ExtraIndexes[]>|Success<Typed.Invocation> {
-    let errors: Errors.ExtraIndexes[] = []
-    let datatype: Typed.Type
+function type_invocation (i: (S2.InvocationValue | S2.InvocationInfo), mn: string, p: S2.AST): Failure<Typed.Error[]>|Success<Typed.Invocation> {
+    let errors: Typed.Error[] = []
+
+    /**
+     * el tipo de dato que esta invocacion retorna
+     */
+    let invocation_datatype: Typed.Type
 
     if (i.is_array) {
-        const indextypes_report = type_indexes(i.indexes, mn, p)
+        /**
+         * 'expresiones de tipo'
+         */
+        const type_exps = type_indexes(i.indexes, mn, p)
 
         if (i.indexes.length > i.dimensions.length) {
             const error: Errors.ExtraIndexes = {
@@ -502,9 +556,13 @@ function type_invocation (i: S2.InvocationValue, mn: string, p: S2.AST): Failure
              * solo hay que calcular el tipo resultante y los tipos
              * de los indices.
              */
-            datatype = new Typed.AtomicType(i.datatype)
+            invocation_datatype = new Typed.AtomicType(i.datatype)
         }
         else {
+            /**
+             * Como hay menos indices que dimensiones hay que calcular
+             * el tipo del valor que esta invocacion retorna
+             */
             const remaining_dimensions = drop(i.indexes.length, i.dimensions)
             let last_type: Typed.Type
             for (let j = remaining_dimensions.length - 1; j >= 0; j--) {
@@ -516,41 +574,81 @@ function type_invocation (i: S2.InvocationValue, mn: string, p: S2.AST): Failure
                 }
             }
 
-            datatype = last_type
+            invocation_datatype = last_type
         }
 
-        if (errors.length > 0 || indextypes_report.error)  {
-            if (indextypes_report.error) {
-                errors = errors.concat(indextypes_report.result)
+        if (errors.length > 0 || type_exps.error)  {
+            if (type_exps.error) {
+                errors = errors.concat(type_exps.result)
             }
             return {error: true, result: errors}
         }
         else {
-            const result: Typed.Invocation = {
-                datatype,
-                indextypes: indextypes_report.result as Typed.ExpElement[][],
-                type: 'invocation'
+            /**
+             * Reducir los indices a tipos individuales...ultima
+             * oportunidad para que haya errores
+             */
+            const types = (type_exps.result as Typed.ExpElement[][]).map(calculate_type)
+            let indextype_error_found = false
+
+            for (let report of types) {
+                if (report.error) {
+                    indextype_error_found = true
+                    errors = errors.concat(report.result)
+                }
             }
-            return {error: false, result}
+
+            if (indextype_error_found) {
+                return {error: true, result: errors}
+            }
+            else {
+                const indextypes: Typed.Type[] = types.map(t => t.result) as Typed.Type[]
+                
+                const {dimensions, datatype, indexes, name, is_array} = i
+
+                const result: Typed.Invocation = {
+                    type: 'invocation',
+                    datatype,
+                    indexes,
+                    dimensions,
+                    name,
+                    is_array,
+                    typings: {
+                        indexes: indextypes,
+                        type: invocation_datatype
+                    }
+                }
+                return {error: false, result}
+            }
         }
     }
     else {
+        const {dimensions, datatype, indexes, name, is_array} = i
+
         const result: Typed.Invocation = {
-            datatype: new Typed.AtomicType(i.datatype),
-            indextypes: [],
-            type: 'invocation'
+            type: 'invocation',
+            datatype,
+            dimensions,
+            indexes,
+            name,
+            is_array,
+            typings: {
+                indexes: [],
+                type: new Typed.AtomicType(datatype)
+            }
         }
+
         return {error: false, result}
     }
 }
 
-function type_indexes (indexes: S2.ExpElement[][], mn: string, p: S2.AST): Failure<Errors.ExtraIndexes[]>|Success<Typed.ExpElement[][]> {
+function type_indexes (indexes: S2.ExpElement[][], mn: string, p: S2.AST): Failure<Typed.Error[]>|Success<Typed.ExpElement[][]> {
     /**
      * arreglo con los tipos de los indices
      */
     const indextypes: Typed.ExpElement[][] = []
 
-    let errors: Errors.ExtraIndexes[] = []
+    let errors: Typed.Error[] = []
 
     for (let index of indexes) {
         const report = type_expression(index, mn, p)
@@ -579,5 +677,160 @@ function type_literal (l: S0.LiteralValue): Typed.Type {
         case 'number': {
             return (l.value as number) - Math.trunc(l.value as number) > 0 ? new Typed.AtomicType('real'):new Typed.AtomicType('entero')
         }
+    }
+}
+
+/**
+ * calculate_type
+ * "ejecuta" una expresion de tipos y calcula el tipo resultante
+ * 
+ * Por ejemplo: entero + entero = entero; entero + real = real
+ */
+
+function calculate_type(exp: Typed.ExpElement[]): Failure<Typed.Error[]>|Success<Typed.Type> {
+    let stack: Typed.Type[] = []
+    let errors: Typed.Error[] = []
+
+    for (let e of exp) {
+        switch (e.type) {
+            case 'literal':
+                stack.push(type_literal(e))
+            break
+            case 'invocation': 
+                stack.push(e.typings.type)
+                break
+            case 'call':
+                stack.push(e.typings.return)
+                break
+            case 'operator': {
+                const op_report = operate(stack, e.name)
+                if (op_report.error) {
+                    errors = errors.concat(op_report.result)
+                }
+                else {
+                    stack = op_report.result as Typed.Type[]
+                }
+            }
+            break
+        }
+    }
+
+    if (errors.length > 0) {
+        return {error: true, result: errors}
+    }
+    else {
+        return {error: false, result: stack.pop() as Typed.Type}
+    }
+}
+
+function operate (s: Typed.Type[], op: string): Failure<Typed.Error>|Success<Typed.Type[]> {
+    switch (op) {
+        case 'plus':
+        case 'times':
+        case 'minus':
+        case 'power':
+            return plus_times(s, op)
+        case 'minor':
+        case 'minor-eq':
+        case 'major':
+        case 'major-eq':
+        case 'equal':
+        case 'different':
+            return comparison(s, op)
+    }
+}
+
+/**
+ * Los operadores se implementan como funciones que toman una pila,
+ * desapilan tantos elementos como necesiten, operan con ellos,
+ * apilan el resultado y devuelven la nueva pila.
+ * 
+ * Tambien pueden devolver un error en caso de que no haya suficientes
+ * elementos en la pila o los tipos de estos no sean compatibles entre
+ * si o con el operador.
+ */
+
+/**
+ * plus_times calcula el tipo producido por: una suma, una resta, una multiplicacion,
+ * y una potencia
+ */
+function plus_times (s: Typed.Type[], op: string): Failure<Typed.Error>|Success<Typed.Type[]> {
+    const supported: string[] = ['entero', 'real']
+
+    if (s.length >= 2) {
+        /**
+         * Si la expresion era "2 + 3" entonces: a = 3 y b = 2
+         */
+        const a: string = stringify(s.pop() as Typed.Type)
+        const b: string = stringify(s.pop() as Typed.Type)
+
+        if (supported.indexOf(a) == -1 || supported.indexOf(b) == -1 ) {
+            /**
+             * ERROR: este operador no opera sobre el tipo de alguno de sus operandos
+             */
+
+            if (supported.indexOf(a) == -1 && supported.indexOf(b) == -1) {
+                const result: Errors.IncompatibleOperands = {reason: 'incompatible-operands', where: 'typer', bad_type_a: a, bad_type_b: b, operator: op}
+                return {error: true, result}
+            }
+            else if (supported.indexOf(a) == -1) {
+                const result: Errors.IncompatibleOperand = {reason: 'incompatible-operand', where: 'typer', bad_type: a, operator: op}
+                return  {error: true, result}
+            }
+            else {
+                const result: Errors.IncompatibleOperand = {reason: 'incompatible-operand', where: 'typer', bad_type: b, operator: op}
+                return  {error: true, result}
+            }
+        }
+
+        switch (a) {
+            case 'entero':
+                switch (b) {
+                    case 'entero':
+                        s.push(new Typed.AtomicType('entero'))
+                        break
+                    case 'real':
+                        s.push(new Typed.AtomicType('real'))
+                        break
+                }
+                break
+            case 'real':
+                s.push(new Typed.AtomicType('real'))
+                break
+        }
+
+        return {error: false, result: s}
+    }
+    else {
+        const result: Errors.MissingOperands = {reason: 'missing-operands', where: 'typer', operator: op, required: 2}
+        return {error: true, result}
+    }
+}
+
+function comparison (s: Typed.Type[], op: string): Failure<Errors.BadComparisonOperands|Errors.MissingOperands>|Success<Typed.Type[]> {
+    if (s.length >= 2) {
+        const a = s.pop()
+        const b = s.pop()
+
+        const atomic_cond = a.kind == 'atomic' && b.kind == 'atomic'
+        const a_float_or_int = (a as Typed.AtomicType).typename == 'entero' || (a as Typed.AtomicType).typename == 'real'
+        const b_float_or_int = (b as Typed.AtomicType).typename == 'entero' || (b as Typed.AtomicType).typename == 'real'
+
+        if (!(((types_are_equal(a, b) && atomic_cond) || (atomic_cond && a_float_or_int && b_float_or_int)))) {
+            /**
+             * Este error se detecta cuando se intenta comparar datos de tipos incompatibles
+             * o cuando alguno de los operandos es un arreglo.
+             */
+            const result: Errors.BadComparisonOperands = {reason: '@comparison-bad-operands', where: 'typer', left: stringify(b), right: stringify(a)}
+            return {error: true, result}
+        }
+        else {
+            s.push(new Typed.AtomicType('logico'))
+            return {error: false, result: s}
+        }
+    }
+    else {
+        const result: Errors.MissingOperands = {reason: 'missing-operands', where: 'typer', operator: op, required: 2}
+        return {error: true, result}
     }
 }

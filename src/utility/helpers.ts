@@ -1,25 +1,4 @@
-// Estas dos funciones quedan comentadas como referencia
-// export function bindN (f, ...args) {
-//   let func = f
-//   let output
-
-//   for (let i = 0; i < args.length - 1; i++) {
-//     if (args[i].error)
-//       return args[i]
-//     else
-//       func = func(args[i].result)
-//   }
-
-//   return bind(func, last(args))
-// }
-
-// similar como seria bind (>>=) de haskell si solo pudiera ser aplicado a
-// Maybes
-// En resumen, una funcion que toma una funcion y un reporte. Si el reporte indica
-// un error, lo devuelve. Si no, aplica f sobre el valor que el reporte contiene
-// Cabe aclarar que f es una funcion que tambien devuelve reportes.
-// Un reporte es un objeto que contiene las propiedades `error` y `result`.
-// export const bind = curry((f : any, r : any) => r.error ? r:f(r.result))
+import {Typed} from '../interfaces'
 
 // flatten :: [any] -> [[any]] -> [any]
 export function flatten<A> (accumulator : A[], arr: A[][]) : A[] {
@@ -213,5 +192,43 @@ export function arr_counter_dec (a: number[], lengths: number[]) {
         done = false
       }
     }
+  }
+}
+
+export function types_are_equal (a: Typed.Type, b: Typed.Type): boolean {
+    if (a.kind == b.kind) {
+        switch (a.kind) {
+            case 'array':
+                if ((a as Typed.ArrayType).length == (b as Typed.ArrayType).length) {
+                    return types_are_equal ((a as Typed.ArrayType).cell_type, (b as Typed.ArrayType).cell_type)
+                }
+                else {
+                    return false
+                }
+            case 'atomic':
+                return (a as Typed.AtomicType).typename == (b as Typed.AtomicType).typename
+        }
+    }
+    else {
+        return false
+    }
+}
+
+export function stringify (type: Typed.Type): string {
+  if (type.kind == 'array') {
+    let dimensions = ''
+    let ct: Typed.Type = type
+    while (ct.kind == 'array') {
+      dimensions += (ct as Typed.ArrayType).length
+      if ((ct as Typed.ArrayType).cell_type.kind == 'array') {
+          dimensions += ', '
+      }
+      ct = (ct as Typed.ArrayType).cell_type
+    }
+    const atomic = (ct as Typed.AtomicType).typename
+    return `${atomic}[${dimensions}]`
+  }
+  else {
+    return (type as Typed.AtomicType).typename
   }
 }

@@ -13,17 +13,15 @@ export interface Success<A> {
 
 export namespace Errors {
   export type TypeError = IncompatibleArgument
-  | IncompatibleOperand
-  | IncompatibleOperands
   | IncompatibleTypes
   | BadIOArgument
-  | MissingOperands
   | BadCondition
   | BadCounter
   | BadInitValue
   | BadLastValue
   | BadReturn
-  | BadComparisonOperands;
+  | WrongArgAmount
+  | BadIndex;
 
   export interface Base {
     reason: string
@@ -34,9 +32,25 @@ export namespace Errors {
     }
   }
 
+  export interface BadIndex extends Base {
+    reason: '@invocation-bad-index'
+    where: 'typechecker'
+    received: string
+    name: string
+    at: number
+  }
+
+  export interface WrongArgAmount extends Base {
+    reason: '@call-wrong-arg-amount'
+    where: 'typechecker'
+    expected: number
+    received: number
+    name: string
+  }
+
   export interface BadComparisonOperands extends Base {
     reason: '@comparison-bad-operands'
-    where: 'typechecker'
+    where: 'typer'
     left: string
     right: string
   }
@@ -83,21 +97,21 @@ export namespace Errors {
 
   export interface MissingOperands extends Base {
     reason: 'missing-operands'
-    where: 'typechecker'
+    where: 'typer'
     operator: string
     required: number
   }
 
   export interface IncompatibleOperand extends Base {
     reason: 'incompatible-operand'
-    where: 'typechecker'
+    where: 'typer'
     operator: string
     bad_type: string
   }
 
   export interface IncompatibleOperands extends Base {
     reason: 'incompatible-operands'
-    where: 'typechecker'
+    where: 'typer'
     operator: string
     bad_type_a: string
     bad_type_b: string
@@ -898,6 +912,12 @@ export namespace S3 {
  */
 
 export namespace Typed {
+  export type Error = Errors.ExtraIndexes
+    | Errors.IncompatibleOperand
+    | Errors.IncompatibleOperands
+    | Errors.MissingOperands
+    | Errors.BadComparisonOperands;
+
   export interface Program {
     [m: string]: Module
   }
@@ -917,65 +937,86 @@ export namespace Typed {
     | Call
     | Return;
 
-  export interface Return extends S2.Return {
+  export interface Return {
+    type: 'return'
+    expression: ExpElement[]
     typings: {
       actual: Type
       expected: Type
     }
   }
 
-  export interface For extends S2.For {
+  export interface For {
+    type: 'for'
+    counter_init: Assignment
+    last_value: ExpElement[]
+    body: Statement[]
     typings: {
-      counter_init: Assignment
+      init_value: Type
       last_value: Type
-      body: Statement[]
     }
   }
 
-  export interface While extends S2.While {
+  export interface While {
+    type: 'while'
+    condition: ExpElement[]
+    body: Statement[]
     typings: {
       condition: Type
       body: Statement[]
     }
   }
 
-  export interface Until extends S2.Until {
+  export interface Until {
+    type: 'until'
+    condition: ExpElement[]
+    body: Statement[]
     typings: {
       condition: Type
       body: Statement[]
     }
   }
 
-  export interface If extends S2.If {
+  export interface If {
+    type: 'if'
+    true_branch: Statement[]
+    false_branch: Statement[]
+    condition: ExpElement[]
     typings: {
       condition: Type
-      true_branch: Statement[]
-      false_branch: Statement[]
     }
   }
 
-  export interface Assignment extends S2.Assignment {
+  export interface Assignment {
+    type: 'assignment'
+    left: Invocation
+    right: ExpElement[]
     typings: {
       left: Type
       right: Type
     }
   }
 
-  export interface Invocation {
-    type: 'invocation'
-    datatype: Type
-    indextypes: ExpElement[][]
-  }
-
-  export interface Call extends S2.ModuleCall {
+  export interface Invocation extends S2.InvocationValue {
     typings: {
-      args: Type[]
-      return: Type
-      parameters: Type
+      type: Type
+      indexes: Type[]
     }
   }
 
-  export type ExpElement = Type | Invocation | Call | Operator
+  export interface Call {
+    type: 'call'
+    name: string
+    args: ExpElement[][]
+    parameters: S0.Parameter[]
+    typings: {
+      args: Type[]
+      return: AtomicType
+      parameters: Type[]
+    }
+  }
+
+  export type ExpElement = S0.LiteralValue | Invocation | Call | Operator
 
   export interface Type {
     type: 'type'
@@ -1020,7 +1061,7 @@ export namespace Typed {
   }
 }
 
-export type TransformError = Failure<Errors.RepeatedVar[]> | Failure<S2.Error[]> | Failure<Errors.ExtraIndexes[]>
+export type TransformError = Failure<Errors.RepeatedVar[]> | Failure<S2.Error[]> | Failure<Typed.Error[]>
 
 export interface TransformedProgram {
   typed_program: Typed.Program,
