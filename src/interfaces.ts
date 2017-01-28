@@ -916,45 +916,49 @@ export namespace Typed {
     | Assignment
     | Call
     | Return;
-  // | ReadCall
-  // | WriteCall;
 
-  export interface Return {
-    type: 'return'
-    actual: ExpElement[]
-    expected: Type
+  export interface Return extends S2.Return {
+    typings: {
+      actual: Type
+      expected: Type
+    }
   }
 
-  export interface For {
-    type: 'for'
-    counter_init: Assignment
-    last_value: ExpElement[]
-    body: Statement[]
+  export interface For extends S2.For {
+    typings: {
+      counter_init: Assignment
+      last_value: Type
+      body: Statement[]
+    }
   }
 
-  export interface While {
-    type: 'while'
-    condition: ExpElement[]
-    body: Statement[]
+  export interface While extends S2.While {
+    typings: {
+      condition: Type
+      body: Statement[]
+    }
   }
 
-  export interface Until {
-    type: 'until'
-    condition: ExpElement[]
-    body: Statement[]
+  export interface Until extends S2.Until {
+    typings: {
+      condition: Type
+      body: Statement[]
+    }
   }
 
-  export interface If {
-    type: 'if'
-    condition: ExpElement[]
-    true_branch: Statement[]
-    false_branch: Statement[]
+  export interface If extends S2.If {
+    typings: {
+      condition: Type
+      true_branch: Statement[]
+      false_branch: Statement[]
+    }
   }
 
-  export interface Assignment {
-    type: 'assignment'
-    left: Invocation
-    right: ExpElement[]
+  export interface Assignment extends S2.Assignment {
+    typings: {
+      left: Type
+      right: Type
+    }
   }
 
   export interface Invocation {
