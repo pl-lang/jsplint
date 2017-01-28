@@ -25,10 +25,175 @@ function check_statement (s: Typed.Statement): Errors.TypeError[] {
                 const report = check_call(s)
                 return report.error ? report.result:[]
             }
-        default:
-            console.log(`El chequeo de enunciados '${s.type}' todavia no fue implementado.`)
-            break
+        case 'if':
+            return check_if(s)
+        case 'while':
+        case 'until':
+            return check_simple_loop(s)
+        case 'for':
+            return check_for(s)
+        case 'return':
+            return check_return(s)
     }
+}
+
+function check_simple_loop (l: Typed.While | Typed.Until): Errors.TypeError[] {
+    let errors: Errors.TypeError[] = []
+
+    const condition = calculate_type(l.condition)
+
+    if (condition.error) {
+        errors = errors.concat(condition.result)
+    }
+    else {
+        if (!types_are_equal(condition.result as Typed.Type, new Typed.AtomicType('logico'))) {
+            const error: Errors.BadCondition = {
+                reason: 'bad-condition',
+                where: 'typechecker',
+                received: stringify(condition.result as Typed.Type)
+            }
+
+            errors.push(error)
+        }
+    }
+
+    for (let s of l.body) {
+        const statement_errors = check_statement(s)
+
+        if (statement_errors.length > 0) {
+            errors = errors.concat(statement_errors)
+        }
+    }
+
+    return errors
+}
+
+function check_for (f: Typed.For): Errors.TypeError[] {
+    let errors: Errors.TypeError[] = []
+
+    const counter = check_invocation(f.counter_init.left)
+
+    if (counter.error) {
+        errors = errors.concat(counter.result)
+    }
+    else {
+        if (!types_are_equal(counter.result as Typed.Type, new Typed.AtomicType('entero'))) {
+            const error: Errors.BadCounter = {
+                reason: '@for-bad-counter',
+                where: 'typechecker',
+                received: stringify(counter.result as Typed.Type)
+            }
+
+            errors.push(error)
+        }
+    }
+
+    const init_v = calculate_type(f.counter_init.right)
+
+    if (init_v.error) {
+        errors = errors.concat(init_v.result)
+    }
+    else {
+        if (!types_are_equal(init_v.result as Typed.Type, new Typed.AtomicType('entero'))) {
+            const error: Errors.BadInitValue = {
+                reason: '@for-bad-init',
+                where: 'typechecker',
+                received: stringify(init_v.result as Typed.Type)
+            }
+
+            errors.push(error)
+        }
+    }
+
+    const last_v = calculate_type(f.counter_init.right)
+
+    if (last_v.error) {
+        errors = errors.concat(last_v.result)
+    }
+    else {
+        if (!types_are_equal(last_v.result as Typed.Type, new Typed.AtomicType('entero'))) {
+            const error: Errors.BadLastValue = {
+                reason: '@for-bad-last',
+                where: 'typechecker',
+                received: stringify(last_v.result as Typed.Type)
+            }
+
+            errors.push(error)
+        }
+    }
+
+    for (let s of f.body) {
+        const statement_errors = check_statement(s)
+
+        if (statement_errors.length > 0) {
+            errors = errors.concat(statement_errors)
+        }
+    }
+
+    return errors
+}
+
+function check_return (r: Typed.Return): Errors.TypeError[] {
+    let errors: Errors.TypeError[] = []
+
+    const exp = calculate_type(r.actual)
+
+    if (exp.error) {
+        errors = exp.result
+    }
+    else {
+        if (!types_are_equal(exp.result as Typed.Type, r.expected)) {
+            const error: Errors.BadReturn = {
+                reason: 'bad-return',
+                where: 'typechecker',
+                declared: stringify(r.expected),
+                received: stringify(exp.result as Typed.Type)
+            }
+
+            errors.push(error)
+        }
+    }
+
+    return errors
+}
+
+function check_if (i: Typed.If): Errors.TypeError[] {
+    let errors: Errors.TypeError[] = []
+
+    const condition = calculate_type(i.condition)
+
+    if (condition.error) {
+        errors = errors.concat(condition.result)
+    }
+    else {
+        if (!types_are_equal(condition.result as Typed.Type, new Typed.AtomicType('logico'))) {
+            const error: Errors.BadCondition = {
+                reason: 'bad-condition',
+                where: 'typechecker',
+                received: stringify(condition.result as Typed.Type)
+            }
+
+            errors.push(error)
+        }
+    }
+
+    for (let s of i.true_branch) {
+        const statement_errors = check_statement(s)
+
+        if (statement_errors.length > 0) {
+            errors = errors.concat(statement_errors)
+        }
+    }
+
+    for (let s of i.false_branch) {
+        const statement_errors = check_statement(s)
+
+        if (statement_errors.length > 0) {
+            errors = errors.concat(statement_errors)
+        }
+    }
+
+    return errors
 }
 
 function check_call (c: Typed.Call): Failure<Errors.TypeError[]>|Success<Typed.AtomicType> {
@@ -79,10 +244,10 @@ function check_call (c: Typed.Call): Failure<Errors.TypeError[]>|Success<Typed.A
              * expresion sea de tipo entero y la variable de tipo real.
              */
             const param = c.paramtypes[arg.index]
-            const cond_a = param.kind != 'atomic' || arg.type.kind != 'atomic'
-            const cond_b = (param as Typed.AtomicType).typename != 'real' && (arg.type as Typed.AtomicType).typename != 'entero'
+            const cond_a = param.kind == 'atomic' || arg.type.kind == 'atomic'
+            const cond_b = (param as Typed.AtomicType).typename == 'real' && (arg.type as Typed.AtomicType).typename == 'entero'
 
-            if (!(types_are_equal(arg.type, param) && (cond_a || cond_b))) {
+            if (!(types_are_equal(arg.type, param) || (cond_a && cond_b))) {
                 const error: Errors.IncompatibleArgument = {
                     reason: '@call-incompatible-argument',
                     where: 'typechecker',

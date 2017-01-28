@@ -17,7 +17,12 @@ export namespace Errors {
   | IncompatibleOperands
   | IncompatibleTypes
   | BadIOArgument
-  | MissingOperands;
+  | MissingOperands
+  | BadCondition
+  | BadCounter
+  | BadInitValue
+  | BadLastValue
+  | BadReturn;
 
   export interface Base {
     reason: string
@@ -123,6 +128,37 @@ export namespace Errors {
      * Propiedad especifica de los retornos del evaluador
      */
     done: boolean
+  }
+
+  export interface BadCondition extends Base {
+    reason: 'bad-condition'
+    where: 'typechecker'
+    received: string
+  }
+
+  export interface BadCounter extends Base {
+    reason: '@for-bad-counter'
+    where: 'typechecker'
+    received: string
+  }
+
+  export interface BadInitValue extends Base {
+    reason: '@for-bad-init'
+    where: 'typechecker'
+    received: string
+  }
+
+  export interface BadLastValue extends Base {
+    reason: '@for-bad-last'
+    where: 'typechecker'
+    received: string
+  }
+
+  export interface BadReturn extends Base {
+    reason: 'bad-return'
+    where: 'typechecker'
+    declared: string
+    received: string
   }
 }
 
