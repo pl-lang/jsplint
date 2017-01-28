@@ -382,7 +382,7 @@ function check_invocation(i: Typed.Invocation): Failure<Errors.TypeError[]>|Succ
  */
 
 function calculate_type(exp: Typed.ExpElement[]): Failure<Errors.TypeError[]>|Success<Typed.Type> {
-    let stack: Typed.ExpElement[] = []
+    let stack: Typed.Type[] = []
     let errors: Errors.TypeError[] = []
 
     for (let e of exp) {
@@ -419,12 +419,12 @@ function calculate_type(exp: Typed.ExpElement[]): Failure<Errors.TypeError[]>|Su
                 }
                 break
             case 'operator': {
-                const op_report = operators[e.name](stack)
+                const op_report = operate(stack, e.name)
                 if (op_report.error) {
                     errors = errors.concat(op_report.result)
                 }
                 else {
-                    stack = op_report.result as Typed.ExpElement[]
+                    stack = op_report.result as Typed.Type[]
                 }
             }
             break
@@ -439,6 +439,23 @@ function calculate_type(exp: Typed.ExpElement[]): Failure<Errors.TypeError[]>|Su
     }
 }
 
+function operate (s: Typed.Type[], op: string) {
+    switch (op) {
+        case 'plus':
+        case 'times':
+        case 'minus':
+        case 'power':
+            return plus_times(s, op)
+        case 'minor':
+        case 'minor-eq':
+        case 'major':
+        case 'major-eq':
+        case 'equal':
+        case 'different':
+            return comparison(s, op)
+    }
+}
+
 /**
  * Los operadores se implementan como funciones que toman una pila,
  * desapilan tantos elementos como necesiten, operan con ellos,
@@ -449,65 +466,84 @@ function calculate_type(exp: Typed.ExpElement[]): Failure<Errors.TypeError[]>|Su
  * si o con el operador.
  */
 
-type OperatorFunction = (s: Typed.ExpElement[])=> Failure<Errors.TypeError>|Success<Typed.ExpElement[]>
+function plus_times (s: Typed.Type[], op: string): Failure<Errors.TypeError>|Success<Typed.Type[]> {
+    const supported: string[] = ['entero', 'real']
 
-const operators: {[o:string]: OperatorFunction} = {
-    plus: (s) => {
-        const supported: string[] = ['entero', 'real']
+    if (s.length >= 2) {
+        /**
+         * Si la expresion era "2 + 3" entonces: a = 3 y b = 2
+         */
+        const a: string = stringify(s.pop() as Typed.Type)
+        const b: string = stringify(s.pop() as Typed.Type)
 
-        if (s.length >= 2) {
-            const a: string = stringify(s.pop() as Typed.Type)
-            const b: string = stringify(s.pop() as Typed.Type)
-
+        if (supported.indexOf(a) == -1 || supported.indexOf(b) == -1 ) {
             /**
-             * Hay arriba falta considerar el caso en el que una expresion
-             * mal escrita hace que (al llamar a un operador) en la pila
-             * haya otros operadores en el medio de los operandos...
-             * 
-             * Una expresion como "2 + *" causaria ese error...
+             * ERROR: este operador no opera sobre el tipo de alguno de sus operandos
              */
 
-            if (supported.indexOf(a) == -1 || supported.indexOf(b) == -1 ) {
-                /**
-                 * ERROR: este operador no opera sobre el tipo de alguno de sus operandos
-                 */
-
-                if (supported.indexOf(a) == -1 && supported.indexOf(b) == -1) {
-                    const result: Errors.IncompatibleOperands = {reason: 'incompatible-operands', where: 'typechecker', bad_type_a: a, bad_type_b: b, operator: '+'}
-                    return {error: true, result}
-                }
-                else if (supported.indexOf(a) == -1) {
-                    const result: Errors.IncompatibleOperand = {reason: 'incompatible-operand', where: 'typechecker', bad_type: a, operator: '+'}
-                    return  {error: true, result}
-                }
-                else {
-                    const result: Errors.IncompatibleOperand = {reason: 'incompatible-operand', where: 'typechecker', bad_type: b, operator: '+'}
-                    return  {error: true, result}
-                }
+            if (supported.indexOf(a) == -1 && supported.indexOf(b) == -1) {
+                const result: Errors.IncompatibleOperands = {reason: 'incompatible-operands', where: 'typechecker', bad_type_a: a, bad_type_b: b, operator: op}
+                return {error: true, result}
             }
-
-            switch (a) {
-                case 'entero':
-                    switch (b) {
-                        case 'entero':
-                            s.push(new Typed.AtomicType('entero'))
-                            break
-                        case 'real':
-                            s.push(new Typed.AtomicType('real'))
-                            break
-                    }
-                    break
-                case 'real':
-                    s.push(new Typed.AtomicType('real'))
-                    break
+            else if (supported.indexOf(a) == -1) {
+                const result: Errors.IncompatibleOperand = {reason: 'incompatible-operand', where: 'typechecker', bad_type: a, operator: op}
+                return  {error: true, result}
             }
-
-            return {error: false, result: s}
+            else {
+                const result: Errors.IncompatibleOperand = {reason: 'incompatible-operand', where: 'typechecker', bad_type: b, operator: op}
+                return  {error: true, result}
+            }
         }
-        else {
-            const result: Errors.MissingOperands = {reason: 'missing-operands', where: 'typechecker', operator: '+', required: 2}
+
+        switch (a) {
+            case 'entero':
+                switch (b) {
+                    case 'entero':
+                        s.push(new Typed.AtomicType('entero'))
+                        break
+                    case 'real':
+                        s.push(new Typed.AtomicType('real'))
+                        break
+                }
+                break
+            case 'real':
+                s.push(new Typed.AtomicType('real'))
+                break
+        }
+
+        return {error: false, result: s}
+    }
+    else {
+        const result: Errors.MissingOperands = {reason: 'missing-operands', where: 'typechecker', operator: op, required: 2}
+        return {error: true, result}
+    }
+}
+
+function comparison (s: Typed.Type[], op: string): Failure<Errors.BadComparisonOperands|Errors.MissingOperands>|Success<Typed.ExpElement[]> {
+    if (s.length >= 2) {
+        const a = s.pop()
+        const b = s.pop()
+
+        const atomic_cond = a.kind == 'atomic' && b.kind == 'atomic'
+        const a_float_or_int = (a as Typed.AtomicType).typename == 'entero' || (a as Typed.AtomicType).typename == 'real'
+        const b_float_or_int = (b as Typed.AtomicType).typename == 'entero' || (b as Typed.AtomicType).typename == 'real'
+
+        if (!(((types_are_equal(a, b) && atomic_cond) || (atomic_cond && a_float_or_int && b_float_or_int)))) {
+            /**
+             * Este error se detecta cuando se intenta comparar datos de tipos incompatibles
+             * o cuando alguno de los operandos es un arreglo.
+             */
+            const result: Errors.BadComparisonOperands = {reason: '@comparison-bad-operands', where: 'typechecker', left: stringify(b), right: stringify(a)}
             return {error: true, result}
         }
+        else {
+            s.push(new Typed.AtomicType('logico'))
+            return {error: false, result: s}
+        }
+    }
+    else {
+        const result: Errors.MissingOperands = {reason: 'missing-operands', where: 'typechecker', operator: op, required: 2}
+        return {error: true, result}
     }
 }
 

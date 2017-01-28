@@ -22,7 +22,8 @@ export namespace Errors {
   | BadCounter
   | BadInitValue
   | BadLastValue
-  | BadReturn;
+  | BadReturn
+  | BadComparisonOperands;
 
   export interface Base {
     reason: string
@@ -31,6 +32,13 @@ export namespace Errors {
       column: number
       line: number
     }
+  }
+
+  export interface BadComparisonOperands extends Base {
+    reason: '@comparison-bad-operands'
+    where: 'typechecker'
+    left: string
+    right: string
   }
 
   export interface Lexical extends Base {
