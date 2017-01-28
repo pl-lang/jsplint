@@ -871,7 +871,7 @@ export namespace Typed {
 
   export interface For {
     type: 'for'
-    counter_init: ExpElement[]
+    counter_init: Assignment
     last_value: ExpElement[]
     body: Statement[]
   }

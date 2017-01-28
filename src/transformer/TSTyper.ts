@@ -79,11 +79,165 @@ function transform_statement (a: S2.Statement, mn: string, p: S2.AST): Failure<E
             return transform_assignment (a, mn, p)
         case 'call':
             return type_call(a, mn, p)
-        case 'for':
-        case 'while':
-        case 'until':
         case 'if':
-        break
+            return transform_if(a, mn, p)
+        case 'for':
+            return transform_for(a, mn, p)
+        case 'while':
+            return transform_while(a, mn, p)
+        case 'until':
+            return transform_until(a, mn, p)
+    }
+}
+
+function transform_if (a: S2.If, mn: string, p: S2.AST): Failure<Errors.ExtraIndexes[]> | Success<Typed.If> {
+    let errors: Errors.ExtraIndexes[] = []
+
+    const c_report = type_expression(a.condition, mn, p)
+
+    if (c_report.error) {
+        errors = errors.concat(c_report.result)
+    }
+
+    const typed_tb: Typed.Statement[] = []
+    for (let e of a.true_branch) {
+        const report = transform_statement(e, mn, p)
+        if (report.error) {
+            errors = errors.concat(report.result)
+        }
+        else {
+            typed_tb.push(report.result as Typed.Statement)
+        }
+    }
+
+    const typed_fb: Typed.Statement[] = []
+    for (let e of a.true_branch) {
+        const report = transform_statement(e, mn, p)
+        if (report.error) {
+            errors = errors.concat(report.result)
+        }
+        else {
+            typed_fb.push(report.result as Typed.Statement)
+        }
+    }
+
+    if (errors.length > 0) {
+        return {error: true, result: errors}
+    }
+    else {
+        const result: Typed.If = {
+            type: 'if',
+            condition: c_report.result as Typed.ExpElement[],
+            true_branch: typed_tb,
+            false_branch: typed_fb
+        }
+        return {error: false, result}
+    }
+}
+
+function transform_for (f: S2.For, mn: string, p: S2.AST): Failure<Errors.ExtraIndexes[]>|Success<Typed.For> {
+    let errors: Errors.ExtraIndexes[] = []
+
+    const init = transform_assignment(f.counter_init, mn, p)
+
+    if (init.error) {
+        errors = errors.concat(init.result)
+    }
+
+    const last = type_expression(f.last_value, mn, p)
+
+    if (last.error) {
+        errors = errors.concat(last.result)
+    }
+
+    const body: Typed.Statement[] = []
+    for (let e of f.body) {
+        const report = transform_statement(e, mn, p)
+        if (report.error) {
+            errors = errors.concat(report.result)
+        }
+        else {
+            body.push(report.result as Typed.Statement)
+        }
+    }
+
+    if (errors.length > 0) {
+        return {error: true, result: errors}
+    }
+    else {
+        const result: Typed.For = {
+            type: 'for',
+            counter_init: init.result as Typed.Assignment,
+            body: body,
+            last_value: last.result as Typed.ExpElement[]
+        }
+        return {error: false, result}
+    }
+}
+
+function transform_while (w: S2.While, mn: string, p: S2.AST): Failure<Errors.ExtraIndexes[]> | Success<Typed.While> {
+    let errors: Errors.ExtraIndexes[] = []
+
+    const c_report = type_expression(w.condition, mn, p)
+
+    if (c_report.error) {
+        errors = errors.concat(c_report.result)
+    }
+
+    const body: Typed.Statement[] = []
+    for (let e of w.body) {
+        const report = transform_statement(e, mn, p)
+        if (report.error) {
+            errors = errors.concat(report.result)
+        }
+        else {
+            body.push(report.result as Typed.Statement)
+        }
+    }
+
+    if (errors.length > 0) {
+        return {error: true, result: errors}
+    }
+    else {
+        const result: Typed.While = {
+            type: 'while',
+            condition: c_report.result as Typed.ExpElement[],
+            body
+        }
+        return {error: false, result}
+    }
+}
+
+function transform_until (w: S2.Until, mn: string, p: S2.AST): Failure<Errors.ExtraIndexes[]> | Success<Typed.Until> {
+    let errors: Errors.ExtraIndexes[] = []
+
+    const c_report = type_expression(w.condition, mn, p)
+
+    if (c_report.error) {
+        errors = errors.concat(c_report.result)
+    }
+
+    const body: Typed.Statement[] = []
+    for (let e of w.body) {
+        const report = transform_statement(e, mn, p)
+        if (report.error) {
+            errors = errors.concat(report.result)
+        }
+        else {
+            body.push(report.result as Typed.Statement)
+        }
+    }
+
+    if (errors.length > 0) {
+        return {error: true, result: errors}
+    }
+    else {
+        const result: Typed.Until = {
+            type: 'until',
+            condition: c_report.result as Typed.ExpElement[],
+            body
+        }
+        return {error: false, result}
     }
 }
 
