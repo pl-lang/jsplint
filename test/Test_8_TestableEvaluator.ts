@@ -3,9 +3,7 @@ import 'should'
 
 import Parser from '../src/parser/Parser.js'
 
-import {ParsedProgram} from '../src/interfaces/ParsingInterfaces'
-import {Program} from '../src/interfaces/Program'
-import {ArrayVariable, RegularVariable} from '../src/interfaces/Stage1'
+import {ParsedProgram, S1, S3} from '../src/interfaces'
 
 import {Evaluator} from '../src/interpreter/Evaluator'
 
@@ -28,7 +26,7 @@ describe('Evaluacion de programas y expresiones', () => {
     `
     const p = transform(parse(code).result as ParsedProgram)
 
-    const evaluator = new Evaluator(p.result as Program)
+    const evaluator = new Evaluator(p.result as S3.Program)
 
     const output = evaluator.step()
 
@@ -47,13 +45,13 @@ describe('Evaluacion de programas y expresiones', () => {
 
     const p = transform(parse(code).result as ParsedProgram)
 
-    const evaluator = new Evaluator(p.result as Program)
+    const evaluator = new Evaluator(p.result as S3.Program)
 
     let output = evaluator.step()
 
     output.result.should.deepEqual({done:false, action: 'none'})
 
-    const a = evaluator.get_locals('main')['a'] as RegularVariable
+    const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
     a.value.should.equal(2)
   })
@@ -71,7 +69,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
     const p = transform(parse(code).result as ParsedProgram)
 
-    const evaluator = new Evaluator(p.result as Program)
+    const evaluator = new Evaluator(p.result as S3.Program)
 
     let output = evaluator.step()
 
@@ -79,7 +77,7 @@ describe('Evaluacion de programas y expresiones', () => {
       output = evaluator.step()
     }
 
-    const v = evaluator.get_locals('main')['v'] as ArrayVariable
+    const v = evaluator.get_locals('main')['v'] as S1.ArrayVariable
 
     v.values[0].should.equal(5)
     v.values[1].should.equal(8)
@@ -100,7 +98,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
     const p = transform(parse(code).result as ParsedProgram)
 
-    const evaluator = new Evaluator(p.result as Program)
+    const evaluator = new Evaluator(p.result as S3.Program)
 
     let output = evaluator.step()
 
@@ -108,7 +106,7 @@ describe('Evaluacion de programas y expresiones', () => {
       output = evaluator.step()
     }
 
-    const m = evaluator.get_locals('main')['m'] as ArrayVariable 
+    const m = evaluator.get_locals('main')['m'] as S1.ArrayVariable 
 
     m.values[0].should.equal(5)
     m.values[1].should.equal(8)
@@ -124,7 +122,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
     const p = transform(parse(code).result as ParsedProgram)
 
-    const evaluator = new Evaluator(p.result as Program)
+    const evaluator = new Evaluator(p.result as S3.Program)
 
     evaluator.step()
 
@@ -142,7 +140,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
     const p = transform(parse(code).result as ParsedProgram)
 
-    const evaluator = new Evaluator(p.result as Program)
+    const evaluator = new Evaluator(p.result as S3.Program)
 
     let output = evaluator.step()
 
@@ -179,7 +177,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
     const p = transform(parse(code).result as ParsedProgram)
 
-    const evaluator = new Evaluator(p.result as Program)
+    const evaluator = new Evaluator(p.result as S3.Program)
 
     let output = evaluator.step()
 
@@ -202,7 +200,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
     const p = transform(parse(code).result as ParsedProgram)
 
-    const evaluator = new Evaluator(p.result as Program)
+    const evaluator = new Evaluator(p.result as S3.Program)
 
     let output = evaluator.step()
 
@@ -239,7 +237,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
     const p = transform(parse(code).result as ParsedProgram)
 
-    const evaluator = new Evaluator(p.result as Program)
+    const evaluator = new Evaluator(p.result as S3.Program)
 
     let output = evaluator.step()
 
@@ -273,7 +271,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
     const p = transform(parse(code).result as ParsedProgram)
 
-    const evaluator = new Evaluator(p.result as Program)
+    const evaluator = new Evaluator(p.result as S3.Program)
 
     let output = evaluator.step()
 
@@ -289,7 +287,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
     output.result.should.deepEqual({done:true, error:false, output:null})
 
-    const m = evaluator.get_locals('main')['m'] as ArrayVariable
+    const m = evaluator.get_locals('main')['m'] as S1.ArrayVariable
 
     m.values[0].should.equal(9)
   })
@@ -303,7 +301,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
     const p = transform(parse(code).result as ParsedProgram)
 
-    const evaluator = new Evaluator(p.result as Program)
+    const evaluator = new Evaluator(p.result as S3.Program)
 
     let output = evaluator.step()
 
@@ -319,7 +317,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
     output.result.should.deepEqual({done:true, error:false, output:null})
     
-    const v = evaluator.get_locals('main')['v'] as ArrayVariable
+    const v = evaluator.get_locals('main')['v'] as S1.ArrayVariable
 
     v.values[0].should.equal(9)
   })
@@ -334,7 +332,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
     const p = transform(parse(code).result as ParsedProgram)
 
-    const evaluator = new Evaluator(p.result as Program)
+    const evaluator = new Evaluator(p.result as S3.Program)
 
     let output = evaluator.step() // evalua la condicion
 
@@ -357,7 +355,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
     const p = transform(parse(code).result as ParsedProgram)
 
-    const evaluator = new Evaluator(p.result as Program)
+    const evaluator = new Evaluator(p.result as S3.Program)
 
     let w: boolean = false
 
@@ -392,7 +390,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
     const p = transform(parse(code).result as ParsedProgram)
 
-    const evaluator = new Evaluator(p.result as Program)
+    const evaluator = new Evaluator(p.result as S3.Program)
 
     let w1: boolean = false, w2: boolean = false, w3: boolean = false;
 
@@ -434,7 +432,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
     const p = transform(parse(code).result as ParsedProgram)
 
-    const evaluator = new Evaluator(p.result as Program)
+    const evaluator = new Evaluator(p.result as S3.Program)
 
     let w1: boolean = false, w2: boolean = false, w3: boolean = false;
 
@@ -479,7 +477,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
     const p = transform(parse(code).result as ParsedProgram)
 
-    const evaluator = new Evaluator(p.result as Program)
+    const evaluator = new Evaluator(p.result as S3.Program)
 
     let w1: boolean = false, w2: boolean = false, w3: boolean = false;
 
@@ -522,7 +520,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const p = transform(parse(code).result as ParsedProgram)
 
-        const evaluator = new Evaluator(p.result as Program)
+        const evaluator = new Evaluator(p.result as S3.Program)
 
         let output = evaluator.step()
 
@@ -530,7 +528,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as RegularVariable
+        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(2*3)
       }
@@ -545,7 +543,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const p = transform(parse(code).result as ParsedProgram)
 
-        const evaluator = new Evaluator(p.result as Program)
+        const evaluator = new Evaluator(p.result as S3.Program)
 
         let output = evaluator.step()
 
@@ -553,7 +551,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as RegularVariable
+        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(-2*-3)
       }
@@ -568,7 +566,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const p = transform(parse(code).result as ParsedProgram)
 
-        const evaluator = new Evaluator(p.result as Program)
+        const evaluator = new Evaluator(p.result as S3.Program)
 
         let output = evaluator.step()
 
@@ -576,7 +574,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as RegularVariable
+        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(2*2*2)
       }
@@ -592,7 +590,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const p = transform(parse(code).result as ParsedProgram)
 
-        const evaluator = new Evaluator(p.result as Program)
+        const evaluator = new Evaluator(p.result as S3.Program)
 
         let output = evaluator.step()
 
@@ -600,7 +598,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as RegularVariable
+        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(12)
       }
@@ -616,7 +614,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const p = transform(parse(code).result as ParsedProgram)
 
-        const evaluator = new Evaluator(p.result as Program)
+        const evaluator = new Evaluator(p.result as S3.Program)
 
         let output = evaluator.step()
 
@@ -624,7 +622,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as RegularVariable
+        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(12)
       }
@@ -640,7 +638,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const p = transform(parse(code).result as ParsedProgram)
 
-        const evaluator = new Evaluator(p.result as Program)
+        const evaluator = new Evaluator(p.result as S3.Program)
 
         let output = evaluator.step()
 
@@ -648,7 +646,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as RegularVariable
+        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(3/2)
       }
@@ -662,7 +660,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const p = transform(parse(code).result as ParsedProgram)
 
-        const evaluator = new Evaluator(p.result as Program)
+        const evaluator = new Evaluator(p.result as S3.Program)
 
         let output = evaluator.step()
 
@@ -670,7 +668,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as RegularVariable
+        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(-3/-2)
       }
@@ -684,7 +682,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const p = transform(parse(code).result as ParsedProgram)
 
-        const evaluator = new Evaluator(p.result as Program)
+        const evaluator = new Evaluator(p.result as S3.Program)
 
         let output = evaluator.step()
 
@@ -692,7 +690,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as RegularVariable
+        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(2+3/3+4)
       }
@@ -706,7 +704,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const p = transform(parse(code).result as ParsedProgram)
 
-        const evaluator = new Evaluator(p.result as Program)
+        const evaluator = new Evaluator(p.result as S3.Program)
 
         let output = evaluator.step()
 
@@ -714,7 +712,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as RegularVariable
+        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(3/2/2)
       }
@@ -728,7 +726,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const p = transform(parse(code).result as ParsedProgram)
 
-        const evaluator = new Evaluator(p.result as Program)
+        const evaluator = new Evaluator(p.result as S3.Program)
 
         let output = evaluator.step()
 
@@ -736,7 +734,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as RegularVariable
+        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(2/2/2/2)
       }
@@ -750,7 +748,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const p = transform(parse(code).result as ParsedProgram)
 
-        const evaluator = new Evaluator(p.result as Program)
+        const evaluator = new Evaluator(p.result as S3.Program)
 
         let output = evaluator.step()
 
@@ -758,7 +756,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as RegularVariable
+        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(4/2/2/2)
       }
@@ -772,7 +770,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const p = transform(parse(code).result as ParsedProgram)
 
-        const evaluator = new Evaluator(p.result as Program)
+        const evaluator = new Evaluator(p.result as S3.Program)
 
         let output = evaluator.step()
 
@@ -780,7 +778,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as RegularVariable
+        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(2/2/2/4)
       }
@@ -796,7 +794,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const p = transform(parse(code).result as ParsedProgram)
 
-        const evaluator = new Evaluator(p.result as Program)
+        const evaluator = new Evaluator(p.result as S3.Program)
 
         let output = evaluator.step()
 
@@ -804,7 +802,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as RegularVariable
+        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(3-3-3)
       }
@@ -818,7 +816,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const p = transform(parse(code).result as ParsedProgram)
 
-        const evaluator = new Evaluator(p.result as Program)
+        const evaluator = new Evaluator(p.result as S3.Program)
 
         let output = evaluator.step()
 
@@ -826,7 +824,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as RegularVariable
+        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal((3-3-3))
       }
@@ -842,7 +840,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const p = transform(parse(code).result as ParsedProgram)
 
-        const evaluator = new Evaluator(p.result as Program)
+        const evaluator = new Evaluator(p.result as S3.Program)
 
         let output = evaluator.step()
 
@@ -850,7 +848,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as RegularVariable
+        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(2+43)
       }
@@ -866,7 +864,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const p = transform(parse(code).result as ParsedProgram)
 
-        const evaluator = new Evaluator(p.result as Program)
+        const evaluator = new Evaluator(p.result as S3.Program)
 
         let output = evaluator.step()
 
@@ -874,7 +872,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as RegularVariable
+        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(2-(2-3))
       }
@@ -888,14 +886,14 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const p = transform(parse(code).result as ParsedProgram)
 
-        const evaluator = new Evaluator(p.result as Program)
+        const evaluator = new Evaluator(p.result as S3.Program)
 
         let output = evaluator.step()
 
         while (output.result.done == false) {
           output = evaluator.step()
         }
-        const a = evaluator.get_locals('main')['a'] as RegularVariable
+        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(2+(2+3))
       }
@@ -909,7 +907,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const p = transform(parse(code).result as ParsedProgram)
 
-        const evaluator = new Evaluator(p.result as Program)
+        const evaluator = new Evaluator(p.result as S3.Program)
 
         let output = evaluator.step()
 
@@ -917,7 +915,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as RegularVariable
+        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(2+(2+3*4))
       }
@@ -931,7 +929,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const p = transform(parse(code).result as ParsedProgram)
 
-        const evaluator = new Evaluator(p.result as Program)
+        const evaluator = new Evaluator(p.result as S3.Program)
 
         let output = evaluator.step()
 
@@ -939,7 +937,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as RegularVariable
+        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal((3*2)-6)
       }
@@ -953,7 +951,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const p = transform(parse(code).result as ParsedProgram)
 
-        const evaluator = new Evaluator(p.result as Program)
+        const evaluator = new Evaluator(p.result as S3.Program)
 
         let output = evaluator.step()
 
@@ -961,7 +959,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as RegularVariable
+        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal((-(-(2+2))))
       }
@@ -975,7 +973,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const p = transform(parse(code).result as ParsedProgram)
 
-        const evaluator = new Evaluator(p.result as Program)
+        const evaluator = new Evaluator(p.result as S3.Program)
 
         let output = evaluator.step()
 
@@ -983,7 +981,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as RegularVariable
+        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(2+8/2)
       }
@@ -999,7 +997,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const p = transform(parse(code).result as ParsedProgram)
 
-        const evaluator = new Evaluator(p.result as Program)
+        const evaluator = new Evaluator(p.result as S3.Program)
 
         let output = evaluator.step()
 
@@ -1007,7 +1005,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as RegularVariable
+        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(true)
       }
@@ -1021,7 +1019,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const p = transform(parse(code).result as ParsedProgram)
 
-        const evaluator = new Evaluator(p.result as Program)
+        const evaluator = new Evaluator(p.result as S3.Program)
 
         let output = evaluator.step()
 
@@ -1029,7 +1027,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as RegularVariable
+        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(true)
       }
@@ -1043,7 +1041,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const p = transform(parse(code).result as ParsedProgram)
 
-        const evaluator = new Evaluator(p.result as Program)
+        const evaluator = new Evaluator(p.result as S3.Program)
 
         let output = evaluator.step()
 
@@ -1051,7 +1049,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as RegularVariable
+        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(true)
       }
@@ -1065,7 +1063,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const p = transform(parse(code).result as ParsedProgram)
 
-        const evaluator = new Evaluator(p.result as Program)
+        const evaluator = new Evaluator(p.result as S3.Program)
 
         let output = evaluator.step()
 
@@ -1073,7 +1071,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as RegularVariable
+        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(true)
       }
@@ -1087,7 +1085,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const p = transform(parse(code).result as ParsedProgram)
 
-        const evaluator = new Evaluator(p.result as Program)
+        const evaluator = new Evaluator(p.result as S3.Program)
 
         let output = evaluator.step()
 
@@ -1095,7 +1093,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as RegularVariable
+        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(true)
       }
@@ -1109,7 +1107,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const p = transform(parse(code).result as ParsedProgram)
 
-        const evaluator = new Evaluator(p.result as Program)
+        const evaluator = new Evaluator(p.result as S3.Program)
 
         let output = evaluator.step()
 
@@ -1117,7 +1115,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as RegularVariable
+        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(true)
       }
@@ -1131,7 +1129,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const p = transform(parse(code).result as ParsedProgram)
 
-        const evaluator = new Evaluator(p.result as Program)
+        const evaluator = new Evaluator(p.result as S3.Program)
 
         let output = evaluator.step()
 
@@ -1139,7 +1137,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as RegularVariable
+        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(true)
       }
@@ -1153,7 +1151,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const p = transform(parse(code).result as ParsedProgram)
 
-        const evaluator = new Evaluator(p.result as Program)
+        const evaluator = new Evaluator(p.result as S3.Program)
 
         let output = evaluator.step()
 
@@ -1161,7 +1159,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as RegularVariable
+        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(true)
       }
@@ -1176,7 +1174,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
       const p = transform(parse(code).result as ParsedProgram)
 
-      const evaluator = new Evaluator(p.result as Program)
+      const evaluator = new Evaluator(p.result as S3.Program)
 
       let output = evaluator.step()
 
@@ -1184,7 +1182,7 @@ describe('Evaluacion de programas y expresiones', () => {
         output = evaluator.step()
       }
 
-      const a = evaluator.get_locals('main')['a'] as RegularVariable
+      const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
       a.value.should.equal(true)
     })
@@ -1204,7 +1202,7 @@ describe('Evaluacion de programas y expresiones', () => {
       `
       const p = transform(parse(code).result as ParsedProgram)
 
-      const evaluator = new Evaluator(p.result as Program)
+      const evaluator = new Evaluator(p.result as S3.Program)
 
       let output = evaluator.step()
 
