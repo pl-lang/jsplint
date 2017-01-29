@@ -1,6 +1,6 @@
 {
   "name": "interprete-pl",
-  "version": "1.0.9",
+  "version": "0.0.0",
   "description": "interprete",
   "scripts": {
     "test": "mocha",
@@ -11,8 +11,8 @@
     "type": "git",
     "url": "https://github.com/pl-lang/jsplint.git"
   },
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
   "author": "Rodrigo Maximiliano Bellusci",
   "license": "MIT",
   "devDependencies": {

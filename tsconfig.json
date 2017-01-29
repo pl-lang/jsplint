@@ -1,15 +1,13 @@
 {
     "compilerOptions": {
         "noImplicitAny": true,
-        "outDir": "./dist",
+        "outDir": "./lib",
         "target" : "es5",
         "importHelpers": true,
         "lib": ["es2015"]
     },
     "files": [
-        "index.ts",
-        "./src/tools/ir_writer.ts",
-        "./src/tools/mini-int.ts"
+        "index.ts"
     ],
     "exclude": [
       "test/*"  
