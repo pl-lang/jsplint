@@ -3,4 +3,4 @@ coverage/
 .nyc_output
 .vscode/
 built/
-dist
+lib/
