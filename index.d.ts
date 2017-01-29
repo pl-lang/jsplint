@@ -1087,6 +1087,6 @@ export class Interpreter extends Emitter {
   send(value: Value): void;
 }
 
-export function transform(p: ParsedProgram): CompileError | Success<TransformedProgram>
+export function transform(p: ParsedProgram): CompileError | Success<S3.Program>
 
 export function typecheck(p: Typed.Program): Errors.TypeError[]
