@@ -503,7 +503,7 @@ function type_expression (es: S2.ExpElement[], mn: string, p: S2.AST): Failure<T
                 }
                 break
             case 'literal':
-                typed_exp.push(e)
+                typed_exp.push(type_literal(e))
                 break
             case 'call':
                 {
@@ -572,7 +572,12 @@ function type_invocation (i: (S2.InvocationValue | S2.InvocationInfo), mn: strin
             let last_type: Typed.Type
             for (let j = remaining_dimensions.length - 1; j >= 0; j--) {
                 if (j == remaining_dimensions.length - 1) {
-                    last_type = new Typed.ArrayType(new Typed.AtomicType(i.datatype), remaining_dimensions[j])
+                    if (i.datatype == 'caracter') {
+                        last_type = new Typed.StringType(remaining_dimensions[j])
+                    }
+                    else {
+                        last_type = new Typed.ArrayType(new Typed.AtomicType(i.datatype), remaining_dimensions[j])
+                    }
                 }
                 else {
                     last_type = new Typed.ArrayType(last_type, remaining_dimensions[j])
@@ -671,16 +676,24 @@ function type_indexes (indexes: S2.ExpElement[][], mn: string, p: S2.AST): Failu
     }
 }
 
-function type_literal (l: S0.LiteralValue): Typed.Type {
+function type_literal (l: S0.LiteralValue): Typed.Literal {
+    const {type, value} = l
+    let datatype: Typed.AtomicType | Typed.StringType;
+
     switch (typeof l.value) {
         case 'boolean':
-            return new Typed.AtomicType('logico')
+            datatype = new Typed.AtomicType('logico')
+            break
         case 'string':
-            return (l.value as String).length > 1 ? new Typed.StringType((l.value as String).length):new Typed.AtomicType('caracter')
+            datatype = (l.value as String).length > 1 ? new Typed.StringType((l.value as String).length):new Typed.AtomicType('caracter')
+            break
         case 'number': {
-            return (l.value as number) - Math.trunc(l.value as number) > 0 ? new Typed.AtomicType('real'):new Typed.AtomicType('entero')
+            datatype = (l.value as number) - Math.trunc(l.value as number) > 0 ? new Typed.AtomicType('real'):new Typed.AtomicType('entero')
+            break
         }
     }
+
+    return {type, value, typings: {type: datatype}}
 }
 
 /**
@@ -697,7 +710,7 @@ function calculate_type(exp: Typed.ExpElement[]): Failure<Typed.Error[]>|Success
     for (let e of exp) {
         switch (e.type) {
             case 'literal':
-                stack.push(type_literal(e))
+                stack.push(e.typings.type)
             break
             case 'invocation': 
                 stack.push(e.typings.type)

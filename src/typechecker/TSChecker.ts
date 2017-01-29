@@ -274,23 +274,42 @@ function check_assignment (a: Typed.Assignment): Errors.TypeError[] {
     }
 
     if (inv_report.error == false) {
-        /**
-         * Revisar que la expresion a asignar sea del mismo tipo
-         * que la variable a la cual se asigna, a menos que la
-         * expresion sea de tipo entero y la variable de tipo real.
-         */
-        const cond_a = inv_report.result.kind == 'atomic' && a.typings.right.kind == 'atomic'
-        const cond_b = (inv_report.result as Typed.AtomicType).typename == 'real' && (a.typings.right as Typed.AtomicType).typename == 'entero'
+        if (inv_report.result instanceof Typed.StringType && a.typings.right instanceof Typed.StringType) {
+            /**
+             * Si se esta asignando una cadena a un vector solo hay que
+             * revisar que la cadena quepa. 
+             */
+            if (!(inv_report.result.length >= a.typings.right.length)) {
+                const error: Errors.LongString = {
+                    length: inv_report.result.length,
+                    name: a.left.name,
+                    reason: '@assignment-long-string',
+                    type: stringify(inv_report.result),
+                    where: 'typechecker'
+                }
 
-        if (!(types_are_equal(inv_report.result, a.typings.right) || (cond_a && cond_b))) {
-            const error: Errors.IncompatibleTypes = {
-                reason: '@assignment-incompatible-types',
-                where: 'typechecker',
-                expected: stringify(inv_report.result),
-                received: stringify(a.typings.right)
+                errors.push(error)
             }
+        }
+        else {
+            /**
+             * Revisar que la expresion a asignar sea del mismo tipo
+             * que la variable a la cual se asigna, a menos que la
+             * expresion sea de tipo entero y la variable de tipo real.
+             */
+            const cond_a = inv_report.result.kind == 'atomic' && a.typings.right.kind == 'atomic'
+            const cond_b = (inv_report.result as Typed.AtomicType).typename == 'real' && (a.typings.right as Typed.AtomicType).typename == 'entero'
 
-            errors.push(error)
+            if (!(types_are_equal(inv_report.result, a.typings.right) || (cond_a && cond_b))) {
+                const error: Errors.IncompatibleTypes = {
+                    reason: '@assignment-incompatible-types',
+                    where: 'typechecker',
+                    expected: stringify(inv_report.result),
+                    received: stringify(a.typings.right)
+                }
+
+                errors.push(error)
+            }
         }
     }
 
