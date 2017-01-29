@@ -1,6 +1,6 @@
 {
   "name": "interprete-pl",
-  "version": "0.0.4",
+  "version": "0.1.0",
   "description": "interprete",
   "scripts": {
     "test": "mocha",
