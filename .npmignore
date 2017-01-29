@@ -1,5 +1,5 @@
 src/
 .vscode/
 index.ts
-./index.d.ts
 tsconfig.json
+definitions.d.ts
