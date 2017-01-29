@@ -4,7 +4,12 @@ import {drop, types_are_equal, stringify} from '../utility/helpers'
 export default function transform (ast: S2.AST): Failure<Typed.Error[]>|Success<Typed.Program> {
     let errors: Typed.Error[] = []
 
-    const typed_program: Typed.Program = {}
+    const typed_program: Typed.Program = {
+        modules: {
+            main: null
+        },
+        variables_per_module: ast.local_variables
+    }
 
     const main_report = transfor_module(ast.modules.main, ast)
 
@@ -12,7 +17,7 @@ export default function transform (ast: S2.AST): Failure<Typed.Error[]>|Success<
         errors = errors.concat(main_report.result)
     }
     else {
-        typed_program['main'] = main_report.result as Typed.Module
+        typed_program.modules.main = main_report.result as Typed.Module
     }
 
     for (let name in ast.modules.user_modules) {
@@ -21,7 +26,7 @@ export default function transform (ast: S2.AST): Failure<Typed.Error[]>|Success<
             errors = errors.concat(report.result)
         }
         else {
-            typed_program[name] = report.result as Typed.Module
+            typed_program.modules[name] = report.result as Typed.Module
         }
     }
 
@@ -604,12 +609,11 @@ function type_invocation (i: (S2.InvocationValue | S2.InvocationInfo), mn: strin
             else {
                 const indextypes: Typed.Type[] = types.map(t => t.result) as Typed.Type[]
                 
-                const {dimensions, datatype, indexes, name, is_array} = i
+                const {dimensions, indexes, name, is_array} = i
 
                 const result: Typed.Invocation = {
                     type: 'invocation',
-                    datatype,
-                    indexes,
+                    indexes: type_exps.result as Typed.ExpElement[][],
                     dimensions,
                     name,
                     is_array,
@@ -627,9 +631,8 @@ function type_invocation (i: (S2.InvocationValue | S2.InvocationInfo), mn: strin
 
         const result: Typed.Invocation = {
             type: 'invocation',
-            datatype,
             dimensions,
-            indexes,
+            indexes: [],
             name,
             is_array,
             typings: {

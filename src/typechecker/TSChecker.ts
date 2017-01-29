@@ -4,8 +4,8 @@ import {types_are_equal, stringify} from '../utility/helpers'
 export default function check (p: Typed.Program): Errors.TypeError[] {
     let errors: Errors.TypeError[] = []
 
-    for (let mn in p) {
-        const mod = p[mn]
+    for (let mn in p.modules) {
+        const mod = p.modules[mn]
         for (let s of mod.body) {
             const report = check_statement(s)
             if (report.length > 0) {

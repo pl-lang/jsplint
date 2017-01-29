@@ -33,39 +33,29 @@ if (args.length > 0) {
                 console.log(p)
             }
             else if (p.error == false) {
-                const type_errors = typecheck(p.result.typed_program)
-                
-                if (type_errors.length > 0) {
-                    console.log('El programa contiene errores de tipado')
-                    for (let error of type_errors) {
-                        console.log(error)
-                    }
-                }
-                else {
-                    const interpreter = new Interpreter(p.result.program)
+                const interpreter = new Interpreter(p.result)
 
-                    interpreter.on('program-started', () => {
-                        console.log('Evento: program-started\n')
-                    })
+                interpreter.on('program-started', () => {
+                    console.log('Evento: program-started\n')
+                })
 
-                    interpreter.on('program-paused', () => {
-                        console.log('Evento: program-paused\n')
-                    })
+                interpreter.on('program-paused', () => {
+                    console.log('Evento: program-paused\n')
+                })
 
-                    interpreter.on('program-finished', () => {
-                        console.log('Evento: program-finished\n')
-                    })
+                interpreter.on('program-finished', () => {
+                    console.log('Evento: program-finished\n')
+                })
 
-                    interpreter.on('evaluation-error', () => {
-                        console.log('Evento: evaluation-error\n')
-                    })
+                interpreter.on('evaluation-error', () => {
+                    console.log('Evento: evaluation-error\n')
+                })
 
-                    interpreter.on('write', (v) => {
-                        console.log(v)
-                    })
+                interpreter.on('write', (v) => {
+                    console.log(v)
+                })
 
-                    interpreter.run()
-                }
+                interpreter.run()
             }
         }
     }

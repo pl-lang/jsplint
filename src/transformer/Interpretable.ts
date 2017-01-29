@@ -1,35 +1,35 @@
 'use strict'
 
-import {Success, S0, S2, S3} from '../interfaces'
+import {Success, S0, S2, S3, Typed} from '../interfaces'
 
 import {drop, arr_counter, arr_counter_inc, arr_counter_dec, arr_minor, arr_major, arr_equal} from '../utility/helpers'
 
-export default function transform (ast: S2.AST) : Success<S3.Program> {
+export default function transform (p: Typed.Program) : Success<S3.Program> {
     const result = {
         entry_point: null,
         modules: {},
-        local_variables: {}
+        local_variables: p.variables_per_module
     } as S3.Program
 
-    const new_main = transform_main(ast.modules.main)
+    const new_main = transform_main(p.modules.main)
 
     result.entry_point = new_main
 
-    for (let name in ast.modules.user_modules) {
-        const module = transform_module(ast.modules.user_modules[name], ast)
-        result.modules[name] = module
+    for (let name in p.modules) {
+        if (name != 'main') {
+            const module = transform_module(p.modules[name], name)
+            result.modules[name] = module
+        }
     }
-
-    result.local_variables = ast.local_variables
 
     return {error: false, result}
 }
 
-function transform_main (old_module: S2.Main) : S3.Statement {
+function transform_main (old_module: Typed.Module) : S3.Statement {
     return transform_body(old_module.body)
 }
 
-function transform_module (old_module: S2.Module, ast: S2.AST) : S3.Module {
+function transform_module (old_module: Typed.Module, current_module: string) : S3.Module {
     /**
      * Copio los parametros
      */
@@ -47,13 +47,16 @@ function transform_module (old_module: S2.Module, ast: S2.AST) : S3.Module {
     let last_statement: S3.Statement
     for (let i = old_module.parameters.length - 1; i >= 0; i--) {
         const param = old_module.parameters[i]
-        const fake_inv: S2.InvocationValue = {
+        const fake_inv: Typed.Invocation = {
             dimensions: param.dimensions,
             indexes: [],
             is_array: param.is_array,
             name: param.name,
             type: 'invocation',
-            datatype: param.type
+            typings: {
+                indexes: [],
+                type: new Typed.AtomicType('ninguno')
+            }
         }
         const assignment = create_assignment(fake_inv)
         if (i == old_module.parameters.length - 1) {
@@ -74,14 +77,14 @@ function transform_module (old_module: S2.Module, ast: S2.AST) : S3.Module {
 
     const new_module: S3.Module = {
         entry_point: first_init,
-        name: old_module.name,
+        name: current_module,
         parameters: parameters
     }
 
     return new_module
 }
 
-function transform_if (statement: S2.If) : S3.Statement {
+function transform_if (statement: Typed.If) : S3.Statement {
     /**
      * La condicion del if debe insertarse antes del propio if
      */
@@ -106,7 +109,7 @@ function transform_if (statement: S2.If) : S3.Statement {
     return entry
 }
 
-function transform_while (statement: S2.While) : S3.Statement {
+function transform_while (statement: Typed.While) : S3.Statement {
     /**
      * condicion
      * bucle
@@ -127,7 +130,7 @@ function transform_while (statement: S2.While) : S3.Statement {
     return condition_entry
 }
 
-function transform_until (statement: S2.Until) : S3.Statement {
+function transform_until (statement: Typed.Until) : S3.Statement {
     const body = transform_body(statement.body)
     const body_last_st = S3.get_last(body)
 
@@ -147,7 +150,7 @@ function transform_until (statement: S2.Until) : S3.Statement {
     return body
 }
 
-function transform_for (statement: S2.For) : S3.Statement {
+function transform_for (statement: Typed.For) : S3.Statement {
     /**
      * Los bucles para tienen la siguiente estructura
      * 
@@ -177,17 +180,9 @@ function transform_for (statement: S2.For) : S3.Statement {
      * Ese debe engancharse con la condicion del while.
      * La condicion es <contador> <= <tope>
      */
-    const left: S2.InvocationInfo = statement.counter_init.left
-    const counter_invocation: S2.InvocationValue = {
-        type:'invocation',
-        name:left.name,
-        is_array:left.is_array,
-        indexes:left.indexes,
-        dimensions: left.dimensions,
-        datatype: left.datatype
-    }
+    const left: Typed.Invocation = statement.counter_init.left
 
-    const condition_exp: S2.ExpElement[] = [counter_invocation, ...statement.last_value, {type:'operator', name:'minor-eq'} as S0.OperatorElement]
+    const condition_exp: Typed.ExpElement[] = [left, ...statement.last_value, {type:'operator', name:'minor-eq'} as S0.OperatorElement]
     const condition_entry = transform_expression(condition_exp)
     const conditon_last = S3.get_last(condition_entry)
 
@@ -198,18 +193,22 @@ function transform_for (statement: S2.For) : S3.Statement {
     const body_last = S3.get_last(body)
 
     /**
-     * Y al cuepor del bucle le sigue el incremento del contador
+     * Y al cuerpo del bucle le sigue el incremento del contador
      */
     const increment_value: S0.LiteralValue = {type:'literal', value:1}
-    const right: S2.ExpElement[] = [counter_invocation, increment_value, {type:'operator', name:'plus'} as S0.OperatorElement]
+    const right: Typed.ExpElement[] = [left, increment_value, {type:'operator', name:'plus'} as S0.OperatorElement]
 
     /**
      * Enunciado S2 del incremento
      */
-    const assingment: S2.Assignment = {
+    const assingment: Typed.Assignment = {
         left: left,
         right: right,
-        type: 'assignment'
+        type: 'assignment',
+        typings: {
+            left: left.typings.type,
+            right: left.typings.type
+        }
     }
 
     /**
@@ -238,7 +237,7 @@ function transform_for (statement: S2.For) : S3.Statement {
     return init
 }
 
-function transform_call (call: S2.ModuleCall) : S3.Statement {
+function transform_call (call: Typed.Call) : S3.Statement {
     /**
      * Para transformar las llamadas solo hay que encadenar
      * la evaluacion de sus argumentos (en el orden en que aparecen)
@@ -260,7 +259,7 @@ function transform_call (call: S2.ModuleCall) : S3.Statement {
     return first_arg
 }
 
-function transform_write (wc: S2.ModuleCall) : S3.Statement {
+function transform_write (wc: Typed.Call) : S3.Statement {
     /**
      * Escribir es un procedimiento que toma solo un argumento,
      * en realidad.
@@ -286,7 +285,7 @@ function transform_write (wc: S2.ModuleCall) : S3.Statement {
     return first_arg
 }
 
-function transform_read (rc: S2.ModuleCall) : S3.Statement {
+function transform_read (rc: Typed.Call) : S3.Statement {
     /**
      * Leer tambien es un procedimiento de un solo argumento.
      * Por cada argumento hay que crear una llamada a leer y una asignacion.
@@ -295,14 +294,14 @@ function transform_read (rc: S2.ModuleCall) : S3.Statement {
     let first_call: S3.Statement
     let current_call: S3.Statement
     let last_statement: S3.Statement
-    let current_var: S2.InvocationValue
+    let current_var: Typed.Invocation
     for (let i = 0; i < rc.args.length; i++) {
         /**
          * El type assert es correcto porque esta garantizado por
          * el TypeChecker que los argumentos de un llamado a leer
-         * son todos InvocationValues. O va a estar garantizado...
+         * son todos Invocation. O va a estar garantizado...
          */
-        current_var = rc.args[i][0] as S2.InvocationValue
+        current_var = rc.args[i][0] as Typed.Invocation
 
         const lcall = new S3.ReadCall(current_var.name)
 
@@ -322,7 +321,7 @@ function transform_read (rc: S2.ModuleCall) : S3.Statement {
     return first_call
 }
 
-function create_assignment (v: S2.InvocationValue) : S3.Statement {
+function create_assignment (v: Typed.Invocation) : S3.Statement {
     if (v.is_array) {
         if (v.dimensions.length > v.indexes.length) {
             /**
@@ -396,7 +395,7 @@ function create_literal_number_exp (n: number) : S0.LiteralValue[] {
     return [{type: 'literal', value: n}]
 }
 
-function transform_return (ret: S0.Return) : S3.Statement {
+function transform_return (ret: Typed.Return) : S3.Statement {
     /**
      * Para transformar 'retornar' solo hay que transformar
      * su expresion. Una vez que se evalue eso, el retorno de
@@ -411,7 +410,7 @@ function transform_return (ret: S0.Return) : S3.Statement {
     return entry
 }
 
-function transform_body (body: S2.Statement[]) : S3.Statement {
+function transform_body (body: Typed.Statement[]) : S3.Statement {
     if (body.length > 0) {
         const entry_point: S3.Statement = transform_statement(body[0])
 
@@ -430,7 +429,7 @@ function transform_body (body: S2.Statement[]) : S3.Statement {
     }
 }
 
-function transform_statement (statement: S2.Statement) : S3.Statement {
+function transform_statement (statement: Typed.Statement) : S3.Statement {
     switch (statement.type) {
         case 'assignment':
             return transform_assignment(statement)
@@ -449,14 +448,14 @@ function transform_statement (statement: S2.Statement) : S3.Statement {
                 case 'escribir':
                     return transform_write(statement)
                 default:
-                    return transform_call(statement as S2.ModuleCall)
+                    return transform_call(statement)
             }
         case 'return':
             return transform_return(statement)
     }
 }
 
-function transform_assignment (assignment: S2.Assignment) : S3.Statement {
+function transform_assignment (assignment: Typed.Assignment) : S3.Statement {
     /**
      * Primer enunciado de la evaluacion de la expresion que se debe asignar
      */
@@ -527,7 +526,7 @@ function transform_assignment (assignment: S2.Assignment) : S3.Statement {
     return entry_point
 }
 
-function transform_invocation (i: S2.InvocationValue) : S3.Statement {
+function transform_invocation (i: Typed.Invocation) : S3.Statement {
     if (i.is_array) {
         if (i.dimensions.length > i.indexes.length) {
             /**
@@ -616,7 +615,7 @@ function transform_expression (expression: S0.ExpElement[]) : S3.Statement {
     return entry
 }
 
-function transform_exp_element (element: S0.ExpElement) : S3.Statement {
+function transform_exp_element (element: Typed.ExpElement) : S3.Statement {
   switch (element.type) {
     case 'operator':
       switch ((element as S0.OperatorElement).name) {
@@ -656,15 +655,8 @@ function transform_exp_element (element: S0.ExpElement) : S3.Statement {
     case 'literal':
         return new S3.Push((element as S0.LiteralValue).value)
     case 'invocation':
-        return transform_invocation(element as S2.InvocationValue)
+        return transform_invocation(element)
     case 'call':
-        /**
-         * Este type assert no causa problemas porque element
-         * contiene todas las propiedades que se usan en transform_call.
-         */
-        return transform_call(element as S2.ModuleCall)
-    default:
-      console.log(element);
-      throw new Error(`La transformacion de  "${element.type}" aun no fue implementada.`)
+        return transform_call(element)
   }
 }

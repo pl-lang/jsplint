@@ -919,7 +919,15 @@ export namespace Typed {
     | Errors.BadComparisonOperands;
 
   export interface Program {
-    [m: string]: Module
+    modules: {
+      main: Module
+      [m: string]: Module
+    }
+    
+    variables_per_module: {
+      main: S1.VariableDict
+      [p: string]: S1.VariableDict
+    }
   }
 
   export interface Module {
@@ -997,7 +1005,12 @@ export namespace Typed {
     }
   }
 
-  export interface Invocation extends S2.InvocationValue {
+  export interface Invocation {
+    type: 'invocation'
+    name: string
+    is_array: boolean
+    indexes: ExpElement[][]
+    dimensions: number[]
     typings: {
       type: Type
       indexes: Type[]
@@ -1061,7 +1074,7 @@ export namespace Typed {
   }
 }
 
-export type TransformError = Failure<Errors.RepeatedVar[]> | Failure<S2.Error[]> | Failure<Typed.Error[]>
+export type CompileError = Failure<Errors.RepeatedVar[] | S2.Error[] | Typed.Error[] | Errors.TypeError[]>
 
 export interface TransformedProgram {
   typed_program: Typed.Program,
