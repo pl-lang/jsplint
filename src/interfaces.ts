@@ -21,7 +21,8 @@ export namespace Errors {
   | BadLastValue
   | BadReturn
   | WrongArgAmount
-  | BadIndex;
+  | BadIndex
+  | LongString;
 
   export interface Base {
     reason: string
@@ -30,6 +31,14 @@ export namespace Errors {
       column: number
       line: number
     }
+  }
+
+  export interface LongString extends Base {
+    reason: '@assignment-long-string'
+    where: 'typechecker'
+    name: string
+    type: string
+    length: number
   }
 
   export interface BadIndex extends Base {
@@ -916,7 +925,8 @@ export namespace Typed {
     | Errors.IncompatibleOperand
     | Errors.IncompatibleOperands
     | Errors.MissingOperands
-    | Errors.BadComparisonOperands;
+    | Errors.BadComparisonOperands
+    | Errors.LongString;
 
   export interface Program {
     modules: {
@@ -1029,7 +1039,13 @@ export namespace Typed {
     }
   }
 
-  export type ExpElement = S0.LiteralValue | Invocation | Call | Operator
+  export interface Literal extends S0.LiteralValue {
+    typings: {
+      type: Typed.AtomicType | Typed.StringType
+    }
+  }
+
+  export type ExpElement = Literal | Invocation | Call | Operator
 
   export interface Type {
     type: 'type'
