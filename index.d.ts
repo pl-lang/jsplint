@@ -13,17 +13,15 @@ export interface Success<A> {
 
 export namespace Errors {
   export type TypeError = IncompatibleArgument
-    | IncompatibleOperand
-    | IncompatibleOperands
-    | IncompatibleTypes
-    | BadIOArgument
-    | MissingOperands
-    | BadCondition
-    | BadCounter
-    | BadInitValue
-    | BadLastValue
-    | BadReturn
-    | BadComparisonOperands;
+  | IncompatibleTypes
+  | BadIOArgument
+  | BadCondition
+  | BadCounter
+  | BadInitValue
+  | BadLastValue
+  | BadReturn
+  | WrongArgAmount
+  | BadIndex;
 
   export interface Base {
     reason: string
@@ -32,6 +30,22 @@ export namespace Errors {
       column: number
       line: number
     }
+  }
+
+  export interface BadIndex extends Base {
+    reason: '@invocation-bad-index'
+    where: 'typechecker'
+    received: string
+    name: string
+    at: number
+  }
+
+  export interface WrongArgAmount extends Base {
+    reason: '@call-wrong-arg-amount'
+    where: 'typechecker'
+    expected: number
+    received: number
+    name: string
   }
 
   export interface BadComparisonOperands extends Base {
@@ -823,8 +837,22 @@ export namespace S3 {
  */
 
 export namespace Typed {
+  export type Error = Errors.ExtraIndexes
+    | Errors.IncompatibleOperand
+    | Errors.IncompatibleOperands
+    | Errors.MissingOperands
+    | Errors.BadComparisonOperands;
+
   export interface Program {
-    [m: string]: Module
+    modules: {
+      main: Module
+      [m: string]: Module
+    }
+    
+    variables_per_module: {
+      main: S1.VariableDict
+      [p: string]: S1.VariableDict
+    }
   }
 
   export interface Module {
@@ -841,12 +869,14 @@ export namespace Typed {
     | Assignment
     | Call
     | Return;
-  // | ReadCall
-  // | WriteCall;
+
   export interface Return {
     type: 'return'
-    actual: ExpElement[]
-    expected: Type
+    expression: ExpElement[]
+    typings: {
+      actual: Type
+      expected: Type
+    }
   }
 
   export interface For {
@@ -854,48 +884,77 @@ export namespace Typed {
     counter_init: Assignment
     last_value: ExpElement[]
     body: Statement[]
+    typings: {
+      init_value: Type
+      last_value: Type
+    }
   }
 
   export interface While {
     type: 'while'
     condition: ExpElement[]
     body: Statement[]
+    typings: {
+      condition: Type
+      body: Statement[]
+    }
   }
 
   export interface Until {
     type: 'until'
     condition: ExpElement[]
     body: Statement[]
+    typings: {
+      condition: Type
+      body: Statement[]
+    }
   }
 
   export interface If {
     type: 'if'
-    condition: ExpElement[]
     true_branch: Statement[]
     false_branch: Statement[]
+    condition: ExpElement[]
+    typings: {
+      condition: Type
+    }
   }
 
   export interface Assignment {
     type: 'assignment'
     left: Invocation
     right: ExpElement[]
+    typings: {
+      left: Type
+      right: Type
+    }
   }
 
   export interface Invocation {
     type: 'invocation'
-    datatype: Type
-    indextypes: ExpElement[][]
+    name: string
+    is_array: boolean
+    indexes: ExpElement[][]
+    dimensions: number[]
+    typings: {
+      type: Type
+      indexes: Type[]
+    }
   }
 
   export interface Call {
     type: 'call'
-    datatype: AtomicType // tipo de dato del valor que esta llamada retorna
-    argtypes: ExpElement[][] // tipos de los argumentos usados en la llamada
-    paramtypes: Type[] // tipos de los parametros declarados para este modulo
     name: string
+    args: ExpElement[][]
+    parameters: S0.Parameter[]
+    typings: {
+      args: Type[]
+      return: AtomicType
+      parameters: Type[]
+    }
   }
 
-  export type ExpElement = Type | Invocation | Call | Operator
+  export type ExpElement = S0.LiteralValue | Invocation | Call | Operator
 
   export interface Type {
     type: 'type'
@@ -929,7 +988,7 @@ export namespace Typed {
   }
 }
 
-export type TransformError = Failure<Errors.RepeatedVar[]> | Failure<S2.Error[]> | Failure<Errors.ExtraIndexes[]>
+export type CompileError = Failure<Errors.RepeatedVar[] | S2.Error[] | Typed.Error[] | Errors.TypeError[]>
 
 export interface TransformedProgram {
   typed_program: Typed.Program,
@@ -1028,6 +1087,6 @@ export class Interpreter extends Emitter {
   send(value: Value): void;
 }
 
-export function transform(p: ParsedProgram): TransformError | Success<TransformedProgram>
+export function transform(p: ParsedProgram): CompileError | Success<TransformedProgram>
 
 export function typecheck(p: Typed.Program): Errors.TypeError[]
