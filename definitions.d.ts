@@ -1090,3 +1090,5 @@ export class Interpreter extends Emitter {
 export function transform(p: ParsedProgram): CompileError | Success<S3.Program>
 
 export function typecheck(p: Typed.Program): Errors.TypeError[]
+
+export function fr_writer (p: S3.Program) : string
