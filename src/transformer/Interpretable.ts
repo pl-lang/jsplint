@@ -195,7 +195,7 @@ function transform_for (statement: Typed.For) : S3.Statement {
     /**
      * Y al cuerpo del bucle le sigue el incremento del contador
      */
-    const increment_value: S0.LiteralValue = {type:'literal', value:1}
+    const increment_value = create_literal_number_exp(1)
     const right: Typed.ExpElement[] = [left, increment_value, {type:'operator', name:'plus'} as S0.OperatorElement]
 
     /**
@@ -340,10 +340,10 @@ function create_assignment (v: Typed.Invocation) : S3.Statement {
                  * Los indices que no fueron proprocionados seran completados con los del
                  * contador `i`
                  */
-                const missing_indexes: S0.ExpElement[][] = i.map(create_literal_number_exp)
-                const final_indexes = [...v.indexes, ...missing_indexes]
+                const missing_indexes = [i.map(create_literal_number_exp)]
+                const final_indexes = v.indexes.concat(missing_indexes)
 
-                for (let j = 0; j < final_indexes.length; j++) {
+                for (let j = 0; j < final_indexes.length; j++) { 
                     const index_exp = transform_expression(final_indexes[j])
 
                     /**
@@ -391,8 +391,8 @@ function create_assignment (v: Typed.Invocation) : S3.Statement {
     }
 }
 
-function create_literal_number_exp (n: number) : S0.LiteralValue[] {
-    return [{type: 'literal', value: n}]
+function create_literal_number_exp (n: number) : Typed.Literal {
+    return {type: 'literal', value: n, typings: {type: new  Typed.AtomicType('entero')}}
 }
 
 function transform_return (ret: Typed.Return) : S3.Statement {
@@ -455,11 +455,11 @@ function transform_statement (statement: Typed.Statement) : S3.Statement {
     }
 }
 
-function transform_assignment (assignment: Typed.Assignment) : S3.Statement {
+function transform_assignment (a: Typed.Assignment) : S3.Statement {
     /**
      * Primer enunciado de la evaluacion de la expresion que se debe asignar
      */
-    const entry_point = transform_expression(assignment.right)
+    const entry_point = transform_expression(a.right)
 
     /**
      * Este enunciado es el que finalmente pone el valor de la expresion en la
@@ -467,11 +467,12 @@ function transform_assignment (assignment: Typed.Assignment) : S3.Statement {
      */
     let last_statement = S3.get_last(entry_point)
     
-    if (assignment.left.dimensions.length > 0 && assignment.left.indexes.length < assignment.left.dimensions.length) {
+    if (a.left.dimensions.length > 0 && a.left.indexes.length < a.left.dimensions.length) {
         /**
-         * Asignacion vectorial: copiar los contenidos de un vector a otro.
+         * Asignacion vectorial: copiar los contenidos de un vector a otro o asignar
+         * una cadena a un vector.
          * En este caso esta garantizado que del lado derecho de la asignacion hay un vector
-         * con menos indices que dimensiones.
+         * con menos indices que dimensiones, o una cadena.
          * Hay que hacer una lista de enunciados que metan los valores que deben copiarse
          * seguidos de los indices de la celda donde deben ser insertados y, por ultimo, el
          * enunciado de asignacion vectorial. Las expresiones de los indices que fueron provistos
@@ -479,18 +480,53 @@ function transform_assignment (assignment: Typed.Assignment) : S3.Statement {
          * Los indices que falten deben rellenarse con numeros del 1...n donde n es el tamaño de
          * la dimension faltante.
          */
-        for (let i = 0; i < assignment.left.indexes.length; i++) {
-            const index_entry = transform_expression(assignment.left.indexes[i])
-            const index_last = S3.get_last(index_entry)
-            /**
-             * Luego de apilar el valor de la expresion, hay que apilar el valor del indice
-             */
-            last_statement.exit_point = index_entry
-            /**
-             * Luego hay que hacer la asignacion
-             */
-
+        /**
+         * "grados de libertad"
+         */
+        const g = a.left.dimensions.length - a.left.indexes.length
+        /**
+         * tamaño de las dimensiones cuyos indices van a ir variando
+         */
+        const dv = drop(a.left.indexes.length, a.left.dimensions)
+        
+        if (a.typings.right instanceof Typed.StringType) {
+            dv[dv.length-1] = a.typings.right.length
         }
+        
+        let first_index: S3.Statement
+        let last: S3.Statement
+        for (let i = arr_counter(g, 1); arr_minor(i, dv) || arr_equal(i, dv); arr_counter_inc(i, dv, 1)) {
+            /**
+             * Los indices que no fueron proprocionados seran completados con los del
+             * contador `i`
+             */
+            const missing_indexes = [i.map(create_literal_number_exp)]
+            const final_indexes = a.left.indexes.concat(missing_indexes)
+
+            for (let j = 0; j < final_indexes.length; j++) { 
+                const index_exp = transform_expression(final_indexes[j])
+
+                /**
+                 * Si esta es la primer iteracion de ambos bucles...
+                 */
+                if (arr_equal(i, arr_counter(i.length, 1))) {
+                    first_index = index_exp
+                }
+                else {
+                    last.exit_point = index_exp
+                }
+
+                last = S3.get_last(index_exp)
+
+                const assignment = new S3.AssignV(final_indexes.length, a.left.dimensions, a.left.name)
+
+                last.exit_point = assignment
+
+                last = assignment
+            }
+        }
+
+        last_statement.exit_point = first_index
     }
     else {
         /**
@@ -501,8 +537,8 @@ function transform_assignment (assignment: Typed.Assignment) : S3.Statement {
          * Si la asignacion es a una celda de un vector, primero hay que la expresion a asignar
          * en la pila, luego los indices de la celda, y por ultimo el enunciado de asignacion.
          */
-        if (assignment.left.is_array) {
-            const v = assignment.left
+        if (a.left.is_array) {
+            const v = a.left
 
             const first_index = transform_expression(v.indexes[0])
             let index_last_st = S3.get_last(first_index)
@@ -518,7 +554,7 @@ function transform_assignment (assignment: Typed.Assignment) : S3.Statement {
             last_statement.exit_point = first_index
         }
         else {
-            const assign = new S3.Assign(assignment.left.name)
+            const assign = new S3.Assign(a.left.name)
             last_statement.exit_point = assign
         }
     }
@@ -552,8 +588,8 @@ function transform_invocation (i: Typed.Invocation) : S3.Statement {
                  * Los indices que no fueron proprocionados seran completados con los del
                  * contador `i`
                  */
-                const missing_indexes: S0.ExpElement[][] = j.map(create_literal_number_exp)
-                const final_indexes = [...i.indexes, ...missing_indexes]
+                const missing_indexes = j.map(i => [create_literal_number_exp(i)])
+                const final_indexes = i.indexes.concat(missing_indexes)
 
                 for (let k = 0; k < final_indexes.length; k++) {
                     const index_exp = transform_expression(final_indexes[k])
@@ -603,7 +639,35 @@ function transform_invocation (i: Typed.Invocation) : S3.Statement {
     }
 }
 
-function transform_expression (expression: S0.ExpElement[]) : S3.Statement {
+function transform_literal (l: Typed.Literal): S3.Statement {
+    if (l.typings.type instanceof Typed.StringType) {
+        const length = (l.typings.type as Typed.StringType).length
+
+        /**
+         * Apilar la cadena de atras para adelante para que cuando
+         * sea asignada a un vector aparezca en el orden correcto.
+         */
+        let first: S3.Statement;
+        let last: S3.Statement;
+        for (let i = length - 1; i >= 0; i--) {
+            if (i == length - 1) {
+                first = new S3.Push((l.value as string)[i])
+                last = first
+            }
+            else {
+                const next = new S3.Push((l.value as string)[i])
+                last.exit_point = next
+                last = next
+            }
+        }
+        return first
+    }
+    else {
+        return new S3.Push(l.value)
+    }
+}
+
+function transform_expression (expression: Typed.ExpElement[]) : S3.Statement {
     const statements = expression.map(transform_exp_element)
     const entry = statements[0]
     let last_statement: S3.Statement = S3.get_last(entry)
@@ -652,8 +716,9 @@ function transform_exp_element (element: Typed.ExpElement) : S3.Statement {
         case 'or':
             return new S3.Operation(S3.StatementKinds.Or)
       }
+      break
     case 'literal':
-        return new S3.Push((element as S0.LiteralValue).value)
+        return transform_literal(element)
     case 'invocation':
         return transform_invocation(element)
     case 'call':
