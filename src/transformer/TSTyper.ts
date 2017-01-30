@@ -400,7 +400,7 @@ function type_params (params: S0.Parameter[]): Typed.Type[] {
         if (param.is_array) {
             let type: Typed.ArrayType;
             for (let i = params.length - 1; i >= 0; i--) {
-                if (i == params.length) {
+                if (i == params.length - 1) {
                     type = new Typed.ArrayType(new Typed.AtomicType(param.type), param.dimensions[i])
                 }
                 else {
