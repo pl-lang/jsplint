@@ -325,31 +325,27 @@ function create_assignment (v: Typed.Invocation) : S3.Statement {
     if (v.is_array) {
         if (v.dimensions.length > v.indexes.length) {
             /**
-             * "grados de libertad"
-             */
-            const g = v.dimensions.length - v.indexes.length
-            /**
              * tamaño de las dimensiones cuyos indices van a ir variando
              */
-            const dv = drop(v.indexes.length, v.dimensions)
+            const missing_indexes = drop(v.indexes.length, v.dimensions)
+            const smallest_index = arr_counter(missing_indexes.length, 1)
             
             let first_index: S3.Statement
             let last_statement: S3.Statement
-            for (let i = arr_counter(g, 1); arr_minor(i, dv) || arr_equal(i, dv); arr_counter_inc(i, dv, 1)) {
+            for (let i = missing_indexes.slice(0); arr_major(i, smallest_index) || arr_equal(i, smallest_index); arr_counter_dec(i, missing_indexes)) {
                 /**
                  * Los indices que no fueron proprocionados seran completados con los del
                  * contador `i`
                  */
-                const missing_indexes = [i.map(create_literal_number_exp)]
-                const final_indexes = v.indexes.concat(missing_indexes)
+                const final_indexes = v.indexes.concat(i.map(index => [create_literal_number_exp(index)]))
 
-                for (let j = 0; j < final_indexes.length; j++) { 
+                for (let j = 0; j < final_indexes.length; j++) {
                     const index_exp = transform_expression(final_indexes[j])
 
                     /**
                      * Si esta es la primer iteracion de ambos bucles...
                      */
-                    if (arr_equal(i, arr_counter(i.length, 1)) && j == 0) {
+                    if (arr_equal(i, missing_indexes) && j == 0) {
                         first_index = index_exp
                     }
                     else {
@@ -357,13 +353,13 @@ function create_assignment (v: Typed.Invocation) : S3.Statement {
                     }
 
                     last_statement = S3.get_last(index_exp)
-
-                    const assignment = new S3.AssignV(final_indexes.length, v.dimensions, v.name)
-
-                    last_statement.exit_point = assignment
-
-                    last_statement = assignment
                 }
+
+                const assignment = new S3.AssignV(final_indexes.length, v.dimensions, v.name)
+
+                last_statement.exit_point = assignment
+
+                last_statement = assignment
             }
 
             return first_index
@@ -494,10 +490,10 @@ function transform_assignment (a: Typed.Assignment) : S3.Statement {
              * Los indices que no fueron proprocionados seran completados con los del
              * contador `i`
              */
-            const final_index = a.left.indexes.concat(i.map(index => [create_literal_number_exp(index)]))
+            const final_indexes = a.left.indexes.concat(i.map(index => [create_literal_number_exp(index)]))
 
-            for (let j = 0; j < final_index.length; j++) {
-                const index_exp = transform_expression(final_index[j])
+            for (let j = 0; j < final_indexes.length; j++) {
+                const index_exp = transform_expression(final_indexes[j])
 
                 /**
                  * Si esta es la primer iteracion de ambos bucles...
@@ -512,7 +508,7 @@ function transform_assignment (a: Typed.Assignment) : S3.Statement {
                 last = S3.get_last(index_exp)
             }
 
-            const assignment = new S3.AssignV(final_index.length, a.left.dimensions, a.left.name)
+            const assignment = new S3.AssignV(final_indexes.length, a.left.dimensions, a.left.name)
 
             last.exit_point = assignment
 
@@ -559,30 +555,25 @@ function transform_invocation (i: Typed.Invocation) : S3.Statement {
     if (i.is_array) {
         if (i.dimensions.length > i.indexes.length) {
             /**
-             * "grados de libertad"
-             */
-            const g = i.dimensions.length - i.indexes.length
-            /**
              * tamaño de las dimensiones cuyos indices van a ir variando
              */
-            const dv = drop(i.indexes.length, i.dimensions)
+            const missing_indexes = drop(i.indexes.length, i.dimensions)
             /**
              * el indice mas pequeño posible
              */
-            const smallest_index = arr_counter(g, 1)
+            const smallest_index = arr_counter(i.dimensions.length - i.indexes.length, 1)
             
             let first_index: S3.Statement
             let last_statement: S3.Statement
             /**
-             * dv.slice(0) hace una copia de dv
+             * smallest_index.slice(0) hace una copia de dv
              */
-            for (let j = dv.slice(0); arr_major(j, smallest_index) || arr_equal(j, smallest_index); arr_counter_dec(j, dv)) {
+            for (let j = smallest_index.slice(0); arr_minor(j, missing_indexes) || arr_equal(j, missing_indexes); arr_counter_inc(j, missing_indexes, 1)) {
                 /**
                  * Los indices que no fueron proprocionados seran completados con los del
                  * contador `i`
                  */
-                const missing_indexes = j.map(i => [create_literal_number_exp(i)])
-                const final_indexes = i.indexes.concat(missing_indexes)
+                const final_indexes = i.indexes.concat(j.map(index => [create_literal_number_exp(index)]))
 
                 for (let k = 0; k < final_indexes.length; k++) {
                     const index_exp = transform_expression(final_indexes[k])
@@ -590,7 +581,7 @@ function transform_invocation (i: Typed.Invocation) : S3.Statement {
                     /**
                      * Si esta es la primer iteracion de ambos bucles...
                      */
-                    if (arr_equal(j, dv)) {
+                    if (arr_equal(j, smallest_index) && k == 0) {
                         first_index = index_exp
                     }
                     else {
@@ -598,13 +589,13 @@ function transform_invocation (i: Typed.Invocation) : S3.Statement {
                     }
 
                     last_statement = S3.get_last(index_exp)
-
-                    const invocation = new S3.GetV(final_indexes.length, i.dimensions, i.name)
-
-                    last_statement.exit_point = invocation
-
-                    last_statement = invocation
                 }
+
+                const invocation = new S3.GetV(final_indexes.length, i.dimensions, i.name)
+
+                last_statement.exit_point = invocation
+
+                last_statement = invocation
             }
 
             return first_index
