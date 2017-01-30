@@ -349,7 +349,7 @@ function create_assignment (v: Typed.Invocation) : S3.Statement {
                     /**
                      * Si esta es la primer iteracion de ambos bucles...
                      */
-                    if (arr_equal(i, arr_counter(i.length, 1))) {
+                    if (arr_equal(i, arr_counter(i.length, 1)) && j == 0) {
                         first_index = index_exp
                     }
                     else {
@@ -471,45 +471,38 @@ function transform_assignment (a: Typed.Assignment) : S3.Statement {
         /**
          * Asignacion vectorial: copiar los contenidos de un vector a otro o asignar
          * una cadena a un vector.
-         * En este caso esta garantizado que del lado derecho de la asignacion hay un vector
-         * con menos indices que dimensiones, o una cadena.
-         * Hay que hacer una lista de enunciados que metan los valores que deben copiarse
-         * seguidos de los indices de la celda donde deben ser insertados y, por ultimo, el
-         * enunciado de asignacion vectorial. Las expresiones de los indices que fueron provistos
-         * para el vector de la derecha deben evaluarse y ponerse al tope de la pila.
-         * Los indices que falten deben rellenarse con numeros del 1...n donde n es el tamaño de
-         * la dimension faltante.
          */
-        /**
-         * "grados de libertad"
-         */
-        const g = a.left.dimensions.length - a.left.indexes.length
+
         /**
          * tamaño de las dimensiones cuyos indices van a ir variando
          */
-        const dv = drop(a.left.indexes.length, a.left.dimensions)
+        const missing_indexes = drop(a.left.indexes.length, a.left.dimensions)
         
         if (a.typings.right instanceof Typed.StringType) {
-            dv[dv.length-1] = a.typings.right.length
+            /**
+             * Esto permite asignar cadenas mas cortas que el vector que las recibe
+             */
+            missing_indexes[missing_indexes.length-1] = a.typings.right.length
         }
+
+        const smallest_index = arr_counter(missing_indexes.length, 1)
         
         let first_index: S3.Statement
         let last: S3.Statement
-        for (let i = arr_counter(g, 1); arr_minor(i, dv) || arr_equal(i, dv); arr_counter_inc(i, dv, 1)) {
+        for (let i = missing_indexes.slice(0); arr_major(i, smallest_index) || arr_equal(i, smallest_index); arr_counter_dec(i, missing_indexes)) {
             /**
              * Los indices que no fueron proprocionados seran completados con los del
              * contador `i`
              */
-            const missing_indexes = [i.map(create_literal_number_exp)]
-            const final_indexes = a.left.indexes.concat(missing_indexes)
+            const final_index = a.left.indexes.concat(i.map(index => [create_literal_number_exp(index)]))
 
-            for (let j = 0; j < final_indexes.length; j++) { 
-                const index_exp = transform_expression(final_indexes[j])
+            for (let j = 0; j < final_index.length; j++) {
+                const index_exp = transform_expression(final_index[j])
 
                 /**
                  * Si esta es la primer iteracion de ambos bucles...
                  */
-                if (arr_equal(i, arr_counter(i.length, 1))) {
+                if (arr_equal(i, missing_indexes) && j == 0) {
                     first_index = index_exp
                 }
                 else {
@@ -517,13 +510,13 @@ function transform_assignment (a: Typed.Assignment) : S3.Statement {
                 }
 
                 last = S3.get_last(index_exp)
-
-                const assignment = new S3.AssignV(final_indexes.length, a.left.dimensions, a.left.name)
-
-                last.exit_point = assignment
-
-                last = assignment
             }
+
+            const assignment = new S3.AssignV(final_index.length, a.left.dimensions, a.left.name)
+
+            last.exit_point = assignment
+
+            last = assignment
         }
 
         last_statement.exit_point = first_index
