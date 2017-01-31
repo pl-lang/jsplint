@@ -52,11 +52,19 @@ function transfor_module (m: S2.Module | S2.Main, p: S2.AST): Failure<Typed.Erro
         }
     }
     else {
+        const parameters: Typed.Parameter[] = []
+        const ptypes = type_params(p.modules.user_modules[m.name].parameters)
+
+        for (let i = 0; i < ptypes.length; i++) {
+            const {name, by_ref, is_array, dimensions} = p.modules.user_modules[m.name].parameters[i]
+            parameters.push({name, by_ref, is_array, dimensions, type: ptypes[i]})
+        }
+
         typed_module = {
             body: [],
             module_type: p.modules.user_modules[m.name].module_type,
             return_type: p.modules.user_modules[m.name].return_type,
-            parameters: p.modules.user_modules[m.name].parameters
+            parameters: parameters
         }
     }
 

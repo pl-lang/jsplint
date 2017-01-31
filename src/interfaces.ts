@@ -971,7 +971,15 @@ export namespace Typed {
     module_type: 'function' | 'procedure' | 'main'
     body: Statement[]
     return_type: 'entero' | 'real' | 'caracter' | 'logico' | 'ninguno'
-    parameters: S0.Parameter[]
+    parameters: Parameter[]
+  }
+
+  export interface Parameter {
+    name: string
+    by_ref: boolean
+    type: Type
+    is_array: boolean
+    dimensions: number[]
   }
 
   export type Statement = For
