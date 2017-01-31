@@ -45,6 +45,7 @@ function transform_module (old_module: Typed.Module, current_module: string) : S
      */
     let first_init: S3.Statement
     let last_statement: S3.Statement
+    let first_statement_initialized = false
     for (let i = old_module.parameters.length - 1; i >= 0; i--) {
         const param = old_module.parameters[i]
         const fake_inv: Typed.Invocation = {
@@ -60,6 +61,7 @@ function transform_module (old_module: Typed.Module, current_module: string) : S
         }
         const assignment = create_assignment(fake_inv)
         if (i == old_module.parameters.length - 1) {
+            first_statement_initialized = true
             first_init = assignment
         }
         else {
@@ -71,12 +73,23 @@ function transform_module (old_module: Typed.Module, current_module: string) : S
     const body_entry = transform_body(old_module.body)
 
     /**
-     * Enlazar la ultima inicializacion al primer enunciado del cuerpo
+     * Punto de entrada (primer enunciado) del modulo
      */
-    last_statement.exit_point = body_entry
+    let entry_point: S3.Statement = null
+
+    if (first_statement_initialized) {
+        entry_point = first_init
+        /**
+         * Enlazar la ultima inicializacion al primer enunciado del cuerpo
+         */
+        last_statement.exit_point = body_entry
+    }
+    else {
+        entry_point = body_entry
+    }
 
     const new_module: S3.Module = {
-        entry_point: first_init,
+        entry_point: entry_point,
         name: current_module,
         parameters: parameters
     }
