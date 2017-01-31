@@ -268,17 +268,30 @@ function transform_write (wc: Typed.Call) : S3.Statement {
     const first_arg: S3.Statement = transform_expression(wc.args[0])
     let last_statement = S3.get_last(first_arg)
 
+    if (wc.typings.args[0] instanceof Typed.StringType) {
+        const concat = new S3.Concat((wc.typings.args[0] as Typed.StringType).length)
+        last_statement.exit_point = concat
+        last_statement = concat
+    }
+
     const escribir_call = new S3.WriteCall()
 
     last_statement.exit_point = escribir_call
     last_statement = escribir_call
 
-    for (let i = 0; i < wc.args.length - 1; i++) {
-        const next_arg = transform_expression(wc.args[i + 1])
-        const next_arg_last = S3.get_last(next_arg)
+    for (let i = 1; i < wc.args.length; i++) {
+        const next_arg = transform_expression(wc.args[i])
         last_statement.exit_point = next_arg
+        last_statement = S3.get_last(next_arg)
+
+        if (wc.typings.args[0] instanceof Typed.StringType) {
+            const concat = new S3.Concat((wc.typings.args[0] as Typed.StringType).length)
+            last_statement.exit_point = concat
+            last_statement = concat
+        }
+
         const wcall = new S3.WriteCall()
-        next_arg_last.exit_point = wcall
+        last_statement.exit_point = wcall
         last_statement = wcall
     }
 

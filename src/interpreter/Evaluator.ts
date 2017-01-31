@@ -10,7 +10,7 @@ import {Value, Errors, Read, Write, NullAction, Paused, SuccessfulReturn} from '
 */
 
 /*
-  Los evaluadores son eleiminados cuando terminan de ejecutar su modulo. Son de
+  Los evaluadores son eliminados cuando terminan de ejecutar su modulo. Son de
   un solo uso.
 */
 
@@ -223,7 +223,18 @@ export class Evaluator {
          */
         this.state.next_statement = null
         return {error: false, result: {action: 'none', done: this.state.done}}
+        case S3.StatementKinds.Concat:
+          return this.concat(s)
     }
+  }
+
+  private concat (s: S3.Concat): Success<NullAction> {
+    let string: string[] = []
+    for (let i = 0; i < s.length; i++) {
+      string.push(this.state.value_stack.pop() as string)
+    }
+    this.state.value_stack.push(string.join(''))
+    return {error: false, result: {action: 'none', done: this.state.done}}
   }
 
   private push (s: S3.Push) : Success<NullAction> {

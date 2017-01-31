@@ -727,7 +727,8 @@ export namespace S3 {
     UserModuleCall,
     ReadCall,
     WriteCall,
-    Return
+    Return,
+    Concat
   }
 
   export class BaseStatement {
@@ -752,6 +753,17 @@ export namespace S3 {
 
     get exit_point(): Statement {
       return this._exit_point
+    }
+  }
+
+  export class Concat extends BaseStatement {
+    readonly kind: StatementKinds.Concat
+    readonly length: number
+
+    constructor (length: number) {
+      super()
+      this.kind = StatementKinds.Concat
+      this.length = length
     }
   }
 
@@ -912,7 +924,21 @@ export namespace S3 {
 
   export type LogicOps = StatementKinds.And | StatementKinds.Or | StatementKinds.Not
 
-  export type Statement = While | If | Until | UserModuleCall | ReadCall | WriteCall | Assign | Get | Operation | AssignV | GetV | Push | Pop | Return
+  export type Statement = While
+    | If
+    | Until
+    | UserModuleCall
+    | ReadCall
+    | WriteCall
+    | Assign
+    | Get
+    | Operation
+    | AssignV
+    | GetV
+    | Push
+    | Pop
+    | Return
+    | Concat;
 
 }
 
