@@ -396,6 +396,7 @@ function transform_invocation(invocation: S0.InvocationInfo, ast: S1.AST, module
 
     if (varinfo.error) {
       errors_found.push(...varinfo.result)
+      return {error: true, result: errors_found}
     }
     else if (varinfo.error == false) {
       if (errors_found.length == 0) {
@@ -457,6 +458,7 @@ function transform_invocation_exp(invocation: S0.InvocationValue, ast: S1.AST, m
 
     if (varinfo.error) {
       errors_found.push(...varinfo.result)
+      return {error: true, result: errors_found}
     }
     else if (varinfo.error == false) {
       if (errors_found.length == 0) {

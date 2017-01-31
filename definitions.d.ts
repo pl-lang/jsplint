@@ -38,7 +38,8 @@ export namespace Errors {
     where: 'typechecker'
     name: string
     type: string
-    length: number
+    vector_length: number
+    string_length: number
   }
 
   export interface BadIndex extends Base {

@@ -281,7 +281,8 @@ function check_assignment (a: Typed.Assignment): Errors.TypeError[] {
              */
             if (!(inv_report.result.length >= a.typings.right.length)) {
                 const error: Errors.LongString = {
-                    length: inv_report.result.length,
+                    vector_length: inv_report.result.length,
+                    string_length: a.typings.right.length,
                     name: a.left.name,
                     reason: '@assignment-long-string',
                     type: stringify(inv_report.result),
