@@ -1,6 +1,6 @@
 {
   "name": "interprete-pl",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "interprete",
   "scripts": {
     "test": "mocha --reporter min -w ./lib/test/Test_8_TestableEvaluator.js",
