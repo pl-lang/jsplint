@@ -284,8 +284,8 @@ function transform_write (wc: Typed.Call) : S3.Statement {
         last_statement.exit_point = next_arg
         last_statement = S3.get_last(next_arg)
 
-        if (wc.typings.args[0] instanceof Typed.StringType) {
-            const concat = new S3.Concat((wc.typings.args[0] as Typed.StringType).length)
+        if (wc.typings.args[i] instanceof Typed.StringType) {
+            const concat = new S3.Concat((wc.typings.args[i] as Typed.StringType).length)
             last_statement.exit_point = concat
             last_statement = concat
         }
