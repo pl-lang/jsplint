@@ -3,7 +3,7 @@
   "version": "0.2.2",
   "description": "interprete",
   "scripts": {
-    "test": "mocha --reporter min -w ./lib/test/Test_8_TestableEvaluator.js",
+    "test": "mocha -w ./lib/test/Test_8_TestableEvaluator.js",
     "m_watch": "mocha -w --reporter min",
     "build": "tsc -p . && cp ./definitions.d.ts ./lib/index.d.ts"
   },

@@ -3,11 +3,34 @@ import 'should'
 
 import Parser from '../src/parser/Parser.js'
 
-import {ParsedProgram, S1, S3} from '../src/interfaces'
+import {ParsedProgram, S1, S3, Errors, Success, Failure} from '../src/interfaces'
 
 import {Evaluator} from '../src/interpreter/Evaluator'
 
 import transform from '../src/transformer/transform'
+
+import fr_writer from '../src/utility/fr_writer'
+
+function compile (p: Failure<Errors.Lexical[] | Errors.Pattern[]> | Success<ParsedProgram>): S3.Program {
+  if (p.error) {
+    // for (let error of p.result) {
+    //   console.log(error)
+    // }
+    throw new Error('Se encontraron errores durante la transformacion')
+  }
+  else if (p.error == false) {
+    const tp = transform(p.result)
+    if (tp.error) {
+      // for (let error of tp.result) {
+      //   console.log(error)
+      // }
+      throw new Error('Se encontraron errores durante la transformacion')
+    }
+    else if (tp.error == false) {
+      return tp.result
+    }
+  }
+}
 
 function parse (s: string) {
     const p = new Parser()
@@ -24,9 +47,9 @@ describe('Evaluacion de programas y expresiones', () => {
     inicio
     fin
     `
-    const p = transform(parse(code).result as ParsedProgram)
+    const p = compile(parse(code))
 
-    const evaluator = new Evaluator(p.result as S3.Program)
+    const evaluator = new Evaluator(p)
 
     const output = evaluator.step()
 
@@ -43,13 +66,15 @@ describe('Evaluacion de programas y expresiones', () => {
       a <- 2
     fin`
 
-    const p = transform(parse(code).result as ParsedProgram)
+    const p = compile(parse(code))
 
-    const evaluator = new Evaluator(p.result as S3.Program)
+    const evaluator = new Evaluator(p)
 
     let output = evaluator.step()
 
-    output.result.should.deepEqual({done:false, action: 'none'})
+    while (output.error == false && !output.result.done) {
+      output = evaluator.step()
+    }
 
     const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
@@ -67,9 +92,9 @@ describe('Evaluacion de programas y expresiones', () => {
       v[5] <- 3
     fin`
 
-    const p = transform(parse(code).result as ParsedProgram)
+    const p = compile(parse(code))
 
-    const evaluator = new Evaluator(p.result as S3.Program)
+    const evaluator = new Evaluator(p)
 
     let output = evaluator.step()
 
@@ -96,9 +121,9 @@ describe('Evaluacion de programas y expresiones', () => {
       m[2, 2] <- 9
     fin`
 
-    const p = transform(parse(code).result as ParsedProgram)
+    const p = compile(parse(code))
 
-    const evaluator = new Evaluator(p.result as S3.Program)
+    const evaluator = new Evaluator(p)
 
     let output = evaluator.step()
 
@@ -120,9 +145,9 @@ describe('Evaluacion de programas y expresiones', () => {
       escribir(4)
     fin`
 
-    const p = transform(parse(code).result as ParsedProgram)
+    const p = compile(parse(code))
 
-    const evaluator = new Evaluator(p.result as S3.Program)
+    const evaluator = new Evaluator(p)
 
     evaluator.step()
 
@@ -138,9 +163,9 @@ describe('Evaluacion de programas y expresiones', () => {
       escribir(4, 3, 2, 1)
     fin`
 
-    const p = transform(parse(code).result as ParsedProgram)
+    const p = compile(parse(code))
 
-    const evaluator = new Evaluator(p.result as S3.Program)
+    const evaluator = new Evaluator(p)
 
     let output = evaluator.step()
 
@@ -175,9 +200,9 @@ describe('Evaluacion de programas y expresiones', () => {
       escribir(a)
     fin`
 
-    const p = transform(parse(code).result as ParsedProgram)
+    const p = compile(parse(code))
 
-    const evaluator = new Evaluator(p.result as S3.Program)
+    const evaluator = new Evaluator(p)
 
     let output = evaluator.step()
 
@@ -198,9 +223,9 @@ describe('Evaluacion de programas y expresiones', () => {
       escribir(v[2])
     fin`
 
-    const p = transform(parse(code).result as ParsedProgram)
+    const p = compile(parse(code))
 
-    const evaluator = new Evaluator(p.result as S3.Program)
+    const evaluator = new Evaluator(p)
 
     let output = evaluator.step()
 
@@ -235,9 +260,9 @@ describe('Evaluacion de programas y expresiones', () => {
       escribir(m[1, 2])
     fin`
 
-    const p = transform(parse(code).result as ParsedProgram)
+    const p = compile(parse(code))
 
-    const evaluator = new Evaluator(p.result as S3.Program)
+    const evaluator = new Evaluator(p)
 
     let output = evaluator.step()
 
@@ -269,9 +294,9 @@ describe('Evaluacion de programas y expresiones', () => {
       leer(m)
     fin`
 
-    const p = transform(parse(code).result as ParsedProgram)
+    const p = compile(parse(code))
 
-    const evaluator = new Evaluator(p.result as S3.Program)
+    const evaluator = new Evaluator(p)
 
     let output = evaluator.step()
 
@@ -299,9 +324,9 @@ describe('Evaluacion de programas y expresiones', () => {
       leer(v[1])
     fin`
 
-    const p = transform(parse(code).result as ParsedProgram)
+    const p = compile(parse(code))
 
-    const evaluator = new Evaluator(p.result as S3.Program)
+    const evaluator = new Evaluator(p)
 
     let output = evaluator.step()
 
@@ -330,9 +355,9 @@ describe('Evaluacion de programas y expresiones', () => {
       finsi
     fin`
 
-    const p = transform(parse(code).result as ParsedProgram)
+    const p = compile(parse(code))
 
-    const evaluator = new Evaluator(p.result as S3.Program)
+    const evaluator = new Evaluator(p)
 
     let output = evaluator.step() // evalua la condicion
 
@@ -353,9 +378,9 @@ describe('Evaluacion de programas y expresiones', () => {
       finsi
     fin`
 
-    const p = transform(parse(code).result as ParsedProgram)
+    const p = compile(parse(code))
 
-    const evaluator = new Evaluator(p.result as S3.Program)
+    const evaluator = new Evaluator(p)
 
     let w: boolean = false
 
@@ -388,9 +413,9 @@ describe('Evaluacion de programas y expresiones', () => {
       escribir(i)
     fin`
 
-    const p = transform(parse(code).result as ParsedProgram)
+    const p = compile(parse(code))
 
-    const evaluator = new Evaluator(p.result as S3.Program)
+    const evaluator = new Evaluator(p)
 
     let w1: boolean = false, w2: boolean = false, w3: boolean = false;
 
@@ -430,9 +455,9 @@ describe('Evaluacion de programas y expresiones', () => {
       finpara
     fin`
 
-    const p = transform(parse(code).result as ParsedProgram)
+    const p = compile(parse(code))
 
-    const evaluator = new Evaluator(p.result as S3.Program)
+    const evaluator = new Evaluator(p)
 
     let w1: boolean = false, w2: boolean = false, w3: boolean = false;
 
@@ -475,9 +500,9 @@ describe('Evaluacion de programas y expresiones', () => {
       escribir(i)
     fin`
 
-    const p = transform(parse(code).result as ParsedProgram)
+    const p = compile(parse(code))
 
-    const evaluator = new Evaluator(p.result as S3.Program)
+    const evaluator = new Evaluator(p)
 
     let w1: boolean = false, w2: boolean = false, w3: boolean = false;
 
@@ -509,18 +534,17 @@ describe('Evaluacion de programas y expresiones', () => {
   })
 
   describe('Evaluacion de expresiones', () => {
-    it('multiplicacion', () => {
-      // 2*3
-      {
+    describe('multiplicacion', () => {
+      it('2*3', () => {
         const code = `variables
           entero a
         inicio
           a <- 2*3
         fin`
 
-        const p = transform(parse(code).result as ParsedProgram)
+        const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p.result as S3.Program)
+        const evaluator = new Evaluator(p)
 
         let output = evaluator.step()
 
@@ -531,19 +555,19 @@ describe('Evaluacion de programas y expresiones', () => {
         const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(2*3)
-      }
+      })
 
       // -2*-3
-      {
+      it('-2*-3', () => {
         const code = `variables
           entero a
         inicio
           a <- -2*-3
         fin`
 
-        const p = transform(parse(code).result as ParsedProgram)
+        const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p.result as S3.Program)
+        const evaluator = new Evaluator(p)
 
         let output = evaluator.step()
 
@@ -554,19 +578,19 @@ describe('Evaluacion de programas y expresiones', () => {
         const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(-2*-3)
-      }
+      })
 
       // 2*2*2
-      {
+      it('2*2*2', () => {
         const code = `variables
           entero a
         inicio
           a <- 2*2*2
         fin`
 
-        const p = transform(parse(code).result as ParsedProgram)
+        const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p.result as S3.Program)
+        const evaluator = new Evaluator(p)
 
         let output = evaluator.step()
 
@@ -577,9 +601,9 @@ describe('Evaluacion de programas y expresiones', () => {
         const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(2*2*2)
-      }
+      })
 
-      {
+      it('a*b', () => {
         const code = `variables
           entero a, b, c
         inicio
@@ -588,9 +612,9 @@ describe('Evaluacion de programas y expresiones', () => {
           c <- a * b
         fin`
 
-        const p = transform(parse(code).result as ParsedProgram)
+        const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p.result as S3.Program)
+        const evaluator = new Evaluator(p)
 
         let output = evaluator.step()
 
@@ -598,12 +622,12 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+        const c = evaluator.get_locals('main')['c'] as S1.RegularVariable
 
-        a.value.should.equal(12)
-      }
+        c.value.should.equal(12)
+      })
 
-      {
+      it('v[1]*v[2]', () => {
         const code = `variables
           entero v[3]
         inicio
@@ -612,9 +636,9 @@ describe('Evaluacion de programas y expresiones', () => {
           v[3] <- v[1] * v[2]
         fin`
 
-        const p = transform(parse(code).result as ParsedProgram)
+        const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p.result as S3.Program)
+        const evaluator = new Evaluator(p)
 
         let output = evaluator.step()
 
@@ -622,10 +646,10 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+        const v = evaluator.get_locals('main')['v'] as S1.ArrayVariable
 
-        a.value.should.equal(12)
-      }
+        v.values[2].should.equal(12)
+      })
     })
 
     it('division', () => {
@@ -636,9 +660,9 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 3/2
         fin`
 
-        const p = transform(parse(code).result as ParsedProgram)
+        const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p.result as S3.Program)
+        const evaluator = new Evaluator(p)
 
         let output = evaluator.step()
 
@@ -658,9 +682,9 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- -3/-2
         fin`
 
-        const p = transform(parse(code).result as ParsedProgram)
+        const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p.result as S3.Program)
+        const evaluator = new Evaluator(p)
 
         let output = evaluator.step()
 
@@ -680,9 +704,9 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 2+3/3+4
         fin`
 
-        const p = transform(parse(code).result as ParsedProgram)
+        const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p.result as S3.Program)
+        const evaluator = new Evaluator(p)
 
         let output = evaluator.step()
 
@@ -702,9 +726,9 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 3/2/2
         fin`
 
-        const p = transform(parse(code).result as ParsedProgram)
+        const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p.result as S3.Program)
+        const evaluator = new Evaluator(p)
 
         let output = evaluator.step()
 
@@ -724,9 +748,9 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 2/2/2/2
         fin`
 
-        const p = transform(parse(code).result as ParsedProgram)
+        const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p.result as S3.Program)
+        const evaluator = new Evaluator(p)
 
         let output = evaluator.step()
 
@@ -746,9 +770,9 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 4/2/2/2
         fin`
 
-        const p = transform(parse(code).result as ParsedProgram)
+        const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p.result as S3.Program)
+        const evaluator = new Evaluator(p)
 
         let output = evaluator.step()
 
@@ -768,9 +792,9 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 2/2/2/4
         fin`
 
-        const p = transform(parse(code).result as ParsedProgram)
+        const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p.result as S3.Program)
+        const evaluator = new Evaluator(p)
 
         let output = evaluator.step()
 
@@ -792,9 +816,9 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 3-3-3
         fin`
 
-        const p = transform(parse(code).result as ParsedProgram)
+        const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p.result as S3.Program)
+        const evaluator = new Evaluator(p)
 
         let output = evaluator.step()
 
@@ -814,9 +838,9 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- (3-3-3)
         fin`
 
-        const p = transform(parse(code).result as ParsedProgram)
+        const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p.result as S3.Program)
+        const evaluator = new Evaluator(p)
 
         let output = evaluator.step()
 
@@ -838,9 +862,9 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 2+43
         fin`
 
-        const p = transform(parse(code).result as ParsedProgram)
+        const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p.result as S3.Program)
+        const evaluator = new Evaluator(p)
 
         let output = evaluator.step()
 
@@ -862,9 +886,9 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 2-(2-3)
         fin`
 
-        const p = transform(parse(code).result as ParsedProgram)
+        const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p.result as S3.Program)
+        const evaluator = new Evaluator(p)
 
         let output = evaluator.step()
 
@@ -884,9 +908,9 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 2+(2+3)
         fin`
 
-        const p = transform(parse(code).result as ParsedProgram)
+        const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p.result as S3.Program)
+        const evaluator = new Evaluator(p)
 
         let output = evaluator.step()
 
@@ -905,9 +929,9 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 2+(2+3*4)
         fin`
 
-        const p = transform(parse(code).result as ParsedProgram)
+        const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p.result as S3.Program)
+        const evaluator = new Evaluator(p)
 
         let output = evaluator.step()
 
@@ -927,9 +951,9 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- (3*2)-6
         fin`
 
-        const p = transform(parse(code).result as ParsedProgram)
+        const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p.result as S3.Program)
+        const evaluator = new Evaluator(p)
 
         let output = evaluator.step()
 
@@ -949,9 +973,9 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- (-(-(2+2)))
         fin`
 
-        const p = transform(parse(code).result as ParsedProgram)
+        const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p.result as S3.Program)
+        const evaluator = new Evaluator(p)
 
         let output = evaluator.step()
 
@@ -971,9 +995,9 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 2+8/2
         fin`
 
-        const p = transform(parse(code).result as ParsedProgram)
+        const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p.result as S3.Program)
+        const evaluator = new Evaluator(p)
 
         let output = evaluator.step()
 
@@ -995,9 +1019,9 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 2 = 2
         fin`
 
-        const p = transform(parse(code).result as ParsedProgram)
+        const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p.result as S3.Program)
+        const evaluator = new Evaluator(p)
 
         let output = evaluator.step()
 
@@ -1017,9 +1041,9 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 2 <> 2
         fin`
 
-        const p = transform(parse(code).result as ParsedProgram)
+        const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p.result as S3.Program)
+        const evaluator = new Evaluator(p)
 
         let output = evaluator.step()
 
@@ -1039,9 +1063,9 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 2 >= 2
         fin`
 
-        const p = transform(parse(code).result as ParsedProgram)
+        const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p.result as S3.Program)
+        const evaluator = new Evaluator(p)
 
         let output = evaluator.step()
 
@@ -1061,9 +1085,9 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 2 <= 2
         fin`
 
-        const p = transform(parse(code).result as ParsedProgram)
+        const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p.result as S3.Program)
+        const evaluator = new Evaluator(p)
 
         let output = evaluator.step()
 
@@ -1083,9 +1107,9 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 5 > 4
         fin`
 
-        const p = transform(parse(code).result as ParsedProgram)
+        const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p.result as S3.Program)
+        const evaluator = new Evaluator(p)
 
         let output = evaluator.step()
 
@@ -1105,9 +1129,9 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- 2 < 4
         fin`
 
-        const p = transform(parse(code).result as ParsedProgram)
+        const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p.result as S3.Program)
+        const evaluator = new Evaluator(p)
 
         let output = evaluator.step()
 
@@ -1127,9 +1151,9 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- verdadero or falso
         fin`
 
-        const p = transform(parse(code).result as ParsedProgram)
+        const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p.result as S3.Program)
+        const evaluator = new Evaluator(p)
 
         let output = evaluator.step()
 
@@ -1149,9 +1173,9 @@ describe('Evaluacion de programas y expresiones', () => {
           a <- verdadero and falso
         fin`
 
-        const p = transform(parse(code).result as ParsedProgram)
+        const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p.result as S3.Program)
+        const evaluator = new Evaluator(p)
 
         let output = evaluator.step()
 
@@ -1172,9 +1196,9 @@ describe('Evaluacion de programas y expresiones', () => {
         a <- 2 + 2 = 4
       fin`
 
-      const p = transform(parse(code).result as ParsedProgram)
+      const p = compile(parse(code))
 
-      const evaluator = new Evaluator(p.result as S3.Program)
+      const evaluator = new Evaluator(p)
 
       let output = evaluator.step()
 
@@ -1200,9 +1224,9 @@ describe('Evaluacion de programas y expresiones', () => {
         escribir(a)
       finprocedimiento
       `
-      const p = transform(parse(code).result as ParsedProgram)
+      const p = compile(parse(code))
 
-      const evaluator = new Evaluator(p.result as S3.Program)
+      const evaluator = new Evaluator(p)
 
       let output = evaluator.step()
 
