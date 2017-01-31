@@ -186,7 +186,7 @@ function procesar_mientras(e: S3.While, nivel: number) : string {
      * Procesar rama verdadera
      */
     let c = e.entry_point
-    while (c != null) {
+    while (c != e) {
         s += procesar_enunciado(c, nivel + 1) + '\n'
         c = c.exit_point
     }
