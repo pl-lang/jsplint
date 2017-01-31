@@ -745,6 +745,7 @@ function operate (s: Typed.Type[], op: string): Failure<Typed.Error>|Success<Typ
         case 'times':
         case 'minus':
         case 'power':
+        case 'mod':
             return plus_times(s, op)
         case 'minor':
         case 'minor-eq':
@@ -768,7 +769,7 @@ function operate (s: Typed.Type[], op: string): Failure<Typed.Error>|Success<Typ
 
 /**
  * plus_times calcula el tipo producido por: una suma, una resta, una multiplicacion,
- * y una potencia
+ * una potencia, y modulo (mod)
  */
 function plus_times (s: Typed.Type[], op: string): Failure<Typed.Error>|Success<Typed.Type[]> {
     const supported: string[] = ['entero', 'real']
