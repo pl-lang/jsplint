@@ -406,13 +406,18 @@ function type_params (params: S0.Parameter[]): Typed.Type[] {
 
     for (let param of params) {
         if (param.is_array) {
-            let type: Typed.ArrayType;
-            for (let i = params.length - 1; i >= 0; i--) {
-                if (i == params.length - 1) {
-                    type = new Typed.ArrayType(new Typed.AtomicType(param.type), param.dimensions[i])
-                }
-                else {
-                    type = new Typed.ArrayType(type, param.dimensions[i])
+            let type: Typed.ArrayType | Typed.StringType = null;
+            if (param.type == 'caracter' && param.dimensions.length == 1) {
+                type = new Typed.StringType(param.dimensions[0])
+            }
+            else {
+                for (let i = params.length - 1; i >= 0; i--) {
+                    if (i == params.length - 1) {
+                        type = new Typed.ArrayType(new Typed.AtomicType(param.type), param.dimensions[i])
+                    }
+                    else {
+                        type = new Typed.ArrayType(type, param.dimensions[i])
+                    }
                 }
             }
             paramtypes.push(type)
