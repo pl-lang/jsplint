@@ -209,6 +209,7 @@ function check_call (c: Typed.Call): Failure<Errors.TypeError[]>|Success<Typed.A
             if (!(types_are_equal(arg.type, param) || (cond_a && cond_b))) {
                 const error: Errors.IncompatibleArgument = {
                     reason: '@call-incompatible-argument',
+                    name: c.name,
                     where: 'typechecker',
                     expected: stringify(param),
                     received: stringify(arg.type),

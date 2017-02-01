@@ -136,6 +136,7 @@ export namespace Errors {
 
   export interface IncompatibleArgument extends Base {
     reason: '@call-incompatible-argument'
+    name: string
     where: 'typechecker'
     expected: string
     received: string
