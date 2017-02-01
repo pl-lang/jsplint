@@ -34,8 +34,8 @@ export namespace Errors {
   }
 
   export interface LongString extends Base {
-    reason: '@assignment-long-string'
-    where: 'typechecker'
+    reason: '@assignment-long-string' | '@read-long-string'
+    where: 'typechecker' | 'interpreter'
     name: string
     type: string
     vector_length: number
@@ -128,8 +128,8 @@ export namespace Errors {
   }
 
   export interface IncompatibleTypes extends Base {
-    reason: '@assignment-incompatible-types'
-    where: 'typechecker'
+    reason: '@assignment-incompatible-types' | '@read-incompatible-types'
+    where: 'typechecker' | 'interpreter'
     expected: string
     received: string
   }
@@ -753,6 +753,11 @@ export namespace S3 {
     readonly name: 'leer'
     readonly kind: StatementKinds.ReadCall
     readonly varname: string
+    /**
+     * Tipo de datos de la variable que v a a recibir el dato
+     * leido.
+     */
+    readonly type: Typed.AtomicType | Typed.StringType
 
     constructor(varname: string)
   }
@@ -1090,8 +1095,8 @@ export class Emitter {
 
 export interface Read {
   action: 'read'
-  // agregar esto mas adelante
-  // type: 'entero' | 'real' | 'caracter' | 'cadena'
+  type: Typed.AtomicType | Typed.StringType
+  name: string
   done: boolean
 }
 
