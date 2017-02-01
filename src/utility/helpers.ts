@@ -1,4 +1,4 @@
-import {Typed} from '../interfaces'
+import {Typed, S0} from '../interfaces'
 
 // flatten :: [any] -> [[any]] -> [any]
 export function flatten<A> (accumulator : A[], arr: A[][]) : A[] {
@@ -231,4 +231,24 @@ export function stringify (type: Typed.Type): string {
   else {
     return (type as Typed.AtomicType).typename
   }
+}
+
+export function type_literal (l: S0.LiteralValue): Typed.Literal {
+    const {type, value} = l
+    let datatype: Typed.AtomicType | Typed.StringType;
+
+    switch (typeof l.value) {
+        case 'boolean':
+            datatype = new Typed.AtomicType('logico')
+            break
+        case 'string':
+            datatype = (l.value as String).length > 1 ? new Typed.StringType((l.value as String).length):new Typed.AtomicType('caracter')
+            break
+        case 'number': {
+            datatype = (l.value as number) - Math.trunc(l.value as number) > 0 ? new Typed.AtomicType('real'):new Typed.AtomicType('entero')
+            break
+        }
+    }
+
+    return {type, value, typings: {type: datatype}}
 }
