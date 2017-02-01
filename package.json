@@ -5,7 +5,9 @@
   "scripts": {
     "test": "mocha -w ./lib/test/Test_8_TestableEvaluator.js",
     "m_watch": "mocha -w --reporter min",
-    "build": "tsc -p . && cp ./definitions.d.ts ./lib/index.d.ts"
+    "build": "tsc -p . && cp ./definitions.d.ts ./lib/index.d.ts",
+    "preversion": "npm run build",
+    "postversion": "git push && git push --tags && npm publish"
   },
   "repository": {
     "type": "git",
