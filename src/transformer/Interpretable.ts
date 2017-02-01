@@ -329,7 +329,7 @@ function transform_read (rc: Typed.Call) : S3.Statement {
          */
         current_var = rc.args[i][0] as Typed.Invocation
 
-        const lcall = new S3.ReadCall(current_var.name)
+        const lcall = new S3.ReadCall(current_var.name, current_var.typings.type as (Typed.AtomicType | Typed.StringType))
 
         if (i == 0) {
             first_call = lcall

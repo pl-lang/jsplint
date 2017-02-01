@@ -378,7 +378,7 @@ export class Evaluator {
 
   private read (s: S3.ReadCall) : Success<Read> {
     this.state.paused = true
-    return {error: false, result: {action: 'read', done: this.state.done}}
+    return {error: false, result: {action: 'read', type: s.type, name: s.varname,  done: this.state.done}}
   }
 
   private if_st (s: S3.If) : Success<NullAction> {
