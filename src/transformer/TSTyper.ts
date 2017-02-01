@@ -126,7 +126,7 @@ function transform_if (a: S2.If, mn: string, p: S2.AST): Failure<Typed.Error[]> 
     }
 
     const typed_fb: Typed.Statement[] = []
-    for (let e of a.true_branch) {
+    for (let e of a.false_branch) {
         const report = transform_statement(e, mn, p)
         if (report.error) {
             errors = errors.concat(report.result)
