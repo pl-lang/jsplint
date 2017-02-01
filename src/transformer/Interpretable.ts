@@ -59,7 +59,13 @@ function transform_module (old_module: Typed.Module, current_module: string) : S
                 type: new Typed.AtomicType('ninguno')
             }
         }
-        const assignment = create_assignment(fake_inv)
+        let assignment: S3.Statement = null
+        if (param.type instanceof Typed.StringType) {
+            assignment = new S3.AssignString(param.name, param.type.length, 0)
+        }
+        else {
+            assignment = create_assignment(fake_inv)
+        }
         if (i == old_module.parameters.length - 1) {
             first_statement_initialized = true
             first_init = assignment
@@ -338,7 +344,14 @@ function transform_read (rc: Typed.Call) : S3.Statement {
             last_statement.exit_point = lcall
         }
 
-        const target_assignment = create_assignment(current_var)
+        let target_assignment: S3.Statement = null
+
+        if (current_var.typings.type instanceof Typed.StringType) {
+            target_assignment = new S3.AssignString(current_var.name, current_var.typings.type.length, current_var.indexes.length)
+        }
+        else {
+            target_assignment = create_assignment(current_var)
+        }
 
         lcall.exit_point =  target_assignment
         last_statement = S3.get_last(target_assignment)
@@ -358,7 +371,7 @@ function create_assignment (v: Typed.Invocation) : S3.Statement {
             
             let first_index: S3.Statement
             let last_statement: S3.Statement
-            for (let i = missing_indexes.slice(0); arr_major(i, smallest_index) || arr_equal(i, smallest_index); arr_counter_dec(i, missing_indexes)) {
+            for (let i = arr_counter(missing_indexes.length, 1); arr_minor(i, missing_indexes) || arr_equal(i, missing_indexes); arr_counter_inc(i, missing_indexes, 1)) {
                 /**
                  * Los indices que no fueron proprocionados seran completados con los del
                  * contador `i`
@@ -371,7 +384,7 @@ function create_assignment (v: Typed.Invocation) : S3.Statement {
                     /**
                      * Si esta es la primer iteracion de ambos bucles...
                      */
-                    if (arr_equal(i, missing_indexes) && j == 0) {
+                    if (arr_equal(i, smallest_index) && j == 0) {
                         first_index = index_exp
                     }
                     else {
@@ -495,53 +508,58 @@ function transform_assignment (a: Typed.Assignment) : S3.Statement {
          * una cadena a un vector.
          */
 
-        /**
-         * tamaño de las dimensiones cuyos indices van a ir variando
-         */
-        const missing_indexes = drop(a.left.indexes.length, a.left.dimensions)
-        
-        if (a.typings.right instanceof Typed.StringType) {
+        if (a.typings.left instanceof Typed.StringType && a.typings.right instanceof Typed.StringType) {
             /**
-             * Esto permite asignar cadenas mas cortas que el vector que las recibe
+             * Asignar una cadena a un vector
              */
-            missing_indexes[missing_indexes.length-1] = a.typings.right.length
+            const assignment = new S3.AssignString(a.left.name, a.typings.left.length, a.left.indexes.length)
+            last_statement.exit_point = assignment
+            return entry_point
         }
-
-        const smallest_index = arr_counter(missing_indexes.length, 1)
-        
-        let first_index: S3.Statement
-        let last: S3.Statement
-        for (let i = missing_indexes.slice(0); arr_major(i, smallest_index) || arr_equal(i, smallest_index); arr_counter_dec(i, missing_indexes)) {
+        else {
             /**
-             * Los indices que no fueron proprocionados seran completados con los del
-             * contador `i`
+             * tamaño de las dimensiones cuyos indices van a ir variando
              */
-            const final_indexes = a.left.indexes.concat(i.map(index => [create_literal_number_exp(index)]))
+            const missing_indexes = drop(a.left.indexes.length, a.left.dimensions)
 
-            for (let j = 0; j < final_indexes.length; j++) {
-                const index_exp = transform_expression(final_indexes[j])
-
+            const smallest_index = arr_counter(missing_indexes.length, 1)
+            
+            let first_index: S3.Statement
+            let last: S3.Statement
+            for (let i = arr_counter(missing_indexes.length, 1); arr_minor(i, missing_indexes) || arr_equal(i, missing_indexes); arr_counter_inc(i, missing_indexes, 1)) {
                 /**
-                 * Si esta es la primer iteracion de ambos bucles...
+                 * Los indices que no fueron proprocionados seran completados con los del
+                 * contador `i`
                  */
-                if (arr_equal(i, missing_indexes) && j == 0) {
-                    first_index = index_exp
-                }
-                else {
-                    last.exit_point = index_exp
+                const final_indexes = a.left.indexes.concat(i.map(index => [create_literal_number_exp(index)]))
+
+                for (let j = 0; j < final_indexes.length; j++) {
+                    const index_exp = transform_expression(final_indexes[j])
+
+                    /**
+                     * Si esta es la primer iteracion de ambos bucles...
+                     */
+                    if (arr_equal(i, smallest_index) && j == 0) {
+                        first_index = index_exp
+                    }
+                    else {
+                        last.exit_point = index_exp
+                    }
+
+                    last = S3.get_last(index_exp)
                 }
 
-                last = S3.get_last(index_exp)
+                const assignment = new S3.AssignV(final_indexes.length, a.left.dimensions, a.left.name)
+
+                last.exit_point = assignment
+
+                last = assignment
             }
 
-            const assignment = new S3.AssignV(final_indexes.length, a.left.dimensions, a.left.name)
+            last_statement.exit_point = first_index
 
-            last.exit_point = assignment
-
-            last = assignment
+            return entry_point
         }
-
-        last_statement.exit_point = first_index
     }
     else {
         /**
@@ -567,14 +585,16 @@ function transform_assignment (a: Typed.Assignment) : S3.Statement {
 
             index_last_st.exit_point = assignv
             last_statement.exit_point = first_index
+
+            return entry_point
         }
         else {
             const assign = new S3.Assign(a.left.name)
             last_statement.exit_point = assign
+
+            return entry_point
         }
     }
-
-    return entry_point
 }
 
 function transform_invocation (i: Typed.Invocation) : S3.Statement {
@@ -657,18 +677,12 @@ function transform_literal (l: Typed.Literal): S3.Statement {
          * Apilar la cadena de atras para adelante para que cuando
          * sea asignada a un vector aparezca en el orden correcto.
          */
-        let first: S3.Statement;
-        let last: S3.Statement;
+        let first: S3.Statement = new S3.Push('\0');
+        let last: S3.Statement = first;
         for (let i = length - 1; i >= 0; i--) {
-            if (i == length - 1) {
-                first = new S3.Push((l.value as string)[i])
-                last = first
-            }
-            else {
-                const next = new S3.Push((l.value as string)[i])
-                last.exit_point = next
-                last = next
-            }
+            const next = new S3.Push((l.value as string)[i])
+            last.exit_point = next
+            last = next
         }
         return first
     }
