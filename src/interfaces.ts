@@ -729,7 +729,8 @@ export namespace S3 {
     ReadCall,
     WriteCall,
     Return,
-    Concat
+    Concat,
+    AssignString
   }
 
   export class BaseStatement {
@@ -754,6 +755,21 @@ export namespace S3 {
 
     get exit_point(): Statement {
       return this._exit_point
+    }
+  }
+
+  export class AssignString extends BaseStatement {
+    readonly kind: StatementKinds.AssignString
+    readonly length: number
+    readonly varname: string
+    readonly indexes: number
+
+    constructor (varname: string, length: number, indexes: number) {
+      super()
+      this.kind = StatementKinds.AssignString
+      this.varname = varname
+      this.length = length
+      this.indexes = indexes
     }
   }
 
@@ -945,7 +961,8 @@ export namespace S3 {
     | Push
     | Pop
     | Return
-    | Concat;
+    | Concat
+    | AssignString;
 
 }
 

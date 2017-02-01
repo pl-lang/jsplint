@@ -225,13 +225,67 @@ export class Evaluator {
         return {error: false, result: {action: 'none', done: this.state.done}}
         case S3.StatementKinds.Concat:
           return this.concat(s)
+        case S3.StatementKinds.AssignString:
+          return this.assign_string(s)
+    }
+  }
+
+  private assign_string (s: S3.AssignString): Failure<Errors.OutOfBounds> | Success<NullAction> {
+    const v = this.get_var(s.varname) as S1.ArrayVariable
+
+    const indexes = this.pop_indexes(s.indexes)
+
+    /**
+     * Si los indices recibidos estan dentro de lo permitido
+     * se continua con la asignacion. Como estos indices son
+     * parciales todavia puede ocurrir que la cadena sea mas
+     * larga que el vector, lo cual ocurre cuando i == s.length
+     * pero todavia no se desapiló el caracter '\0' que indica
+     * el final de la cadena. En ese caso se retorna el error
+     * Errors.LongString. Esto evita que se asignen cadenas
+     * que fueron leidas (ingresadas por el usuario) y son
+     * demasiado largas.
+     */
+    if (this.is_whithin_bounds(indexes, v.dimensions)) {
+      let i = 0;
+      let char = this.state.value_stack.pop()
+      while (i < s.length && char != '\0') {
+        const index = this.calculate_index([...indexes, i], v.dimensions)
+        v.values[index] = char
+        char = this.state.value_stack.pop()
+        i++
+      }
+
+      /**
+       * Si no se alcanzó  '\0' (porque la cadena y el vector
+       * tienen la misma longitud), quitarlo de la pila.
+       */
+      if (i == s.length) {
+        char = this.state.value_stack.pop()
+      }
+
+      return {error: false, result: {done: false, action: 'none'}}
+    }
+    else {
+      const bad_index = this.get_bad_index(indexes, v.dimensions)
+
+      const result: Errors.OutOfBounds = {
+        bad_index: bad_index,
+        dimensions: v.dimensions,
+        name: s.varname,
+        reason: 'index-out-of-bounds',
+        where: 'evaluator',
+        done: true
+      }
+
+      return {error: true, result} 
     }
   }
 
   private concat (s: S3.Concat): Success<NullAction> {
     let string: string[] = []
     for (let i = 0; i < s.length; i++) {
-      string.push(this.state.value_stack.pop() as string)
+      string.unshift(this.state.value_stack.pop() as string)
     }
     this.state.value_stack.push(string.join(''))
     return {error: false, result: {action: 'none', done: this.state.done}}

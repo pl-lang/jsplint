@@ -716,7 +716,8 @@ export namespace S3 {
     ReadCall = 26,
     WriteCall = 27,
     Return = 28,
-    Concat = 29
+    Concat = 29,
+    AssignString = 30
   }
 
   export class BaseStatement {
@@ -726,6 +727,15 @@ export namespace S3 {
     exit_point: Statement
 
     constructor()
+  }
+
+  export class AssignString extends BaseStatement {
+    readonly kind: StatementKinds.AssignString
+    readonly length: number
+    readonly varname: string
+    readonly indexes: number
+
+    constructor (varname: string, length: number, indexes: number)
   }
 
   export class Concat extends BaseStatement {
@@ -865,8 +875,8 @@ export namespace S3 {
     | Push
     | Pop
     | Return
-    | Concat;
-
+    | Concat
+    | AssignString;
 }
 
 /**
