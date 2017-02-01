@@ -132,6 +132,10 @@ export default class Interpreter extends Emitter {
         }
         else {
           /**
+           * Primero hay que enviar '\0' para marcar el principio de la cadena
+           */
+          this.evaluator.input('\0')
+          /**
            * Los tipos son compatibles! Hay que enviarlos al evaluador...
            * pero como el valor enviado es una cadena, hay que enviarlo
            * letra por letra. De atras para adelante.
@@ -139,10 +143,6 @@ export default class Interpreter extends Emitter {
           for (let i = value.length - 1; i >= 0; i--) {
             this.evaluator.input(value[i])
           }
-          /**
-           * Por ultimo hay que enviar '\0' para marcar el final de la cadena
-           */
-          this.evaluator.input('\0')
           this.data_read = true
         }
       }
