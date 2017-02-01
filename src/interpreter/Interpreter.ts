@@ -14,13 +14,16 @@ import {Evaluator} from './Evaluator'
 
 import Emitter from '../utility/Emitter.js'
 
-import {S3, Value} from '../interfaces'
+import {S3, Value, Failure, Success, S0, Typed, Errors} from '../interfaces'
+
+import {type_literal, types_are_equal, stringify} from '../utility/helpers'
 
 export default class Interpreter extends Emitter {
   private evaluator: Evaluator
-  running: boolean
+  private running: boolean
   paused: boolean
   data_read: boolean
+  private read_stack: {name: string, type: (Typed.AtomicType | Typed.StringType)}[]
 
   constructor(p: S3.Program) {
     super(['program-started', 'program-resumed', 'program-paused', 'program-finished'])
@@ -29,6 +32,7 @@ export default class Interpreter extends Emitter {
     this.running = true
     this.paused = false
     this.data_read = false
+    this.read_stack = []
   }
 
   run() {
@@ -59,6 +63,7 @@ export default class Interpreter extends Emitter {
         switch (evaluation_report.result.action) {
           case 'read':
             this.emit('read')
+            this.read_stack.push({name: evaluation_report.result.name, type: evaluation_report.result.type})
             break
           case 'write':
             this.emit('write', evaluation_report.result.value)
@@ -90,7 +95,111 @@ export default class Interpreter extends Emitter {
     }
   }
 
-  send (value: Value) {
-    this.evaluator.input(value)
+  send (value: string) {
+    /**
+     * tipar value
+     * revisar que coincida con el tipo que el evaluador espera
+     *  si no coincide: finaliza la ejecucion el programa y se devuelve un error
+     *  si coincide: se envia el valor al evaluador como se venia haciendo hasta ahora
+     */
+    const l = this.parse(value)
+
+    const literal_type = type_literal(l).typings.type
+    const var_info = this.read_stack.pop()
+
+    const cond_a = literal_type.kind == 'atomic' && var_info.type.kind == 'atomic'
+    const cond_b = (var_info.type as Typed.AtomicType).typename == 'real' && (literal_type as Typed.AtomicType).typename == 'entero'
+
+    if (!(types_are_equal(literal_type, var_info.type) || (cond_a && cond_b))) {
+      if (var_info.type instanceof Typed.StringType && literal_type instanceof Typed.StringType) {
+        if (var_info.type.length < literal_type.length) {
+          const error: Errors.LongString = {
+              vector_length: var_info.type.length,
+              string_length: literal_type.length,
+              name: var_info.name,
+              reason: '@read-long-string',
+              type: stringify(var_info.type),
+              where: 'interpreter'
+          }
+          /**
+           * Terminar la ejecucion de este programa debido al error
+           */
+          this.running = false
+          /**
+           * Emitir el error
+           */
+          this.emit('evaluation-error', error)
+        }
+        else {
+          /**
+           * Los tipos son compatibles! Hay que enviarlos al evaluador...
+           * pero como el valor enviado es una cadena, hay que enviarlo
+           * letra por letra. De atras para adelante.
+           */
+          for (let i = value.length - 1; i >= 0; i--) {
+            this.evaluator.input(value[i])
+          }
+          /**
+           * Por ultimo hay que enviar '\0' para marcar el final de la cadena
+           */
+          this.evaluator.input('\0')
+          this.data_read = true
+        }
+      }
+      else {
+        const error: Errors.IncompatibleTypes = {
+            reason: '@read-incompatible-types',
+            where: 'interpreter',
+            expected: stringify(var_info.type),
+            received: stringify(literal_type)
+        }
+        /**
+         * Terminar la ejecucion de este programa debido al error
+         */
+        this.running = false
+        /**
+         * Emitir el error
+         */
+        this.emit('evaluation-error', error)
+      }
+    }
+    else {
+      /**
+       * Los tipos son compatibles! Hay que enviarlos al evaluador
+       */
+      this.evaluator.input(l.value)
+      this.data_read = true
+    }
+  }
+
+  parse (value: string): S0.LiteralValue {
+    let v: Value = null
+
+    if (/^\d+$/.test(value)) {
+      /**
+       * es un entero
+       */
+      v = parseInt(value)
+    }
+    else if (/^\d+(\.\d+)?$/.test(value)) {
+      /**
+       * es un real
+       */
+      v = parseFloat(value)
+    }
+    else if (/^(verdadero|falso)$/.test(value)) {
+      /**
+       * es un booleano
+       */
+      v = value == 'verdadero'
+    }
+    else {
+      /**
+       * es una cadena
+       */
+      v = value
+    }
+
+    return {type: 'literal', value: v}
   }
 }
