@@ -148,6 +148,8 @@ function procesar_enunciado (e: S3.Statement, nivel: number) : string {
             return `${repetir(' ', nivel*espacios)}RETORNAR`
         case S3.StatementKinds.Concat:
             return `${repetir(' ', nivel*espacios)}CONCATENAR ${e.length}`
+        case S3.StatementKinds.AssignString:
+            return `${repetir(' ', nivel*espacios)}ASIGNAR CADENA ${e.varname} ${e.length} ${e.indexes}`
     }
 }
 
