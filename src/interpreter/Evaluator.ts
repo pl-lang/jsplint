@@ -392,68 +392,142 @@ export class Evaluator {
   }
 
   private assignv (s: S3.AssignV) : Failure<Errors.OutOfBounds> | Success<NullAction> {
-    const indexes = this.pop_indexes(s.total_indexes)
-    
-    if (this.is_whithin_bounds(indexes, s.dimensions)) {
-      /**
-       * Calcular indice final y asignar el valor a la variable.
-       * 
-       * Nota: hay que restarle 1 a cada indice para que inicien en 0
-       * (como los indices de JS) y no en 1
-       */
-      const index = this.calculate_index(indexes.map(i => i-1), s.dimensions)
-      const value = this.state.value_stack.pop()
-      const variable = this.get_var(s.varname) as S1.ArrayVariable
-      variable.values[index] = value
+    const alias_found = this.has_alias(s.varname)
 
-      return {error:false, result: {action: 'none', done: false}}
+    if (alias_found.error) {
+      const indexes = this.pop_indexes(s.total_indexes)
+      
+      if (this.is_whithin_bounds(indexes, s.dimensions)) {
+        /**
+         * Calcular indice final y asignar el valor a la variable.
+         * 
+         * Nota: hay que restarle 1 a cada indice para que inicien en 0
+         * (como los indices de JS) y no en 1
+         */
+        const index = this.calculate_index(indexes.map(i => i-1), s.dimensions)
+        const value = this.state.value_stack.pop()
+        const variable = this.get_var(s.varname) as S1.ArrayVariable
+        variable.values[index] = value
+
+        return {error:false, result: {action: 'none', done: false}}
+      }
+      else {
+        const bad_index = this.get_bad_index(indexes, s.dimensions)
+
+        const result: Errors.OutOfBounds = {
+          bad_index: bad_index,
+          dimensions: s.dimensions,
+          name: s.varname,
+          reason: 'index-out-of-bounds',
+          where: 'evaluator',
+          done: true
+        }
+
+        return {error: true, result}
+      }
     }
     else {
-      const bad_index = this.get_bad_index(indexes, s.dimensions)
+      const alias = alias_found.result as Alias
 
-      const result: Errors.OutOfBounds = {
-        bad_index: bad_index,
-        dimensions: s.dimensions,
-        name: s.varname,
-        reason: 'index-out-of-bounds',
-        where: 'evaluator',
-        done: true
+      /**
+       * Los indices usados para asignar el valor al alias (al parametro tomado por referencia)
+       */
+      const partial_indexes = this.pop_indexes(s.total_indexes)
+
+      const indexes: number[] = [...alias.indexes, ...partial_indexes]
+      const dimensions = alias.dimensions
+
+      if (this.is_whithin_bounds(indexes, dimensions)) {
+        const index = this.calculate_index(indexes.map(i => i - 1), dimensions)
+        const variable = this.get_var(alias.varname) as S1.ArrayVariable
+        variable.values[index] = this.state.value_stack.pop()
+
+        return {error: false, result: {action: 'none', done: false}}
       }
+      else {
+        const bad_index = this.get_bad_index(partial_indexes, s.dimensions)
 
-      return {error: true, result}
+        const result: Errors.OutOfBounds = {
+          bad_index: bad_index,
+          dimensions: s.dimensions,
+          name: s.varname,
+          reason: 'index-out-of-bounds',
+          where: 'evaluator',
+          done: true
+        }
+
+        return {error: true, result}
+      }
     }
   }
 
   private getv_value (s: S3.GetV) : Failure<Errors.OutOfBounds> | Success<NullAction> {
-    const indexes = this.pop_indexes(s.total_indexes)
-    
-    if (this.is_whithin_bounds(indexes, s.dimensions)) {
-      /**
-       * Calcular indice final y apilar el valor de la variable.
-       * 
-       * Nota: hay que restarle 1 a cada indice para que inicien en 0
-       * (como los indices de JS) y no en 1
-       */
-      const index = this.calculate_index(indexes.map(i => i-1), s.dimensions)
-      const variable = this.get_var(s.varname) as S1.ArrayVariable
-      const value = variable.values[index]
-      this.state.value_stack.push(value)
+    const alias_found = this.has_alias(s.varname)
 
-      return {error:false, result: {action: 'none', done: false}}
+    if (alias_found.error) {
+      const indexes = this.pop_indexes(s.total_indexes)
+      
+      if (this.is_whithin_bounds(indexes, s.dimensions)) {
+        /**
+         * Calcular indice final y asignar el valor a la variable.
+         * 
+         * Nota: hay que restarle 1 a cada indice para que inicien en 0
+         * (como los indices de JS) y no en 1
+         */
+        const index = this.calculate_index(indexes.map(i => i-1), s.dimensions)
+        const value = this.state.value_stack.pop()
+        const variable = this.get_var(s.varname) as S1.ArrayVariable
+        this.state.value_stack.push(variable.values[index])
+
+        return {error:false, result: {action: 'none', done: false}}
+      }
+      else {
+        const bad_index = this.get_bad_index(indexes, s.dimensions)
+
+        const result: Errors.OutOfBounds = {
+          bad_index: bad_index,
+          dimensions: s.dimensions,
+          name: s.varname,
+          reason: 'index-out-of-bounds',
+          where: 'evaluator',
+          done: true
+        }
+
+        return {error: true, result}
+      }
     }
     else {
-      const bad_index = this.get_bad_index(indexes, s.dimensions)
+      const alias = alias_found.result as Alias
 
-      const result: Errors.OutOfBounds = {
-        bad_index: bad_index,
-        dimensions: s.dimensions,
-        name: s.varname,
-        reason: 'index-out-of-bounds',
-        where: 'evaluator',
-        done: true 
+      /**
+       * Los indices usados para asignar el valor al alias (al parametro tomado por referencia)
+       */
+      const partial_indexes = this.pop_indexes(s.total_indexes)
+
+      const indexes: number[] = [...alias.indexes, ...partial_indexes]
+      const dimensions = alias.dimensions
+
+      if (this.is_whithin_bounds(indexes, dimensions)) {
+        const index = this.calculate_index(indexes.map(i => i - 1), dimensions)
+        const variable = this.get_var(alias.varname) as S1.ArrayVariable
+        this.state.value_stack.push(variable.values[index])
+
+        return {error: false, result: {action: 'none', done: false}}
       }
+      else {
+        const bad_index = this.get_bad_index(partial_indexes, s.dimensions)
 
-      return {error: true, result}
+        const result: Errors.OutOfBounds = {
+          bad_index: bad_index,
+          dimensions: s.dimensions,
+          name: s.varname,
+          reason: 'index-out-of-bounds',
+          where: 'evaluator',
+          done: true
+        }
+
+        return {error: true, result}
+      }
     }
   }
 
