@@ -3,15 +3,15 @@ import 'should'
 
 import Parser from '../src/parser/Parser.js'
 
-import {ParsedProgram, S1, S3, Errors, Success, Failure} from '../src/interfaces'
+import { ParsedProgram, S1, S3, Errors, Success, Failure } from '../src/interfaces'
 
-import {Evaluator} from '../src/interpreter/Evaluator'
+import { Evaluator } from '../src/interpreter/Evaluator'
 
 import transform from '../src/transformer/transform'
 
 import fr_writer from '../src/utility/fr_writer'
 
-function compile (p: Failure<Errors.Lexical[] | Errors.Pattern[]> | Success<ParsedProgram>): S3.Program {
+function compile(p: Failure<Errors.Lexical[] | Errors.Pattern[]> | Success<ParsedProgram>): S3.Program {
   if (p.error) {
     // for (let error of p.result) {
     //   console.log(error)
@@ -32,12 +32,12 @@ function compile (p: Failure<Errors.Lexical[] | Errors.Pattern[]> | Success<Pars
   }
 }
 
-function parse (s: string) {
-    const p = new Parser()
+function parse(s: string) {
+  const p = new Parser()
 
-    p.on('syntax-error', console.log)
+  p.on('syntax-error', console.log)
 
-    return p.parse(s)
+  return p.parse(s)
 }
 
 
@@ -55,7 +55,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
     output.result.should.deepEqual({
       action: 'none',
-      done:true
+      done: true
     })
   })
 
@@ -131,7 +131,7 @@ describe('Evaluacion de programas y expresiones', () => {
       output = evaluator.step()
     }
 
-    const m = evaluator.get_locals('main')['m'] as S1.ArrayVariable 
+    const m = evaluator.get_locals('main')['m'] as S1.ArrayVariable
 
     m.values[0].should.equal(5)
     m.values[1].should.equal(8)
@@ -154,7 +154,7 @@ describe('Evaluacion de programas y expresiones', () => {
     let output = evaluator.step()
 
     output.error.should.equal(false)
-    output.result.should.deepEqual({done:true, action:'write', value:4})
+    output.result.should.deepEqual({ done: true, action: 'write', value: 4 })
   })
 
   it('programa con un llamado a escribir con varios argumentos', () => {
@@ -171,25 +171,25 @@ describe('Evaluacion de programas y expresiones', () => {
 
     output = evaluator.step()
 
-    output.result.should.deepEqual({done:false, action:'write', value:4})
+    output.result.should.deepEqual({ done: false, action: 'write', value: 4 })
 
     evaluator.step()
 
     output = evaluator.step()
 
-    output.result.should.deepEqual({done:false, action:'write', value:3})
+    output.result.should.deepEqual({ done: false, action: 'write', value: 3 })
 
     evaluator.step()
 
     output = evaluator.step()
 
-    output.result.should.deepEqual({done:false, action:'write', value:2})
+    output.result.should.deepEqual({ done: false, action: 'write', value: 2 })
 
     evaluator.step()
 
     output = evaluator.step()
 
-    output.result.should.deepEqual({done:true, action:'write', value:1})
+    output.result.should.deepEqual({ done: true, action: 'write', value: 1 })
   })
 
   it('programa que escribe el valor de una variable', () => {
@@ -210,7 +210,7 @@ describe('Evaluacion de programas y expresiones', () => {
       output = evaluator.step()
     }
 
-    output.result.should.deepEqual({done:true, action:'write', value:32})
+    output.result.should.deepEqual({ done: true, action: 'write', value: 32 })
   })
 
   it('programa que escribe los valores de un vector', () => {
@@ -304,13 +304,13 @@ describe('Evaluacion de programas y expresiones', () => {
       output = evaluator.step()
     }
 
-    output.result.should.deepEqual({done:false, action:'read', type:'entero'})
+    output.result.should.deepEqual({ done: false, action: 'read', type: 'entero' })
 
     evaluator.input(9)
 
     output = evaluator.step()
 
-    output.result.should.deepEqual({done:true, error:false, output:null})
+    output.result.should.deepEqual({ done: true, error: false, output: null })
 
     const m = evaluator.get_locals('main')['m'] as S1.ArrayVariable
 
@@ -334,14 +334,14 @@ describe('Evaluacion de programas y expresiones', () => {
       output = evaluator.step()
     }
 
-    output.result.should.deepEqual({done:false, error:false, output:{action:'read', type:'entero'}})
+    output.result.should.deepEqual({ done: false, error: false, output: { action: 'read', type: 'entero' } })
 
     evaluator.input(9)
 
     output = evaluator.step()
 
-    output.result.should.deepEqual({done:true, error:false, output:null})
-    
+    output.result.should.deepEqual({ done: true, error: false, output: null })
+
     const v = evaluator.get_locals('main')['v'] as S1.ArrayVariable
 
     v.values[0].should.equal(9)
@@ -365,7 +365,7 @@ describe('Evaluacion de programas y expresiones', () => {
       output = evaluator.step()
     }
 
-    output.result.should.deepEqual({done:true, action:'write', value:3})
+    output.result.should.deepEqual({ done: true, action: 'write', value: 3 })
   })
 
   it('programa con un enunciado si/sino', () => {
@@ -554,7 +554,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
-        a.value.should.equal(2*3)
+        a.value.should.equal(2 * 3)
       })
 
       // -2*-3
@@ -577,7 +577,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
-        a.value.should.equal(-2*-3)
+        a.value.should.equal(-2 * -3)
       })
 
       // 2*2*2
@@ -600,7 +600,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
-        a.value.should.equal(2*2*2)
+        a.value.should.equal(2 * 2 * 2)
       })
 
       it('a*b', () => {
@@ -652,8 +652,8 @@ describe('Evaluacion de programas y expresiones', () => {
       })
     })
 
-    it('division', () => {
-      {
+    describe('division', () => {
+      it('3/2', () => {
         const code = `variables
           entero a
         inicio
@@ -672,10 +672,11 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
-        a.value.should.equal(3/2)
-      }
+        a.value.should.equal(3 / 2)
+      })
 
-      {
+      it('-3/-2', () => {
+
         const code = `variables
           entero a
         inicio
@@ -694,10 +695,10 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
-        a.value.should.equal(-3/-2)
-      }
+        a.value.should.equal(-3 / -2)
+      })
 
-      {
+      it('2+3/3+4', () => {
         const code = `variables
           entero a
         inicio
@@ -716,10 +717,10 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
-        a.value.should.equal(2+3/3+4)
-      }
+        a.value.should.equal(2 + 3 / 3 + 4)
+      })
 
-      {
+      it('3/2/2', () => {
         const code = `variables
           entero a
         inicio
@@ -738,10 +739,10 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
-        a.value.should.equal(3/2/2)
-      }
+        a.value.should.equal(3 / 2 / 2)
+      })
 
-      {
+      it('2/2/2/2', () => {
         const code = `variables
           entero a
         inicio
@@ -760,10 +761,10 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
-        a.value.should.equal(2/2/2/2)
-      }
+        a.value.should.equal(2 / 2 / 2 / 2)
+      })
 
-      {
+      it('4/2/2/2', () => {
         const code = `variables
           entero a
         inicio
@@ -782,15 +783,15 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
-        a.value.should.equal(4/2/2/2)
-      }
+        a.value.should.equal(4 / 2 / 2 / 2)
+      })
 
-      {
+      it('2/2/2/4', () => {
         const code = `variables
-          entero a
-        inicio
-          a <- 2/2/2/4
-        fin`
+            entero a
+          inicio
+            a <- 2/2/2/4
+          fin`
 
         const p = compile(parse(code))
 
@@ -804,12 +805,12 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
-        a.value.should.equal(2/2/2/4)
-      }
+        a.value.should.equal(2 / 2 / 2 / 4)
+      })
     })
 
-    it('resta', () => {
-      {
+    describe('resta', () => {
+      it('3-3-3', () => {
         const code = `variables
           entero a
         inicio
@@ -828,10 +829,10 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
-        a.value.should.equal(3-3-3)
-      }
+        a.value.should.equal(3 - 3 - 3)
+      })
 
-      {
+      it('(3-3-3)', () => {
         const code = `variables
           entero a
         inicio
@@ -850,12 +851,12 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
-        a.value.should.equal((3-3-3))
-      }
+        a.value.should.equal((3 - 3 - 3))
+      })
     })
 
-    it('suma', () => {
-      {
+    describe('suma', () => {
+      it('2+43', () => {
         const code = `variables
           entero a
         inicio
@@ -874,12 +875,12 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
-        a.value.should.equal(2+43)
-      }
+        a.value.should.equal(2 + 43)
+      })
     })
 
-    it('operaciones combinadas', () => {
-      {
+    describe('operaciones combinadas', () => {
+      it('2-(2-3)', () => {
         const code = `variables
           entero a
         inicio
@@ -898,121 +899,121 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
-        a.value.should.equal(2-(2-3))
-      }
+        a.value.should.equal(2 - (2 - 3))
+      })
+    })
 
-      {
-        const code = `variables
+    it('2+(2+3)', () => {
+      const code = `variables
           entero a
         inicio
           a <- 2+(2+3)
         fin`
 
-        const p = compile(parse(code))
+      const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p)
+      const evaluator = new Evaluator(p)
 
-        let output = evaluator.step()
+      let output = evaluator.step()
 
-        while (output.result.done == false) {
-          output = evaluator.step()
-        }
-        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
-
-        a.value.should.equal(2+(2+3))
+      while (output.result.done == false) {
+        output = evaluator.step()
       }
+      const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
-      {
-        const code = `variables
+      a.value.should.equal(2 + (2 + 3))
+    })
+
+    it('2+(2+3*4)', () => {
+      const code = `variables
           entero a
         inicio
           a <- 2+(2+3*4)
         fin`
 
-        const p = compile(parse(code))
+      const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p)
+      const evaluator = new Evaluator(p)
 
-        let output = evaluator.step()
+      let output = evaluator.step()
 
-        while (output.result.done == false) {
-          output = evaluator.step()
-        }
-
-        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
-
-        a.value.should.equal(2+(2+3*4))
+      while (output.result.done == false) {
+        output = evaluator.step()
       }
 
-      {
-        const code = `variables
+      const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+
+      a.value.should.equal(2 + (2 + 3 * 4))
+    })
+
+    it('3*(2-6)', () => {
+      const code = `variables
           entero a
         inicio
           a <- (3*2)-6
         fin`
 
-        const p = compile(parse(code))
+      const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p)
+      const evaluator = new Evaluator(p)
 
-        let output = evaluator.step()
+      let output = evaluator.step()
 
-        while (output.result.done == false) {
-          output = evaluator.step()
-        }
-
-        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
-
-        a.value.should.equal((3*2)-6)
+      while (output.result.done == false) {
+        output = evaluator.step()
       }
 
-      {
-        const code = `variables
+      const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+
+      a.value.should.equal((3 * 2) - 6)
+    })
+
+    it('(-(-(2+2)))', () => {
+      const code = `variables
           entero a
         inicio
           a <- (-(-(2+2)))
         fin`
 
-        const p = compile(parse(code))
+      const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p)
+      const evaluator = new Evaluator(p)
 
-        let output = evaluator.step()
+      let output = evaluator.step()
 
-        while (output.result.done == false) {
-          output = evaluator.step()
-        }
-
-        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
-
-        a.value.should.equal((-(-(2+2))))
+      while (output.result.done == false) {
+        output = evaluator.step()
       }
 
-      {
-        const code = `variables
+      const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+
+      a.value.should.equal((-(-(2 + 2))))
+    })
+
+    it('2+8/2', () => {
+      const code = `variables
           entero a
         inicio
           a <- 2+8/2
         fin`
 
-        const p = compile(parse(code))
+      const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p)
+      const evaluator = new Evaluator(p)
 
-        let output = evaluator.step()
+      let output = evaluator.step()
 
-        while (output.result.done == false) {
-          output = evaluator.step()
-        }
-
-        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
-
-        a.value.should.equal(2+8/2)
+      while (output.result.done == false) {
+        output = evaluator.step()
       }
+
+      const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+
+      a.value.should.equal(2 + 8 / 2)
     })
 
-    it('relacionales', () => {
-      {
+    describe('relacionales', () => {
+      it('2 = 2', () => {
         const code = `variables
           entero a
         inicio
@@ -1032,9 +1033,9 @@ describe('Evaluacion de programas y expresiones', () => {
         const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(true)
-      }
+      })
 
-      {
+      it('2 <> 2', () => {
         const code = `variables
           entero a
         inicio
@@ -1054,9 +1055,9 @@ describe('Evaluacion de programas y expresiones', () => {
         const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(true)
-      }
+      })
 
-      {
+      it('2 >= 2', () => {
         const code = `variables
           entero a
         inicio
@@ -1076,9 +1077,9 @@ describe('Evaluacion de programas y expresiones', () => {
         const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(true)
-      }
+      })
 
-      {
+      it('2 <= 2', () => {
         const code = `variables
           entero a
         inicio
@@ -1098,9 +1099,9 @@ describe('Evaluacion de programas y expresiones', () => {
         const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(true)
-      }
+      })
 
-      {
+      it('5 > 4', () => {
         const code = `variables
           entero a
         inicio
@@ -1120,9 +1121,9 @@ describe('Evaluacion de programas y expresiones', () => {
         const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(true)
-      }
+      })
 
-      {
+      it('4 < 2', () => {
         const code = `variables
           entero a
         inicio
@@ -1142,9 +1143,9 @@ describe('Evaluacion de programas y expresiones', () => {
         const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(true)
-      }
+      })
 
-      {
+      it('verdadero or falso', () => {
         const code = `variables
           entero a
         inicio
@@ -1164,9 +1165,9 @@ describe('Evaluacion de programas y expresiones', () => {
         const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(true)
-      }
+      })
 
-      {
+      it('verdadero and falso', () => {
         const code = `variables
           entero a
         inicio
@@ -1186,7 +1187,7 @@ describe('Evaluacion de programas y expresiones', () => {
         const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(true)
-      }
+      })
     })
 
     it('prueba que no deberia fallar', () => {
@@ -1234,7 +1235,7 @@ describe('Evaluacion de programas y expresiones', () => {
         output = evaluator.step()
       }
 
-      output.result.should.deepEqual({done:true, error:false, output:{action:'write', value:2}})
+      output.result.should.deepEqual({ done: true, error: false, output: { action: 'write', value: 2 } })
     })
   })
 })
