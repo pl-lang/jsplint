@@ -731,7 +731,8 @@ export namespace S3 {
     WriteCall,
     Return,
     Concat,
-    AssignString
+    AssignString,
+    Alias
   }
 
   export class BaseStatement {
@@ -756,6 +757,25 @@ export namespace S3 {
 
     get exit_point(): Statement {
       return this._exit_point
+    }
+  }
+
+  export class Alias extends BaseStatement {
+    readonly kind: StatementKinds.Alias
+    readonly varname: string
+    readonly var_indexes: number
+    readonly local_alias: string
+    readonly dimensions: number[]
+    readonly module_name: string
+
+    constructor (varname: string, indexes: number, dimensions: number[], alias: string, module_name: string) {
+      super()
+      this.kind = StatementKinds.Alias
+      this.varname = varname
+      this.var_indexes = indexes
+      this.local_alias = alias
+      this.dimensions = dimensions
+      this.module_name = module_name
     }
   }
 
@@ -963,7 +983,8 @@ export namespace S3 {
     | Pop
     | Return
     | Concat
-    | AssignString;
+    | AssignString
+    | Alias;
 
 }
 

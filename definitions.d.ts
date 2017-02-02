@@ -718,7 +718,8 @@ export namespace S3 {
     WriteCall = 27,
     Return = 28,
     Concat = 29,
-    AssignString = 30
+    AssignString = 30,
+    Alias = 31
   }
 
   export class BaseStatement {
@@ -728,6 +729,17 @@ export namespace S3 {
     exit_point: Statement
 
     constructor()
+  }
+
+  export class Alias extends BaseStatement {
+    readonly kind: StatementKinds.Alias
+    readonly varname: string
+    readonly var_indexes: number
+    readonly local_alias: string
+    readonly dimensions: number[]
+    readonly module_name: string
+
+    constructor (varname: string, indexes: number, dimensions: number[], alias: string, module_name: string)
   }
 
   export class AssignString extends BaseStatement {
@@ -877,7 +889,8 @@ export namespace S3 {
     | Pop
     | Return
     | Concat
-    | AssignString;
+    | AssignString
+    | Alias;
 }
 
 /**

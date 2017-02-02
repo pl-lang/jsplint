@@ -14,6 +14,14 @@ import {Value, Errors, Read, Write, NullAction, Paused, SuccessfulReturn} from '
   un solo uso.
 */
 
+export interface Alias {
+  varname: string
+  indexes: number[]
+  local_name: string
+  dimensions: number[]
+  module: string
+}
+
 export class Evaluator {
   private readonly modules: {[p:string]: S3.Module}
   private readonly entry_point: S3.Statement
@@ -22,6 +30,7 @@ export class Evaluator {
   private readonly globals: S1.VariableDict
   private readonly locals: {[p:string]: S1.VariableDict}
   private readonly locals_stack: S1.VariableDict[]
+  private readonly aliases: Alias[]
   private readonly state: {
     done: boolean
     value_stack: Value[]
@@ -38,6 +47,7 @@ export class Evaluator {
     this.globals = program.local_variables.main
     this.locals = program.local_variables
     this.locals_stack = [this.globals]
+    this.aliases = []
     this.current_statement = this.entry_point
     this.current_module = 'main'
 
@@ -227,7 +237,25 @@ export class Evaluator {
           return this.concat(s)
         case S3.StatementKinds.AssignString:
           return this.assign_string(s)
+        case S3.StatementKinds.Alias:
+          return this.alias(s)
     }
+  }
+
+  private has_alias (name: string): Failure<string>|Success<Alias> {
+    for (let alias of this.aliases) {
+      if (alias.local_name  == name) {
+        return {error: false, result: alias}
+      }
+    }
+
+    return {error: true, result: 'no-alias'}
+  }
+
+  private alias (s: S3.Alias): Success<NullAction> {
+    const indexes = this.pop_indexes(s.var_indexes)
+    this.aliases.push({varname: s.varname, indexes, local_name: s.local_alias, dimensions: s.dimensions, module: s.module_name})
+    return {error: false, result: {done: false, action: 'none'}}
   }
 
   private assign_string (s: S3.AssignString): Failure<Errors.OutOfBounds> | Success<NullAction> {
@@ -305,19 +333,62 @@ export class Evaluator {
   }
 
   private assign (s: S3.Assign) : Success<NullAction> {
-    const variable = this.get_var(s.varname) as S1.RegularVariable
+    const alias_found = this.has_alias(s.varname)
 
-    variable.value = this.state.value_stack.pop()
+    /**
+     * Si no hay alias esta es una asignacion normal
+     */
+    if (alias_found.error) {
+      const variable = this.get_var(s.varname) as S1.RegularVariable
 
-    return {error: false, result: {action: 'none', done: this.state.done}}
+      variable.value = this.state.value_stack.pop()
+
+      return {error: false, result: {action: 'none', done: this.state.done}}
+    }
+    else {
+      const alias = alias_found.result as Alias
+      if (alias.dimensions.length > 0) {
+        const variable = this.get_var(alias.varname) as S1.ArrayVariable
+        const index = this.calculate_index(alias.indexes.map(i => i-1), alias.dimensions)
+        variable.values[index] = this.state.value_stack.pop()
+        return {error: false, result: {action: 'none', done: this.state.done}}
+      }
+      else {
+        const variable = this.get_var(alias.varname) as S1.RegularVariable
+        variable.value = this.state.value_stack.pop()
+        return {error: false, result: {action: 'none', done: this.state.done}}
+      }
+    }
   }
 
   private get_value (s: S3.Get) : Success<NullAction> {
-    const variable = this.get_var(s.varname) as S1.RegularVariable
+    const alias_found = this.has_alias(s.varname)
 
-    this.state.value_stack.push(variable.value)
+    /**
+     * Si no hay alias solo hay que apilar el valor de la variable
+     */
+    if (alias_found.error) {
+      const variable = this.get_var(s.varname) as S1.RegularVariable
 
-    return {error: false, result: {action: 'none', done: this.state.done}}
+      this.state.value_stack.push(variable.value)
+
+      return {error: false, result: {action: 'none', done: this.state.done}}
+    }
+    else {
+      const alias = alias_found.result as Alias
+
+      if (alias.dimensions.length > 0) {
+        const variable = this.get_var(alias.varname) as S1.ArrayVariable
+        const index = this.calculate_index(alias.indexes.map(i => i - 1), alias.dimensions)
+        this.state.value_stack.push(variable.values[index])
+        return {error: false, result: {action: 'none', done: this.state.done}}
+      }
+      else {
+        const variable = this.get_var(alias.varname) as S1.RegularVariable
+        this.state.value_stack.push(variable.value)
+        return {error: false, result: {action: 'none', done: this.state.done}}
+      }
+    }
   }
 
   private assignv (s: S3.AssignV) : Failure<Errors.OutOfBounds> | Success<NullAction> {

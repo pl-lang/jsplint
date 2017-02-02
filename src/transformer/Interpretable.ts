@@ -48,32 +48,38 @@ function transform_module (old_module: Typed.Module, current_module: string) : S
     let first_statement_initialized = false
     for (let i = old_module.parameters.length - 1; i >= 0; i--) {
         const param = old_module.parameters[i]
-        const fake_inv: Typed.Invocation = {
-            dimensions: param.dimensions,
-            indexes: [],
-            is_array: param.is_array,
-            name: param.name,
-            type: 'invocation',
-            typings: {
+        /**
+         * Saltear parametros tomados por referencia, no hace falta
+         * inicializarlos
+         */
+        if (!param.by_ref)  {
+            const fake_inv: Typed.Invocation = {
+                dimensions: param.dimensions,
                 indexes: [],
-                type: new Typed.AtomicType('ninguno')
+                is_array: param.is_array,
+                name: param.name,
+                type: 'invocation',
+                typings: {
+                    indexes: [],
+                    type: new Typed.AtomicType('ninguno')
+                }
             }
+            let assignment: S3.Statement = null
+            if (param.type instanceof Typed.StringType) {
+                assignment = new S3.AssignString(param.name, param.type.length, 0)
+            }
+            else {
+                assignment = create_assignment(fake_inv)
+            }
+            if (i == old_module.parameters.length - 1) {
+                first_statement_initialized = true
+                first_init = assignment
+            }
+            else {
+                last_statement.exit_point = assignment
+            }
+            last_statement = S3.get_last(assignment)
         }
-        let assignment: S3.Statement = null
-        if (param.type instanceof Typed.StringType) {
-            assignment = new S3.AssignString(param.name, param.type.length, 0)
-        }
-        else {
-            assignment = create_assignment(fake_inv)
-        }
-        if (i == old_module.parameters.length - 1) {
-            first_statement_initialized = true
-            first_init = assignment
-        }
-        else {
-            last_statement.exit_point = assignment
-        }
-        last_statement = S3.get_last(assignment)
     }
 
     const body_entry = transform_body(old_module.body)
@@ -262,20 +268,69 @@ function transform_call (call: Typed.Call) : S3.Statement {
      * la evaluacion de sus argumentos (en el orden en que aparecen)
      * con el Statement de llamada.
      */
-    const first_arg: S3.Statement = transform_expression(call.args[0])
-    let last_statement = S3.get_last(first_arg)
+    let first_arg: S3.Statement = null
+    let last_statement: S3.Statement = null
+    let first_arg_initd = false
 
-    for (let i = 0; i < call.args.length - 1; i++) {
-        const next_arg = transform_expression(call.args[i + 1])
-        last_statement.exit_point = next_arg
-        last_statement = S3.get_last(next_arg)
+    for (let i = 0; i < call.args.length; i++) {
+        let next_arg: S3.Statement = null
+
+        if (call.parameters[i].by_ref) {
+            const invocation = call.args[i][0] as Typed.Invocation
+            /**
+             * apilar los indices de la invocacion
+             */
+            let first_index: S3.Statement = null
+            let last_index_st: S3.Statement = null
+            let index_initd = false
+            for (let j = 0; j < invocation.indexes.length; j++) {
+                const next_index = transform_expression(invocation.indexes[j])
+                if (j == 0) {
+                    first_index = next_index
+                    last_index_st = S3.get_last(first_index)
+                    index_initd = true
+                }
+                else {
+                    last_index_st.exit_point = next_index
+                    last_index_st = next_index
+                }
+            }
+
+            const make_alias = new S3.Alias(invocation.name, invocation.indexes.length, invocation.dimensions, call.parameters[i].name, call.name)
+
+            if (index_initd) {
+                last_index_st.exit_point = make_alias
+                next_arg = first_index
+            }
+            else {
+                next_arg = make_alias
+            }
+        }
+        else {
+            next_arg = transform_expression(call.args[i])
+        }
+
+        if (i == 0) {
+            first_arg = next_arg
+            last_statement = S3.get_last(first_arg)
+            first_arg_initd = true
+        }
+        else {
+            last_statement.exit_point = next_arg
+            last_statement = S3.get_last(next_arg)
+        }
     }
 
     const ucall = new S3.UserModuleCall(call.name, call.args.length)
 
-    last_statement.exit_point =  ucall
+    if (first_arg_initd) {
+        last_statement.exit_point =  ucall
 
-    return first_arg
+        return first_arg
+    }
+    else {
+        return ucall
+    }
 }
 
 function transform_write (wc: Typed.Call) : S3.Statement {

@@ -150,6 +150,8 @@ function procesar_enunciado (e: S3.Statement, nivel: number) : string {
             return `${repetir(' ', nivel*espacios)}CONCATENAR ${e.length}`
         case S3.StatementKinds.AssignString:
             return `${repetir(' ', nivel*espacios)}ASIGNAR CADENA ${e.varname} ${e.length} ${e.indexes}`
+        case S3.StatementKinds.Alias:
+            return `${repetir(' ', nivel*espacios)}ALIAS ${e.varname} ${e.var_indexes} ${e.dimensions} ${e.local_alias}`
     }
 }
 
