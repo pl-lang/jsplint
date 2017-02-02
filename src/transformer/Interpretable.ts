@@ -26,7 +26,7 @@ export default function transform (p: Typed.Program) : Success<S3.Program> {
 }
 
 function transform_main (old_module: Typed.Module) : S3.Statement {
-    return transform_body(old_module.body)
+    return transform_body(old_module.body, 'main')
 }
 
 function transform_module (old_module: Typed.Module, current_module: string) : S3.Module {
@@ -66,10 +66,10 @@ function transform_module (old_module: Typed.Module, current_module: string) : S
             }
             let assignment: S3.Statement = null
             if (param.type instanceof Typed.StringType) {
-                assignment = new S3.AssignString(param.name, param.type.length, 0)
+                assignment = new S3.AssignString(current_module, param.name, param.type.length, 0)
             }
             else {
-                assignment = create_assignment(fake_inv)
+                assignment = create_assignment(fake_inv, current_module)
             }
             if (i == old_module.parameters.length - 1) {
                 first_statement_initialized = true
@@ -82,7 +82,7 @@ function transform_module (old_module: Typed.Module, current_module: string) : S
         }
     }
 
-    const body_entry = transform_body(old_module.body)
+    const body_entry = transform_body(old_module.body, current_module)
 
     /**
      * Punto de entrada (primer enunciado) del modulo
@@ -109,21 +109,21 @@ function transform_module (old_module: Typed.Module, current_module: string) : S
     return new_module
 }
 
-function transform_if (statement: Typed.If) : S3.Statement {
+function transform_if (statement: Typed.If, module_name: string) : S3.Statement {
     /**
      * La condicion del if debe insertarse antes del propio if
      */
-    const entry = transform_expression(statement.condition)
+    const entry = transform_expression(statement.condition, module_name)
 
     /**
      * Ultimo enunciado de la condicion del if
      */
     const last_statement = S3.get_last(entry)
 
-    const true_entry = transform_body(statement.true_branch)
-    const false_entry = transform_body(statement.false_branch)
+    const true_entry = transform_body(statement.true_branch, module_name)
+    const false_entry = transform_body(statement.false_branch, module_name)
 
-    const sif = new S3.If(true_entry, false_entry)
+    const sif = new S3.If(module_name, true_entry, false_entry)
 
     /**
      * Hacer que la evaluacion de la condicion venga seguida del if
@@ -134,19 +134,19 @@ function transform_if (statement: Typed.If) : S3.Statement {
     return entry
 }
 
-function transform_while (statement: Typed.While) : S3.Statement {
+function transform_while (statement: Typed.While, module_name: string) : S3.Statement {
     /**
      * condicion
      * bucle
      * condicion
      */
-    const condition_entry = transform_expression(statement.condition)
+    const condition_entry = transform_expression(statement.condition, module_name)
     const cond_last_st = S3.get_last(condition_entry)
 
-    const loop_body = transform_body(statement.body)
+    const loop_body = transform_body(statement.body, module_name)
     const body_last_st = S3.get_last(loop_body)
 
-    const swhile = new S3.While(loop_body)
+    const swhile = new S3.While(module_name, loop_body)
 
     cond_last_st.exit_point = swhile
 
@@ -155,11 +155,11 @@ function transform_while (statement: Typed.While) : S3.Statement {
     return condition_entry
 }
 
-function transform_until (statement: Typed.Until) : S3.Statement {
-    const body = transform_body(statement.body)
+function transform_until (statement: Typed.Until, module_name: string) : S3.Statement {
+    const body = transform_body(statement.body, module_name)
     const body_last_st = S3.get_last(body)
 
-    const condition = transform_expression(statement.condition)
+    const condition = transform_expression(statement.condition, module_name)
     /**
      * La condicion del bucle se evalua luego del ultimo enunciado
      * que este contiene.
@@ -168,14 +168,14 @@ function transform_until (statement: Typed.Until) : S3.Statement {
 
     const last_st_condition = S3.get_last(condition)
 
-    const suntil = new S3.Until(body)
+    const suntil = new S3.Until(module_name, body)
 
     last_st_condition.exit_point = suntil
 
     return body
 }
 
-function transform_for (statement: Typed.For) : S3.Statement {
+function transform_for (statement: Typed.For, module_name: string) : S3.Statement {
     /**
      * Los bucles para tienen la siguiente estructura
      * 
@@ -198,7 +198,7 @@ function transform_for (statement: Typed.For) : S3.Statement {
     /**
      * Este es el enunciado de asignacion que inicializa el contador.
      */
-    const init = transform_assignment(statement.counter_init)
+    const init = transform_assignment(statement.counter_init, module_name)
     const init_last = S3.get_last(init)
 
     /**
@@ -208,13 +208,13 @@ function transform_for (statement: Typed.For) : S3.Statement {
     const left: Typed.Invocation = statement.counter_init.left
 
     const condition_exp: Typed.ExpElement[] = [left, ...statement.last_value, {type:'operator', name:'minor-eq'} as S0.OperatorElement]
-    const condition_entry = transform_expression(condition_exp)
+    const condition_entry = transform_expression(condition_exp, module_name)
     const conditon_last = S3.get_last(condition_entry)
 
     /**
      * A la evaluacion de la condicion le sigue el cuerpo del bucle
      */
-    const body = transform_body(statement.body)
+    const body = transform_body(statement.body, module_name)
     const body_last = S3.get_last(body)
 
     /**
@@ -239,7 +239,7 @@ function transform_for (statement: Typed.For) : S3.Statement {
     /**
      * Ahora ese enunciado de S2 debe convertirse en uno de Program
      */
-    const incremement_entry = transform_assignment(assingment)
+    const incremement_entry = transform_assignment(assingment, module_name)
     const increment_last = S3.get_last(incremement_entry)
 
     /**
@@ -252,7 +252,7 @@ function transform_for (statement: Typed.For) : S3.Statement {
      * -    condicion
      */
 
-    const swhile = new S3.While(body)
+    const swhile = new S3.While(module_name, body)
 
     init_last.exit_point = condition_entry
     conditon_last.exit_point = swhile
@@ -262,7 +262,7 @@ function transform_for (statement: Typed.For) : S3.Statement {
     return init
 }
 
-function transform_call (call: Typed.Call) : S3.Statement {
+function transform_call (call: Typed.Call, module_name: string) : S3.Statement {
     /**
      * Para transformar las llamadas solo hay que encadenar
      * la evaluacion de sus argumentos (en el orden en que aparecen)
@@ -284,7 +284,7 @@ function transform_call (call: Typed.Call) : S3.Statement {
             let last_index_st: S3.Statement = null
             let index_initd = false
             for (let j = 0; j < invocation.indexes.length; j++) {
-                const next_index = transform_expression(invocation.indexes[j])
+                const next_index = transform_expression(invocation.indexes[j], module_name)
                 if (j == 0) {
                     first_index = next_index
                     last_index_st = S3.get_last(first_index)
@@ -296,7 +296,7 @@ function transform_call (call: Typed.Call) : S3.Statement {
                 }
             }
 
-            const make_alias = new S3.Alias(invocation.name, invocation.indexes.length, invocation.dimensions, call.parameters[i].name, call.name)
+            const make_alias = new S3.Alias(module_name, invocation.name, invocation.indexes.length, invocation.dimensions, call.parameters[i].name, call.name)
 
             if (index_initd) {
                 last_index_st.exit_point = make_alias
@@ -307,7 +307,7 @@ function transform_call (call: Typed.Call) : S3.Statement {
             }
         }
         else {
-            next_arg = transform_expression(call.args[i])
+            next_arg = transform_expression(call.args[i], module_name)
         }
 
         if (i == 0) {
@@ -321,7 +321,7 @@ function transform_call (call: Typed.Call) : S3.Statement {
         }
     }
 
-    const ucall = new S3.UserModuleCall(call.name, call.args.length)
+    const ucall = new S3.UserModuleCall(module_name, call.name, call.args.length)
 
     if (first_arg_initd) {
         last_statement.exit_point =  ucall
@@ -333,38 +333,38 @@ function transform_call (call: Typed.Call) : S3.Statement {
     }
 }
 
-function transform_write (wc: Typed.Call) : S3.Statement {
+function transform_write (wc: Typed.Call, module_name: string) : S3.Statement {
     /**
      * Escribir es un procedimiento que toma solo un argumento,
      * en realidad.
      * Hay que hacer una llamada por cada argumento evaluado.
      */
-    const first_arg: S3.Statement = transform_expression(wc.args[0])
+    const first_arg: S3.Statement = transform_expression(wc.args[0], module_name)
     let last_statement = S3.get_last(first_arg)
 
     if (wc.typings.args[0] instanceof Typed.StringType) {
-        const concat = new S3.Concat((wc.typings.args[0] as Typed.StringType).length)
+        const concat = new S3.Concat(module_name, (wc.typings.args[0] as Typed.StringType).length)
         last_statement.exit_point = concat
         last_statement = concat
     }
 
-    const escribir_call = new S3.WriteCall()
+    const escribir_call = new S3.WriteCall(module_name)
 
     last_statement.exit_point = escribir_call
     last_statement = escribir_call
 
     for (let i = 1; i < wc.args.length; i++) {
-        const next_arg = transform_expression(wc.args[i])
+        const next_arg = transform_expression(wc.args[i], module_name)
         last_statement.exit_point = next_arg
         last_statement = S3.get_last(next_arg)
 
         if (wc.typings.args[i] instanceof Typed.StringType) {
-            const concat = new S3.Concat((wc.typings.args[i] as Typed.StringType).length)
+            const concat = new S3.Concat(module_name, (wc.typings.args[i] as Typed.StringType).length)
             last_statement.exit_point = concat
             last_statement = concat
         }
 
-        const wcall = new S3.WriteCall()
+        const wcall = new S3.WriteCall(module_name)
         last_statement.exit_point = wcall
         last_statement = wcall
     }
@@ -372,7 +372,7 @@ function transform_write (wc: Typed.Call) : S3.Statement {
     return first_arg
 }
 
-function transform_read (rc: Typed.Call) : S3.Statement {
+function transform_read (rc: Typed.Call, module_name: string): S3.Statement {
     /**
      * Leer tambien es un procedimiento de un solo argumento.
      * Por cada argumento hay que crear una llamada a leer y una asignacion.
@@ -390,7 +390,7 @@ function transform_read (rc: Typed.Call) : S3.Statement {
          */
         current_var = rc.args[i][0] as Typed.Invocation
 
-        const lcall = new S3.ReadCall(current_var.name, current_var.typings.type as (Typed.AtomicType | Typed.StringType))
+        const lcall = new S3.ReadCall(module_name, current_var.name, current_var.typings.type as (Typed.AtomicType | Typed.StringType))
 
         if (i == 0) {
             first_call = lcall
@@ -402,10 +402,10 @@ function transform_read (rc: Typed.Call) : S3.Statement {
         let target_assignment: S3.Statement = null
 
         if (current_var.typings.type instanceof Typed.StringType) {
-            target_assignment = new S3.AssignString(current_var.name, current_var.typings.type.length, current_var.indexes.length)
+            target_assignment = new S3.AssignString(module_name, current_var.name, current_var.typings.type.length, current_var.indexes.length)
         }
         else {
-            target_assignment = create_assignment(current_var)
+            target_assignment = create_assignment(current_var, module_name)
         }
 
         lcall.exit_point =  target_assignment
@@ -415,7 +415,7 @@ function transform_read (rc: Typed.Call) : S3.Statement {
     return first_call
 }
 
-function create_assignment (v: Typed.Invocation) : S3.Statement {
+function create_assignment (v: Typed.Invocation, module_name: string) : S3.Statement {
     if (v.is_array) {
         if (v.dimensions.length > v.indexes.length) {
             /**
@@ -434,7 +434,7 @@ function create_assignment (v: Typed.Invocation) : S3.Statement {
                 const final_indexes = v.indexes.concat(i.map(index => [create_literal_number_exp(index)]))
 
                 for (let j = 0; j < final_indexes.length; j++) {
-                    const index_exp = transform_expression(final_indexes[j])
+                    const index_exp = transform_expression(final_indexes[j], module_name)
 
                     /**
                      * Si esta es la primer iteracion de ambos bucles...
@@ -449,7 +449,7 @@ function create_assignment (v: Typed.Invocation) : S3.Statement {
                     last_statement = S3.get_last(index_exp)
                 }
 
-                const assignment = new S3.AssignV(final_indexes.length, v.dimensions, v.name)
+                const assignment = new S3.AssignV(module_name, final_indexes.length, v.dimensions, v.name)
 
                 last_statement.exit_point = assignment
 
@@ -459,15 +459,15 @@ function create_assignment (v: Typed.Invocation) : S3.Statement {
             return first_index
         }
         else {
-            const first_index = transform_expression(v.indexes[0])
+            const first_index = transform_expression(v.indexes[0], module_name)
             let last_statement = S3.get_last(first_index)
             for (let i = 0; i < v.indexes.length - 1; i++) {
-                const next_index = transform_expression(v.indexes[i + 1])
+                const next_index = transform_expression(v.indexes[i + 1], module_name)
                 last_statement.exit_point =  next_index
                 last_statement = S3.get_last(next_index)
             }
 
-            const assignment = new S3.AssignV(v.indexes.length, v.dimensions, v.name)
+            const assignment = new S3.AssignV(module_name, v.indexes.length, v.dimensions, v.name)
 
             last_statement.exit_point = assignment
 
@@ -475,7 +475,7 @@ function create_assignment (v: Typed.Invocation) : S3.Statement {
         }
     }
     else {
-        const assignment = new S3.Assign(v.name)
+        const assignment = new S3.Assign(module_name, v.name)
 
         return assignment
     }
@@ -485,7 +485,7 @@ function create_literal_number_exp (n: number) : Typed.Literal {
     return {type: 'literal', value: n, typings: {type: new  Typed.AtomicType('entero')}}
 }
 
-function transform_return (ret: Typed.Return) : S3.Statement {
+function transform_return (ret: Typed.Return, module_name: string) : S3.Statement {
     /**
      * Para transformar 'retornar' solo hay que transformar
      * su expresion. Una vez que se evalue eso, el retorno de
@@ -493,21 +493,21 @@ function transform_return (ret: Typed.Return) : S3.Statement {
      * viene el enunciado 'retornar' que termina la ejecucion
      * de la funcion donde se encuentra.
      */
-    const entry = transform_expression(ret.expression)
-    const ret_statement = new S3.Return()
+    const entry = transform_expression(ret.expression, module_name)
+    const ret_statement = new S3.Return(module_name)
     S3.get_last(entry).exit_point = ret_statement
 
     return entry
 }
 
-function transform_body (body: Typed.Statement[]) : S3.Statement {
+function transform_body (body: Typed.Statement[], module_name: string) : S3.Statement {
     if (body.length > 0) {
-        const entry_point: S3.Statement = transform_statement(body[0])
+        const entry_point: S3.Statement = transform_statement(body[0], module_name)
 
         let last_statement: S3.Statement = S3.get_last(entry_point)
 
         for (let i = 0; i < body.length - 1; i++) {
-            const next_statement = transform_statement(body[i+1])
+            const next_statement = transform_statement(body[i+1], module_name)
             last_statement.exit_point = next_statement
             last_statement = S3.get_last(next_statement)
         }
@@ -519,37 +519,37 @@ function transform_body (body: Typed.Statement[]) : S3.Statement {
     }
 }
 
-function transform_statement (statement: Typed.Statement) : S3.Statement {
+function transform_statement (statement: Typed.Statement, module_name: string) : S3.Statement {
     switch (statement.type) {
         case 'assignment':
-            return transform_assignment(statement)
+            return transform_assignment(statement, module_name)
         case 'if':
-            return transform_if(statement)
+            return transform_if(statement, module_name)
         case 'while':
-            return transform_while(statement)
+            return transform_while(statement, module_name)
         case 'until':
-            return transform_until(statement)
+            return transform_until(statement, module_name)
         case 'for':
-            return transform_for(statement)
+            return transform_for(statement, module_name)
         case 'call':
             switch (statement.name) {
                 case 'leer':
-                    return transform_read(statement)
+                    return transform_read(statement, module_name)
                 case 'escribir':
-                    return transform_write(statement)
+                    return transform_write(statement, module_name)
                 default:
-                    return transform_call(statement)
+                    return transform_call(statement, module_name)
             }
         case 'return':
-            return transform_return(statement)
+            return transform_return(statement, module_name)
     }
 }
 
-function transform_assignment (a: Typed.Assignment) : S3.Statement {
+function transform_assignment (a: Typed.Assignment, module_name: string) : S3.Statement {
     /**
      * Primer enunciado de la evaluacion de la expresion que se debe asignar
      */
-    const entry_point = transform_expression(a.right)
+    const entry_point = transform_expression(a.right, module_name)
 
     /**
      * Este enunciado es el que finalmente pone el valor de la expresion en la
@@ -567,7 +567,7 @@ function transform_assignment (a: Typed.Assignment) : S3.Statement {
             /**
              * Asignar una cadena a un vector
              */
-            const assignment = new S3.AssignString(a.left.name, a.typings.left.length, a.left.indexes.length)
+            const assignment = new S3.AssignString(module_name, a.left.name, a.typings.left.length, a.left.indexes.length)
             last_statement.exit_point = assignment
             return entry_point
         }
@@ -589,7 +589,7 @@ function transform_assignment (a: Typed.Assignment) : S3.Statement {
                 const final_indexes = a.left.indexes.concat(i.map(index => [create_literal_number_exp(index)]))
 
                 for (let j = 0; j < final_indexes.length; j++) {
-                    const index_exp = transform_expression(final_indexes[j])
+                    const index_exp = transform_expression(final_indexes[j], module_name)
 
                     /**
                      * Si esta es la primer iteracion de ambos bucles...
@@ -604,7 +604,7 @@ function transform_assignment (a: Typed.Assignment) : S3.Statement {
                     last = S3.get_last(index_exp)
                 }
 
-                const assignment = new S3.AssignV(final_indexes.length, a.left.dimensions, a.left.name)
+                const assignment = new S3.AssignV(module_name, final_indexes.length, a.left.dimensions, a.left.name)
 
                 last.exit_point = assignment
 
@@ -628,15 +628,15 @@ function transform_assignment (a: Typed.Assignment) : S3.Statement {
         if (a.left.is_array) {
             const v = a.left
 
-            const first_index = transform_expression(v.indexes[0])
+            const first_index = transform_expression(v.indexes[0], module_name)
             let index_last_st = S3.get_last(first_index)
 
             for (let i = 0; i < v.indexes.length - 1; i++) {
-                let next_index = transform_expression(v.indexes[i + 1])
+                let next_index = transform_expression(v.indexes[i + 1], module_name)
                 index_last_st.exit_point = next_index
                 index_last_st = S3.get_last(next_index) 
             }
-            const assignv = new S3.AssignV(v.indexes.length, v.dimensions, v.name)
+            const assignv = new S3.AssignV(module_name, v.indexes.length, v.dimensions, v.name)
 
             index_last_st.exit_point = assignv
             last_statement.exit_point = first_index
@@ -644,7 +644,7 @@ function transform_assignment (a: Typed.Assignment) : S3.Statement {
             return entry_point
         }
         else {
-            const assign = new S3.Assign(a.left.name)
+            const assign = new S3.Assign(module_name, a.left.name)
             last_statement.exit_point = assign
 
             return entry_point
@@ -652,7 +652,7 @@ function transform_assignment (a: Typed.Assignment) : S3.Statement {
     }
 }
 
-function transform_invocation (i: Typed.Invocation) : S3.Statement {
+function transform_invocation (i: Typed.Invocation, module_name: string) : S3.Statement {
     if (i.is_array) {
         if (i.dimensions.length > i.indexes.length) {
             /**
@@ -677,7 +677,7 @@ function transform_invocation (i: Typed.Invocation) : S3.Statement {
                 const final_indexes = i.indexes.concat(j.map(index => [create_literal_number_exp(index)]))
 
                 for (let k = 0; k < final_indexes.length; k++) {
-                    const index_exp = transform_expression(final_indexes[k])
+                    const index_exp = transform_expression(final_indexes[k], module_name)
 
                     /**
                      * Si esta es la primer iteracion de ambos bucles...
@@ -692,7 +692,7 @@ function transform_invocation (i: Typed.Invocation) : S3.Statement {
                     last_statement = S3.get_last(index_exp)
                 }
 
-                const invocation = new S3.GetV(final_indexes.length, i.dimensions, i.name)
+                const invocation = new S3.GetV(module_name, final_indexes.length, i.dimensions, i.name)
 
                 last_statement.exit_point = invocation
 
@@ -702,15 +702,15 @@ function transform_invocation (i: Typed.Invocation) : S3.Statement {
             return first_index
         }
         else {
-            const first_index = transform_expression(i.indexes[0])
+            const first_index = transform_expression(i.indexes[0], module_name)
             let last_statement = S3.get_last(first_index)
             for (let j = 1; j < i.indexes.length; j++) {
-                const next_index = transform_expression(i.indexes[j])
+                const next_index = transform_expression(i.indexes[j], module_name)
                 last_statement.exit_point = next_index
                 last_statement = S3.get_last(next_index)
             }
             
-            const getv = new S3.GetV(i.indexes.length, i.dimensions, i.name)
+            const getv = new S3.GetV(module_name, i.indexes.length, i.dimensions, i.name)
 
             last_statement.exit_point = getv
 
@@ -718,13 +718,13 @@ function transform_invocation (i: Typed.Invocation) : S3.Statement {
         }
     }
     else {
-        const geti = new S3.Get(i.name)
+        const geti = new S3.Get(module_name, i.name)
 
         return geti
     }
 }
 
-function transform_literal (l: Typed.Literal): S3.Statement {
+function transform_literal (l: Typed.Literal, module_name: string): S3.Statement {
     if (l.typings.type instanceof Typed.StringType) {
         const length = (l.typings.type as Typed.StringType).length
 
@@ -732,22 +732,26 @@ function transform_literal (l: Typed.Literal): S3.Statement {
          * Apilar la cadena de atras para adelante para que cuando
          * sea asignada a un vector aparezca en el orden correcto.
          */
-        let first: S3.Statement = new S3.Push('\0');
+        let first: S3.Statement = new S3.Push(module_name, '\0');
         let last: S3.Statement = first;
         for (let i = length - 1; i >= 0; i--) {
-            const next = new S3.Push((l.value as string)[i])
+            const next = new S3.Push(module_name, (l.value as string)[i])
             last.exit_point = next
             last = next
         }
         return first
     }
     else {
-        return new S3.Push(l.value)
+        return new S3.Push(module_name, l.value)
     }
 }
 
-function transform_expression (expression: Typed.ExpElement[]) : S3.Statement {
-    const statements = expression.map(transform_exp_element)
+function transform_expression (expression: Typed.ExpElement[], module_name: string) : S3.Statement {
+    const statements: S3.Statement[] = []
+    for (let e of expression) {
+        statements.push(transform_exp_element(e, module_name))
+    }
+
     const entry = statements[0]
     let last_statement: S3.Statement = S3.get_last(entry)
     for (let i = 0; i < statements.length - 1; i++) {
@@ -758,49 +762,49 @@ function transform_expression (expression: Typed.ExpElement[]) : S3.Statement {
     return entry
 }
 
-function transform_exp_element (element: Typed.ExpElement) : S3.Statement {
+function transform_exp_element (element: Typed.ExpElement, module_name: string) : S3.Statement {
   switch (element.type) {
     case 'operator':
       switch ((element as S0.OperatorElement).name) {
         case 'times':
-            return new S3.Operation(S3.StatementKinds.Times)
+            return new S3.Operation(module_name, S3.StatementKinds.Times)
         case 'slash':
-            return new S3.Operation(S3.StatementKinds.Slash)
+            return new S3.Operation(module_name, S3.StatementKinds.Slash)
         case 'power':
-            return new S3.Operation(S3.StatementKinds.Power)
+            return new S3.Operation(module_name, S3.StatementKinds.Power)
         case 'div':
-            return new S3.Operation(S3.StatementKinds.Div)
+            return new S3.Operation(module_name, S3.StatementKinds.Div)
         case 'mod':
-            return new S3.Operation(S3.StatementKinds.Mod)
+            return new S3.Operation(module_name, S3.StatementKinds.Mod)
         case 'minus':
-            return new S3.Operation(S3.StatementKinds.Minus)
+            return new S3.Operation(module_name, S3.StatementKinds.Minus)
         case 'plus':
-            return new S3.Operation(S3.StatementKinds.Plus)
+            return new S3.Operation(module_name, S3.StatementKinds.Plus)
         case 'minor':
-            return new S3.Operation(S3.StatementKinds.Minor)
+            return new S3.Operation(module_name, S3.StatementKinds.Minor)
         case 'minor-eq':
-            return new S3.Operation(S3.StatementKinds.MinorEq)
+            return new S3.Operation(module_name, S3.StatementKinds.MinorEq)
         case 'major':
-            return new S3.Operation(S3.StatementKinds.Major)
+            return new S3.Operation(module_name, S3.StatementKinds.Major)
         case 'major-eq':
-            return new S3.Operation(S3.StatementKinds.MajorEq)
+            return new S3.Operation(module_name, S3.StatementKinds.MajorEq)
         case 'equal':
-            return new S3.Operation(S3.StatementKinds.Equal)
+            return new S3.Operation(module_name, S3.StatementKinds.Equal)
         case 'not':
-            return new S3.Operation(S3.StatementKinds.Not)
+            return new S3.Operation(module_name, S3.StatementKinds.Not)
         case 'different':
-            return new S3.Operation(S3.StatementKinds.Different)
+            return new S3.Operation(module_name, S3.StatementKinds.Different)
         case 'and':
-            return new S3.Operation(S3.StatementKinds.And)
+            return new S3.Operation(module_name, S3.StatementKinds.And)
         case 'or':
-            return new S3.Operation(S3.StatementKinds.Or)
+            return new S3.Operation(module_name, S3.StatementKinds.Or)
       }
       break
     case 'literal':
-        return transform_literal(element)
+        return transform_literal(element, module_name)
     case 'invocation':
-        return transform_invocation(element)
+        return transform_invocation(element, module_name)
     case 'call':
-        return transform_call(element)
+        return transform_call(element, module_name)
   }
 }

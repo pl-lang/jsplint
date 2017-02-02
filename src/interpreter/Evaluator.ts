@@ -15,10 +15,25 @@ import {Value, Errors, Read, Write, NullAction, Paused, SuccessfulReturn} from '
 */
 
 export interface Alias {
+  /**
+   * Nombre de la variable a la que este alias hace referencia
+   */
   varname: string
+  /**
+   * Indices utilizados al interactuar con este alias
+   */
   indexes: number[]
+  /**
+   * "Alias" de la variable referenciada
+   */
   local_name: string
+  /**
+   * Dimensiones de la variable referenciada
+   */
   dimensions: number[]
+  /**
+   * Modulo al que este alias pertenece
+   */
   module: string
 }
 
@@ -242,9 +257,9 @@ export class Evaluator {
     }
   }
 
-  private has_alias (name: string): Failure<string>|Success<Alias> {
+  private has_alias (name: string, module_name: string): Failure<string>|Success<Alias> {
     for (let alias of this.aliases) {
-      if (alias.local_name  == name) {
+      if (alias.local_name  == name && alias.module == module_name) {
         return {error: false, result: alias}
       }
     }
@@ -333,7 +348,7 @@ export class Evaluator {
   }
 
   private assign (s: S3.Assign) : Success<NullAction> {
-    const alias_found = this.has_alias(s.varname)
+    const alias_found = this.has_alias(s.varname, s.owner)
 
     /**
      * Si no hay alias esta es una asignacion normal
@@ -362,7 +377,7 @@ export class Evaluator {
   }
 
   private get_value (s: S3.Get) : Success<NullAction> {
-    const alias_found = this.has_alias(s.varname)
+    const alias_found = this.has_alias(s.varname, s.owner)
 
     /**
      * Si no hay alias solo hay que apilar el valor de la variable
@@ -392,7 +407,7 @@ export class Evaluator {
   }
 
   private assignv (s: S3.AssignV) : Failure<Errors.OutOfBounds> | Success<NullAction> {
-    const alias_found = this.has_alias(s.varname)
+    const alias_found = this.has_alias(s.varname, s.owner)
 
     if (alias_found.error) {
       const indexes = this.pop_indexes(s.total_indexes)
@@ -462,7 +477,7 @@ export class Evaluator {
   }
 
   private getv_value (s: S3.GetV) : Failure<Errors.OutOfBounds> | Success<NullAction> {
-    const alias_found = this.has_alias(s.varname)
+    const alias_found = this.has_alias(s.varname, s.owner)
 
     if (alias_found.error) {
       const indexes = this.pop_indexes(s.total_indexes)

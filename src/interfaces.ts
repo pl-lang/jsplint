@@ -739,8 +739,10 @@ export namespace S3 {
     readonly kind: StatementKinds
     protected _exit_point: Statement
     protected exit_set: boolean
+    readonly owner: string
 
-    constructor() {
+    constructor(owner: string) {
+      this.owner = owner
       this._exit_point = null
       this.exit_set = false
     }
@@ -768,8 +770,8 @@ export namespace S3 {
     readonly dimensions: number[]
     readonly module_name: string
 
-    constructor (varname: string, indexes: number, dimensions: number[], alias: string, module_name: string) {
-      super()
+    constructor (owner: string, varname: string, indexes: number, dimensions: number[], alias: string, module_name: string) {
+      super(owner)
       this.kind = StatementKinds.Alias
       this.varname = varname
       this.var_indexes = indexes
@@ -785,8 +787,8 @@ export namespace S3 {
     readonly varname: string
     readonly indexes: number
 
-    constructor (varname: string, length: number, indexes: number) {
-      super()
+    constructor (owner: string, varname: string, length: number, indexes: number) {
+      super(owner)
       this.kind = StatementKinds.AssignString
       this.varname = varname
       this.length = length
@@ -798,8 +800,8 @@ export namespace S3 {
     readonly kind: StatementKinds.Concat
     readonly length: number
 
-    constructor (length: number) {
-      super()
+    constructor (owner: string, length: number) {
+      super(owner)
       this.kind = StatementKinds.Concat
       this.length = length
     }
@@ -808,8 +810,8 @@ export namespace S3 {
   export class Return extends BaseStatement {
     readonly kind: StatementKinds.Return
 
-    constructor() {
-      super()
+    constructor(owner: string) {
+      super(owner)
       this.kind = StatementKinds.Return
     }
   }
@@ -817,8 +819,8 @@ export namespace S3 {
   export class UserModuleCall extends BaseStatement {
     readonly kind: StatementKinds.UserModuleCall
 
-    constructor(readonly name: string, readonly total_args: number) {
-      super()
+    constructor(owner: string, readonly name: string, readonly total_args: number) {
+      super(owner)
       this.kind = StatementKinds.UserModuleCall
     }
   }
@@ -832,8 +834,8 @@ export namespace S3 {
      */
     readonly type: Typed.AtomicType | Typed.StringType
 
-    constructor(readonly varname: string, type: Typed.AtomicType | Typed.StringType) {
-      super()
+    constructor(owner: string, readonly varname: string, type: Typed.AtomicType | Typed.StringType) {
+      super(owner)
       this.kind = StatementKinds.ReadCall
       this.name = 'leer'
       this.type = type
@@ -844,8 +846,8 @@ export namespace S3 {
     readonly name: 'escribir'
     readonly kind: StatementKinds.WriteCall
 
-    constructor() {
-      super()
+    constructor(owner: string) {
+      super(owner)
       this.kind = StatementKinds.WriteCall
       this.name = 'escribir'
     }
@@ -854,8 +856,8 @@ export namespace S3 {
   export class Assign extends BaseStatement {
     readonly kind: StatementKinds.Assign
 
-    constructor(readonly varname: string) {
-      super()
+    constructor(owner: string, readonly varname: string) {
+      super(owner)
       this.kind = StatementKinds.Assign
     }
   }
@@ -863,8 +865,8 @@ export namespace S3 {
   export class AssignV extends BaseStatement {
     readonly kind: StatementKinds.AssignV
 
-    constructor(readonly total_indexes: number, readonly dimensions: number[], readonly varname: string) {
-      super()
+    constructor(owner: string, readonly total_indexes: number, readonly dimensions: number[], readonly varname: string) {
+      super(owner)
       this.kind = StatementKinds.AssignV
     }
   }
@@ -872,8 +874,8 @@ export namespace S3 {
   export class Get extends BaseStatement {
     readonly kind: StatementKinds.Get
 
-    constructor(readonly varname: string) {
-      super()
+    constructor(owner: string, readonly varname: string) {
+      super(owner)
       this.kind = StatementKinds.Get
     }
   }
@@ -881,8 +883,8 @@ export namespace S3 {
   export class GetV extends BaseStatement {
     readonly kind: StatementKinds.GetV
 
-    constructor(readonly total_indexes: number, readonly dimensions: number[], readonly varname: string) {
-      super()
+    constructor(owner: string, readonly total_indexes: number, readonly dimensions: number[], readonly varname: string) {
+      super(owner)
       this.kind = StatementKinds.GetV
     }
   }
@@ -890,8 +892,8 @@ export namespace S3 {
   export class Push extends BaseStatement {
     readonly kind: StatementKinds.Push
 
-    constructor(readonly value: number | boolean | string) {
-      super()
+    constructor(owner: string, readonly value: number | boolean | string) {
+      super(owner)
       this.kind = StatementKinds.Push
     }
   }
@@ -899,24 +901,24 @@ export namespace S3 {
   export class Pop extends BaseStatement {
     readonly kind: StatementKinds.Pop
 
-    constructor() {
-      super()
+    constructor(owner: string) {
+      super(owner)
       this.kind = StatementKinds.Pop
     }
   }
 
   export class Operation extends BaseStatement {
 
-    constructor(readonly kind: OperationKinds) {
-      super()
+    constructor(owner: string, readonly kind: OperationKinds) {
+      super(owner)
     }
   }
 
   export class While extends BaseStatement {
     readonly kind: StatementKinds.While
 
-    constructor(readonly entry_point: Statement) {
-      super()
+    constructor(owner: string, readonly entry_point: Statement) {
+      super(owner)
       this.kind = StatementKinds.While
     }
   }
@@ -924,8 +926,8 @@ export namespace S3 {
   export class Until extends BaseStatement {
     readonly kind: StatementKinds.Until
 
-    constructor(readonly entry_point: Statement) {
-      super()
+    constructor(owner: string, readonly entry_point: Statement) {
+      super(owner)
       this.kind = StatementKinds.Until
     }
   }
@@ -933,8 +935,8 @@ export namespace S3 {
   export class If extends BaseStatement {
     readonly kind: StatementKinds.If
 
-    constructor(readonly true_branch_entry: Statement, readonly false_branch_entry: Statement) {
-      super()
+    constructor(owner: string, readonly true_branch_entry: Statement, readonly false_branch_entry: Statement) {
+      super(owner)
       this.kind = StatementKinds.If
     }
 
