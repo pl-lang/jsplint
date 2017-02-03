@@ -328,7 +328,7 @@ export class Evaluator {
   private concat (s: S3.Concat): Success<NullAction> {
     let string: string[] = []
     for (let i = 0; i < s.length; i++) {
-      string.unshift(this.state.value_stack.pop() as string)
+      string.push(this.state.value_stack.pop() as string)
     }
     this.state.value_stack.push(string.join(''))
     return {error: false, result: {action: 'none', done: this.state.done}}
