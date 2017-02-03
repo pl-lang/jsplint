@@ -219,7 +219,7 @@ export function TypeName (source: TokenQueue) : Failure<Errors.Pattern> | Succes
 export function IndexExpression (source: TokenQueue) : Failure<Errors.Pattern> | Success<S0.ExpElement[][]> {
   let indexes: S0.ExpElement[][] = []
 
-  const index_report = Expression(source)
+  const index_report = Expression(source, tk => tk == SymbolKind.RightBracket)
 
   if (index_report.error === true) {
     return index_report
@@ -337,9 +337,10 @@ function is_operator (k: TokenKind) {
 }
 
 /**
- * Captura una expresion
+ * Expression: captura una expresion
+ * end_reached: funcion que indica si se llegó al final de este tipo de expresion
  */
-export function Expression (source: TokenQueue) : Failure<Errors.Pattern> | Success<S0.ExpElement[]> {
+export function Expression (source: TokenQueue, end_reached: (tk: TokenKind) => boolean) : Failure<Errors.Pattern> | Success<S0.ExpElement[]> {
   // Ubicacion del inicio de la expresion, en caso de que haya algun error
   const column = source.current().column
   const line = source.current().line
@@ -347,30 +348,27 @@ export function Expression (source: TokenQueue) : Failure<Errors.Pattern> | Succ
   /**
    * Dice si un token indica el fin de la expresion a capturar
    */
-  const end_reached = (tkind: TokenKind) => {
-    return  tkind == SymbolKind.EOL
-            || tkind == SymbolKind.EOF
-            || tkind == SymbolKind.Comma
-            || tkind == SymbolKind.RightPar
-            || tkind == SymbolKind.RightBracket
-  }
 
   const output: S0.ExpElement[] = []
   const operators: S0.ExpElement[] = []
 
-  while (!end_reached(source.current().kind)) {
+  while (source.current().kind != SymbolKind.EOF && !end_reached(source.current().kind)) {
     const ctoken = source.current()
 
     if (ctoken.kind == SymbolKind.LeftPar) {
-      operators.unshift({type:'parenthesis', name:'left-par'})
+      operators.push({type:'parenthesis', name:'left-par'})
       source.next()
     }
     else if (ctoken.kind == SymbolKind.RightPar) {
-      while (operators.length > 0 && operators[0].name != 'left-par') {
-        output.push(operators.shift())
+      while (operators.length > 0 && operators[operators.length - 1].name != 'left-par') {
+        output.push(operators.pop())
       }
       if (operators[operators.length - 1].name == 'left-par') {
-        operators.shift()
+        operators.pop()
+        /**
+         * Consumir el right-par
+         */
+        source.next()
       }
       else {
         const unexpected = SymbolKind.LeftPar;
@@ -381,15 +379,15 @@ export function Expression (source: TokenQueue) : Failure<Errors.Pattern> | Succ
     }
     else if (is_operator(ctoken.kind)) {
       const p1 = precedence[(ctoken as SpecialSymbolToken).name]
-      const p2 = () => precedence[operators[0].name]
+      const p2 = () => precedence[operators[operators.length - 1].name]
 
       while (operators.length > 0 &&  p1 <= p2()) {
-        const op = operators.shift()
+        const op = operators.pop()
 
         output.push({type:'operator', name:op.name})
       }
 
-      operators.unshift({type:'operator', name:ctoken.name})
+      operators.push({type:'operator', name:ctoken.name})
 
       source.next()
     }
@@ -403,6 +401,11 @@ export function Expression (source: TokenQueue) : Failure<Errors.Pattern> | Succ
       output.push(value_match.result)
     }
   }
+
+  /**
+   * No hace falta consumir el token que marca el final porque
+   * de eso se encarga la funcion que llamó a ésta (Expression)
+   */
 
   while (operators.length > 0) output.push(operators.shift());
 
@@ -474,7 +477,7 @@ function isLiteralTokenType (k: TokenKind) {
  */
 export function ArgumentList (source: TokenQueue) : Failure<Errors.Pattern> | Success<S0.ExpElement[][]>{
   let args: S0.ExpElement[][] = []
-  const exp = Expression(source)
+  const exp = Expression(source, tk => tk == SymbolKind.Comma || tk == SymbolKind.RightPar)
 
   if (exp.error) {
     return exp
@@ -668,7 +671,7 @@ export function Assignment (source: TokenQueue) : Failure<Errors.Pattern> | Succ
       source.next()
     }
 
-    const right_hand_match = Expression(source)
+    const right_hand_match = Expression(source, tk => tk == SymbolKind.EOL)
 
     if (right_hand_match.error) {
       return right_hand_match
@@ -724,7 +727,7 @@ export function If (source: TokenQueue) : Failure<Errors.Pattern> | Success<S0.I
     source.next()
   }
 
-  const expression_match = Expression(new TokenQueue(queue))
+  const expression_match = Expression(new TokenQueue(queue), tk => tk == SymbolKind.RightPar)
 
   if (expression_match.error) {
     return expression_match
@@ -850,7 +853,7 @@ export function While (source: TokenQueue) : Failure<Errors.Pattern> | Success<S
     source.next()
   }
 
-  const expression_match = Expression(new TokenQueue(queue))
+  const expression_match = Expression(new TokenQueue(queue), tk => tk == SymbolKind.RightPar)
 
   if (expression_match.error) {
     return expression_match
@@ -963,7 +966,7 @@ export function For(source: TokenQueue) : Failure<Errors.Pattern> | Success<S0.F
       return {error:true, result:{unexpected, expected, pos: {line, column}, reason, where: 'parser'}}
     }
 
-    const last_val_exp = Expression(source)
+    const last_val_exp = Expression(source, tk => tk == SymbolKind.EOL)
 
     if (last_val_exp.error) {
       return last_val_exp
@@ -1088,7 +1091,7 @@ export function Until (source: TokenQueue) : Failure<Errors.Pattern> | Success<S
     source.next()
   }
 
-  const expression_match = Expression(new TokenQueue(queue))
+  const expression_match = Expression(new TokenQueue(queue), tk => tk == SymbolKind.EOL)
 
   if (expression_match.error) {
     return expression_match
@@ -1135,7 +1138,7 @@ export function Return (source: TokenQueue) : Failure<Errors.Pattern> | Success<
   else {
     source.next() // consumir 'retornar'
 
-    const exp = Expression(source)
+    const exp = Expression(source, tk => tk == SymbolKind.EOL)
 
     if (exp.error) {
       return exp
