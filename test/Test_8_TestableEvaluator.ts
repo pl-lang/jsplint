@@ -655,7 +655,7 @@ describe('Evaluacion de programas y expresiones', () => {
     describe('division', () => {
       it('3/2', () => {
         const code = `variables
-          entero a
+          real a
         inicio
           a <- 3/2
         fin`
@@ -678,7 +678,7 @@ describe('Evaluacion de programas y expresiones', () => {
       it('-3/-2', () => {
 
         const code = `variables
-          entero a
+          real a
         inicio
           a <- -3/-2
         fin`
@@ -700,7 +700,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
       it('2+3/3+4', () => {
         const code = `variables
-          entero a
+          real a
         inicio
           a <- 2+3/3+4
         fin`
@@ -722,7 +722,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
       it('3/2/2', () => {
         const code = `variables
-          entero a
+          real a
         inicio
           a <- 3/2/2
         fin`
@@ -744,7 +744,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
       it('2/2/2/2', () => {
         const code = `variables
-          entero a
+          real a
         inicio
           a <- 2/2/2/2
         fin`
@@ -766,7 +766,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
       it('4/2/2/2', () => {
         const code = `variables
-          entero a
+          real a
         inicio
           a <- 4/2/2/2
         fin`
@@ -788,7 +788,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
       it('2/2/2/4', () => {
         const code = `variables
-            entero a
+            real a
           inicio
             a <- 2/2/2/4
           fin`
@@ -811,11 +811,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
     describe('resta', () => {
       it('3-3-3', () => {
-        const code = `variables
-          entero a
-        inicio
-          a <- 3-3-3
-        fin`
+        const code = `variables \n entero a \n inicio \n a <- 3-3-3 \n fin`
 
         const p = compile(parse(code))
 
@@ -992,7 +988,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
     it('2+8/2', () => {
       const code = `variables
-          entero a
+          real a
         inicio
           a <- 2+8/2
         fin`
@@ -1015,7 +1011,7 @@ describe('Evaluacion de programas y expresiones', () => {
     describe('relacionales', () => {
       it('2 = 2', () => {
         const code = `variables
-          entero a
+          logico a
         inicio
           a <- 2 = 2
         fin`
@@ -1037,7 +1033,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
       it('2 <> 2', () => {
         const code = `variables
-          entero a
+          logico a
         inicio
           a <- 2 <> 2
         fin`
@@ -1054,12 +1050,12 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
-        a.value.should.equal(true)
+        a.value.should.equal(false)
       })
 
       it('2 >= 2', () => {
         const code = `variables
-          entero a
+          logico a
         inicio
           a <- 2 >= 2
         fin`
@@ -1081,7 +1077,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
       it('2 <= 2', () => {
         const code = `variables
-          entero a
+          logico a
         inicio
           a <- 2 <= 2
         fin`
@@ -1103,7 +1099,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
       it('5 > 4', () => {
         const code = `variables
-          entero a
+          logico a
         inicio
           a <- 5 > 4
         fin`
@@ -1123,9 +1119,9 @@ describe('Evaluacion de programas y expresiones', () => {
         a.value.should.equal(true)
       })
 
-      it('4 < 2', () => {
+      it('2 < 4', () => {
         const code = `variables
-          entero a
+          logico a
         inicio
           a <- 2 < 4
         fin`
@@ -1147,7 +1143,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
       it('verdadero or falso', () => {
         const code = `variables
-          entero a
+          logico a
         inicio
           a <- verdadero or falso
         fin`
@@ -1169,7 +1165,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
       it('verdadero and falso', () => {
         const code = `variables
-          entero a
+          logico a
         inicio
           a <- verdadero and falso
         fin`
@@ -1186,7 +1182,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
-        a.value.should.equal(true)
+        a.value.should.equal(false)
       })
     })
 

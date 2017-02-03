@@ -178,9 +178,10 @@ export class SpecialSymbolToken implements Token {
             this.name = 'major-eq' 
             this.text += source.nextChar()
           }
-          else
+          else {
             this.kind = SymbolKind.Major
             this.name = 'major'
+          }
         }
         break
       case '=':

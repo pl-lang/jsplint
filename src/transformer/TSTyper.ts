@@ -748,6 +748,12 @@ function operate (s: Typed.Type[], op: string): Failure<Typed.Error>|Success<Typ
         case 'equal':
         case 'different':
             return comparison(s, op)
+        case 'slash':
+            return slash(s)
+        case 'and':
+        case 'or':
+        case 'not':
+            return logical(s, op)
     }
 }
 
@@ -843,5 +849,81 @@ function comparison (s: Typed.Type[], op: string): Failure<Errors.BadComparisonO
     else {
         const result: Errors.MissingOperands = {reason: 'missing-operands', where: 'typer', operator: op, required: 2}
         return {error: true, result}
+    }
+}
+
+function slash (s: Typed.Type[]): Failure<Errors.IncompatibleOperands | Errors.MissingOperands> | Success<Typed.Type[]> {
+    if (s.length >= 2) {
+        const a = s.pop()
+        const b = s.pop()
+
+        const a_string = stringify(a)
+        const b_string = stringify(b)
+
+        const atomic_cond = a.kind == 'atomic' && b.kind == 'atomic'
+
+        if (!(atomic_cond && (a_string == 'entero' || a_string ==  'real') && (b_string == 'entero' || b_string == 'real'))) {
+            /**
+             * Este error se detecta cuando se intenta comparar datos de tipos incompatibles
+             * o cuando alguno de los operandos es un arreglo.
+             */
+            const result: Errors.IncompatibleOperands = {reason: 'incompatible-operands', where: 'typer', bad_type_a: stringify(b), operator: '/', bad_type_b: stringify(a)}
+            return {error: true, result}
+        }
+        else {
+            s.push(new Typed.AtomicType('literal', 'real'))
+            return {error: false, result: s}
+        }
+    }
+    else {
+        const result: Errors.MissingOperands = {reason: 'missing-operands', where: 'typer', operator: '/', required: 2}
+        return {error: true, result}
+    }
+}
+
+function logical (s: Typed.Type[], op: string): Failure<Errors.IncompatibleOperand | Errors.IncompatibleOperands | Errors.MissingOperands> | Success<Typed.Type[]> {
+    if ((op == 'and' || op == 'or') && s.length >= 2) {
+        const a = s.pop()
+        const b = s.pop()
+
+        const a_string = stringify(a)
+        const b_string = stringify(b)
+
+        const atomic_cond = a.kind == 'atomic' && b.kind == 'atomic'
+
+        if (!(atomic_cond && a_string == 'logico' && b_string == 'logico')) {
+            /**
+             * Este error se detecta cuando se intenta comparar datos de tipos incompatibles
+             * o cuando alguno de los operandos es un arreglo.
+             */
+            const result: Errors.IncompatibleOperands = {reason: 'incompatible-operands', where: 'typer', bad_type_a: stringify(b), operator: '/', bad_type_b: stringify(a)}
+            return {error: true, result}
+        }
+        else {
+            s.push(new Typed.AtomicType('literal', 'logico'))
+            return {error: false, result: s}
+        }
+    }
+    else if (op == 'not' && s.length == 1) {
+        const a = s.pop()
+
+        if (!(a.kind == 'atomic' && stringify(a) == 'logico')) {
+            const result: Errors.IncompatibleOperand = {reason: 'incompatible-operand', where: 'typer', bad_type: stringify(a), operator: 'not'}
+            return {error: true, result}
+        }
+        else {
+            s.push(new Typed.AtomicType('literal', 'logico'))
+            return {error: false, result: s}
+        }
+    }
+    else {
+        if (op == 'not') {
+            const result: Errors.MissingOperands = {reason: 'missing-operands', where: 'typer', operator: 'not', required: 1}
+            return {error: true, result}
+        }
+        else {
+            const result: Errors.MissingOperands = {reason: 'missing-operands', where: 'typer', operator: op, required: 2}
+            return {error: true, result}
+        }
     }
 }
