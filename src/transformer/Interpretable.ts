@@ -732,13 +732,9 @@ function transform_literal (l: Typed.Literal, module_name: string): S3.Statement
     if (l.typings.type instanceof Typed.StringType) {
         const length = (l.typings.type as Typed.StringType).length
 
-        /**
-         * Apilar la cadena de atras para adelante para que cuando
-         * sea asignada a un vector aparezca en el orden correcto.
-         */
         let first: S3.Statement = new S3.Push(module_name, '\0');
         let last: S3.Statement = first;
-        for (let i = length - 1; i >= 0; i--) {
+        for (let i = 0; i < length; i++) {
             const next = new S3.Push(module_name, (l.value as string)[i])
             last.exit_point = next
             last = next
