@@ -22,7 +22,9 @@ export namespace Errors {
   | BadReturn
   | WrongArgAmount
   | BadIndex
-  | LongString;
+  | LongString
+  | BadRefArg
+  | BadReadArg;
 
   export interface Base {
     reason: string
@@ -31,6 +33,47 @@ export namespace Errors {
       column: number
       line: number
     }
+  }
+
+  /**
+   * Emitido cuando se pasa un literal a 'leer'
+   */
+  export interface BadReadArg extends Base {
+    reason: '@read-bad-arg'
+    where: 'typechecker'
+    /**
+     * Indice del argumento literal que de esta llamada
+     */
+    index: number
+  }
+
+  /**
+   * Emitido cuando se llama un modulo con un literal como
+   * parametro por referencia
+   */
+  export interface BadRefArg extends Base {
+    reason: '@call-bad-ref-arg'
+    where: 'typechecker'
+    /**
+     * Tipo del parametro en cuestion
+     */
+    param_expected: string
+    /**
+     * Nombre del parametro en cuestion
+     */
+    param_name: string
+    /**
+     * Nombre del modulo al que pertenece
+     */
+    module: string
+    /**
+     * Tipo del valor literal recibido como argumento
+     */
+    received: string
+    /**
+     * Indice (en la lista de parametros del modulo)
+     */
+    index: number
   }
 
   export interface LongString extends Base {
@@ -1028,6 +1071,11 @@ export namespace Typed {
   export interface Type {
     type: 'type'
     kind: 'atomic' | 'array'
+    /**
+     * Esta propiedad indica si este tipo pertenece a un valor
+     * literal o a un valor invocado.
+     */
+    represents: 'literal' | 'invocation'
   }
 
   export interface Operator {
@@ -1036,18 +1084,20 @@ export namespace Typed {
   }
 
   export class ArrayType implements Type {
-    type: 'type'
-    kind: 'array'
-    length: number
-    cell_type: Type
+    readonly type: 'type'
+    readonly kind: 'array'
+    readonly length: number
+    readonly cell_type: Type
+    readonly represents: 'literal' | 'invocation'
 
     constructor(element_type: Type, length: number)
   }
 
   export class AtomicType implements Type {
-    type: 'type'
-    kind: 'atomic'
-    typename: TypeNameString
+    readonly type: 'type'
+    readonly kind: 'atomic'
+    readonly typename: TypeNameString
+    readonly represents: 'literal' | 'invocation'
 
     constructor(tn: TypeNameString)
   }

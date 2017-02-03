@@ -61,7 +61,11 @@ function transform_module (old_module: Typed.Module, current_module: string) : S
                 type: 'invocation',
                 typings: {
                     indexes: [],
-                    type: new Typed.AtomicType('ninguno')
+                    /**
+                     * este tipo no sirve para nada, esta aca solo para cumplir
+                     * con la interfaz
+                     */
+                    type: new Typed.AtomicType('literal', 'ninguno')
                 }
             }
             let assignment: S3.Statement = null
@@ -482,7 +486,7 @@ function create_assignment (v: Typed.Invocation, module_name: string) : S3.State
 }
 
 function create_literal_number_exp (n: number) : Typed.Literal {
-    return {type: 'literal', value: n, typings: {type: new  Typed.AtomicType('entero')}}
+    return {type: 'literal', value: n, typings: {type: new  Typed.AtomicType('literal','entero')}} // este tipo solo esta aca para cumplir con la interfaz
 }
 
 function transform_return (ret: Typed.Return, module_name: string) : S3.Statement {

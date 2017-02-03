@@ -324,7 +324,7 @@ function transform_return (r: S2.Return, mn: string, p: S2.AST): Failure<Typed.E
                 expression: exp.result as Typed.ExpElement[],
                 typings: {
                     actual: report.result as Typed.Type,
-                    expected: new Typed.AtomicType(expected)
+                    expected: new Typed.AtomicType('literal', expected)
                 }
             }
 
@@ -380,7 +380,7 @@ function type_call (a: S2.ModuleCall, mn: string, p: S2.AST): Failure<Typed.Erro
         else {
             const paramtypes = type_params(a.parameters)
 
-            const ret = new Typed.AtomicType(a.return_type)
+            const ret = new Typed.AtomicType('literal', a.return_type)
 
             const {type, name, parameters} = a
 
@@ -405,25 +405,26 @@ function type_params (params: S0.Parameter[]): Typed.Type[] {
     const paramtypes: Typed.Type[] = []
 
     for (let param of params) {
+        const inv_or_lit: 'literal' | 'invocation' = param.by_ref ? 'invocation':'literal'
         if (param.is_array) {
             let type: Typed.ArrayType | Typed.StringType = null;
             if (param.type == 'caracter' && param.dimensions.length == 1) {
-                type = new Typed.StringType(param.dimensions[0])
+                type = new Typed.StringType(param.dimensions[0], inv_or_lit)
             }
             else {
                 for (let i = param.dimensions.length - 1; i >= 0; i--) {
                     if (i == param.dimensions.length - 1) {
-                        type = new Typed.ArrayType(new Typed.AtomicType(param.type), param.dimensions[i])
+                        type = new Typed.ArrayType(inv_or_lit, new Typed.AtomicType(inv_or_lit, param.type), param.dimensions[i])
                     }
                     else {
-                        type = new Typed.ArrayType(type, param.dimensions[i])
+                        type = new Typed.ArrayType(inv_or_lit, type, param.dimensions[i])
                     }
                 }
             }
             paramtypes.push(type)
         }
         else {
-            paramtypes.push(new Typed.AtomicType(param.type))
+            paramtypes.push(new Typed.AtomicType(inv_or_lit, param.type))
         }
     }
 
@@ -574,7 +575,7 @@ function type_invocation (i: (S2.InvocationValue | S2.InvocationInfo), mn: strin
              * solo hay que calcular el tipo resultante y los tipos
              * de los indices.
              */
-            invocation_datatype = new Typed.AtomicType(i.datatype)
+            invocation_datatype = new Typed.AtomicType('invocation', i.datatype)
         }
         else {
             /**
@@ -586,14 +587,14 @@ function type_invocation (i: (S2.InvocationValue | S2.InvocationInfo), mn: strin
             for (let j = remaining_dimensions.length - 1; j >= 0; j--) {
                 if (j == remaining_dimensions.length - 1) {
                     if (i.datatype == 'caracter') {
-                        last_type = new Typed.StringType(remaining_dimensions[j])
+                        last_type = new Typed.StringType(remaining_dimensions[j], 'invocation')
                     }
                     else {
-                        last_type = new Typed.ArrayType(new Typed.AtomicType(i.datatype), remaining_dimensions[j])
+                        last_type = new Typed.ArrayType('invocation', new Typed.AtomicType('invocation', i.datatype), remaining_dimensions[j])
                     }
                 }
                 else {
-                    last_type = new Typed.ArrayType(last_type, remaining_dimensions[j])
+                    last_type = new Typed.ArrayType('invocation', last_type, remaining_dimensions[j])
                 }
             }
 
@@ -655,7 +656,7 @@ function type_invocation (i: (S2.InvocationValue | S2.InvocationInfo), mn: strin
             is_array,
             typings: {
                 indexes: [],
-                type: new Typed.AtomicType(datatype)
+                type: new Typed.AtomicType('invocation', datatype)
             }
         }
 
@@ -797,15 +798,15 @@ function plus_times (s: Typed.Type[], op: string): Failure<Typed.Error>|Success<
             case 'entero':
                 switch (b) {
                     case 'entero':
-                        s.push(new Typed.AtomicType('entero'))
+                        s.push(new Typed.AtomicType('literal', 'entero'))
                         break
                     case 'real':
-                        s.push(new Typed.AtomicType('real'))
+                        s.push(new Typed.AtomicType('literal', 'real'))
                         break
                 }
                 break
             case 'real':
-                s.push(new Typed.AtomicType('real'))
+                s.push(new Typed.AtomicType('literal', 'real'))
                 break
         }
 
@@ -835,7 +836,7 @@ function comparison (s: Typed.Type[], op: string): Failure<Errors.BadComparisonO
             return {error: true, result}
         }
         else {
-            s.push(new Typed.AtomicType('logico'))
+            s.push(new Typed.AtomicType('literal', 'logico'))
             return {error: false, result: s}
         }
     }

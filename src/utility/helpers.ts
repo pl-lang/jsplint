@@ -239,13 +239,13 @@ export function type_literal (l: S0.LiteralValue): Typed.Literal {
 
     switch (typeof l.value) {
         case 'boolean':
-            datatype = new Typed.AtomicType('logico')
+            datatype = new Typed.AtomicType('literal', 'logico')
             break
         case 'string':
-            datatype = (l.value as String).length > 1 ? new Typed.StringType((l.value as String).length):new Typed.AtomicType('caracter')
+            datatype = (l.value as String).length > 1 ? new Typed.StringType((l.value as String).length, 'literal'):new Typed.AtomicType('literal', 'caracter')
             break
         case 'number': {
-            datatype = (l.value as number) - Math.trunc(l.value as number) > 0 ? new Typed.AtomicType('real'):new Typed.AtomicType('entero')
+            datatype = (l.value as number) - Math.trunc(l.value as number) > 0 ? new Typed.AtomicType('literal', 'real'):new Typed.AtomicType('literal', 'entero')
             break
         }
     }

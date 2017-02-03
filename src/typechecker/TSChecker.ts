@@ -41,7 +41,7 @@ function check_statement (s: Typed.Statement): Errors.TypeError[] {
 function check_simple_loop (l: Typed.While | Typed.Until): Errors.TypeError[] {
     let errors: Errors.TypeError[] = []
 
-    if (!types_are_equal(l.typings.condition, new Typed.AtomicType('logico'))) {
+    if (!types_are_equal(l.typings.condition, new Typed.AtomicType('literal', 'logico'))) {
         const error: Errors.BadCondition = {
             reason: 'bad-condition',
             where: 'typechecker',
@@ -71,7 +71,7 @@ function check_for (f: Typed.For): Errors.TypeError[] {
         errors = errors.concat(init_report)
     }
 
-    if (!types_are_equal(f.counter_init.typings.left, new Typed.AtomicType('entero'))) {
+    if (!types_are_equal(f.counter_init.typings.left, new Typed.AtomicType('literal', 'entero'))) {
         const error: Errors.BadCounter = {
             reason: '@for-bad-counter',
             where: 'typechecker',
@@ -81,7 +81,7 @@ function check_for (f: Typed.For): Errors.TypeError[] {
         errors.push(error)
     }
 
-    if (!types_are_equal(f.typings.init_value, new Typed.AtomicType('entero'))) {
+    if (!types_are_equal(f.typings.init_value, new Typed.AtomicType('literal', 'entero'))) {
         const error: Errors.BadInitValue = {
             reason: '@for-bad-init',
             where: 'typechecker',
@@ -91,7 +91,7 @@ function check_for (f: Typed.For): Errors.TypeError[] {
         errors.push(error)
     }
 
-    if (!types_are_equal(f.typings.last_value, new Typed.AtomicType('entero'))) {
+    if (!types_are_equal(f.typings.last_value, new Typed.AtomicType('literal', 'entero'))) {
         const error: Errors.BadLastValue = {
             reason: '@for-bad-last',
             where: 'typechecker',
@@ -132,7 +132,7 @@ function check_return (r: Typed.Return): Errors.TypeError[] {
 function check_if (i: Typed.If): Errors.TypeError[] {
     let errors: Errors.TypeError[] = []
 
-    if (!types_are_equal(i.typings.condition, new Typed.AtomicType('logico'))) {
+    if (!types_are_equal(i.typings.condition, new Typed.AtomicType('literal', 'logico'))) {
         const error: Errors.BadCondition = {
             reason: 'bad-condition',
             where: 'typechecker',
@@ -202,20 +202,58 @@ function check_call (c: Typed.Call): Failure<Errors.TypeError[]>|Success<Typed.A
              * que la variable a la cual se asigna, a menos que la
              * expresion sea de tipo entero y la variable de tipo real.
              */
-            const param = c.typings.parameters[arg.index]
-            const cond_a = param.kind == 'atomic' || arg.type.kind == 'atomic'
-            const cond_b = (param as Typed.AtomicType).typename == 'real' && (arg.type as Typed.AtomicType).typename == 'entero'
+            const param_type = c.typings.parameters[arg.index]
+            const param = c.parameters[arg.index]
+            const cond_a = param_type.kind == 'atomic' || arg.type.kind == 'atomic'
+            const cond_b = (param_type as Typed.AtomicType).typename == 'real' && (arg.type as Typed.AtomicType).typename == 'entero'
 
-            if (!(types_are_equal(arg.type, param) || (cond_a && cond_b))) {
+            if (!(types_are_equal(arg.type, param_type) || (cond_a && cond_b))) {
                 const error: Errors.IncompatibleArgument = {
                     reason: '@call-incompatible-argument',
                     name: c.name,
                     where: 'typechecker',
-                    expected: stringify(param),
+                    expected: stringify(param_type),
                     received: stringify(arg.type),
                     index: arg.index + 1
                 }
                 errors.push(error)
+            }
+
+            /**
+             * Si el parametro se toma por referencia hay que revisar que este recibiendo como argumento
+             * la invocacion de una variable/arreglo
+             */
+            if (param.by_ref) {
+                if (arg.type.represents != 'invocation') {
+                    /**
+                     * ERROR: se esta recibiendo un valor literal en un parametro por referencia
+                     */
+                    const error: Errors.BadRefArg = {
+                        reason: '@call-bad-ref-arg',
+                        where: 'typechecker',
+                        /**
+                         * Tipo del parametro en cuestion
+                         */
+                        param_expected: stringify(param_type),
+                        /**
+                         * Nombre del parametro en cuestion
+                         */
+                        param_name: param.name,
+                        /**
+                         * Nombre del modulo al que pertenece
+                         */
+                        module: c.name,
+                        /**
+                         * Tipo del valor literal recibido como argumento
+                         */
+                        received: stringify(arg.type),
+                        /**
+                         * Indice (en la lista de parametros del modulo)
+                         */
+                        index: arg.index,
+                    }
+                    errors.push(error)
+                }
             }
         }
 
@@ -252,7 +290,14 @@ function check_io (c: Typed.Call): Failure<Errors.TypeError[]>|Success<Typed.Ato
                 received: stringify(type),
                 where: 'typechecker'
             }
-
+            errors.push(e)
+        }
+        else if (c.name == 'leer' && type.represents != 'invocation') {
+            const e: Errors.BadReadArg = {
+                reason: '@read-bad-arg',
+                where: 'typechecker',
+                index: i
+            }
             errors.push(e)
         }
     }
@@ -261,7 +306,7 @@ function check_io (c: Typed.Call): Failure<Errors.TypeError[]>|Success<Typed.Ato
         return {error: true, result: errors}
     }
     else {
-        return {error: false, result: new Typed.AtomicType('ninguno')}
+        return {error: false, result: new Typed.AtomicType('literal', 'ninguno')}
     }
 }
 
@@ -325,7 +370,7 @@ function check_assignment (a: Typed.Assignment): Errors.TypeError[] {
  */
 function check_invocation(i: Typed.Invocation): Failure<Errors.TypeError[]>|Success<Typed.Type> {
     let errors: Errors.TypeError[] = []
-    const entero = new Typed.AtomicType('entero')
+    const entero = new Typed.AtomicType('literal', 'entero')
     let j = 0;
 
     for (let index_type of i.typings.indexes) {
