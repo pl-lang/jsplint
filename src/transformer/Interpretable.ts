@@ -390,7 +390,7 @@ function transform_read (rc: Typed.Call, module_name: string): S3.Statement {
         /**
          * El type assert es correcto porque esta garantizado por
          * el TypeChecker que los argumentos de un llamado a leer
-         * son todos Invocation. O va a estar garantizado...
+         * son todos Invocation.
          */
         current_var = rc.args[i][0] as Typed.Invocation
 
@@ -550,77 +550,96 @@ function transform_statement (statement: Typed.Statement, module_name: string) :
 }
 
 function transform_assignment (a: Typed.Assignment, module_name: string) : S3.Statement {
-    /**
-     * Primer enunciado de la evaluacion de la expresion que se debe asignar
-     */
-    const entry_point = transform_expression(a.right, module_name)
-
-    /**
-     * Este enunciado es el que finalmente pone el valor de la expresion en la
-     * pila. Seguido de este va el enunciado de asignacion.
-     */
-    let last_statement = S3.get_last(entry_point)
-    
     if (a.left.dimensions.length > 0 && a.left.indexes.length < a.left.dimensions.length) {
         /**
          * Asignacion vectorial: copiar los contenidos de un vector a otro o asignar
          * una cadena a un vector.
          */
 
-        if (a.typings.left instanceof Typed.StringType && a.typings.right instanceof Typed.StringType) {
+        if (a.typings.left instanceof Typed.StringType && a.typings.right instanceof Typed.StringType && a.typings.right.represents == 'literal') {
             /**
-             * Asignar una cadena a un vector
+             * Enunciados que apilan la cadena
              */
-            const assignment = new S3.AssignString(module_name, a.left.name, a.typings.left.length, a.left.indexes.length)
-            last_statement.exit_point = assignment
-            return entry_point
+            const stack_string = transform_expression(a.right, module_name)
+            S3.get_last(stack_string).exit_point = new S3.AssignString(module_name, a.left.name, a.typings.left.length, a.left.indexes.length)
+            return stack_string
         }
         else {
             /**
-             * tamaño de las dimensiones cuyos indices van a ir variando
+             * Copiar contenidos de un vector a otro
              */
-            const missing_indexes = drop(a.left.indexes.length, a.left.dimensions)
-
-            const smallest_index = arr_counter(missing_indexes.length, 1)
-            
-            let first_index: S3.Statement
-            let last: S3.Statement
-            for (let i = arr_counter(missing_indexes.length, 1); arr_minor(i, missing_indexes) || arr_equal(i, missing_indexes); arr_counter_inc(i, missing_indexes, 1)) {
-                /**
-                 * Los indices que no fueron proprocionados seran completados con los del
-                 * contador `i`
-                 */
-                const final_indexes = a.left.indexes.concat(i.map(index => [create_literal_number_exp(index)]))
-
-                for (let j = 0; j < final_indexes.length; j++) {
-                    const index_exp = transform_expression(final_indexes[j], module_name)
-
-                    /**
-                     * Si esta es la primer iteracion de ambos bucles...
-                     */
-                    if (arr_equal(i, smallest_index) && j == 0) {
-                        first_index = index_exp
-                    }
-                    else {
-                        last.exit_point = index_exp
-                    }
-
-                    last = S3.get_last(index_exp)
+            /**
+             * Apilar indices del vector que recibe los datos
+             */
+            let entry: S3.Statement = null
+            let last: S3.Statement = null
+            let entry_initd = false
+            for (let i = 0; i < a.left.indexes.length; i++) {
+                if (i == 0) {
+                    entry = transform_expression(a.left.indexes[i], module_name)
+                    last = S3.get_last(entry)
+                    entry_initd = true
                 }
-
-                const assignment = new S3.AssignV(module_name, final_indexes.length, a.left.dimensions, a.left.name)
-
-                last.exit_point = assignment
-
-                last = assignment
+                else {
+                    const next = transform_expression(a.left.indexes[i], module_name)
+                    last.exit_point = next
+                    last = S3.get_last(next)
+                }
             }
 
-            last_statement.exit_point = first_index
+            /**
+             * Apilar indices del vector del cual se copian los datos
+             * Aclaracion el type assert para a.right es correcto porque ya se verifico
+             * (en TSChecker) que el primer y unico componente de esa expresion sea una
+             * invocacion de un vector.
+             */
+            for (let i = 0; i < (a.right[0] as Typed.Invocation).indexes.length; i++) {
+                if (!entry_initd) {
+                    entry = transform_expression((a.right[0] as Typed.Invocation).indexes[i], module_name)
+                    last = S3.get_last(entry)
+                }
+                else {
+                    const next = transform_expression((a.right[0] as Typed.Invocation).indexes[i], module_name)
+                    last.exit_point = next
+                    last = S3.get_last(next)
+                }
+            }
 
-            return entry_point
+            const target: S3.VectorData = {
+                name: a.left.name,
+                dimensions: a.left.dimensions,
+                indexes: a.left.indexes.length
+            }
+
+            const source: S3.VectorData = {
+                name: (a.right[0] as Typed.Invocation).name,
+                dimensions: (a.right[0] as Typed.Invocation).dimensions,
+                indexes: (a.right[0] as Typed.Invocation).indexes.length
+            }
+
+            const copy_statement = new S3.CopyVec(module_name, target, source)
+
+            if (!entry_initd) {
+                return copy_statement
+            }
+            else {
+                last.exit_point = copy_statement
+
+                return entry
+            }
         }
     }
     else {
+        /**
+         * Primer enunciado de la evaluacion de la expresion que se debe asignar
+         */
+        const entry_point = transform_expression(a.right, module_name)
+
+        /**
+         * Ultimo enunciado de evaluacion de la expresion
+         */
+        let last_statement = S3.get_last(entry_point)
+
         /**
          * Asignacion normal: hay que copiar un valor a una variable (o una celda de un vector).
          * Para hacer eso hay que poner la expresion que se va a asignar en la pila y luego hacer

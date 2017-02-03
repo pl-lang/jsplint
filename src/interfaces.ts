@@ -776,7 +776,8 @@ export namespace S3 {
     Return,
     Concat,
     AssignString,
-    Alias
+    Alias,
+    CopyVec
   }
 
   export class BaseStatement {
@@ -803,6 +804,35 @@ export namespace S3 {
 
     get exit_point(): Statement {
       return this._exit_point
+    }
+  }
+
+  export interface VectorData {
+      name: string
+      indexes: number
+      dimensions: number[]
+  }
+
+  export class CopyVec extends BaseStatement {
+    readonly kind: StatementKinds.CopyVec
+    /**
+     * datos del vector que recibe los datos
+     */
+    readonly target: VectorData
+    /**
+     * datos del vector del cual se originan los datos
+     */
+    readonly source: VectorData
+
+    /**
+     * target datos del vector que recibe los datos;
+     * source datos del vector del cual se copian los datos;
+     */
+    constructor (owner: string, target: VectorData, source: VectorData) {
+      super(owner)
+      this.kind = StatementKinds.CopyVec
+      this.target = target
+      this.source = source
     }
   }
 
@@ -1030,7 +1060,8 @@ export namespace S3 {
     | Return
     | Concat
     | AssignString
-    | Alias;
+    | Alias
+    | CopyVec;
 
 }
 

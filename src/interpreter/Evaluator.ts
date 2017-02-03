@@ -2,6 +2,7 @@
 
 import {Failure, Success, S1, S3} from '../interfaces'
 import {Value, Errors, Read, Write, NullAction, Paused, SuccessfulReturn} from '../interfaces'
+import {drop} from '../utility/helpers'
 
 /*
   Un evaluador sirve para ejecutar las acciones/enunciados de un modulo.
@@ -254,7 +255,72 @@ export class Evaluator {
           return this.assign_string(s)
         case S3.StatementKinds.Alias:
           return this.alias(s)
+        case S3.StatementKinds.CopyVec:
+          return this.copy_vec(s)
     }
+  }
+
+  private pad<A>(a: A[], padder: A, desired_length: number): A[] {
+    let padded_copy: A[] = new Array(desired_length)
+
+    for (let i = 0; i < desired_length; i++) {
+      if (i < a.length) {
+        padded_copy[i] = a[i]
+      }
+      else {
+        padded_copy[i] = padder
+      }
+    }
+    
+    return padded_copy
+  }
+
+  private copy_vec(s: S3.CopyVec): Success<NullAction> {
+    /**
+     * Indices provistos para el vector del cual se copian los datos
+     */
+    const src_provided_indexes = this.pop_indexes(s.source.indexes)
+
+    /**
+     * Indices provistos para el vector que recibe los datos
+     */
+    const tgt_provided_indexes = this.pop_indexes(s.target.indexes)
+
+    /**
+     * Indice inicial: indices provistos rellenados con 1 hasta que haya tantos como dimensiones
+     * Aclaracion: se resta 1 a todos para que sean indices para que arranquen en 0 en lugar de 1
+     */
+    const tgt_start_indexes = this.pad(tgt_provided_indexes, 1, s.target.dimensions.length).map(i => i - 1)
+
+    /**
+     * Indice final: indices provistos rellenados con el tamaño de las dimensiones que no tienen indice
+     */
+    const tgt_end_indexes = [...tgt_provided_indexes, ...drop(s.target.indexes, s.target.dimensions)].map(i => i - 1)
+
+    /**
+     * Los valores que me interesan
+     */
+    const tgt_start = this.calculate_index(tgt_start_indexes, s.target.dimensions)
+    const tgt_end = this.calculate_index(tgt_end_indexes, s.target.dimensions)
+
+    const src_start_indexes = this.pad(src_provided_indexes, 1, s.source.dimensions.length).map(i => i - 1)
+
+    // const src_end_indexes = [...src_provided_indexes, ...drop(s.source.indexes, s.source.dimensions)].map(i => i - 1)
+
+    // const src_end = this.calculate_index(src_end_indexes, s.source.dimensions)
+
+    const src_start = this.calculate_index(src_start_indexes, s.source.dimensions)
+
+    const tgt_var = this.get_var(s.target.name) as S1.ArrayVariable
+    const src_var = this.get_var(s.source.name) as S1.ArrayVariable
+
+    let counter = 0
+    while (tgt_start + counter <= tgt_end) {
+      tgt_var.values[tgt_start + counter] = src_var.values[src_start + counter]
+      counter++
+    }
+
+    return {error: false, result: {done: false, action: 'none'}}
   }
 
   private has_alias (name: string, module_name: string): Failure<string>|Success<Alias> {
