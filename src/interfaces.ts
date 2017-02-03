@@ -14,7 +14,7 @@ export interface Success<A> {
 export namespace Errors {
   export type TypeError = IncompatibleArgument
   | IncompatibleTypes
-  | BadIOArgument
+  | BadWriteArg
   | BadCondition
   | BadCounter
   | BadInitValue
@@ -186,11 +186,12 @@ export namespace Errors {
     index: number
   }
 
-  export interface BadIOArgument extends Base {
-    reason: 'bad-io-argument'
+  export interface BadWriteArg extends Base {
+    reason: 'bad-write-arg'
     where: 'typechecker'
     received: string
     index: number
+    name: string
   }
 
   export interface OutOfBounds extends Base {

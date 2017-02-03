@@ -284,11 +284,12 @@ function check_io (c: Typed.Call): Failure<Errors.TypeError[]>|Success<Typed.Ato
         const cond_b = type.kind != 'atomic' && !(type instanceof Typed.StringType)
 
         if (cond_a || cond_b) {
-            const e: Errors.BadIOArgument = {
+            const e: Errors.BadWriteArg = {
                 index: i,
-                reason: 'bad-io-argument',
+                reason: 'bad-write-arg',
                 received: stringify(type),
-                where: 'typechecker'
+                where: 'typechecker',
+                name: c.name
             }
             errors.push(e)
         }
