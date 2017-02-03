@@ -22,7 +22,9 @@ export namespace Errors {
   | BadReturn
   | WrongArgAmount
   | BadIndex
-  | LongString;
+  | LongString
+  | BadRefArg
+  | BadReadArg;
 
   export interface Base {
     reason: string
@@ -31,6 +33,47 @@ export namespace Errors {
       column: number
       line: number
     }
+  }
+
+  /**
+   * Emitido cuando se pasa un literal a 'leer'
+   */
+  export interface BadReadArg extends Base {
+    reason: '@read-bad-arg'
+    where: 'typechecker'
+    /**
+     * Indice del argumento literal que de esta llamada
+     */
+    index: number
+  }
+
+  /**
+   * Emitido cuando se llama un modulo con un literal como
+   * parametro por referencia
+   */
+  export interface BadRefArg extends Base {
+    reason: '@call-bad-ref-arg'
+    where: 'typechecker'
+    /**
+     * Tipo del parametro en cuestion
+     */
+    param_expected: string
+    /**
+     * Nombre del parametro en cuestion
+     */
+    param_name: string
+    /**
+     * Nombre del modulo al que pertenece
+     */
+    module: string
+    /**
+     * Tipo del valor literal recibido como argumento
+     */
+    received: string
+    /**
+     * Indice (en la lista de parametros del modulo)
+     */
+    index: number
   }
 
   export interface LongString extends Base {
@@ -727,6 +770,7 @@ export namespace S3 {
     protected _exit_point: Statement
     protected exit_set: boolean
     exit_point: Statement
+    readonly owner: string
 
     constructor()
   }
@@ -739,7 +783,7 @@ export namespace S3 {
     readonly dimensions: number[]
     readonly module_name: string
 
-    constructor (varname: string, indexes: number, dimensions: number[], alias: string, module_name: string)
+    constructor (owner: string, varname: string, indexes: number, dimensions: number[], alias: string, module_name: string)
   }
 
   export class AssignString extends BaseStatement {
@@ -748,20 +792,20 @@ export namespace S3 {
     readonly varname: string
     readonly indexes: number
 
-    constructor (varname: string, length: number, indexes: number)
+    constructor (owner: string, varname: string, length: number, indexes: number)
   }
 
   export class Concat extends BaseStatement {
     readonly kind: StatementKinds.Concat
     readonly length: number
 
-    constructor (length: number)
+    constructor (owner: string, length: number)
   }
 
   class Return extends BaseStatement {
     readonly kind: StatementKinds.Return
 
-    constructor()
+    constructor(owner:string, )
   }
 
   class UserModuleCall extends BaseStatement {
@@ -769,7 +813,7 @@ export namespace S3 {
     readonly name: string
     readonly total_args: number
 
-    constructor(name: string, total_args: number)
+    constructor(owner:string, name: string, total_args: number)
   }
 
   class ReadCall extends BaseStatement {
@@ -782,21 +826,21 @@ export namespace S3 {
      */
     readonly type: Typed.AtomicType | Typed.StringType
 
-    constructor(varname: string)
+    constructor(owner:string, varname: string)
   }
 
   class WriteCall extends BaseStatement {
     readonly name: 'escribir'
     readonly kind: StatementKinds.WriteCall
 
-    constructor()
+    constructor(owner:string, )
   }
 
   class Assign extends BaseStatement {
     readonly kind: StatementKinds.Assign
     readonly varname: string
 
-    constructor(varname: string)
+    constructor(owner:string, varname: string)
   }
 
   class AssignV extends BaseStatement {
@@ -805,14 +849,14 @@ export namespace S3 {
     readonly dimensions: number[]
     readonly varname: string
 
-    constructor(total_indexes: number, dimensions: number[], varname: string)
+    constructor(owner:string, total_indexes: number, dimensions: number[], varname: string)
   }
 
   class Get extends BaseStatement {
     readonly kind: StatementKinds.Get
     readonly varname: string
 
-    constructor(varname: string)
+    constructor(owner:string, varname: string)
   }
 
   class GetV extends BaseStatement {
@@ -821,40 +865,40 @@ export namespace S3 {
     readonly dimensions: number[]
     readonly varname: string
 
-    constructor(total_indexes: number, dimensions: number, varname: string)
+    constructor(owner:string, total_indexes: number, dimensions: number, varname: string)
   }
 
   class Push extends BaseStatement {
     readonly kind: StatementKinds.Push
     readonly value: number | boolean | string
 
-    constructor(value: number | boolean | string)
+    constructor(owner:string, value: number | boolean | string)
   }
 
   class Pop extends BaseStatement {
     readonly kind: StatementKinds.Pop
 
-    constructor()
+    constructor(owner:string, )
   }
 
   class Operation extends BaseStatement {
     readonly kind: OperationKinds
 
-    constructor(kind: OperationKinds)
+    constructor(owner:string, kind: OperationKinds)
   }
 
   class While extends BaseStatement {
     readonly kind: StatementKinds.While
     readonly entry_point: Statement
 
-    constructor(entry_point: Statement)
+    constructor(owner:string, entry_point: Statement)
   }
 
   class Until extends BaseStatement {
     readonly kind: StatementKinds.Until
     readonly entry_point: Statement
 
-    constructor(entry_point: Statement)
+    constructor(owner:string, entry_point: Statement)
   }
 
   class If extends BaseStatement {
@@ -863,7 +907,7 @@ export namespace S3 {
     readonly false_branch_entry: Statement
     exit_point: Statement
 
-    constructor(true_branch_entry: Statement, false_branch_entry: Statement)
+    constructor(owner:string, true_branch_entry: Statement, false_branch_entry: Statement)
   }
 
   export type OperationKinds = MathOps | ComparisonOps | LogicOps
@@ -1027,6 +1071,11 @@ export namespace Typed {
   export interface Type {
     type: 'type'
     kind: 'atomic' | 'array'
+    /**
+     * Esta propiedad indica si este tipo pertenece a un valor
+     * literal o a un valor invocado.
+     */
+    represents: 'literal' | 'invocation'
   }
 
   export interface Operator {
@@ -1035,18 +1084,20 @@ export namespace Typed {
   }
 
   export class ArrayType implements Type {
-    type: 'type'
-    kind: 'array'
-    length: number
-    cell_type: Type
+    readonly type: 'type'
+    readonly kind: 'array'
+    readonly length: number
+    readonly cell_type: Type
+    readonly represents: 'literal' | 'invocation'
 
     constructor(element_type: Type, length: number)
   }
 
   export class AtomicType implements Type {
-    type: 'type'
-    kind: 'atomic'
-    typename: TypeNameString
+    readonly type: 'type'
+    readonly kind: 'atomic'
+    readonly typename: TypeNameString
+    readonly represents: 'literal' | 'invocation'
 
     constructor(tn: TypeNameString)
   }

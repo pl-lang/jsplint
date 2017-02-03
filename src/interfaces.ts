@@ -22,7 +22,9 @@ export namespace Errors {
   | BadReturn
   | WrongArgAmount
   | BadIndex
-  | LongString;
+  | LongString
+  | BadRefArg
+  | BadReadArg;
 
   export interface Base {
     reason: string
@@ -31,6 +33,47 @@ export namespace Errors {
       column: number
       line: number
     }
+  }
+
+  /**
+   * Emitido cuando se pasa un literal a 'leer'
+   */
+  export interface BadReadArg extends Base {
+    reason: '@read-bad-arg'
+    where: 'typechecker'
+    /**
+     * Indice del argumento literal que de esta llamada
+     */
+    index: number
+  }
+
+  /**
+   * Emitido cuando se llama un modulo con un literal como
+   * parametro por referencia
+   */
+  export interface BadRefArg extends Base {
+    reason: '@call-bad-ref-arg'
+    where: 'typechecker'
+    /**
+     * Tipo del parametro en cuestion
+     */
+    param_expected: string
+    /**
+     * Nombre del parametro en cuestion
+     */
+    param_name: string
+    /**
+     * Nombre del modulo al que pertenece
+     */
+    module: string
+    /**
+     * Tipo del valor literal recibido como argumento
+     */
+    received: string
+    /**
+     * Indice (en la lista de parametros del modulo)
+     */
+    index: number
   }
 
   export interface LongString extends Base {
@@ -739,8 +782,10 @@ export namespace S3 {
     readonly kind: StatementKinds
     protected _exit_point: Statement
     protected exit_set: boolean
+    readonly owner: string
 
-    constructor() {
+    constructor(owner: string) {
+      this.owner = owner
       this._exit_point = null
       this.exit_set = false
     }
@@ -768,8 +813,8 @@ export namespace S3 {
     readonly dimensions: number[]
     readonly module_name: string
 
-    constructor (varname: string, indexes: number, dimensions: number[], alias: string, module_name: string) {
-      super()
+    constructor (owner: string, varname: string, indexes: number, dimensions: number[], alias: string, module_name: string) {
+      super(owner)
       this.kind = StatementKinds.Alias
       this.varname = varname
       this.var_indexes = indexes
@@ -785,8 +830,8 @@ export namespace S3 {
     readonly varname: string
     readonly indexes: number
 
-    constructor (varname: string, length: number, indexes: number) {
-      super()
+    constructor (owner: string, varname: string, length: number, indexes: number) {
+      super(owner)
       this.kind = StatementKinds.AssignString
       this.varname = varname
       this.length = length
@@ -798,8 +843,8 @@ export namespace S3 {
     readonly kind: StatementKinds.Concat
     readonly length: number
 
-    constructor (length: number) {
-      super()
+    constructor (owner: string, length: number) {
+      super(owner)
       this.kind = StatementKinds.Concat
       this.length = length
     }
@@ -808,8 +853,8 @@ export namespace S3 {
   export class Return extends BaseStatement {
     readonly kind: StatementKinds.Return
 
-    constructor() {
-      super()
+    constructor(owner: string) {
+      super(owner)
       this.kind = StatementKinds.Return
     }
   }
@@ -817,8 +862,8 @@ export namespace S3 {
   export class UserModuleCall extends BaseStatement {
     readonly kind: StatementKinds.UserModuleCall
 
-    constructor(readonly name: string, readonly total_args: number) {
-      super()
+    constructor(owner: string, readonly name: string, readonly total_args: number) {
+      super(owner)
       this.kind = StatementKinds.UserModuleCall
     }
   }
@@ -832,8 +877,8 @@ export namespace S3 {
      */
     readonly type: Typed.AtomicType | Typed.StringType
 
-    constructor(readonly varname: string, type: Typed.AtomicType | Typed.StringType) {
-      super()
+    constructor(owner: string, readonly varname: string, type: Typed.AtomicType | Typed.StringType) {
+      super(owner)
       this.kind = StatementKinds.ReadCall
       this.name = 'leer'
       this.type = type
@@ -844,8 +889,8 @@ export namespace S3 {
     readonly name: 'escribir'
     readonly kind: StatementKinds.WriteCall
 
-    constructor() {
-      super()
+    constructor(owner: string) {
+      super(owner)
       this.kind = StatementKinds.WriteCall
       this.name = 'escribir'
     }
@@ -854,8 +899,8 @@ export namespace S3 {
   export class Assign extends BaseStatement {
     readonly kind: StatementKinds.Assign
 
-    constructor(readonly varname: string) {
-      super()
+    constructor(owner: string, readonly varname: string) {
+      super(owner)
       this.kind = StatementKinds.Assign
     }
   }
@@ -863,8 +908,8 @@ export namespace S3 {
   export class AssignV extends BaseStatement {
     readonly kind: StatementKinds.AssignV
 
-    constructor(readonly total_indexes: number, readonly dimensions: number[], readonly varname: string) {
-      super()
+    constructor(owner: string, readonly total_indexes: number, readonly dimensions: number[], readonly varname: string) {
+      super(owner)
       this.kind = StatementKinds.AssignV
     }
   }
@@ -872,8 +917,8 @@ export namespace S3 {
   export class Get extends BaseStatement {
     readonly kind: StatementKinds.Get
 
-    constructor(readonly varname: string) {
-      super()
+    constructor(owner: string, readonly varname: string) {
+      super(owner)
       this.kind = StatementKinds.Get
     }
   }
@@ -881,8 +926,8 @@ export namespace S3 {
   export class GetV extends BaseStatement {
     readonly kind: StatementKinds.GetV
 
-    constructor(readonly total_indexes: number, readonly dimensions: number[], readonly varname: string) {
-      super()
+    constructor(owner: string, readonly total_indexes: number, readonly dimensions: number[], readonly varname: string) {
+      super(owner)
       this.kind = StatementKinds.GetV
     }
   }
@@ -890,8 +935,8 @@ export namespace S3 {
   export class Push extends BaseStatement {
     readonly kind: StatementKinds.Push
 
-    constructor(readonly value: number | boolean | string) {
-      super()
+    constructor(owner: string, readonly value: number | boolean | string) {
+      super(owner)
       this.kind = StatementKinds.Push
     }
   }
@@ -899,24 +944,24 @@ export namespace S3 {
   export class Pop extends BaseStatement {
     readonly kind: StatementKinds.Pop
 
-    constructor() {
-      super()
+    constructor(owner: string) {
+      super(owner)
       this.kind = StatementKinds.Pop
     }
   }
 
   export class Operation extends BaseStatement {
 
-    constructor(readonly kind: OperationKinds) {
-      super()
+    constructor(owner: string, readonly kind: OperationKinds) {
+      super(owner)
     }
   }
 
   export class While extends BaseStatement {
     readonly kind: StatementKinds.While
 
-    constructor(readonly entry_point: Statement) {
-      super()
+    constructor(owner: string, readonly entry_point: Statement) {
+      super(owner)
       this.kind = StatementKinds.While
     }
   }
@@ -924,8 +969,8 @@ export namespace S3 {
   export class Until extends BaseStatement {
     readonly kind: StatementKinds.Until
 
-    constructor(readonly entry_point: Statement) {
-      super()
+    constructor(owner: string, readonly entry_point: Statement) {
+      super(owner)
       this.kind = StatementKinds.Until
     }
   }
@@ -933,8 +978,8 @@ export namespace S3 {
   export class If extends BaseStatement {
     readonly kind: StatementKinds.If
 
-    constructor(readonly true_branch_entry: Statement, readonly false_branch_entry: Statement) {
-      super()
+    constructor(owner: string, readonly true_branch_entry: Statement, readonly false_branch_entry: Statement) {
+      super(owner)
       this.kind = StatementKinds.If
     }
 
@@ -1130,6 +1175,11 @@ export namespace Typed {
   export interface Type {
     type: 'type'
     kind: 'atomic' | 'array'
+    /**
+     * Esta propiedad indica si este tipo pertenece a un valor
+     * literal o a un valor invocado.
+     */
+    represents: 'literal' | 'invocation'
   }
 
   export interface Operator {
@@ -1138,34 +1188,38 @@ export namespace Typed {
   }
 
   export class ArrayType implements Type {
-    type: 'type'
-    kind: 'array'
-    length: number
-    cell_type: Type
+    readonly type: 'type'
+    readonly kind: 'array'
+    readonly length: number
+    readonly cell_type: Type
+    readonly represents: 'literal' | 'invocation'
 
-    constructor(element_type: Type, length: number) {
+    constructor(represents: 'literal' | 'invocation', element_type: Type, length: number) {
       this.kind = 'array'
       this.type = 'type'
       this.length = length
       this.cell_type = element_type
+      this.represents = represents
     }
   }
 
   export class AtomicType implements Type {
-    type: 'type'
-    kind: 'atomic'
-    typename: TypeNameString
+    readonly type: 'type'
+    readonly kind: 'atomic'
+    readonly typename: TypeNameString
+    readonly represents: 'literal' | 'invocation'
 
-    constructor(tn: TypeNameString) {
+    constructor(represents: 'literal' | 'invocation', tn: TypeNameString) {
       this.kind = 'atomic'
       this.type = 'type'
       this.typename = tn
+      this.represents = represents
     }
   }
 
   export class StringType extends ArrayType {
-    constructor(length: number) {
-      super(new AtomicType('caracter'), length)
+    constructor(length: number, represents: 'literal' | 'invocation') {
+      super(represents, new AtomicType(represents, 'caracter'), length)
     }
   }
 }

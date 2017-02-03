@@ -15,10 +15,25 @@ import {Value, Errors, Read, Write, NullAction, Paused, SuccessfulReturn} from '
 */
 
 export interface Alias {
+  /**
+   * Nombre de la variable a la que este alias hace referencia
+   */
   varname: string
+  /**
+   * Indices utilizados al interactuar con este alias
+   */
   indexes: number[]
+  /**
+   * "Alias" de la variable referenciada
+   */
   local_name: string
+  /**
+   * Dimensiones de la variable referenciada
+   */
   dimensions: number[]
+  /**
+   * Modulo al que este alias pertenece
+   */
   module: string
 }
 
@@ -242,9 +257,9 @@ export class Evaluator {
     }
   }
 
-  private has_alias (name: string): Failure<string>|Success<Alias> {
+  private has_alias (name: string, module_name: string): Failure<string>|Success<Alias> {
     for (let alias of this.aliases) {
-      if (alias.local_name  == name) {
+      if (alias.local_name  == name && alias.module == module_name) {
         return {error: false, result: alias}
       }
     }
@@ -333,7 +348,7 @@ export class Evaluator {
   }
 
   private assign (s: S3.Assign) : Success<NullAction> {
-    const alias_found = this.has_alias(s.varname)
+    const alias_found = this.has_alias(s.varname, s.owner)
 
     /**
      * Si no hay alias esta es una asignacion normal
@@ -362,7 +377,7 @@ export class Evaluator {
   }
 
   private get_value (s: S3.Get) : Success<NullAction> {
-    const alias_found = this.has_alias(s.varname)
+    const alias_found = this.has_alias(s.varname, s.owner)
 
     /**
      * Si no hay alias solo hay que apilar el valor de la variable
@@ -392,68 +407,142 @@ export class Evaluator {
   }
 
   private assignv (s: S3.AssignV) : Failure<Errors.OutOfBounds> | Success<NullAction> {
-    const indexes = this.pop_indexes(s.total_indexes)
-    
-    if (this.is_whithin_bounds(indexes, s.dimensions)) {
-      /**
-       * Calcular indice final y asignar el valor a la variable.
-       * 
-       * Nota: hay que restarle 1 a cada indice para que inicien en 0
-       * (como los indices de JS) y no en 1
-       */
-      const index = this.calculate_index(indexes.map(i => i-1), s.dimensions)
-      const value = this.state.value_stack.pop()
-      const variable = this.get_var(s.varname) as S1.ArrayVariable
-      variable.values[index] = value
+    const alias_found = this.has_alias(s.varname, s.owner)
 
-      return {error:false, result: {action: 'none', done: false}}
+    if (alias_found.error) {
+      const indexes = this.pop_indexes(s.total_indexes)
+      
+      if (this.is_whithin_bounds(indexes, s.dimensions)) {
+        /**
+         * Calcular indice final y asignar el valor a la variable.
+         * 
+         * Nota: hay que restarle 1 a cada indice para que inicien en 0
+         * (como los indices de JS) y no en 1
+         */
+        const index = this.calculate_index(indexes.map(i => i-1), s.dimensions)
+        const value = this.state.value_stack.pop()
+        const variable = this.get_var(s.varname) as S1.ArrayVariable
+        variable.values[index] = value
+
+        return {error:false, result: {action: 'none', done: false}}
+      }
+      else {
+        const bad_index = this.get_bad_index(indexes, s.dimensions)
+
+        const result: Errors.OutOfBounds = {
+          bad_index: bad_index,
+          dimensions: s.dimensions,
+          name: s.varname,
+          reason: 'index-out-of-bounds',
+          where: 'evaluator',
+          done: true
+        }
+
+        return {error: true, result}
+      }
     }
     else {
-      const bad_index = this.get_bad_index(indexes, s.dimensions)
+      const alias = alias_found.result as Alias
 
-      const result: Errors.OutOfBounds = {
-        bad_index: bad_index,
-        dimensions: s.dimensions,
-        name: s.varname,
-        reason: 'index-out-of-bounds',
-        where: 'evaluator',
-        done: true
+      /**
+       * Los indices usados para asignar el valor al alias (al parametro tomado por referencia)
+       */
+      const partial_indexes = this.pop_indexes(s.total_indexes)
+
+      const indexes: number[] = [...alias.indexes, ...partial_indexes]
+      const dimensions = alias.dimensions
+
+      if (this.is_whithin_bounds(indexes, dimensions)) {
+        const index = this.calculate_index(indexes.map(i => i - 1), dimensions)
+        const variable = this.get_var(alias.varname) as S1.ArrayVariable
+        variable.values[index] = this.state.value_stack.pop()
+
+        return {error: false, result: {action: 'none', done: false}}
       }
+      else {
+        const bad_index = this.get_bad_index(partial_indexes, s.dimensions)
 
-      return {error: true, result}
+        const result: Errors.OutOfBounds = {
+          bad_index: bad_index,
+          dimensions: s.dimensions,
+          name: s.varname,
+          reason: 'index-out-of-bounds',
+          where: 'evaluator',
+          done: true
+        }
+
+        return {error: true, result}
+      }
     }
   }
 
   private getv_value (s: S3.GetV) : Failure<Errors.OutOfBounds> | Success<NullAction> {
-    const indexes = this.pop_indexes(s.total_indexes)
-    
-    if (this.is_whithin_bounds(indexes, s.dimensions)) {
-      /**
-       * Calcular indice final y apilar el valor de la variable.
-       * 
-       * Nota: hay que restarle 1 a cada indice para que inicien en 0
-       * (como los indices de JS) y no en 1
-       */
-      const index = this.calculate_index(indexes.map(i => i-1), s.dimensions)
-      const variable = this.get_var(s.varname) as S1.ArrayVariable
-      const value = variable.values[index]
-      this.state.value_stack.push(value)
+    const alias_found = this.has_alias(s.varname, s.owner)
 
-      return {error:false, result: {action: 'none', done: false}}
+    if (alias_found.error) {
+      const indexes = this.pop_indexes(s.total_indexes)
+      
+      if (this.is_whithin_bounds(indexes, s.dimensions)) {
+        /**
+         * Calcular indice final y asignar el valor a la variable.
+         * 
+         * Nota: hay que restarle 1 a cada indice para que inicien en 0
+         * (como los indices de JS) y no en 1
+         */
+        const index = this.calculate_index(indexes.map(i => i-1), s.dimensions)
+        const value = this.state.value_stack.pop()
+        const variable = this.get_var(s.varname) as S1.ArrayVariable
+        this.state.value_stack.push(variable.values[index])
+
+        return {error:false, result: {action: 'none', done: false}}
+      }
+      else {
+        const bad_index = this.get_bad_index(indexes, s.dimensions)
+
+        const result: Errors.OutOfBounds = {
+          bad_index: bad_index,
+          dimensions: s.dimensions,
+          name: s.varname,
+          reason: 'index-out-of-bounds',
+          where: 'evaluator',
+          done: true
+        }
+
+        return {error: true, result}
+      }
     }
     else {
-      const bad_index = this.get_bad_index(indexes, s.dimensions)
+      const alias = alias_found.result as Alias
 
-      const result: Errors.OutOfBounds = {
-        bad_index: bad_index,
-        dimensions: s.dimensions,
-        name: s.varname,
-        reason: 'index-out-of-bounds',
-        where: 'evaluator',
-        done: true 
+      /**
+       * Los indices usados para asignar el valor al alias (al parametro tomado por referencia)
+       */
+      const partial_indexes = this.pop_indexes(s.total_indexes)
+
+      const indexes: number[] = [...alias.indexes, ...partial_indexes]
+      const dimensions = alias.dimensions
+
+      if (this.is_whithin_bounds(indexes, dimensions)) {
+        const index = this.calculate_index(indexes.map(i => i - 1), dimensions)
+        const variable = this.get_var(alias.varname) as S1.ArrayVariable
+        this.state.value_stack.push(variable.values[index])
+
+        return {error: false, result: {action: 'none', done: false}}
       }
+      else {
+        const bad_index = this.get_bad_index(partial_indexes, s.dimensions)
 
-      return {error: true, result}
+        const result: Errors.OutOfBounds = {
+          bad_index: bad_index,
+          dimensions: s.dimensions,
+          name: s.varname,
+          reason: 'index-out-of-bounds',
+          where: 'evaluator',
+          done: true
+        }
+
+        return {error: true, result}
+      }
     }
   }
 

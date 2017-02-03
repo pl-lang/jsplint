@@ -1293,18 +1293,22 @@ export function FunctionModule (source: TokenQueue) : Failure<Errors.Pattern> | 
   const par_declaration: S0.Declaration = {type: 'declaration', variables: []}
   for (let par of (parameters.result as S0.Parameter[])) {
     /**
-     * Extraer las propiedades del parametro que son necesarias
-     * para crear la variable
+     * Crear declaraciones para todos los parametros que no se toman por referencia
      */
-    const name = par.name
-    const is_array = par.is_array
-    const dimensions = par.dimensions
-    const type = par.type
-    /**
-     * Meter los datos de la variable en el arreglo del enunciado de declaracion.
-     */
-    par_declaration.variables.push({name, is_array, dimensions, datatype:type})
-
+    if (!par.by_ref) {
+      /**
+       * Extraer las propiedades del parametro que son necesarias
+       * para crear la variable
+       */
+      const name = par.name
+      const is_array = par.is_array
+      const dimensions = par.dimensions
+      const type = par.type
+      /**
+       * Meter los datos de la variable en el arreglo del enunciado de declaracion.
+       */
+      par_declaration.variables.push({name, is_array, dimensions, datatype:type})
+    }
     /**
      * Luego, cuando el programa sea transformado por Declarator.ts, las variables de los
      * parametros seran declaradas.
@@ -1401,18 +1405,22 @@ export function ProcedureModule (source: TokenQueue) : Failure<Errors.Pattern> |
   const par_declaration: S0.Declaration = {type: 'declaration', variables: []}
   for (let par of (parameters.result as S0.Parameter[])) {
     /**
-     * Extraer las propiedades del parametro que son necesarias
-     * para crear la variable
+     * Crear declaraciones para todos los parametros que no se toman por referencia
      */
-    const name = par.name
-    const is_array = par.is_array
-    const dimensions = par.dimensions
-    const type = par.type
-    /**
-     * Meter los datos de la variable en el arreglo del enunciado de declaracion.
-     */
-    par_declaration.variables.push({name, is_array, dimensions, datatype:type})
-
+    if (!par.by_ref) {
+      /**
+       * Extraer las propiedades del parametro que son necesarias
+       * para crear la variable
+       */
+      const name = par.name
+      const is_array = par.is_array
+      const dimensions = par.dimensions
+      const type = par.type
+      /**
+       * Meter los datos de la variable en el arreglo del enunciado de declaracion.
+       */
+      par_declaration.variables.push({name, is_array, dimensions, datatype:type})
+    }
     /**
      * Luego, cuando el programa sea transformado por Declarator.ts, las variables de los
      * parametros seran declaradas.
