@@ -457,6 +457,7 @@ export namespace S0 {
 
   export interface TypedDeclaration extends DeclarationInfo {
     datatype: TypeNameString
+    by_ref: boolean
   }
 
   export interface Declaration {

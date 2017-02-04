@@ -882,31 +882,34 @@ export class Evaluator {
     const copy: S1.VariableDict = {}
 
     for (let vn in variables) {
-      const variable = variables[vn] 
-      if (variable.is_array) {
-        const {datatype, dimensions, is_array, name} = variable
-        const vcopy: S1.ArrayVariable = {
-          datatype,
-          dimensions,
-          is_array,
-          name,
-          values: new Array(variable.values.length)
+      const variable = variables[vn]
+      if (!variable.by_ref) {
+        if (variable.is_array) {
+          const {datatype, dimensions, is_array, name, by_ref} = variable
+          const vcopy: S1.ArrayVariable = {
+            datatype,
+            dimensions,
+            is_array,
+            name,
+            values: new Array(variable.values.length),
+            by_ref
+          }
+          copy[vn] = vcopy 
         }
-        copy[vn] = vcopy 
-      }
-      else if (variable.is_array == false) {
-        const {datatype, dimensions, is_array, name} = variable
-        const vcopy: S1.RegularVariable = {
-          datatype,
-          dimensions,
-          is_array,
-          name,
-          value: null
+        else if (variable.is_array == false) {
+          const {datatype, dimensions, is_array, name, by_ref} = variable
+          const vcopy: S1.RegularVariable = {
+            datatype,
+            dimensions,
+            is_array,
+            name,
+            value: null,
+            by_ref
+          }
+          copy[vn] = vcopy
         }
-        copy[vn] = vcopy
       }
     }
-
     return copy
   }
 }

@@ -11,6 +11,16 @@ import transform from '../src/transformer/transform'
 
 import fr_writer from '../src/utility/fr_writer'
 
+function run (e: Evaluator) {
+  let output = e.step()
+
+  while (output.error == false && output.result.done == false && output.result.action != 'read' && output.result.action != 'write') {
+    output = e.step()
+  }
+
+  return output
+}
+
 function compile(p: Failure<Errors.Lexical[] | Errors.Pattern[]> | Success<ParsedProgram>): S3.Program {
   if (p.error) {
     // for (let error of p.result) {
@@ -1300,7 +1310,7 @@ describe('Evaluacion de programas y expresiones', () => {
     })
   })
 
-  describe.skip('Programas con funciones o procedimientos', () => {
+  describe('Programas con funciones o procedimientos', () => {
     it('procedimiento sencillo', () => {
       const code = `variables
       inicio
@@ -1318,11 +1328,128 @@ describe('Evaluacion de programas y expresiones', () => {
 
       let output = evaluator.step()
 
-      while (output.result.done == false) {
+      while (output.error == false && output.result.done == false && output.result.action != 'write') {
         output = evaluator.step()
       }
 
-      output.result.should.deepEqual({ done: true, error: false, output: { action: 'write', value: 2 } })
+      output.result.should.deepEqual({done: true, action: 'write', value: 2 })
+    })
+
+    it('funcion sencilla', () => {
+      const code = `
+      variables
+        entero a
+      inicio
+        a <- sumar(2, 6)
+      fin
+      
+      entero funcion sumar(entero a, entero b)
+      inicio
+        retornar a + b
+      finfuncion
+      `
+
+      const p = compile(parse(code))
+
+      const e = new Evaluator(p)
+
+      const output = run(e)
+
+      output.should.deepEqual({error: false, result: {done: true, action: 'none'}})
+
+      const a = e.get_locals('main')['a'] as S1.RegularVariable
+      a.value.should.equal(8)
+    })
+
+    describe('parametros por referencia', () => {
+      it('variable normal por referencia ', () => {
+        const code = `
+        variables
+          entero a
+        inicio
+          a <- 16
+          p(a)
+        fin
+
+        procedimiento p(entero ref b)
+        inicio
+          b <- 32
+        finprocedimiento
+        `
+
+        const p = compile(parse(code))
+
+        const e = new Evaluator(p)
+
+        const output = run(e)
+
+        output.should.deepEqual({error: false, result: {done: true, action: 'none'}})
+
+        const a = e.get_locals('main')['a'] as S1.RegularVariable
+        a.value.should.equal(32)
+      })
+
+      it('celda de vector por referencia ', () => {
+        const code = `
+        variables
+          entero a[2]
+        inicio
+          a[1] <- 16
+          p(a[1])
+        fin
+
+        procedimiento p(entero ref b)
+        inicio
+          b <- 32
+        finprocedimiento
+        `
+
+        const p = compile(parse(code))
+
+        const e = new Evaluator(p)
+
+        const output = run(e)
+
+        output.should.deepEqual({error: false, result: {done: true, action: 'none'}})
+
+        const a = e.get_locals('main')['a'] as S1.ArrayVariable
+        a.values[0].should.equal(32)
+      })
+
+      it.skip('vector por referencia', () => {})
+      
+      it.skip('matriz por referencia', () => {})
+
+      it.skip('variable de un modulo pasada por referencia a otro modulo', () => {
+        const code = `
+        variables
+        inicio
+          p(22)
+        fin
+
+        procedimiento p(entero a)
+        inicio
+          o(a)
+            escribir(a)
+        finprocedimiento
+
+        procedimiento o(entero ref u)
+        inicio
+          u <- 92
+        finprocedimiento
+        `
+
+        const p = compile(parse(code))
+
+        const e = new Evaluator(p)
+
+        const output = run(e)
+
+        output.should.deepEqual({error: false, result: {done: true, action: 'none'}})
+
+        const a = e.get_locals('main')['a'] as S1.ArrayVariable
+        a.values[0].should.equal(32)
+      })
     })
   })
 })

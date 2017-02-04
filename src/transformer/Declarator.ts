@@ -117,7 +117,8 @@ function declare_variables (declarations: S0.Declaration[]) : Failure<Errors.Rep
             datatype: variable.datatype,
             is_array: true,
             dimensions: variable.dimensions,
-            values: new Array(variable.dimensions.reduce((a, b) => a * b))
+            values: variable.by_ref ? []:new Array(variable.dimensions.reduce((a, b) => a * b)),
+            by_ref: variable.by_ref
           }
 
           declared_variables[new_array.name] = new_array
@@ -128,7 +129,8 @@ function declare_variables (declarations: S0.Declaration[]) : Failure<Errors.Rep
             datatype: variable.datatype,
             is_array: false,
             dimensions: variable.dimensions,
-            value: null
+            value: null,
+            by_ref: variable.by_ref
           }
           declared_variables[new_var.name] = new_var
         }
