@@ -1188,7 +1188,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
     it('prueba que no deberia fallar', () => {
       const code = `variables
-        entero a
+        logico a
       inicio
         a <- 2 + 2 = 4
       fin`

@@ -219,7 +219,7 @@ export function TypeName (source: TokenQueue) : Failure<Errors.Pattern> | Succes
 export function IndexExpression (source: TokenQueue) : Failure<Errors.Pattern> | Success<S0.ExpElement[][]> {
   let indexes: S0.ExpElement[][] = []
 
-  const index_report = Expression(source, tk => tk == SymbolKind.RightBracket)
+  const index_report = Expression(source, tk => tk == SymbolKind.RightBracket || tk == SymbolKind.Comma)
 
   if (index_report.error === true) {
     return index_report
@@ -295,22 +295,25 @@ export function Variable (source: TokenQueue) : Failure<Errors.Pattern> | Succes
   }
 }
 
+/**
+ * Para dos operaciones a y b, si precedencia(a) > precedencia(b) => la operacion a ocurre primero
+ */
 let precedence : {[p: string]: number} = {
-  'power'       : 6 ,
-  'div'         : 5 ,
-  'mod'         : 5 ,
-  'times'       : 5 ,
-  'divide'      : 5 ,
-  'minus'       : 4 ,
-  'plus'        : 4 ,
-  'minor-than'  : 3 ,
-  'minor-equal' : 3 ,
-  'major-than'  : 3 ,
-  'major-equal' : 3 ,
-  'equal'       : 2 ,
-  'diff-than'   : 2 ,
-  'and'         : 1 ,
-  'or'          : 0
+  'power'       : 4 ,
+  'div'         : 4 ,
+  'mod'         : 4 ,
+  'times'       : 4 ,
+  'slash'       : 4 ,
+  'minus'       : 3 ,
+  'plus'        : 3 ,
+  'minor-than'  : 5 ,
+  'minor-equal' : 5 ,
+  'major-than'  : 5 ,
+  'major-equal' : 5 ,
+  'equal'       : 0 ,
+  'diff-than'   : 0 ,
+  'and'         : 2 ,
+  'or'          : 1
 }
 
 function is_operator (k: TokenKind) {
@@ -407,7 +410,7 @@ export function Expression (source: TokenQueue, end_reached: (tk: TokenKind) => 
    * de eso se encarga la funcion que llamó a ésta (Expression)
    */
 
-  while (operators.length > 0) output.push(operators.shift());
+  while (operators.length > 0) output.push(operators.pop());
 
   return {error:false, result:output}
 }
