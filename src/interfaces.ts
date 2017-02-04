@@ -385,7 +385,23 @@ export namespace S0 {
 
   export interface OperatorElement extends ExpElement {
     type: 'operator'
-    name: 'plus' | 'minus' | 'slash' | 'times' | 'power' | 'minor-eq' | 'different' | 'minor' | 'major-eq' | 'major' | 'equal' | 'and' | 'or' | 'not' | 'div' | 'mod' | 'neg'
+    name: 'plus'
+      | 'minus'
+      | 'slash'
+      | 'times'
+      | 'power'
+      | 'minor-eq'
+      | 'different'
+      | 'minor'
+      | 'major-eq'
+      | 'major'
+      | 'equal'
+      | 'and'
+      | 'or'
+      | 'not'
+      | 'div'
+      | 'mod'
+      | 'neg';
   }
 
   export interface Parameter {
@@ -1038,13 +1054,29 @@ export namespace S3 {
     }
   }
 
-  export type OperationKinds = MathOps | ComparisonOps | LogicOps
+  export type OperationKinds = MathOps
+    | ComparisonOps
+    | LogicOps;
 
-  export type MathOps = StatementKinds.Plus | StatementKinds.Minus | StatementKinds.Times | StatementKinds.Slash | StatementKinds.Power | StatementKinds.Div | StatementKinds.Mod | StatementKinds.Neg
+  export type MathOps = StatementKinds.Plus
+    | StatementKinds.Minus
+    | StatementKinds.Times
+    | StatementKinds.Slash
+    | StatementKinds.Power
+    | StatementKinds.Div
+    | StatementKinds.Mod
+    | StatementKinds.Neg;
 
-  export type ComparisonOps = StatementKinds.Minor | StatementKinds.MinorEq | StatementKinds.Different | StatementKinds.Equal | StatementKinds.Major | StatementKinds.MajorEq
+  export type ComparisonOps = StatementKinds.Minor
+    | StatementKinds.MinorEq
+    | StatementKinds.Different
+    | StatementKinds.Equal
+    | StatementKinds.Major
+    | StatementKinds.MajorEq;
 
-  export type LogicOps = StatementKinds.And | StatementKinds.Or | StatementKinds.Not
+  export type LogicOps = StatementKinds.And
+    | StatementKinds.Or
+    | StatementKinds.Not;
 
   export type Statement = While
     | If
@@ -1064,7 +1096,6 @@ export namespace S3 {
     | AssignString
     | Alias
     | CopyVec;
-
 }
 
 /**
