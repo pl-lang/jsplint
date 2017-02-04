@@ -3,7 +3,7 @@ import 'should'
 
 import Parser from '../src/parser/Parser.js'
 
-import { ParsedProgram, S1, S3, Errors, Success, Failure } from '../src/interfaces'
+import { ParsedProgram, S1, S3, Errors, Success, Failure, Read } from '../src/interfaces'
 
 import { Evaluator } from '../src/interpreter/Evaluator'
 
@@ -287,7 +287,7 @@ describe('Evaluacion de programas y expresiones', () => {
     w2.should.equal(true)
   })
 
-  it.skip('programa con una llamada a leer', () => {
+  it('programa con una llamada a leer', () => {
     const code = `variables
       entero m
     inicio
@@ -300,24 +300,48 @@ describe('Evaluacion de programas y expresiones', () => {
 
     let output = evaluator.step()
 
-    while (output.result.done == false) {
-      output = evaluator.step()
+    let error = output.error
+    let data_read = false
+
+    while (!error && output.result.done == false && !data_read) {
+      if (output.error == false) {
+        data_read = output.result.action == 'read'
+      }
+      else {
+        error = true
+      }
+
+      if (!data_read) {
+        output = evaluator.step()
+      }
     }
 
-    output.result.should.deepEqual({ done: false, action: 'read', type: 'entero' })
+    let {done, action} = (output as Success<Read>).result
+    done.should.equal(false)
+    action.should.equal('read')
 
     evaluator.input(9)
 
     output = evaluator.step()
 
-    output.result.should.deepEqual({ done: true, error: false, output: null })
+    error = output.error
 
-    const m = evaluator.get_locals('main')['m'] as S1.ArrayVariable
+    while (!error && output.result.done == false) {
+      output = evaluator.step()
+      error = output.error
+    }
 
-    m.values[0].should.equal(9)
+    done = (output as Success<Read>).result.done
+    action = (output as Success<Read>).result.action
+    done.should.equal(true)
+    action.should.equal('none')
+
+    const m = evaluator.get_locals('main')['m'] as S1.RegularVariable
+
+    m.value.should.equal(9)
   })
 
-  it.skip('programa con una llamada a leer una celda de un vector', () => {
+  it('programa con una llamada a leer una celda de un vector', () => {
     const code = `variables
       entero v[2]
     inicio
@@ -330,17 +354,40 @@ describe('Evaluacion de programas y expresiones', () => {
 
     let output = evaluator.step()
 
-    while (output.result.done == false) {
-      output = evaluator.step()
+    let error = output.error
+    let data_read = false
+
+    while (!error && output.result.done == false && !data_read) {
+      if (output.error == false) {
+        data_read = output.result.action == 'read'
+      }
+      else {
+        error = true
+      }
+      if (!data_read) {
+        output = evaluator.step()
+      }
     }
 
-    output.result.should.deepEqual({ done: false, error: false, output: { action: 'read', type: 'entero' } })
+    let {done, action} = (output as Success<Read>).result
+    done.should.equal(false)
+    action.should.equal('read')
 
     evaluator.input(9)
 
     output = evaluator.step()
 
-    output.result.should.deepEqual({ done: true, error: false, output: null })
+    error = output.error
+
+    while (!error && output.result.done == false) {
+      output = evaluator.step()
+      error = output.error
+    }
+
+    done = (output as Success<Read>).result.done
+    action = (output as Success<Read>).result.action
+    done.should.equal(true)
+    action.should.equal('none')
 
     const v = evaluator.get_locals('main')['v'] as S1.ArrayVariable
 
