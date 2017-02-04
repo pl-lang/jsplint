@@ -287,6 +287,7 @@ function isReservedWord(word : string) {
         case 'not':
         case 'mod':
         case 'ref':
+        case 'neg':
           return true
         default:
           return false
@@ -466,6 +467,8 @@ function wtk(word : string) : ReservedKind {
           return ReservedKind.Mod
         case 'ref':
           return ReservedKind.Ref
+        case 'neg':
+          return ReservedKind.Neg
       }
     case 4:
       switch (word) {

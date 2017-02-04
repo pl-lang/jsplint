@@ -754,6 +754,8 @@ function operate (s: Typed.Type[], op: string): Failure<Typed.Error>|Success<Typ
         case 'or':
         case 'not':
             return logical(s, op)
+        case 'neg':
+            return neg(s)
     }
 }
 
@@ -925,5 +927,25 @@ function logical (s: Typed.Type[], op: string): Failure<Errors.IncompatibleOpera
             const result: Errors.MissingOperands = {reason: 'missing-operands', where: 'typer', operator: op, required: 2}
             return {error: true, result}
         }
+    }
+}
+
+function neg (s: Typed.Type[]): Failure<Errors.IncompatibleOperand | Errors.MissingOperands> | Success<Typed.Type[]> {
+    if (s.length >= 1) {
+        const a = s.pop()
+        const a_string = stringify(a)
+
+        if (!(a.kind == 'atomic' && (a_string == 'entero' || a_string == 'real'))) {
+            const result: Errors.IncompatibleOperand = {reason: 'incompatible-operand', where: 'typer', bad_type: a_string, operator: 'neg'}
+            return {error: true, result}
+        }
+        else {
+            s.push(new Typed.AtomicType('literal', 'entero'))
+            return {error: false, result: s}
+        }
+    }
+    else {
+        const result: Errors.MissingOperands = {reason: 'missing-operands', where: 'typer', operator: 'neg', required: 1}
+        return {error: true, result}
     }
 }

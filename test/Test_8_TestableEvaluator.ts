@@ -609,7 +609,7 @@ describe('Evaluacion de programas y expresiones', () => {
         const code = `variables
           entero a
         inicio
-          a <- -2*-3
+          a <- neg 2 * neg 3
         fin`
 
         const p = compile(parse(code))
@@ -722,12 +722,12 @@ describe('Evaluacion de programas y expresiones', () => {
         a.value.should.equal(3 / 2)
       })
 
-      it('-3/-2', () => {
+      it('neg 3/neg 2', () => {
 
         const code = `variables
           real a
         inicio
-          a <- -3/-2
+          a <- neg 3/neg 2
         fin`
 
         const p = compile(parse(code))
@@ -1011,11 +1011,11 @@ describe('Evaluacion de programas y expresiones', () => {
       a.value.should.equal((3 * 2) - 6)
     })
 
-    it('(-(-(2+2)))', () => {
+    it('(neg(neg(2+2)))', () => {
       const code = `variables
           entero a
         inicio
-          a <- (-(-(2+2)))
+          a <- (neg(neg(2+2)))
         fin`
 
       const p = compile(parse(code))
@@ -1230,6 +1230,50 @@ describe('Evaluacion de programas y expresiones', () => {
         const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
 
         a.value.should.equal(false)
+      })
+
+      it('not verdadero', () => {
+        const code = `variables
+          logico a
+        inicio
+          a <- not verdadero
+        fin`
+
+        const p = compile(parse(code))
+
+        const evaluator = new Evaluator(p)
+
+        let output = evaluator.step()
+
+        while (output.result.done == false) {
+          output = evaluator.step()
+        }
+
+        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+
+        a.value.should.equal(false)
+      })
+
+      it('not falso', () => {
+        const code = `variables
+          logico a
+        inicio
+          a <- not falso
+        fin`
+
+        const p = compile(parse(code))
+
+        const evaluator = new Evaluator(p)
+
+        let output = evaluator.step()
+
+        while (output.result.done == false) {
+          output = evaluator.step()
+        }
+
+        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+
+        a.value.should.equal(true)
       })
     })
 

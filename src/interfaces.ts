@@ -301,11 +301,12 @@ export enum ReservedKind {
   FinFuncion,
   FinMientras,
   Procedimiento,
-  FinProcedimiento
+  FinProcedimiento,
+  Neg
 }
 
 export enum OtherKind {
-  Word = 53,
+  Word = 54,
   Unknown
 }
 
@@ -384,7 +385,7 @@ export namespace S0 {
 
   export interface OperatorElement extends ExpElement {
     type: 'operator'
-    name: 'plus' | 'minus' | 'slash' | 'times' | 'power' | 'minor-eq' | 'different' | 'minor' | 'major-eq' | 'major' | 'equal' | 'and' | 'or' | 'not' | 'div' | 'mod'
+    name: 'plus' | 'minus' | 'slash' | 'times' | 'power' | 'minor-eq' | 'different' | 'minor' | 'major-eq' | 'major' | 'equal' | 'and' | 'or' | 'not' | 'div' | 'mod' | 'neg'
   }
 
   export interface Parameter {
@@ -777,7 +778,8 @@ export namespace S3 {
     Concat,
     AssignString,
     Alias,
-    CopyVec
+    CopyVec,
+    Neg
   }
 
   export class BaseStatement {
@@ -1038,7 +1040,7 @@ export namespace S3 {
 
   export type OperationKinds = MathOps | ComparisonOps | LogicOps
 
-  export type MathOps = StatementKinds.Plus | StatementKinds.Minus | StatementKinds.Times | StatementKinds.Slash | StatementKinds.Power | StatementKinds.Div | StatementKinds.Mod
+  export type MathOps = StatementKinds.Plus | StatementKinds.Minus | StatementKinds.Times | StatementKinds.Slash | StatementKinds.Power | StatementKinds.Div | StatementKinds.Mod | StatementKinds.Neg
 
   export type ComparisonOps = StatementKinds.Minor | StatementKinds.MinorEq | StatementKinds.Different | StatementKinds.Equal | StatementKinds.Major | StatementKinds.MajorEq
 

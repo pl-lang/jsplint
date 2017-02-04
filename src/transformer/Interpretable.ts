@@ -817,6 +817,8 @@ function transform_exp_element (element: Typed.ExpElement, module_name: string) 
             return new S3.Operation(module_name, S3.StatementKinds.And)
         case 'or':
             return new S3.Operation(module_name, S3.StatementKinds.Or)
+        case 'neg':
+            return new S3.Operation(module_name, S3.StatementKinds.Neg)
       }
       break
     case 'literal':

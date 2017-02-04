@@ -299,6 +299,12 @@ export function Variable (source: TokenQueue) : Failure<Errors.Pattern> | Succes
  * Para dos operaciones a y b, si precedencia(a) > precedencia(b) => la operacion a ocurre primero
  */
 let precedence : {[p: string]: number} = {
+  'not'         : 7 ,
+  'neg'         : 6 ,
+  'minor-than'  : 5 ,
+  'minor-equal' : 5 ,
+  'major-than'  : 5 ,
+  'major-equal' : 5 ,
   'power'       : 4 ,
   'div'         : 4 ,
   'mod'         : 4 ,
@@ -306,14 +312,10 @@ let precedence : {[p: string]: number} = {
   'slash'       : 4 ,
   'minus'       : 3 ,
   'plus'        : 3 ,
-  'minor-than'  : 5 ,
-  'minor-equal' : 5 ,
-  'major-than'  : 5 ,
-  'major-equal' : 5 ,
-  'equal'       : 0 ,
-  'diff-than'   : 0 ,
   'and'         : 2 ,
-  'or'          : 1
+  'or'          : 1 ,
+  'equal'       : 0 ,
+  'diff-than'   : 0
 }
 
 function is_operator (k: TokenKind) {
@@ -333,6 +335,8 @@ function is_operator (k: TokenKind) {
     case ReservedKind.Mod:
     case ReservedKind.And:
     case ReservedKind.Or:
+    case ReservedKind.Not:
+    case ReservedKind.Neg:
       return true
     default:
       return false

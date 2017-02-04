@@ -257,7 +257,15 @@ export class Evaluator {
           return this.alias(s)
         case S3.StatementKinds.CopyVec:
           return this.copy_vec(s)
+        case S3.StatementKinds.Neg:
+          return this.neg()
     }
+  }
+
+  private neg(): Success<NullAction> {
+    const a = this.state.value_stack.pop() as number
+    this.state.value_stack.push(-a)
+    return {error: false, result: {done: false, action: 'none'}}
   }
 
   private pad<A>(a: A[], padder: A, desired_length: number): A[] {
