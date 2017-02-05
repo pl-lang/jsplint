@@ -19,7 +19,7 @@ export default function fr_writer (p: S3.Program) : string {
     for (let vn in p.local_variables['main']) {
         const v = p.local_variables['main'][vn] 
         variables += `${repetir(' ', espacios)}${v.datatype} ${vn}`
-        if (v.is_array) {
+        if (v.type == 'array') {
             variables += `[${v.dimensions.toString()}]`
         }
         variables += '\n'
@@ -48,7 +48,7 @@ export default function fr_writer (p: S3.Program) : string {
         for (let vn in p.local_variables[mn]) {
             const v = p.local_variables[mn][vn] 
             variables += `${repetir(' ', espacios)}${v.datatype} ${vn}`
-            if (v.is_array) {
+            if (v.type == 'array') {
                 variables += `[${v.dimensions.toString()}]`
             }
             variables += '\n'
@@ -154,6 +154,8 @@ function procesar_enunciado (e: S3.Statement, nivel: number) : string {
             return `${repetir(' ', nivel*espacios)}ALIAS ${e.varname} ${e.var_indexes} ${e.dimensions} ${e.local_alias}`
         case S3.StatementKinds.CopyVec:
             return `${repetir(' ', nivel*espacios)}CPYVEC ${e.target.name} ${e.target.dimensions} ${e.target.indexes} ${e.source.name} ${e.source.dimensions} ${e.source.indexes}`
+        case S3.StatementKinds.MakeFrame:
+            return `${repetir(' ', nivel*espacios)}MAKEFRAME ${e.name}`
     }
 }
 

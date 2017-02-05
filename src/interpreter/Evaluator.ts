@@ -2,6 +2,7 @@
 
 import {Failure, Success, S1, S3} from '../interfaces'
 import {Value, Errors, Read, Write, NullAction, Paused, SuccessfulReturn} from '../interfaces'
+import {Alias, Vector, ValueContainer, Scalar, Frame} from '../interfaces'
 import {drop} from '../utility/helpers'
 
 /*
@@ -15,38 +16,13 @@ import {drop} from '../utility/helpers'
   un solo uso.
 */
 
-export interface Alias {
-  /**
-   * Nombre de la variable a la que este alias hace referencia
-   */
-  varname: string
-  /**
-   * Indices utilizados al interactuar con este alias
-   */
-  indexes: number[]
-  /**
-   * "Alias" de la variable referenciada
-   */
-  local_name: string
-  /**
-   * Dimensiones de la variable referenciada
-   */
-  dimensions: number[]
-  /**
-   * Modulo al que este alias pertenece
-   */
-  module: string
-}
-
 export class Evaluator {
   private readonly modules: {[p:string]: S3.Module}
   private readonly entry_point: S3.Statement
   private current_statement: S3.Statement
   private current_module: string
-  private readonly globals: S1.VariableDict
-  private readonly locals: {[p:string]: S1.VariableDict}
-  private readonly locals_stack: S1.VariableDict[]
-  private readonly aliases: Alias[]
+  private readonly frame_templates: {[p:string]: S1.VariableDict}
+  private readonly frame_stack: Frame[]
   private readonly state: {
     done: boolean
     value_stack: Value[]
@@ -54,16 +30,15 @@ export class Evaluator {
     statement_stack: S3.Statement[]
     last_report: Failure<Errors.OutOfBounds> | SuccessfulReturn | Success<Paused>
     next_statement: S3.Statement
+    next_frame: Frame
     paused: boolean
   }
 
   constructor (program: S3.Program) {
     this.entry_point = program.entry_point
     this.modules = program.modules
-    this.globals = program.local_variables.main
-    this.locals = program.local_variables
-    this.locals_stack = [this.globals]
-    this.aliases = []
+    this.frame_templates = program.local_variables
+    this.frame_stack = [this.make_frame('main')]
     this.current_statement = this.entry_point
     this.current_module = 'main'
 
@@ -74,21 +49,17 @@ export class Evaluator {
       statement_stack: [],
       last_report: {error: false, result: {action: 'none', done: this.entry_point === null ? true:false}},
       next_statement: null,
+      next_frame: null,
       paused: false
     }
   }
 
   /**
    * get_locals
-   * devuelve las variables locales de un modulo.
+   * devuelve las variables locales del modulo en ejecucion.
    */
-  get_locals (module_name: string) {
-    return this.locals[module_name]
-  }
-
-  private get_current_locals () {
-    const current_locals = this.locals_stack[this.locals_stack.length - 1]
-    return current_locals
+  get_locals () {
+    return this.frame_stack[this.frame_stack.length - 1]
   }
 
   /**
@@ -96,7 +67,7 @@ export class Evaluator {
    * devuelve las variables globales de este evaluador.
    */
   get_globals() {
-    return this.globals
+    return this.frame_stack[0]
   }
 
   input (v: Value) {
@@ -148,7 +119,7 @@ export class Evaluator {
       while (this.state.next_statement == null && this.state.statement_stack.length > 0) {
         this.state.next_statement = this.state.statement_stack.pop()
         this.current_module = this.state.module_stack.pop()
-        this.locals_stack.pop()
+        this.frame_stack.pop()
       }
 
       /**
@@ -259,7 +230,36 @@ export class Evaluator {
           return this.copy_vec(s)
         case S3.StatementKinds.Neg:
           return this.neg()
+        case S3.StatementKinds.MakeFrame:
+          return this.make_frame_statement(s)
     }
+  }
+
+  private make_frame_statement(s: S3.MakeFrame): Success<NullAction> {
+    this.state.next_frame = this.make_frame(s.name)
+    return {error: false, result: {done: false, action: 'none'}}
+  }
+
+  private make_frame(mod_name: string): Frame {
+    const templates = this.frame_templates[mod_name]
+    const frame: Frame = {}
+    for (let name in templates) {
+      const template = templates[name]
+      const {type, datatype, by_ref} = template
+      if (by_ref) {
+        frame[name] = {type: 'alias', name: '', indexes: []}
+      }
+      else {
+        if (type == 'array') {
+          const values = new Array<Value>((template as S1.ArrayVariable).dimensions.reduce((a, b) => a*b))
+          frame[name] = {type: 'vector', dimensions: (template as S1.ArrayVariable).dimensions, values}
+        }
+        else {
+          frame[name] = {type: 'variable', value: null}
+        }
+      }
+    }
+    return frame
   }
 
   private neg(): Success<NullAction> {
@@ -319,8 +319,8 @@ export class Evaluator {
 
     const src_start = this.calculate_index(src_start_indexes, s.source.dimensions)
 
-    const tgt_var = this.get_var(s.target.name) as S1.ArrayVariable
-    const src_var = this.get_var(s.source.name) as S1.ArrayVariable
+    const tgt_var = this.get_var(s.target.name) as Vector
+    const src_var = this.get_var(s.source.name) as Vector
 
     let counter = 0
     while (tgt_start + counter <= tgt_end) {
@@ -331,24 +331,16 @@ export class Evaluator {
     return {error: false, result: {done: false, action: 'none'}}
   }
 
-  private has_alias (name: string, module_name: string): Failure<string>|Success<Alias> {
-    for (let alias of this.aliases) {
-      if (alias.local_name  == name && alias.module == module_name) {
-        return {error: false, result: alias}
-      }
-    }
-
-    return {error: true, result: 'no-alias'}
-  }
-
   private alias (s: S3.Alias): Success<NullAction> {
     const indexes = this.pop_indexes(s.var_indexes)
-    this.aliases.push({varname: s.varname, indexes, local_name: s.local_alias, dimensions: s.dimensions, module: s.module_name})
+    const alias = this.state.next_frame[s.local_alias] as Alias
+    alias.indexes = indexes
+    alias.name = s.varname
     return {error: false, result: {done: false, action: 'none'}}
   }
 
   private assign_string (s: S3.AssignString): Failure<Errors.OutOfBounds> | Success<NullAction> {
-    const v = this.get_var(s.varname) as S1.ArrayVariable
+    const v = this.get_var(s.varname) as Vector
 
     const indexes = this.pop_indexes(s.indexes)
 
@@ -419,68 +411,62 @@ export class Evaluator {
   }
 
   private assign (s: S3.Assign) : Success<NullAction> {
-    const alias_found = this.has_alias(s.varname, s.owner)
+    const var_found = this.get_var(s.varname)
 
-    /**
-     * Si no hay alias esta es una asignacion normal
-     */
-    if (alias_found.error) {
-      const variable = this.get_var(s.varname) as S1.RegularVariable
+    // Si no hay alias esta es una asignacion normal
+    if (var_found.type != 'alias') {
+      const variable = var_found as Scalar
 
       variable.value = this.state.value_stack.pop()
 
       return {error: false, result: {action: 'none', done: this.state.done}}
     }
     else {
-      const alias = alias_found.result as Alias
-      if (alias.dimensions.length > 0) {
-        const variable = this.get_var(alias.varname) as S1.ArrayVariable
-        const index = this.calculate_index(alias.indexes.map(i => i-1), alias.dimensions)
-        variable.values[index] = this.state.value_stack.pop()
+      const {variable, pre_indexes} = this.resolve_alias(var_found)
+
+      if (pre_indexes.length > 0) {
+        const v: Vector = variable as Vector
+        const index = this.calculate_index(pre_indexes.map(i => i-1), v.dimensions)
+        v.values[index] = this.state.value_stack.pop()
         return {error: false, result: {action: 'none', done: this.state.done}}
       }
       else {
-        const variable = this.get_var(alias.varname) as S1.RegularVariable
-        variable.value = this.state.value_stack.pop()
+        (variable as Scalar).value = this.state.value_stack.pop()
         return {error: false, result: {action: 'none', done: this.state.done}}
       }
     }
   }
 
   private get_value (s: S3.Get) : Success<NullAction> {
-    const alias_found = this.has_alias(s.varname, s.owner)
+    const var_found = this.get_var(s.varname)
 
-    /**
-     * Si no hay alias solo hay que apilar el valor de la variable
-     */
-    if (alias_found.error) {
-      const variable = this.get_var(s.varname) as S1.RegularVariable
-
-      this.state.value_stack.push(variable.value)
+    // Si no hay alias solo hay que apilar el valor de la variable
+    if (var_found.type != 'alias') {
+      this.state.value_stack.push((var_found as Scalar).value)
 
       return {error: false, result: {action: 'none', done: this.state.done}}
     }
     else {
-      const alias = alias_found.result as Alias
+      const {variable, pre_indexes} = this.resolve_alias(var_found)
 
-      if (alias.dimensions.length > 0) {
-        const variable = this.get_var(alias.varname) as S1.ArrayVariable
-        const index = this.calculate_index(alias.indexes.map(i => i - 1), alias.dimensions)
-        this.state.value_stack.push(variable.values[index])
+      if (pre_indexes.length > 0) {
+        const v = variable as Vector
+        const index = this.calculate_index(pre_indexes.map(i => i - 1), v.dimensions)
+        this.state.value_stack.push(v.values[index])
         return {error: false, result: {action: 'none', done: this.state.done}}
       }
       else {
-        const variable = this.get_var(alias.varname) as S1.RegularVariable
-        this.state.value_stack.push(variable.value)
+        this.state.value_stack.push((variable as Scalar).value)
         return {error: false, result: {action: 'none', done: this.state.done}}
       }
     }
   }
 
   private assignv (s: S3.AssignV) : Failure<Errors.OutOfBounds> | Success<NullAction> {
-    const alias_found = this.has_alias(s.varname, s.owner)
+    const var_found = this.get_var(s.varname)
 
-    if (alias_found.error) {
+
+    if (var_found.type != 'alias') {
       const indexes = this.pop_indexes(s.total_indexes)
       
       if (this.is_whithin_bounds(indexes, s.dimensions)) {
@@ -492,7 +478,7 @@ export class Evaluator {
          */
         const index = this.calculate_index(indexes.map(i => i-1), s.dimensions)
         const value = this.state.value_stack.pop()
-        const variable = this.get_var(s.varname) as S1.ArrayVariable
+        const variable = this.get_var(s.varname) as Vector
         variable.values[index] = value
 
         return {error:false, result: {action: 'none', done: false}}
@@ -513,20 +499,23 @@ export class Evaluator {
       }
     }
     else {
-      const alias = alias_found.result as Alias
+      const {variable, pre_indexes} = this.resolve_alias(var_found)
 
       /**
        * Los indices usados para asignar el valor al alias (al parametro tomado por referencia)
        */
       const partial_indexes = this.pop_indexes(s.total_indexes)
 
-      const indexes: number[] = [...alias.indexes, ...partial_indexes]
-      const dimensions = alias.dimensions
+      const indexes: number[] = [...pre_indexes, ...partial_indexes]
+      
+      const dimensions = (variable as Vector).dimensions
 
       if (this.is_whithin_bounds(indexes, dimensions)) {
         const index = this.calculate_index(indexes.map(i => i - 1), dimensions)
-        const variable = this.get_var(alias.varname) as S1.ArrayVariable
-        variable.values[index] = this.state.value_stack.pop()
+
+        const v: Vector = variable as Vector
+
+        v.values[index] = this.state.value_stack.pop()
 
         return {error: false, result: {action: 'none', done: false}}
       }
@@ -548,9 +537,9 @@ export class Evaluator {
   }
 
   private getv_value (s: S3.GetV) : Failure<Errors.OutOfBounds> | Success<NullAction> {
-    const alias_found = this.has_alias(s.varname, s.owner)
+    const var_found = this.get_var(s.varname)
 
-    if (alias_found.error) {
+    if (var_found.type != 'alias') {
       const indexes = this.pop_indexes(s.total_indexes)
       
       if (this.is_whithin_bounds(indexes, s.dimensions)) {
@@ -561,7 +550,7 @@ export class Evaluator {
          * (como los indices de JS) y no en 1
          */
         const index = this.calculate_index(indexes.map(i => i-1), s.dimensions)
-        const variable = this.get_var(s.varname) as S1.ArrayVariable
+        const variable = this.get_var(s.varname) as Vector
         this.state.value_stack.push(variable.values[index])
 
         return {error:false, result: {action: 'none', done: false}}
@@ -582,20 +571,20 @@ export class Evaluator {
       }
     }
     else {
-      const alias = alias_found.result as Alias
+      const {variable, pre_indexes} = this.resolve_alias(var_found)
 
       /**
        * Los indices usados para asignar el valor al alias (al parametro tomado por referencia)
        */
       const partial_indexes = this.pop_indexes(s.total_indexes)
 
-      const indexes: number[] = [...alias.indexes, ...partial_indexes]
-      const dimensions = alias.dimensions
+      const indexes: number[] = [...pre_indexes, ...partial_indexes]
+      const dimensions = (variable as Vector).dimensions
 
       if (this.is_whithin_bounds(indexes, dimensions)) {
         const index = this.calculate_index(indexes.map(i => i - 1), dimensions)
-        const variable = this.get_var(alias.varname) as S1.ArrayVariable
-        this.state.value_stack.push(variable.values[index])
+        const v = variable as Vector
+        this.state.value_stack.push(v.values[index])
 
         return {error: false, result: {action: 'none', done: false}}
       }
@@ -633,13 +622,34 @@ export class Evaluator {
     return result.reverse()
   }
 
-  private get_var (vn: string) : S1.Variable {
-    const locals = this.get_current_locals()
-    if (vn in locals) {
-      return locals[vn]
-    }
-    else {
-      return this.globals[vn]
+  private get_var (vn: string) : ValueContainer | Alias {
+    const locals = this.get_locals()
+    return vn in locals ? locals[vn]:this.get_globals()[vn]
+  }
+
+  private resolve_alias (a: Alias): {variable: ValueContainer, pre_indexes: number[]} {
+    /**
+     * indice del ante-penultimo frame
+     */
+    let i = this.frame_stack.length - 2
+
+    // se busca a partir del ante-penultimo porque se que en el ante-ultimo no esta
+    // si estuviera get_var nunca hubiera llamado a esta funcion
+    
+    let var_found = false
+    let v: ValueContainer | Alias = a
+    let pre_indexes: number[] = []
+    while (i >= 0) {
+      pre_indexes = [...v.indexes, ...pre_indexes]
+      v = this.frame_stack[i][v.name]
+      switch (v.type) {
+        case 'alias':
+        i-- 
+        break
+        case 'vector':
+        case 'variable':
+        return {variable: v, pre_indexes}
+      }
     }
   }
 
@@ -654,7 +664,8 @@ export class Evaluator {
     this.state.next_statement = this.modules[s.name].entry_point
     this.state.statement_stack.push(this.current_statement.exit_point)
     this.state.module_stack.push(this.current_module)
-    this.locals_stack.push(this.copy_locals(s.name))
+    this.frame_stack.push(this.state.next_frame)
+    this.state.next_frame = null
     this.current_module = s.name
 
     return {error: false, result: {action: 'none', done: this.state.done}}
@@ -875,41 +886,5 @@ export class Evaluator {
       i++
     }
     return result
-  }
-
-  private copy_locals (module_name: string) : S1.VariableDict {
-    const variables = this.locals[module_name]
-    const copy: S1.VariableDict = {}
-
-    for (let vn in variables) {
-      const variable = variables[vn]
-      if (!variable.by_ref) {
-        if (variable.is_array) {
-          const {datatype, dimensions, is_array, name, by_ref} = variable
-          const vcopy: S1.ArrayVariable = {
-            datatype,
-            dimensions,
-            is_array,
-            name,
-            values: new Array(variable.values.length),
-            by_ref
-          }
-          copy[vn] = vcopy 
-        }
-        else if (variable.is_array == false) {
-          const {datatype, dimensions, is_array, name, by_ref} = variable
-          const vcopy: S1.RegularVariable = {
-            datatype,
-            dimensions,
-            is_array,
-            name,
-            value: null,
-            by_ref
-          }
-          copy[vn] = vcopy
-        }
-      }
-    }
-    return copy
   }
 }

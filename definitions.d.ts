@@ -571,20 +571,25 @@ export namespace S1 {
     body: Statement[]
   }
 
-  export interface ArrayVariable extends S0.TypedDeclaration {
-    is_array: true
-    values: any[]
-  }
-
   export interface VariableDict {
     [v: string]: Variable
   }
 
   export type Variable = ArrayVariable | RegularVariable
 
-  export interface RegularVariable extends S0.TypedDeclaration {
-    is_array: false
-    value: any
+  export interface ArrayVariable {
+    type: 'array'
+    name: string
+    dimensions: number[]
+    datatype: TypeNameString
+    by_ref: boolean
+  }
+
+  export interface RegularVariable {
+    type: 'scalar'
+    name: string
+    datatype: TypeNameString
+    by_ref: boolean
   }
 }
 
@@ -766,7 +771,8 @@ export namespace S3 {
     AssignString = 30,
     Alias = 31,
     CopyVec = 32,
-    Neg = 33
+    Neg = 33,
+    MakeFrame = 34
   }
 
   export class BaseStatement {
@@ -777,6 +783,16 @@ export namespace S3 {
     readonly owner: string
 
     constructor()
+  }
+
+  export class MakeFrame extends BaseStatement {
+    readonly kind: StatementKinds.MakeFrame
+    /**
+     * Nombre del modulo del cual se hara un frame
+     */
+    readonly name: string
+
+    constructor(owner: string, name: string)
   }
 
   export interface VectorData {
@@ -963,7 +979,8 @@ export namespace S3 {
     | Concat
     | AssignString
     | Alias
-    | CopyVec;
+    | CopyVec
+    | MakeFrame;
 }
 
 /**
@@ -1173,6 +1190,36 @@ export interface Paused {
 }
 
 export type SuccessfulReturn = Success<Read> | Success<Write> | Success<NullAction>
+
+export interface Alias {
+  type: 'alias'
+  /**
+   * Nombre de la variable a la que este alias hace referencia
+   */
+  name: string
+  /**
+   * Indices utilizados al crear este alias
+   */
+  indexes: number[]
+}
+
+export interface Scalar {
+  type: 'variable'
+  value: Value
+}
+
+// se llama vector para no 'sobreescribir' al tipo Array de JS
+export interface Vector {
+  type: 'vector'
+  values: Value[]
+  dimensions: number[]
+}
+
+export type ValueContainer = Scalar | Vector
+
+export interface Frame {
+  [name: string]: ValueContainer | Alias
+}
 
 type ICallback = (...params: any[]) => void;
 
