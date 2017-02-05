@@ -600,7 +600,7 @@ function transform_assignment (a: Typed.Assignment, module_name: string) : S3.St
 
             /**
              * Apilar indices del vector del cual se copian los datos
-             * Aclaracion el type assert para a.right es correcto porque ya se verifico
+             * Aclaracion: el type assert para a.right es correcto porque ya se verifico
              * (en TSChecker) que el primer y unico componente de esa expresion sea una
              * invocacion de un vector.
              */
@@ -608,6 +608,7 @@ function transform_assignment (a: Typed.Assignment, module_name: string) : S3.St
                 if (!entry_initd) {
                     entry = transform_expression((a.right[0] as Typed.Invocation).indexes[i], module_name)
                     last = S3.get_last(entry)
+                    entry_initd = true
                 }
                 else {
                     const next = transform_expression((a.right[0] as Typed.Invocation).indexes[i], module_name)
