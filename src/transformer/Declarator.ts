@@ -112,27 +112,12 @@ function declare_variables (declarations: S0.Declaration[]) : Failure<Errors.Rep
     for (let variable of declaration.variables) {
       if (!(variable.name in declared_variables)) {
         if (variable.is_array) {
-          const new_array: S1.ArrayVariable = {
-            name: variable.name,
-            datatype: variable.datatype,
-            is_array: true,
-            dimensions: variable.dimensions,
-            values: variable.by_ref ? []:new Array(variable.dimensions.reduce((a, b) => a * b)),
-            by_ref: variable.by_ref
-          }
-
-          declared_variables[new_array.name] = new_array
+          const {name, datatype, dimensions, by_ref} = variable
+          declared_variables[name] = {type: 'array', name , datatype , dimensions, by_ref}
         }
         else {
-          const new_var: S1.RegularVariable = {
-            name: variable.name,
-            datatype: variable.datatype,
-            is_array: false,
-            dimensions: variable.dimensions,
-            value: null,
-            by_ref: variable.by_ref
-          }
-          declared_variables[new_var.name] = new_var
+          const {name, datatype, by_ref} = variable
+          declared_variables[name] = {type: 'scalar', name , datatype, by_ref}
         }
       }
       else {

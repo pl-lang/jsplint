@@ -533,7 +533,12 @@ function get_variable_info (name: string, variables: {[m:string]: S1.VariableDic
   const variable = name in variables[module_name] ? variables[module_name][name]:variables['main'][name]
 
   if (exists) {
-    return {error:false, result:{datatype: variable.datatype, dimensions: variable.dimensions, is_array: variable.is_array}}
+    switch (variable.type) {
+      case 'array':
+        return {error: false, result: {datatype: variable.datatype, dimensions: variable.dimensions, is_array: true}}
+      case 'scalar':
+        return {error: false, result: {datatype: variable.datatype, dimensions: [], is_array: false}}
+    }
   }
   else return {error:true, result:[{reason:'undefined-variable', name, where: 'call-decorator-transform'}]}
 }
