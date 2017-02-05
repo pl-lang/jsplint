@@ -802,7 +802,8 @@ export namespace S3 {
     Alias,
     CopyVec,
     Neg,
-    MakeFrame
+    MakeFrame,
+    InitV
   }
 
   export class BaseStatement {
@@ -843,6 +844,20 @@ export namespace S3 {
       super(owner)
       this.kind = StatementKinds.MakeFrame
       this.name = name
+    }
+  }
+  
+  // Los contenidos de esta clase son iguales a los de CopyVec al proposito
+  export class InitV extends BaseStatement {
+    readonly kind: StatementKinds.InitV
+    readonly target: VectorData
+    readonly source: VectorData
+
+    constructor (owner: string, target: VectorData, source: VectorData) {
+      super(owner)
+      this.kind = StatementKinds.InitV
+      this.target = target
+      this.source = source
     }
   }
 
@@ -1117,7 +1132,8 @@ export namespace S3 {
     | AssignString
     | Alias
     | CopyVec
-    | MakeFrame;
+    | MakeFrame
+    | InitV;
 }
 
 /**

@@ -16,6 +16,16 @@ import {drop} from '../utility/helpers'
   un solo uso.
 */
 
+interface VectorRange {
+  from: number[]
+  to: number[]
+}
+
+interface Range {
+  from: number
+  to: number
+}
+
 export class Evaluator {
   private readonly modules: {[p:string]: S3.Module}
   private readonly entry_point: S3.Statement
@@ -227,7 +237,7 @@ export class Evaluator {
         case S3.StatementKinds.Alias:
           return this.alias(s)
         case S3.StatementKinds.CopyVec:
-          return this.copy_vec(s)
+          return this.copy_vec_statement(s)
         case S3.StatementKinds.Neg:
           return this.neg()
         case S3.StatementKinds.MakeFrame:
@@ -283,7 +293,7 @@ export class Evaluator {
     return padded_copy
   }
 
-  private copy_vec(s: S3.CopyVec): Success<NullAction> {
+  private copy_vec_statement(s: S3.CopyVec): Success<NullAction> {
     /**
      * Indices provistos para el vector del cual se copian los datos
      */
@@ -294,37 +304,62 @@ export class Evaluator {
      */
     const tgt_provided_indexes = this.pop_indexes(s.target.indexes)
 
-    /**
-     * Indice inicial: indices provistos rellenados con 1 hasta que haya tantos como dimensiones
-     * Aclaracion: se resta 1 a todos para que sean indices para que arranquen en 0 en lugar de 1
-     */
-    const tgt_start_indexes = this.pad(tgt_provided_indexes, 1, s.target.dimensions.length).map(i => i - 1)
+    const tgt_indexes: VectorRange = {
+      from: this.pad(tgt_provided_indexes, 1, s.target.dimensions.length).map(i => i - 1),
+      to: [...tgt_provided_indexes, ...drop(s.target.indexes, s.target.dimensions)].map(i => i - 1)
+    }
 
-    /**
-     * Indice final: indices provistos rellenados con el tamaño de las dimensiones que no tienen indice
-     */
-    const tgt_end_indexes = [...tgt_provided_indexes, ...drop(s.target.indexes, s.target.dimensions)].map(i => i - 1)
+    const src_indexes: VectorRange = {
+      from: this.pad(src_provided_indexes, 1, s.source.dimensions.length).map(i => i - 1),
+      to: [...src_provided_indexes, ...drop(s.source.indexes, s.source.dimensions)].map(i => i - 1)
+    }
 
-    /**
-     * Los valores que me interesan
-     */
-    const tgt_start = this.calculate_index(tgt_start_indexes, s.target.dimensions)
-    const tgt_end = this.calculate_index(tgt_end_indexes, s.target.dimensions)
+    // variables que se usan para saber si se encontró la variable deseada o un alias
+    const tgt_found = this.get_var(s.target.name)
+    const src_found = this.get_var(s.source.name)
 
-    const src_start_indexes = this.pad(src_provided_indexes, 1, s.source.dimensions.length).map(i => i - 1)
+    // variables que se usaran para la asignacion
+    let tgt_var: Vector;
+    let src_var: Vector;
 
-    // const src_end_indexes = [...src_provided_indexes, ...drop(s.source.indexes, s.source.dimensions)].map(i => i - 1)
+    // rangos que indican el indice donde inicia la copia y el indice donde termina
+    let tgt_range: Range = {from: 0, to: 0}
+    let src_range: Range = {from: 0, to: 0}
 
-    // const src_end = this.calculate_index(src_end_indexes, s.source.dimensions)
+    // preparar las variables y los rangos
+    if (tgt_found.type == 'alias') {
+      const {variable, pre_indexes} = this.resolve_alias(tgt_found)
+      tgt_var = variable as Vector
+      tgt_range.from = this.calculate_index([...pre_indexes, ...tgt_indexes.from], tgt_var.dimensions)
+      tgt_range.to = this.calculate_index([...pre_indexes, ...tgt_indexes.to], tgt_var.dimensions)
+    }
+    else {
+      tgt_var = tgt_found as Vector
+      tgt_range.from = this.calculate_index(tgt_indexes.from, tgt_var.dimensions)
+      tgt_range.to = this.calculate_index(tgt_indexes.to, tgt_var.dimensions)
+    }
 
-    const src_start = this.calculate_index(src_start_indexes, s.source.dimensions)
+    if (src_found.type == 'alias') {
+      const {variable, pre_indexes} = this.resolve_alias(src_found)
+      src_var = variable as Vector
+      src_range.from = this.calculate_index([...pre_indexes, ...src_indexes.from], src_var.dimensions)
+      src_range.to = this.calculate_index([...pre_indexes, ...src_indexes.to], src_var.dimensions)
+    }
+    else {
+      src_var = src_found as Vector
+      src_range.from = this.calculate_index(src_indexes.from, src_var.dimensions)
+      src_range.to = this.calculate_index(src_indexes.to, src_var.dimensions)
+    }
 
-    const tgt_var = this.get_var(s.target.name) as Vector
-    const src_var = this.get_var(s.source.name) as Vector
+    this.copy_vec(tgt_var, src_var, tgt_range, src_range)
 
+    return {error: false, result: {done: false, action: 'none'}}
+  }
+
+  private copy_vec(tgt: Vector, src: Vector, tgt_range: Range, src_range: Range): Success<NullAction> {
     let counter = 0
-    while (tgt_start + counter <= tgt_end) {
-      tgt_var.values[tgt_start + counter] = src_var.values[src_start + counter]
+    while (tgt_range.from + counter <= tgt_range.to) {
+      tgt.values[tgt_range.from + counter] = src.values[src_range.from + counter]
       counter++
     }
 
