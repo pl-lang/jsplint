@@ -4,6 +4,7 @@ import 'should'
 import Parser from '../src/parser/Parser.js'
 
 import { ParsedProgram, S1, S3, Errors, Success, Failure, Read } from '../src/interfaces'
+import {Vector, Scalar} from '../src/interfaces'
 
 import { Evaluator } from '../src/interpreter/Evaluator'
 
@@ -86,7 +87,7 @@ describe('Evaluacion de programas y expresiones', () => {
       output = evaluator.step()
     }
 
-    const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+    const a = evaluator.get_globals()['a'] as Scalar
 
     a.value.should.equal(2)
   })
@@ -112,7 +113,7 @@ describe('Evaluacion de programas y expresiones', () => {
       output = evaluator.step()
     }
 
-    const v = evaluator.get_locals('main')['v'] as S1.ArrayVariable
+    const v = evaluator.get_globals()['v'] as Vector
 
     v.values[0].should.equal(5)
     v.values[1].should.equal(8)
@@ -141,7 +142,7 @@ describe('Evaluacion de programas y expresiones', () => {
       output = evaluator.step()
     }
 
-    const m = evaluator.get_locals('main')['m'] as S1.ArrayVariable
+    const m = evaluator.get_globals()['m'] as Vector
 
     m.values[0].should.equal(5)
     m.values[1].should.equal(8)
@@ -346,7 +347,7 @@ describe('Evaluacion de programas y expresiones', () => {
     done.should.equal(true)
     action.should.equal('none')
 
-    const m = evaluator.get_locals('main')['m'] as S1.RegularVariable
+    const m = evaluator.get_globals()['m'] as Scalar
 
     m.value.should.equal(9)
   })
@@ -399,7 +400,7 @@ describe('Evaluacion de programas y expresiones', () => {
     done.should.equal(true)
     action.should.equal('none')
 
-    const v = evaluator.get_locals('main')['v'] as S1.ArrayVariable
+    const v = evaluator.get_globals()['v'] as Vector
 
     v.values[0].should.equal(9)
   })
@@ -609,7 +610,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+        const a = evaluator.get_globals()['a'] as Scalar
 
         a.value.should.equal(2 * 3)
       })
@@ -632,7 +633,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+        const a = evaluator.get_globals()['a'] as Scalar
 
         a.value.should.equal(-2 * -3)
       })
@@ -655,7 +656,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+        const a = evaluator.get_globals()['a'] as Scalar
 
         a.value.should.equal(2 * 2 * 2)
       })
@@ -679,7 +680,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const c = evaluator.get_locals('main')['c'] as S1.RegularVariable
+        const c = evaluator.get_globals()['c'] as Scalar
 
         c.value.should.equal(12)
       })
@@ -703,7 +704,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const v = evaluator.get_locals('main')['v'] as S1.ArrayVariable
+        const v = evaluator.get_globals()['v'] as Vector
 
         v.values[2].should.equal(12)
       })
@@ -727,7 +728,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+        const a = evaluator.get_globals()['a'] as Scalar
 
         a.value.should.equal(3 / 2)
       })
@@ -750,7 +751,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+        const a = evaluator.get_globals()['a'] as Scalar
 
         a.value.should.equal(-3 / -2)
       })
@@ -772,7 +773,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+        const a = evaluator.get_globals()['a'] as Scalar
 
         a.value.should.equal(2 + 3 / 3 + 4)
       })
@@ -794,7 +795,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+        const a = evaluator.get_globals()['a'] as Scalar
 
         a.value.should.equal(3 / 2 / 2)
       })
@@ -816,7 +817,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+        const a = evaluator.get_globals()['a'] as Scalar
 
         a.value.should.equal(2 / 2 / 2 / 2)
       })
@@ -838,7 +839,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+        const a = evaluator.get_globals()['a'] as Scalar
 
         a.value.should.equal(4 / 2 / 2 / 2)
       })
@@ -860,7 +861,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+        const a = evaluator.get_globals()['a'] as Scalar
 
         a.value.should.equal(2 / 2 / 2 / 4)
       })
@@ -880,7 +881,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+        const a = evaluator.get_globals()['a'] as Scalar
 
         a.value.should.equal(3 - 3 - 3)
       })
@@ -902,7 +903,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+        const a = evaluator.get_globals()['a'] as Scalar
 
         a.value.should.equal((3 - 3 - 3))
       })
@@ -926,7 +927,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+        const a = evaluator.get_globals()['a'] as Scalar
 
         a.value.should.equal(2 + 43)
       })
@@ -950,7 +951,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+        const a = evaluator.get_globals()['a'] as Scalar
 
         a.value.should.equal(2 - (2 - 3))
       })
@@ -972,7 +973,7 @@ describe('Evaluacion de programas y expresiones', () => {
       while (output.result.done == false) {
         output = evaluator.step()
       }
-      const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+      const a = evaluator.get_globals()['a'] as Scalar
 
       a.value.should.equal(2 + (2 + 3))
     })
@@ -994,7 +995,7 @@ describe('Evaluacion de programas y expresiones', () => {
         output = evaluator.step()
       }
 
-      const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+      const a = evaluator.get_globals()['a'] as Scalar
 
       a.value.should.equal(2 + (2 + 3 * 4))
     })
@@ -1016,7 +1017,7 @@ describe('Evaluacion de programas y expresiones', () => {
         output = evaluator.step()
       }
 
-      const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+      const a = evaluator.get_globals()['a'] as Scalar
 
       a.value.should.equal((3 * 2) - 6)
     })
@@ -1038,7 +1039,7 @@ describe('Evaluacion de programas y expresiones', () => {
         output = evaluator.step()
       }
 
-      const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+      const a = evaluator.get_globals()['a'] as Scalar
 
       a.value.should.equal((-(-(2 + 2))))
     })
@@ -1060,7 +1061,7 @@ describe('Evaluacion de programas y expresiones', () => {
         output = evaluator.step()
       }
 
-      const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+      const a = evaluator.get_globals()['a'] as Scalar
 
       a.value.should.equal(2 + 8 / 2)
     })
@@ -1083,7 +1084,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+        const a = evaluator.get_globals()['a'] as Scalar
 
         a.value.should.equal(true)
       })
@@ -1105,7 +1106,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+        const a = evaluator.get_globals()['a'] as Scalar
 
         a.value.should.equal(false)
       })
@@ -1127,7 +1128,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+        const a = evaluator.get_globals()['a'] as Scalar
 
         a.value.should.equal(true)
       })
@@ -1149,7 +1150,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+        const a = evaluator.get_globals()['a'] as Scalar
 
         a.value.should.equal(true)
       })
@@ -1171,7 +1172,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+        const a = evaluator.get_globals()['a'] as Scalar
 
         a.value.should.equal(true)
       })
@@ -1193,7 +1194,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+        const a = evaluator.get_globals()['a'] as Scalar
 
         a.value.should.equal(true)
       })
@@ -1215,7 +1216,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+        const a = evaluator.get_globals()['a'] as Scalar
 
         a.value.should.equal(true)
       })
@@ -1237,7 +1238,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+        const a = evaluator.get_globals()['a'] as Scalar
 
         a.value.should.equal(false)
       })
@@ -1259,7 +1260,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+        const a = evaluator.get_globals()['a'] as Scalar
 
         a.value.should.equal(false)
       })
@@ -1281,7 +1282,7 @@ describe('Evaluacion de programas y expresiones', () => {
           output = evaluator.step()
         }
 
-        const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+        const a = evaluator.get_globals()['a'] as Scalar
 
         a.value.should.equal(true)
       })
@@ -1304,7 +1305,7 @@ describe('Evaluacion de programas y expresiones', () => {
         output = evaluator.step()
       }
 
-      const a = evaluator.get_locals('main')['a'] as S1.RegularVariable
+      const a = evaluator.get_globals()['a'] as Scalar
 
       a.value.should.equal(true)
     })
@@ -1357,7 +1358,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
       output.should.deepEqual({error: false, result: {done: true, action: 'none'}})
 
-      const a = e.get_locals('main')['a'] as S1.RegularVariable
+      const a = e.get_globals()['a'] as Scalar
       a.value.should.equal(8)
     })
 
@@ -1385,11 +1386,11 @@ describe('Evaluacion de programas y expresiones', () => {
 
         output.should.deepEqual({error: false, result: {done: true, action: 'none'}})
 
-        const a = e.get_locals('main')['a'] as S1.RegularVariable
+        const a = e.get_globals()['a'] as Scalar
         a.value.should.equal(32)
       })
 
-      it('celda de vector por referencia ', () => {
+      it('pasar celda de vector', () => {
         const code = `
         variables
           entero a[2]
@@ -1412,13 +1413,170 @@ describe('Evaluacion de programas y expresiones', () => {
 
         output.should.deepEqual({error: false, result: {done: true, action: 'none'}})
 
-        const a = e.get_locals('main')['a'] as S1.ArrayVariable
+        const a = e.get_globals()['a'] as Vector
         a.values[0].should.equal(32)
       })
 
-      it.skip('vector por referencia', () => {})
+      it('pasara variable de un modulo a otro', () => {
+        const code = `
+        variables
+          entero a
+        inicio
+          a <- p(2)
+        fin
+
+        entero funcion p(entero inutil)
+          entero b
+        inicio
+          b <- 32
+          o(b)
+          retornar b
+        finfuncion
+
+        procedimiento o(entero ref c)
+        inicio
+          c <- 48
+        finprocedimiento
+        `
+
+        const p = compile(parse(code))
+
+        const e = new Evaluator(p)
+
+        const output = run(e)
+
+        output.should.deepEqual({error: false, result: {done: true, action: 'none'}})
+
+        const a = e.get_globals()['a'] as Scalar
+        a.value.should.equal(48)
+      })
+
+      it('parametro tomado por referencia pasado por referencia a otro modulo', () => {
+        const code = `
+        variables
+          entero a
+        inicio
+          p(a)
+        fin
+
+        procedimiento p(entero ref b)
+        inicio
+          b <- 32
+          o(b)
+        finprocedimiento
+
+        procedimiento o(entero ref c)
+        inicio
+          c <- 48
+        finprocedimiento
+        `
+
+        const p = compile(parse(code))
+
+        const e = new Evaluator(p)
+
+        const output = run(e)
+
+        output.should.deepEqual({error: false, result: {done: true, action: 'none'}})
+
+        const a = e.get_globals()['a'] as Scalar
+        a.value.should.equal(48)
+      })
+
+      it('pasar vector entero', () => {
+        const code = `
+        variables
+          entero v[3]
+        inicio
+          inicializar(v)
+        fin
+
+        procedimiento inicializar(entero ref b[3])
+          entero i
+        inicio
+          para i <- 1 hasta 3
+            b[i] <- i
+          finpara
+        finprocedimiento
+        `
+
+        const p = compile(parse(code))
+
+        const e = new Evaluator(p)
+
+        const output = run(e)
+
+        output.should.deepEqual({error: false, result: {done: true, action: 'none'}})
+
+        const a = e.get_globals()['v'] as Vector
+        a.values[0].should.equal(1)
+        a.values[1].should.equal(2)
+        a.values[2].should.equal(3)
+      })
       
-      it.skip('matriz por referencia', () => {})
+      it('pasara matriz entera', () => {
+        const code = `
+        variables
+          entero m[2, 2]
+        inicio
+          inicializar(m)
+        fin
+
+        procedimiento inicializar(entero ref b[2, 2])
+          entero i, j
+        inicio
+          para i <- 1 hasta 2
+            para j <- 1 hasta 2
+              b[i, j] <- i + j
+            finpara
+          finpara
+        finprocedimiento
+        `
+
+        const p = compile(parse(code))
+
+        const e = new Evaluator(p)
+
+        const output = run(e)
+
+        output.should.deepEqual({error: false, result: {done: true, action: 'none'}})
+
+        const m = e.get_globals()['m'] as Vector
+        m.values[0].should.equal(2)
+        m.values[1].should.equal(3)
+        m.values[2].should.equal(3)
+        m.values[3].should.equal(4)
+      })
+
+      it('pasar fila de matriz', () => {
+        const code = `
+        variables
+          entero m[2, 2]
+        inicio
+          inicializar(m[1])
+        fin
+
+        procedimiento inicializar(entero ref b[2])
+          entero i
+        inicio
+          para i <- 1 hasta 2
+            b[i] <- i
+          finpara
+        finprocedimiento
+        `
+
+        const p = compile(parse(code))
+
+        const e = new Evaluator(p)
+
+        const output = run(e)
+
+        output.should.deepEqual({error: false, result: {done: true, action: 'none'}})
+
+        const m = e.get_globals()['m'] as Vector
+        m.values[0].should.equal(1)
+        m.values[1].should.equal(2)
+      })
 
       it.skip('variable de un modulo pasada por referencia a otro modulo', () => {
         const code = `
@@ -1447,7 +1605,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
         output.should.deepEqual({error: false, result: {done: true, action: 'none'}})
 
-        const a = e.get_locals('main')['a'] as S1.ArrayVariable
+        const a = e.get_globals()['a'] as Vector
         a.values[0].should.equal(32)
       })
     })

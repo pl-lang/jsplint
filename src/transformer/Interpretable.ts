@@ -328,11 +328,22 @@ function transform_call (call: Typed.Call, module_name: string) : S3.Statement {
     const ucall = new S3.UserModuleCall(module_name, call.name, call.args.length)
 
     if (first_arg_initd) {
+        const make_frame = new S3.MakeFrame(module_name, call.name)
+
+        // enlazar creacion de frame a inicializacion de argumentos
+        make_frame.exit_point = first_arg
+
+        // enlazar inicializacion de argumentos a llamada
         last_statement.exit_point =  ucall
 
-        return first_arg
+        return make_frame
     }
     else {
+        const make_frame = new S3.MakeFrame(module_name, call.name)
+
+        // enlazar creacion de frame a llamada
+        make_frame.exit_point = ucall
+
         return ucall
     }
 }
