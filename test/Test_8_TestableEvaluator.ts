@@ -122,6 +122,33 @@ describe('Evaluacion de programas y expresiones', () => {
     v.values[4].should.equal(3)
   })
 
+  it('copiar un vector a otro', () => {
+    const code = `variables
+      entero a[3], b[3]
+    inicio
+      a[1] <- 1
+      a[2] <- 2
+      a[3] <- 3
+      b <- a
+    fin`
+
+    const p = compile(parse(code))
+
+    const evaluator = new Evaluator(p)
+
+    let output = evaluator.step()
+
+    while (output.result.done == false) {
+      output = evaluator.step()
+    }
+
+    const b = evaluator.get_globals()['b'] as Vector
+
+    b.values[0].should.equal(1)
+    b.values[1].should.equal(2)
+    b.values[2].should.equal(3)
+  })
+
   it('programa con una asignacion a una matriz', () => {
     const code = `variables
       entero m[2, 2]
@@ -148,6 +175,85 @@ describe('Evaluacion de programas y expresiones', () => {
     m.values[1].should.equal(8)
     m.values[2].should.equal(7)
     m.values[3].should.equal(9)
+  })
+
+  it('copiar una matriz a otra', () => {
+    const code = `variables
+      entero m[2, 2], n[2, 2]
+    inicio
+      m[1, 1] <- 5
+      m[1, 2] <- 8
+      m[2, 1] <- 7
+      m[2, 2] <- 9
+      n <- m
+    fin`
+
+    const p = compile(parse(code))
+
+    const evaluator = new Evaluator(p)
+
+    let output = evaluator.step()
+
+    while (output.result.done == false) {
+      output = evaluator.step()
+    }
+
+    const n = evaluator.get_globals()['n'] as Vector
+
+    n.values[0].should.equal(5)
+    n.values[1].should.equal(8)
+    n.values[2].should.equal(7)
+    n.values[3].should.equal(9)
+  })
+
+  it('copiar vector a fila de matriz', () => {
+    const code = `variables
+      entero n[2], m[2, 2]
+    inicio
+      n[1] <- 5
+      n[2] <- 8
+      m[1] <- n
+    fin`
+
+    const p = compile(parse(code))
+
+    const evaluator = new Evaluator(p)
+
+    let output = evaluator.step()
+
+    while (output.result.done == false) {
+      output = evaluator.step()
+    }
+
+    const m = evaluator.get_globals()['m'] as Vector
+
+    m.values[0].should.equal(5)
+    m.values[1].should.equal(8)
+  })
+
+  it('copiar fila de matriz a vector', () => {
+    const code = `variables
+      entero n[2], m[2, 2]
+    inicio
+      m[1, 1] <- 5
+      m[1, 2] <- 8
+      n <- m[1]
+    fin`
+
+    const p = compile(parse(code))
+
+    const evaluator = new Evaluator(p)
+
+    let output = evaluator.step()
+
+    while (output.result.done == false) {
+      output = evaluator.step()
+    }
+
+    const n = evaluator.get_globals()['n'] as Vector
+
+    n.values[0].should.equal(5)
+    n.values[1].should.equal(8)
   })
 
   it('programa con un llamado a escribir de un solo argumento', () => {
@@ -1576,6 +1682,38 @@ describe('Evaluacion de programas y expresiones', () => {
         const m = e.get_globals()['m'] as Vector
         m.values[0].should.equal(1)
         m.values[1].should.equal(2)
+      })
+
+      it.skip('copiar vector a parametro referenciado', () => {
+        const code = `
+        variables
+          entero v[3]
+        inicio
+          inicializar(v)
+        fin
+
+        procedimiento inicializar(entero ref tgt[3])
+          entero v[3]
+        inicio
+          v[1] <- 1
+          v[2] <- 2
+          v[3] <- 3
+          tgt <- v
+        finprocedimiento
+        `
+
+        const p = compile(parse(code))
+
+        const e = new Evaluator(p)
+
+        const output = run(e)
+
+        output.should.deepEqual({error: false, result: {done: true, action: 'none'}})
+
+        const v = e.get_globals()['v'] as Vector
+        v.values[0].should.equal(1)
+        v.values[1].should.equal(2)
+        v.values[2].should.equal(3)
       })
 
       it.skip('variable de un modulo pasada por referencia a otro modulo', () => {
