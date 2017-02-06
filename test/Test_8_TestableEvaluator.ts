@@ -1468,6 +1468,121 @@ describe('Evaluacion de programas y expresiones', () => {
       a.value.should.equal(8)
     })
 
+      it('pasar un vector como argumento', () => {
+        const code = `
+        variables
+          entero a[3]
+        inicio
+          a[1] <- 1
+          a[2] <- 2
+          a[3] <- 3
+          p(a)
+        fin
+
+        procedimiento p(entero b[3])
+        inicio
+          escribir(b[1])
+          escribir(b[2])
+          escribir(b[3])
+        finprocedimiento
+        `
+
+        const p = compile(parse(code))
+
+        const e = new Evaluator(p)
+
+        let output = run(e)
+
+        output.should.deepEqual({error: false, result: {done: false, action: 'write', value: 1}})
+
+        output = run(e)
+
+        output.should.deepEqual({error: false, result: {done: false, action: 'write', value: 2}})
+
+        output = run(e)
+
+        output.should.deepEqual({error: false, result: {done: true, action: 'write', value: 3}})
+      })
+
+      it('pasar una fila de matriz como argumento', () => {
+        const code = `
+        variables
+          entero a[2, 3]
+        inicio
+          a[1, 1] <- 1
+          a[1, 2] <- 2
+          a[1, 3] <- 3
+          p(a[1])
+        fin
+
+        procedimiento p(entero b[3])
+        inicio
+          escribir(b[1])
+          escribir(b[2])
+          escribir(b[3])
+        finprocedimiento
+        `
+
+        const p = compile(parse(code))
+
+        const e = new Evaluator(p)
+
+        let output = run(e)
+
+        output.should.deepEqual({error: false, result: {done: false, action: 'write', value: 1}})
+
+        output = run(e)
+
+        output.should.deepEqual({error: false, result: {done: false, action: 'write', value: 2}})
+
+        output = run(e)
+
+        output.should.deepEqual({error: false, result: {done: true, action: 'write', value: 3}})
+      })
+
+      it('pasar un matriz como argumento', () => {
+        const code = `
+        variables
+          entero a[2, 2]
+        inicio
+          a[1, 1] <- 1
+          a[1, 2] <- 2
+          a[2, 1] <- 3
+          a[2, 2] <- 4
+          p(a)
+        fin
+
+        procedimiento p(entero b[2, 2])
+        inicio
+          escribir(b[1, 1])
+          escribir(b[1, 2])
+          escribir(b[2, 1])
+          escribir(b[2, 2])
+        finprocedimiento
+        `
+
+        const p = compile(parse(code))
+
+        const e = new Evaluator(p)
+
+        let output = run(e)
+
+        output.should.deepEqual({error: false, result: {done: false, action: 'write', value: 1}})
+
+        output = run(e)
+
+        output.should.deepEqual({error: false, result: {done: false, action: 'write', value: 2}})
+
+        output = run(e)
+
+        output.should.deepEqual({error: false, result: {done: false, action: 'write', value: 3}})
+
+        output = run(e)
+        
+
+        output.should.deepEqual({error: false, result: {done: true, action: 'write', value: 4}})
+      })
+
     describe('parametros por referencia', () => {
       it('variable normal por referencia ', () => {
         const code = `
@@ -1523,7 +1638,7 @@ describe('Evaluacion de programas y expresiones', () => {
         a.values[0].should.equal(32)
       })
 
-      it('pasara variable de un modulo a otro', () => {
+      it('pasar variable de un modulo a otro', () => {
         const code = `
         variables
           entero a
@@ -1620,7 +1735,7 @@ describe('Evaluacion de programas y expresiones', () => {
         a.values[2].should.equal(3)
       })
       
-      it('pasara matriz entera', () => {
+      it('pasar matriz entera', () => {
         const code = `
         variables
           entero m[2, 2]
@@ -1684,7 +1799,7 @@ describe('Evaluacion de programas y expresiones', () => {
         m.values[1].should.equal(2)
       })
 
-      it.skip('copiar vector a parametro referenciado', () => {
+      it('copiar vector a parametro referenciado', () => {
         const code = `
         variables
           entero v[3]
@@ -1716,22 +1831,58 @@ describe('Evaluacion de programas y expresiones', () => {
         v.values[2].should.equal(3)
       })
 
-      it.skip('variable de un modulo pasada por referencia a otro modulo', () => {
+      it('copiar valores desde un vector referenciado', () => {
         const code = `
         variables
+          entero v[3]
         inicio
-          p(22)
+          v[1] <- 1
+          v[2] <- 2
+          v[3] <- 3
+          p(v)
         fin
 
-        procedimiento p(entero a)
+        procedimiento p(entero ref src[3])
+          entero v[3]
         inicio
-          o(a)
-            escribir(a)
+          v <- src
+          escribir(v[1])
+          escribir(v[2])
+          escribir(v[3])
         finprocedimiento
+        `
 
-        procedimiento o(entero ref u)
+        const p = compile(parse(code))
+
+        const e = new Evaluator(p)
+
+        let output = run(e)
+
+        output.should.deepEqual({error: false, result: {done: false, action: 'write', value: 1}})
+
+        output = run(e)
+
+        output.should.deepEqual({error: false, result: {done: false, action: 'write', value: 2}})
+
+        output = run(e)
+
+        output.should.deepEqual({error: false, result: {done: true, action: 'write', value: 3}})
+      })
+
+      it('copia de vectores referenciados', () => {
+        const code = `
+        variables
+          entero v[3], w[3]
         inicio
-          u <- 92
+          v[1] <- 1
+          v[2] <- 2
+          v[3] <- 3          
+          copiar(v, w)
+        fin
+
+        procedimiento copiar(entero ref src[3], entero ref tgt[3])
+        inicio
+          tgt <- src
         finprocedimiento
         `
 
@@ -1743,8 +1894,10 @@ describe('Evaluacion de programas y expresiones', () => {
 
         output.should.deepEqual({error: false, result: {done: true, action: 'none'}})
 
-        const a = e.get_globals()['a'] as Vector
-        a.values[0].should.equal(32)
+        const w = e.get_globals()['w'] as Vector
+        w.values[0].should.equal(1)
+        w.values[1].should.equal(2)
+        w.values[2].should.equal(3)
       })
     })
   })
