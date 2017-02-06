@@ -48,11 +48,8 @@ function transform_module (old_module: Typed.Module, current_module: string) : S
     let first_statement_initialized = false
     for (let i = old_module.parameters.length - 1; i >= 0; i--) {
         const param = old_module.parameters[i]
-        /**
-         * Saltear parametros tomados por referencia, no hace falta
-         * inicializarlos
-         */
-        if (!param.by_ref)  {
+        // saltear parametros tomados por referencia y vectores que NO son cadenas
+        if ((param.type instanceof Typed.StringType || param.type.kind != 'array') && !param.by_ref)  {
             const fake_inv: Typed.Invocation = {
                 dimensions: param.dimensions,
                 indexes: [],
@@ -69,12 +66,14 @@ function transform_module (old_module: Typed.Module, current_module: string) : S
                 }
             }
             let assignment: S3.Statement = null
+
             if (param.type instanceof Typed.StringType) {
                 assignment = new S3.AssignString(current_module, param.name, param.type.length, 0)
             }
             else {
                 assignment = create_assignment(fake_inv, current_module)
             }
+
             if (i == old_module.parameters.length - 1) {
                 first_statement_initialized = true
                 first_init = assignment
@@ -308,6 +307,38 @@ function transform_call (call: Typed.Call, module_name: string) : S3.Statement {
             }
             else {
                 next_arg = make_alias
+            }
+        }
+        else if (call.parameters[i].is_array) {
+            // Hay que inicializar un vector del modulo con valores del vector pasado como argumento
+            const source = call.args[i][0] as Typed.Invocation
+            const param = call.parameters[i]
+
+            let entry: S3.Statement = null
+            let last: S3.Statement = null
+            let entry_initd = false
+
+            for (let i = 0; i < source.indexes.length; i++) {
+                if (!entry_initd) {
+                    entry = transform_expression(source.indexes[i], module_name)
+                    last = S3.get_last(entry)
+                    entry_initd =  true
+                }
+                else {
+                    const next = transform_expression(source.indexes[i], module_name)
+                    last.exit_point = next
+                    last = S3.get_last(next)
+                }
+            }
+
+            const initv = new S3.InitV(module_name, {name: source.name, indexes: source.indexes.length, dimensions: source.dimensions}, param.name)
+
+            if (entry_initd) {
+                last.exit_point = initv
+                next_arg = entry
+            }
+            else {
+                next_arg = initv
             }
         }
         else {

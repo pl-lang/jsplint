@@ -847,17 +847,17 @@ export namespace S3 {
     }
   }
   
-  // Los contenidos de esta clase son iguales a los de CopyVec al proposito
+  // Los contenidos de esta clase son parecidos a los de CopyVec al proposito
   export class InitV extends BaseStatement {
     readonly kind: StatementKinds.InitV
-    readonly target: VectorData
     readonly source: VectorData
+    readonly target_name: string
 
-    constructor (owner: string, target: VectorData, source: VectorData) {
+    constructor (owner: string, source: VectorData, target_name: string) {
       super(owner)
       this.kind = StatementKinds.InitV
-      this.target = target
       this.source = source
+      this.target_name = target_name
     }
   }
 

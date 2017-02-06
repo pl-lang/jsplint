@@ -772,7 +772,8 @@ export namespace S3 {
     Alias = 31,
     CopyVec = 32,
     Neg = 33,
-    MakeFrame = 34
+    MakeFrame = 34,
+    InitV = 35
   }
 
   export class BaseStatement {
@@ -793,6 +794,15 @@ export namespace S3 {
     readonly name: string
 
     constructor(owner: string, name: string)
+  }
+
+  // Los contenidos de esta clase son parecidos a los de CopyVec al proposito
+  export class InitV extends BaseStatement {
+    readonly kind: StatementKinds.InitV
+    readonly source: VectorData
+    readonly target_name: string
+
+    constructor (owner: string, source: VectorData, target_name: string)
   }
 
   export interface VectorData {
@@ -980,7 +990,8 @@ export namespace S3 {
     | AssignString
     | Alias
     | CopyVec
-    | MakeFrame;
+    | MakeFrame
+    | InitV;
 }
 
 /**

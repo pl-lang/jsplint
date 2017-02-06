@@ -151,11 +151,13 @@ function procesar_enunciado (e: S3.Statement, nivel: number) : string {
         case S3.StatementKinds.AssignString:
             return `${repetir(' ', nivel*espacios)}ASIGNAR CADENA ${e.varname} ${e.length} ${e.indexes}`
         case S3.StatementKinds.Alias:
-            return `${repetir(' ', nivel*espacios)}ALIAS ${e.varname} ${e.var_indexes} ${e.dimensions} ${e.local_alias}`
+            return `${repetir(' ', nivel*espacios)}ALIAS ${e.varname} ${e.var_indexes} [${e.dimensions}] ${e.local_alias}`
         case S3.StatementKinds.CopyVec:
-            return `${repetir(' ', nivel*espacios)}CPYVEC ${e.target.name} ${e.target.dimensions} ${e.target.indexes} ${e.source.name} ${e.source.dimensions} ${e.source.indexes}`
+            return `${repetir(' ', nivel*espacios)}CPYVEC ${e.target.name} [${e.target.dimensions}] ${e.target.indexes} ${e.source.name} [${e.source.dimensions}] ${e.source.indexes}`
         case S3.StatementKinds.MakeFrame:
             return `${repetir(' ', nivel*espacios)}MAKEFRAME ${e.name}`
+        case S3.StatementKinds.InitV:
+            return `${repetir(' ', nivel*espacios)}INITV ${e.source.name} ${e.source.indexes} [${e.source.dimensions}] ${e.target_name}`
     }
 }
 

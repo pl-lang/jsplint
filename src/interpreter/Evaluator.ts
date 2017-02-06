@@ -242,7 +242,52 @@ export class Evaluator {
           return this.neg()
         case S3.StatementKinds.MakeFrame:
           return this.make_frame_statement(s)
+        case S3.StatementKinds.InitV:
+          return this.initv(s)
     }
+  }
+
+  private initv(s: S3.InitV): Success<NullAction> {
+    // obtener el vector donde se copiaran los valores
+    const tgt = this.state.next_frame[s.target_name] as Vector
+
+    const tgt_range: Range = {
+      from: 0,
+      to: this.calculate_index(tgt.dimensions.map(i => i - 1), tgt.dimensions)
+    }
+
+    const src_found = this.get_var(s.source.name)
+
+    const src_provided_indexes = this.pop_indexes(s.source.indexes)
+
+    // src: vector del cual se copiaran los valores
+    let src: Vector = null
+
+    if (src_found.type == 'alias') {
+      const {variable, pre_indexes} = this.resolve_alias(src_found)
+      const partial_indexes = this.pad(src_provided_indexes, 1, s.source.dimensions.length)
+      const indexes = [...pre_indexes, ...partial_indexes].map(i => i - 1)
+      src = variable as Vector
+
+      const src_range: Range = {
+        from: this.calculate_index(indexes, src.dimensions),
+        to: this.calculate_index(src.dimensions.map(i => i - 1), src.dimensions)
+      }
+
+      this.copy_vec(tgt, src, tgt_range, src_range)
+    }
+    else {
+      src = src_found as Vector
+
+      const src_range: Range = {
+        from: this.calculate_index(this.pad(src_provided_indexes, 1, s.source.dimensions.length).map(i => i - 1), s.source.dimensions),
+        to: this.calculate_index(s.source.dimensions.map(i => i - 1), s.source.dimensions)
+      }
+
+      this.copy_vec(tgt, src, tgt_range, src_range)
+    }
+
+    return {error: false, result: {done: false, action: 'none'}}
   }
 
   private make_frame_statement(s: S3.MakeFrame): Success<NullAction> {
