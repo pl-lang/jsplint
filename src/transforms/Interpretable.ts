@@ -790,24 +790,6 @@ function transform_invocation (i: Typed.Invocation, module_name: string) : S3.St
     }
 }
 
-function transform_literal (l: Typed.Literal, module_name: string): S3.Statement {
-    if (l.typings.type instanceof Typed.StringType) {
-        const length = (l.typings.type as Typed.StringType).length
-
-        let first: S3.Statement = new S3.Push(module_name, '\0');
-        let last: S3.Statement = first;
-        for (let i = 0; i < length; i++) {
-            const next = new S3.Push(module_name, (l.value as string)[i])
-            last.exit_point = next
-            last = next
-        }
-        return first
-    }
-    else {
-        return new S3.Push(module_name, l.value)
-    }
-}
-
 function transform_expression (expression: Typed.ExpElement[], module_name: string) : S3.Statement {
     const statements: S3.Statement[] = []
     for (let e of expression) {
@@ -865,7 +847,7 @@ function transform_exp_element (element: Typed.ExpElement, module_name: string) 
       }
       break
     case 'literal':
-        return transform_literal(element, module_name)
+        return new S3.Push(module_name, element.value)
     case 'invocation':
         return transform_invocation(element, module_name)
     case 'call':
