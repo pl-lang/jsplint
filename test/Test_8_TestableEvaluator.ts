@@ -574,11 +574,7 @@ describe('Evaluacion de programas y expresiones', () => {
     action.should.equal('read')
     name.should.equal('v')
 
-    e.input('\0')
-    e.input('h')
-    e.input('o')
-    e.input('l')
-    e.input('a')
+    e.input('hola')
 
     output = run(e)
 
@@ -593,7 +589,55 @@ describe('Evaluacion de programas y expresiones', () => {
     v.values[3].should.equal('a')
 
     e.get_value_stack().length.should.equal(0)
-  })  
+  })
+
+  it('escribir cadena leida', () => {
+    const code = `
+        variables
+          caracter v[4]
+        inicio
+          leer(v)
+          escribir(v)
+        fin`
+
+    const p = compile(parse(code))
+
+    const e = new Evaluator(p)
+
+    let output = run(e)
+
+    output.error.should.equal(false)
+
+    const { done, action, name } = output.result as Read
+
+    done.should.equal(false)
+    action.should.equal('read')
+    name.should.equal('v')
+
+    e.input('hola')
+
+    output = run(e)
+
+    output.should.deepEqual({ error: false, result: { done: true, action: 'write', value: 'hola' } })
+  })
+
+  it('escribir cadena asignada', () => {
+    const code = `
+        variables
+          caracter v[4]
+        inicio
+          v <- "hola"
+          escribir(v)
+        fin`
+
+    const p = compile(parse(code))
+
+    const e = new Evaluator(p)
+
+    let output = run(e)
+
+    output.should.deepEqual({ error: false, result: { done: true, action: 'write', value: 'hola' } })
+  })
 
   it('programa con un enunciado si', () => {
     const code = `variables
