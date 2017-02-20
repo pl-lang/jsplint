@@ -444,12 +444,7 @@ export class Evaluator {
      * demasiado largas.
      */
     if (this.is_whithin_bounds(indexes, v.dimensions)) {
-      const string: string[] = []
-      let char = this.state.value_stack.pop() as string
-      while (char != '\0') {
-        string.unshift(char)
-        char = this.state.value_stack.pop() as string
-      }
+      const string = this.state.value_stack.pop() as string
 
       let i = 0;
       const start_index = this.calculate_index([...indexes, 0], v.dimensions)
