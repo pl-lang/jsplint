@@ -431,18 +431,7 @@ export class Evaluator {
     const v = this.get_var(s.varname) as Vector
 
     const indexes = this.pop_indexes(s.indexes)
-
-    /**
-     * Si los indices recibidos estan dentro de lo permitido
-     * se continua con la asignacion. Como estos indices son
-     * parciales todavia puede ocurrir que la cadena sea mas
-     * larga que el vector, lo cual ocurre cuando i == s.length
-     * pero todavia no se desapiló el caracter '\0' que indica
-     * el final de la cadena. En ese caso se retorna el error
-     * Errors.LongString. Esto evita que se asignen cadenas
-     * que fueron leidas (ingresadas por el usuario) y son
-     * demasiado largas.
-     */
+    
     if (this.is_whithin_bounds(indexes, v.dimensions)) {
       const string = this.state.value_stack.pop() as string
 
