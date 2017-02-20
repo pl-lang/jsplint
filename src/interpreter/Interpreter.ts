@@ -112,39 +112,22 @@ export default class Interpreter extends Emitter {
 
     if (!(types_are_equal(literal_type, var_info.type) || (cond_a && cond_b))) {
       if (var_info.type instanceof Typed.StringType && literal_type instanceof Typed.StringType) {
-        if (var_info.type.length < literal_type.length) {
-          const error: Errors.LongString = {
-              vector_length: var_info.type.length,
-              string_length: literal_type.length,
-              name: var_info.name,
-              reason: '@read-long-string',
-              type: stringify(var_info.type),
-              where: 'interpreter'
-          }
-          /**
-           * Terminar la ejecucion de este programa debido al error
-           */
-          this.running = false
-          /**
-           * Emitir el error
-           */
-          this.emit('evaluation-error', error)
+        const error: Errors.LongString = {
+          vector_length: var_info.type.length,
+          string_length: literal_type.length,
+          name: var_info.name,
+          reason: '@read-long-string',
+          type: stringify(var_info.type),
+          where: 'interpreter'
         }
-        else {
-          /**
-           * Primero hay que enviar '\0' para marcar el principio de la cadena
-           */
-          this.evaluator.input('\0')
-          /**
-           * Los tipos son compatibles! Hay que enviarlos al evaluador...
-           * pero como el valor enviado es una cadena, hay que enviarlo
-           * letra por letra. De atras para adelante.
-           */
-          for (let i = value.length - 1; i >= 0; i--) {
-            this.evaluator.input(value[i])
-          }
-          this.data_read = true
-        }
+        /**
+         * Terminar la ejecucion de este programa debido al error
+         */
+        this.running = false
+        /**
+         * Emitir el error
+         */
+        this.emit('evaluation-error', error)
       }
       else {
         const error: Errors.IncompatibleTypes = {
