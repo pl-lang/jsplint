@@ -11,6 +11,11 @@ export interface Success<A> {
   result: A
 }
 
+export interface Position {
+  line: number
+  column: number
+}
+
 export namespace Errors {
   export type TypeError = IncompatibleArgument
   | IncompatibleTypes
@@ -29,10 +34,7 @@ export namespace Errors {
   export interface Base {
     reason: string
     where: string
-    pos?: {
-      column: number
-      line: number
-    }
+    pos?: Position
   }
 
   /**
@@ -132,7 +134,7 @@ export namespace Errors {
     where: 'parser'
   }
 
-  export interface RepeatedVar {
+  export interface RepeatedVar extends Base {
     reason: 'repeated-variable'
     name: string
     first_type: string
@@ -140,7 +142,7 @@ export namespace Errors {
     where: 'declarator-transform'
   }
 
-  export interface ExtraIndexes {
+  export interface ExtraIndexes extends Base {
     reason: '@invocation-extra-indexes'
     name: string
     dimensions: number
@@ -416,12 +418,14 @@ export namespace S0 {
     type: 'call'
     args: ExpElement[][]
     name: string
+    pos: Position
   }
 
   export interface Assignment {
     type: 'assignment'
     left: InvocationInfo
     right: ExpElement[]
+    pos: Position
   }
 
   export interface If {
@@ -429,12 +433,14 @@ export namespace S0 {
     condition: ExpElement[]
     true_branch: Statement[]
     false_branch: Statement[]
+    pos: Position
   }
 
   export interface While {
     type: 'while'
     condition: ExpElement[]
     body: Statement[]
+    pos: Position
   }
 
   export interface For {
@@ -442,17 +448,20 @@ export namespace S0 {
     counter_init: Assignment
     last_value: ExpElement[]
     body: Statement[]
+    pos: Position
   }
 
   export interface Until {
     type: 'until'
     condition: ExpElement[]
     body: Statement[]
+    pos: Position
   }
 
   export interface Return {
     type: 'return'
     expression: ExpElement[]
+    pos: Position
   }
 
   export interface TypedDeclaration extends DeclarationInfo {
@@ -463,6 +472,7 @@ export namespace S0 {
   export interface Declaration {
     type: 'declaration'
     variables: TypedDeclaration[]
+    pos: Position
   }
 
   export type Module = Function | Procedure
@@ -640,12 +650,14 @@ export namespace S2 {
     module_type: 'function' | 'procedure'
     parameters: S0.Parameter[]
     return_type: TypeNameString
+    pos: Position
   }
 
   export interface Assignment {
     type: 'assignment'
     left: InvocationInfo
     right: ExpElement[]
+    pos: Position
   }
 
   export type ExpValue = InvocationValue | ModuleCall | S0.LiteralValue
@@ -678,6 +690,7 @@ export namespace S2 {
     type: 'return'
     expression: ExpElement[]
     expected: TypeNameString
+    pos: Position
   }
 
   export type Statement = ModuleCall | Assignment | If | While | For | Until | Return
@@ -811,6 +824,7 @@ export namespace S3 {
     protected _exit_point: Statement
     protected exit_set: boolean
     readonly owner: string
+    is_user_stmnt: boolean
 
     constructor(owner: string) {
       this.owner = owner
@@ -844,6 +858,7 @@ export namespace S3 {
       super(owner)
       this.kind = StatementKinds.MakeFrame
       this.name = name
+      this.is_user_stmnt = false
     }
   }
   
@@ -858,6 +873,7 @@ export namespace S3 {
       this.kind = StatementKinds.InitV
       this.source = source
       this.target_name = target_name
+      this.is_user_stmnt = false
     }
   }
 
@@ -878,15 +894,19 @@ export namespace S3 {
      */
     readonly source: VectorData
 
+    pos: Position
+
     /**
      * target datos del vector que recibe los datos;
      * source datos del vector del cual se copian los datos;
      */
-    constructor (owner: string, target: VectorData, source: VectorData) {
+    constructor (owner: string, target: VectorData, source: VectorData, pos: Position) {
       super(owner)
       this.kind = StatementKinds.CopyVec
       this.target = target
       this.source = source
+      this.is_user_stmnt = true
+      this.pos = pos
     }
   }
 
@@ -906,6 +926,7 @@ export namespace S3 {
       this.local_alias = alias
       this.dimensions = dimensions
       this.module_name = module_name
+      this.is_user_stmnt = false
     }
   }
 
@@ -914,13 +935,16 @@ export namespace S3 {
     readonly length: number
     readonly varname: string
     readonly indexes: number
+    pos?: Position
 
-    constructor (owner: string, varname: string, length: number, indexes: number) {
+    constructor(owner: string, varname: string, length: number, indexes: number, user: boolean, pos?: Position) {
       super(owner)
       this.kind = StatementKinds.AssignString
       this.varname = varname
       this.length = length
       this.indexes = indexes
+      this.is_user_stmnt = user
+      this.pos = pos
     }
   }
 
@@ -932,70 +956,89 @@ export namespace S3 {
       super(owner)
       this.kind = StatementKinds.Concat
       this.length = length
+      this.is_user_stmnt = false
     }
   }
 
   export class Return extends BaseStatement {
     readonly kind: StatementKinds.Return
+    pos: Position
 
-    constructor(owner: string) {
+    constructor(owner: string, pos: Position) {
       super(owner)
       this.kind = StatementKinds.Return
+      this.is_user_stmnt = true
+      this.pos = pos
     }
   }
 
   export class UserModuleCall extends BaseStatement {
     readonly kind: StatementKinds.UserModuleCall
+    pos: Position
 
-    constructor(owner: string, readonly name: string, readonly total_args: number) {
+    constructor(owner: string, readonly name: string, readonly total_args: number, pos: Position) {
       super(owner)
       this.kind = StatementKinds.UserModuleCall
+      this.is_user_stmnt = true
+      this.pos = pos
     }
   }
 
   export class ReadCall extends BaseStatement {
     readonly name: 'leer'
     readonly kind: StatementKinds.ReadCall
+    pos: Position
     /**
      * Tipo de datos de la variable que v a a recibir el dato
      * leido.
      */
     readonly type: Typed.AtomicType | Typed.StringType
 
-    constructor(owner: string, readonly varname: string, type: Typed.AtomicType | Typed.StringType) {
+    constructor(owner: string, readonly varname: string, type: Typed.AtomicType | Typed.StringType, pos: Position) {
       super(owner)
       this.kind = StatementKinds.ReadCall
       this.name = 'leer'
       this.type = type
+      this.is_user_stmnt = true
+      this.pos = pos
     }
   }
 
   export class WriteCall extends BaseStatement {
     readonly name: 'escribir'
     readonly kind: StatementKinds.WriteCall
+    pos: Position
 
-    constructor(owner: string) {
+    constructor(owner: string, pos: Position) {
       super(owner)
       this.kind = StatementKinds.WriteCall
       this.name = 'escribir'
+      this.is_user_stmnt = true
+      this.pos = pos
     }
   }
 
   export class Assign extends BaseStatement {
     readonly kind: StatementKinds.Assign
+    pos?: Position
 
-    constructor(owner: string, readonly varname: string) {
+    constructor(owner: string, readonly varname: string, user: boolean, pos?: Position) {
       super(owner)
       this.kind = StatementKinds.Assign
+      this.is_user_stmnt = user
+      this.pos = pos
     }
   }
 
   export class AssignV extends BaseStatement {
     readonly kind: StatementKinds.AssignV
+    pos?: Position
 
-    constructor(owner: string, readonly total_indexes: number, readonly dimensions: number[], readonly varname: string) {
+    constructor(owner: string, readonly total_indexes: number, readonly dimensions: number[], readonly varname: string, user: boolean, pos?: Position) {
       super(owner)
       this.kind = StatementKinds.AssignV
+      this.is_user_stmnt = user
+      this.pos = pos
     }
   }
 
@@ -1044,28 +1087,37 @@ export namespace S3 {
 
   export class While extends BaseStatement {
     readonly kind: StatementKinds.While
+    pos: Position
 
-    constructor(owner: string, readonly entry_point: Statement) {
+    constructor(owner: string, readonly entry_point: Statement, pos: Position) {
       super(owner)
       this.kind = StatementKinds.While
+      this.is_user_stmnt = true
+      this.pos = pos
     }
   }
 
   export class Until extends BaseStatement {
     readonly kind: StatementKinds.Until
+    pos: Position
 
-    constructor(owner: string, readonly entry_point: Statement) {
+    constructor(owner: string, readonly entry_point: Statement, pos: Position) {
       super(owner)
       this.kind = StatementKinds.Until
+      this.is_user_stmnt = true
+      this.pos = pos
     }
   }
 
   export class If extends BaseStatement {
     readonly kind: StatementKinds.If
+    pos: Position
 
-    constructor(owner: string, readonly true_branch_entry: Statement, readonly false_branch_entry: Statement) {
+    constructor(owner: string, readonly true_branch_entry: Statement, readonly false_branch_entry: Statement, pos: Position) {
       super(owner)
       this.kind = StatementKinds.If
+      this.is_user_stmnt = true
+      this.pos = pos
     }
 
     set exit_point(s: Statement) {
@@ -1190,6 +1242,7 @@ export namespace Typed {
       actual: Type
       expected: Type
     }
+    pos: Position
   }
 
   export interface For {
@@ -1201,6 +1254,7 @@ export namespace Typed {
       init_value: Type
       last_value: Type
     }
+    pos: Position
   }
 
   export interface While {
@@ -1211,6 +1265,7 @@ export namespace Typed {
       condition: Type
       body: Statement[]
     }
+    pos: Position
   }
 
   export interface Until {
@@ -1221,6 +1276,7 @@ export namespace Typed {
       condition: Type
       body: Statement[]
     }
+    pos: Position
   }
 
   export interface If {
@@ -1231,12 +1287,14 @@ export namespace Typed {
     typings: {
       condition: Type
     }
+    pos: Position
   }
 
   export interface Assignment {
     type: 'assignment'
     left: Invocation
-    right: ExpElement[]
+    right: ExpElement[],
+    pos: Position,
     typings: {
       left: Type
       right: Type
@@ -1265,6 +1323,7 @@ export namespace Typed {
       return: AtomicType
       parameters: Type[]
     }
+    pos: Position
   }
 
   export interface Literal extends S0.LiteralValue {

@@ -45,7 +45,8 @@ function check_simple_loop (l: Typed.While | Typed.Until): Errors.TypeError[] {
         const error: Errors.BadCondition = {
             reason: 'bad-condition',
             where: 'typechecker',
-            received: stringify(l.typings.condition)
+            received: stringify(l.typings.condition),
+            pos: l.pos
         }
 
         errors.push(error)
@@ -75,7 +76,8 @@ function check_for (f: Typed.For): Errors.TypeError[] {
         const error: Errors.BadCounter = {
             reason: '@for-bad-counter',
             where: 'typechecker',
-            received: stringify(f.counter_init.typings.left)
+            received: stringify(f.counter_init.typings.left),
+            pos: f.pos
         }
 
         errors.push(error)
@@ -85,7 +87,8 @@ function check_for (f: Typed.For): Errors.TypeError[] {
         const error: Errors.BadInitValue = {
             reason: '@for-bad-init',
             where: 'typechecker',
-            received: stringify(f.typings.init_value)
+            received: stringify(f.typings.init_value),
+            pos: f.pos
         }
 
         errors.push(error)
@@ -95,7 +98,8 @@ function check_for (f: Typed.For): Errors.TypeError[] {
         const error: Errors.BadLastValue = {
             reason: '@for-bad-last',
             where: 'typechecker',
-            received: stringify(f.typings.last_value)
+            received: stringify(f.typings.last_value),
+            pos: f.pos
         }
 
         errors.push(error)
@@ -120,7 +124,8 @@ function check_return (r: Typed.Return): Errors.TypeError[] {
             reason: 'bad-return',
             where: 'typechecker',
             declared: stringify(r.typings.expected),
-            received: stringify(r.typings.actual)
+            received: stringify(r.typings.actual),
+            pos: r.pos
         }
 
         errors.push(error)
@@ -136,7 +141,8 @@ function check_if (i: Typed.If): Errors.TypeError[] {
         const error: Errors.BadCondition = {
             reason: 'bad-condition',
             where: 'typechecker',
-            received: stringify(i.typings.condition)
+            received: stringify(i.typings.condition),
+            pos: i.pos
         }
 
         errors.push(error)
@@ -184,7 +190,8 @@ function check_call (c: Typed.Call): Failure<Errors.TypeError[]>|Success<Typed.A
                 received: c.typings.args.length,
                 name: c.name,
                 reason: '@call-wrong-arg-amount',
-                where: 'typechecker'
+                where: 'typechecker',
+                pos: c.pos
             }
 
             errors.push(error)
@@ -214,7 +221,8 @@ function check_call (c: Typed.Call): Failure<Errors.TypeError[]>|Success<Typed.A
                     where: 'typechecker',
                     expected: stringify(param_type),
                     received: stringify(arg.type),
-                    index: arg.index + 1
+                    index: arg.index + 1,
+                    pos: c.pos
                 }
                 errors.push(error)
             }
@@ -251,6 +259,7 @@ function check_call (c: Typed.Call): Failure<Errors.TypeError[]>|Success<Typed.A
                          * Indice (en la lista de parametros del modulo)
                          */
                         index: arg.index,
+                        pos: c.pos
                     }
                     errors.push(error)
                 }
@@ -289,7 +298,8 @@ function check_io (c: Typed.Call): Failure<Errors.TypeError[]>|Success<Typed.Ato
                 reason: 'bad-write-arg',
                 received: stringify(type),
                 where: 'typechecker',
-                name: c.name
+                name: c.name,
+                pos: c.pos
             }
             errors.push(e)
         }
@@ -297,7 +307,8 @@ function check_io (c: Typed.Call): Failure<Errors.TypeError[]>|Success<Typed.Ato
             const e: Errors.BadReadArg = {
                 reason: '@read-bad-arg',
                 where: 'typechecker',
-                index: i
+                index: i,
+                pos: c.pos
             }
             errors.push(e)
         }
@@ -333,7 +344,8 @@ function check_assignment (a: Typed.Assignment): Errors.TypeError[] {
                     name: a.left.name,
                     reason: '@assignment-long-string',
                     type: stringify(inv_report.result),
-                    where: 'typechecker'
+                    where: 'typechecker',
+                    pos: a.pos
                 }
 
                 errors.push(error)
@@ -353,7 +365,8 @@ function check_assignment (a: Typed.Assignment): Errors.TypeError[] {
                     reason: '@assignment-incompatible-types',
                     where: 'typechecker',
                     expected: stringify(inv_report.result),
-                    received: stringify(a.typings.right)
+                    received: stringify(a.typings.right),
+                    pos: a.pos
                 }
 
                 errors.push(error)
