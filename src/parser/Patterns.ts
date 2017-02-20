@@ -2,7 +2,7 @@
 
 import {take, flatten, mergeObjs} from '../utility/helpers.js'
 
-import {Failure, Success, ValueKind, ReservedKind, SymbolKind, OtherKind, Token, TokenKind} from '../interfaces'
+import {Failure, Success, Position, ValueKind, ReservedKind, SymbolKind, OtherKind, Token, TokenKind} from '../interfaces'
 
 import {Errors, DataTypeKind, TypeNameString, S0} from '../interfaces'
 
@@ -601,6 +601,8 @@ export function Parameter (source: TokenQueue) : Failure<Errors.Pattern> | Succe
  * Captura una llamada a una funcion o procedimiento
  */
 export function ModuleCall (source: TokenQueue) : Failure<Errors.Pattern> | Success<S0.Call> {
+  const pos: Position = { line: source.current().line, column: source.current().column }
+
   const name = Word(source)
 
   if (name.error) {
@@ -631,7 +633,7 @@ export function ModuleCall (source: TokenQueue) : Failure<Errors.Pattern> | Succ
 
         if (source.current().kind == SymbolKind.RightPar) {
           source.next()
-          return {error:false, result:{type:'call', args:args.result, name:name.result}}
+          return {error:false, result:{type:'call', args:args.result, name:name.result, pos}}
         }
         else {
           const current = source.current()
@@ -646,7 +648,7 @@ export function ModuleCall (source: TokenQueue) : Failure<Errors.Pattern> | Succ
     }
     else {
       source.next() 
-      return {error:false, result:{type:'call', args:[], name:name.result}}
+      return {error:false, result:{type:'call', args:[], name:name.result, pos}}
     }
   }
 }
@@ -655,7 +657,9 @@ export function ModuleCall (source: TokenQueue) : Failure<Errors.Pattern> | Succ
  * Captura un enunciado de asignacion
  */
 export function Assignment (source: TokenQueue) : Failure<Errors.Pattern> | Success<S0.Assignment> {
-  const result: S0.Assignment = {type: 'assignment', left: null, right: null}
+  const pos: Position = { line: source.current().line, column: source.current().column }
+
+  const result: S0.Assignment = {type: 'assignment', left: null, right: null, pos}
 
   const left_hand_match = Variable(source)
 
@@ -695,11 +699,14 @@ export function Assignment (source: TokenQueue) : Failure<Errors.Pattern> | Succ
  * Captura un enunciado si
  */
 export function If (source: TokenQueue) : Failure<Errors.Pattern> | Success<S0.If> {
+  const pos: Position = { line: source.current().line, column: source.current().column }
+
   let result: S0.If = {
     type : 'if',
     condition : null,
     true_branch : [],
-    false_branch :[]
+    false_branch :[],
+    pos
   }
 
   if (source.current().kind === ReservedKind.Si) {
@@ -822,10 +829,13 @@ export function If (source: TokenQueue) : Failure<Errors.Pattern> | Success<S0.I
 }
 
 export function While (source: TokenQueue) : Failure<Errors.Pattern> | Success<S0.While> {
+  const pos: Position = { line: source.current().line, column: source.current().column }
+
   const result: S0.While = {
     type : 'while',
     condition : null,
-    body : []
+    body : [],
+    pos
   }
 
   if (source.current().kind === ReservedKind.Mientras) {
@@ -926,11 +936,14 @@ export function While (source: TokenQueue) : Failure<Errors.Pattern> | Success<S
 // 'finpara'
 
 export function For(source: TokenQueue) : Failure<Errors.Pattern> | Success<S0.For> {
+  const pos: Position = { line: source.current().line, column: source.current().column }
+
   const result: S0.For = {
     type: 'for',
     counter_init: null,
     last_value: null,
-    body: []
+    body: [],
+    pos
   }
 
   if (source.current().kind === ReservedKind.Para) {
@@ -1016,10 +1029,13 @@ export function For(source: TokenQueue) : Failure<Errors.Pattern> | Success<S0.F
 }
 
 export function Until (source: TokenQueue) : Failure<Errors.Pattern> | Success<S0.Until> {
+  const pos: Position = { line: source.current().line, column: source.current().column }
+  
   const result: S0.Until = {
     type : 'until',
     condition : null,
-    body : []
+    body : [],
+    pos
   }
 
   if (source.current().kind === ReservedKind.Repetir) {
@@ -1128,9 +1144,12 @@ export function Until (source: TokenQueue) : Failure<Errors.Pattern> | Success<S
 }
 
 export function Return (source: TokenQueue) : Failure<Errors.Pattern> | Success<S0.Return> {
+  const pos: Position = { line: source.current().line, column: source.current().column }
+
   const result: S0.Return = {
     type:'return',
-    expression:null
+    expression:null,
+    pos
   }
 
   if (source.current().kind != ReservedKind.Retornar) {
@@ -1300,7 +1319,9 @@ export function FunctionModule (source: TokenQueue) : Failure<Errors.Pattern> | 
    * Ahora hay que crear un DeclarationStatement donde se declaren las variables
    * de los parametros.
    */
-  const par_declaration: S0.Declaration = {type: 'declaration', variables: []}
+  const pos: Position = { line: source.current().line, column: source.current().column }
+
+  const par_declaration: S0.Declaration = {type: 'declaration', variables: [], pos}
   for (let par of (parameters.result as S0.Parameter[])) {
     /**
      * Extraer las propiedades del parametro que son necesarias
@@ -1404,7 +1425,9 @@ export function ProcedureModule (source: TokenQueue) : Failure<Errors.Pattern> |
    * Ahora hay que crear un DeclarationStatement donde se declaren las variables
    * de los parametros.
    */
-  const par_declaration: S0.Declaration = {type: 'declaration', variables: []}
+  const pos: Position = { line: source.current().line, column: source.current().column }
+
+  const par_declaration: S0.Declaration = {type: 'declaration', variables: [], pos}
   for (let par of (parameters.result as S0.Parameter[])) {
     /**
      * Extraer las propiedades del parametro que son necesarias
@@ -1486,9 +1509,12 @@ export function ProcedureModule (source: TokenQueue) : Failure<Errors.Pattern> |
 }
 
 export function DeclarationStatement (source: TokenQueue) : Failure<Errors.Pattern> | Success<S0.Declaration> {
+  const pos: Position = { line: source.current().line, column: source.current().column }
+
   const result: S0.Declaration = {
     type:'declaration',
-    variables: []
+    variables: [],
+    pos
   }
 
   const type_match = TypeName(source)

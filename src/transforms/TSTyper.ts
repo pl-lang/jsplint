@@ -148,6 +148,7 @@ function transform_if (a: S2.If, mn: string, p: S2.AST): Failure<Typed.Error[]> 
         else {
             const result: Typed.If = {
                 type: 'if',
+                pos: a.pos,
                 condition: c_report.result as Typed.ExpElement[],
                 true_branch: typed_tb,
                 false_branch: typed_fb,
@@ -198,6 +199,7 @@ function transform_for (f: S2.For, mn: string, p: S2.AST): Failure<Typed.Error[]
         else {
             const result: Typed.For = {
                 type: 'for',
+                pos: f.pos,
                 counter_init: init.result as Typed.Assignment,
                 body: body,
                 last_value: last.result as Typed.ExpElement[],
@@ -243,6 +245,7 @@ function transform_while (w: S2.While, mn: string, p: S2.AST): Failure<Typed.Err
         else {
             const result: Typed.While = {
                 type: 'while',
+                pos: w.pos,
                 condition: c_report.result as Typed.ExpElement[],
                 body: body_statements,
                 typings: {
@@ -287,6 +290,7 @@ function transform_until (u: S2.Until, mn: string, p: S2.AST): Failure<Typed.Err
         else {
             const result: Typed.Until = {
                 type: 'until',
+                pos: u.pos,
                 condition: c_report.result as Typed.ExpElement[],
                 body: body_statements,
                 typings: {
@@ -321,6 +325,7 @@ function transform_return (r: S2.Return, mn: string, p: S2.AST): Failure<Typed.E
 
             const result: Typed.Return = {
                 type,
+                pos: r.pos,
                 expression: exp.result as Typed.ExpElement[],
                 typings: {
                     actual: report.result as Typed.Type,
@@ -386,6 +391,7 @@ function type_call (a: S2.ModuleCall, mn: string, p: S2.AST): Failure<Typed.Erro
 
             const result: Typed.Call = {
                 type,
+                pos: a.pos,
                 name,
                 args: transformed_args,
                 parameters,
@@ -489,6 +495,7 @@ function transform_assignment (a: S2.Assignment, mn: string, p: S2.AST): Failure
 
             const result: Typed.Assignment = {
                 type,
+                pos: a.pos,
                 left: left_type.result as Typed.Invocation,
                 right: typed_right.result as Typed.ExpElement[],
                 typings: {left: (left_type.result as Typed.Invocation).typings.type, right: right_type.result as Typed.Type}

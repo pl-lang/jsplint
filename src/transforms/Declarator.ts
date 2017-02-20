@@ -128,7 +128,8 @@ function declare_variables (declarations: S0.Declaration[]) : Failure<Errors.Rep
           name: original.name,
           first_type: original.datatype,
           second_type: variable.datatype,
-          where: 'declarator-transform'
+          where: 'declarator-transform',
+          pos: declaration.pos
         }
 
         repeated_variables.push(error_info)

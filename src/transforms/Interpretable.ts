@@ -68,7 +68,7 @@ function transform_module (old_module: Typed.Module, current_module: string) : S
             let assignment: S3.Statement = null
 
             if (param.type instanceof Typed.StringType) {
-                assignment = new S3.AssignString(current_module, param.name, param.type.length, 0)
+                assignment = new S3.AssignString(current_module, param.name, param.type.length, 0, false)
             }
             else {
                 assignment = create_assignment(fake_inv, current_module)
@@ -126,7 +126,7 @@ function transform_if (statement: Typed.If, module_name: string) : S3.Statement 
     const true_entry = transform_body(statement.true_branch, module_name)
     const false_entry = transform_body(statement.false_branch, module_name)
 
-    const sif = new S3.If(module_name, true_entry, false_entry)
+    const sif = new S3.If(module_name, true_entry, false_entry, statement.pos)
 
     /**
      * Hacer que la evaluacion de la condicion venga seguida del if
@@ -149,7 +149,7 @@ function transform_while (statement: Typed.While, module_name: string) : S3.Stat
     const loop_body = transform_body(statement.body, module_name)
     const body_last_st = S3.get_last(loop_body)
 
-    const swhile = new S3.While(module_name, loop_body)
+    const swhile = new S3.While(module_name, loop_body, statement.pos)
 
     cond_last_st.exit_point = swhile
 
@@ -171,7 +171,7 @@ function transform_until (statement: Typed.Until, module_name: string) : S3.Stat
 
     const last_st_condition = S3.get_last(condition)
 
-    const suntil = new S3.Until(module_name, body)
+    const suntil = new S3.Until(module_name, body, statement.pos)
 
     last_st_condition.exit_point = suntil
 
@@ -236,7 +236,8 @@ function transform_for (statement: Typed.For, module_name: string) : S3.Statemen
         typings: {
             left: left.typings.type,
             right: left.typings.type
-        }
+        },
+        pos: null
     }
 
     /**
@@ -255,7 +256,7 @@ function transform_for (statement: Typed.For, module_name: string) : S3.Statemen
      * -    condicion
      */
 
-    const swhile = new S3.While(module_name, body)
+    const swhile = new S3.While(module_name, body, statement.pos)
 
     init_last.exit_point = condition_entry
     conditon_last.exit_point = swhile
@@ -356,7 +357,7 @@ function transform_call (call: Typed.Call, module_name: string) : S3.Statement {
         }
     }
 
-    const ucall = new S3.UserModuleCall(module_name, call.name, call.args.length)
+    const ucall = new S3.UserModuleCall(module_name, call.name, call.args.length, call.pos)
 
     if (first_arg_initd) {
         const make_frame = new S3.MakeFrame(module_name, call.name)
@@ -394,7 +395,7 @@ function transform_write (wc: Typed.Call, module_name: string) : S3.Statement {
         last_statement = concat
     }
 
-    const escribir_call = new S3.WriteCall(module_name)
+    const escribir_call = new S3.WriteCall(module_name, wc.pos)
 
     last_statement.exit_point = escribir_call
     last_statement = escribir_call
@@ -410,7 +411,7 @@ function transform_write (wc: Typed.Call, module_name: string) : S3.Statement {
             last_statement = concat
         }
 
-        const wcall = new S3.WriteCall(module_name)
+        const wcall = new S3.WriteCall(module_name, wc.pos)
         last_statement.exit_point = wcall
         last_statement = wcall
     }
@@ -436,7 +437,7 @@ function transform_read (rc: Typed.Call, module_name: string): S3.Statement {
          */
         current_var = rc.args[i][0] as Typed.Invocation
 
-        const lcall = new S3.ReadCall(module_name, current_var.name, current_var.typings.type as (Typed.AtomicType | Typed.StringType))
+        const lcall = new S3.ReadCall(module_name, current_var.name, current_var.typings.type as (Typed.AtomicType | Typed.StringType), rc.pos)
 
         if (i == 0) {
             first_call = lcall
@@ -448,7 +449,7 @@ function transform_read (rc: Typed.Call, module_name: string): S3.Statement {
         let target_assignment: S3.Statement = null
 
         if (current_var.typings.type instanceof Typed.StringType) {
-            target_assignment = new S3.AssignString(module_name, current_var.name, current_var.typings.type.length, current_var.indexes.length)
+            target_assignment = new S3.AssignString(module_name, current_var.name, current_var.typings.type.length, current_var.indexes.length, false)
         }
         else {
             target_assignment = create_assignment(current_var, module_name)
@@ -495,7 +496,7 @@ function create_assignment (v: Typed.Invocation, module_name: string) : S3.State
                     last_statement = S3.get_last(index_exp)
                 }
 
-                const assignment = new S3.AssignV(module_name, final_indexes.length, v.dimensions, v.name)
+                const assignment = new S3.AssignV(module_name, final_indexes.length, v.dimensions, v.name, false)
 
                 last_statement.exit_point = assignment
 
@@ -513,7 +514,7 @@ function create_assignment (v: Typed.Invocation, module_name: string) : S3.State
                 last_statement = S3.get_last(next_index)
             }
 
-            const assignment = new S3.AssignV(module_name, v.indexes.length, v.dimensions, v.name)
+            const assignment = new S3.AssignV(module_name, v.indexes.length, v.dimensions, v.name, false)
 
             last_statement.exit_point = assignment
 
@@ -521,7 +522,7 @@ function create_assignment (v: Typed.Invocation, module_name: string) : S3.State
         }
     }
     else {
-        const assignment = new S3.Assign(module_name, v.name)
+        const assignment = new S3.Assign(module_name, v.name, false)
 
         return assignment
     }
@@ -540,7 +541,7 @@ function transform_return (ret: Typed.Return, module_name: string) : S3.Statemen
      * de la funcion donde se encuentra.
      */
     const entry = transform_expression(ret.expression, module_name)
-    const ret_statement = new S3.Return(module_name)
+    const ret_statement = new S3.Return(module_name, ret.pos)
     S3.get_last(entry).exit_point = ret_statement
 
     return entry
@@ -603,7 +604,9 @@ function transform_assignment (a: Typed.Assignment, module_name: string) : S3.St
              * Enunciados que apilan la cadena
              */
             const stack_string = transform_expression(a.right, module_name)
-            S3.get_last(stack_string).exit_point = new S3.AssignString(module_name, a.left.name, a.typings.left.length, a.left.indexes.length)
+            const assignment = new S3.AssignString(module_name, a.left.name, a.typings.left.length, a.left.indexes.length, true, a.pos)
+            assignment.pos = a.pos
+            S3.get_last(stack_string).exit_point = assignment
             return stack_string
         }
         else {
@@ -660,7 +663,7 @@ function transform_assignment (a: Typed.Assignment, module_name: string) : S3.St
                 indexes: (a.right[0] as Typed.Invocation).indexes.length
             }
 
-            const copy_statement = new S3.CopyVec(module_name, target, source)
+            const copy_statement = new S3.CopyVec(module_name, target, source, a.pos)
 
             if (!entry_initd) {
                 return copy_statement
@@ -702,7 +705,7 @@ function transform_assignment (a: Typed.Assignment, module_name: string) : S3.St
                 index_last_st.exit_point = next_index
                 index_last_st = S3.get_last(next_index) 
             }
-            const assignv = new S3.AssignV(module_name, v.indexes.length, v.dimensions, v.name)
+            const assignv = new S3.AssignV(module_name, v.indexes.length, v.dimensions, v.name, true, a.pos)
 
             index_last_st.exit_point = assignv
             last_statement.exit_point = first_index
@@ -710,7 +713,7 @@ function transform_assignment (a: Typed.Assignment, module_name: string) : S3.St
             return entry_point
         }
         else {
-            const assign = new S3.Assign(module_name, a.left.name)
+            const assign = new S3.Assign(module_name, a.left.name, true, a.pos)
             last_statement.exit_point = assign
 
             return entry_point

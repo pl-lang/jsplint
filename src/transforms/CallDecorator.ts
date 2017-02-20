@@ -161,7 +161,8 @@ function transform_assignment (assignment: S0.Assignment, ast: S1.AST, module_na
     const new_assignment: S2.Assignment = {
       type:'assignment',
       left:variable.result as S2.InvocationInfo,
-      right:payload.result as S2.ExpElement[]
+      right:payload.result as S2.ExpElement[],
+      pos: assignment.pos
     }
 
     return {error:false, result:new_assignment}
@@ -207,7 +208,8 @@ function transform_call (call: S0.Call, ast: S1.AST, module_name: string) : Fail
         type: 'call',
         module_type: 'procedure',
         parameters: [],
-        return_type: 'ninguno'
+        return_type: 'ninguno',
+        pos: call.pos
       }
 
       return {error: false, result: new_call}
@@ -219,7 +221,8 @@ function transform_call (call: S0.Call, ast: S1.AST, module_name: string) : Fail
         name: call.name,
         module_type: (info.result as (S1.Function | S1.Procedure)).module_type,
         parameters: (info.result as (S1.Function | S1.Procedure)).parameters,
-        return_type: (info.result as (S1.Function | S1.Procedure)).return_type
+        return_type: (info.result as (S1.Function | S1.Procedure)).return_type,
+        pos: call.pos
       }
 
       return {error:false, result:new_call}
@@ -250,7 +253,8 @@ function transform_loop (statement: S1.While | S1.Until, ast: S1.AST, module_nam
       const new_loop: S2.While = {
         type: statement.type,
         condition: new_condition.result as S2.ExpElement[],
-        body: new_body.result as S2.Statement[]
+        body: new_body.result as S2.Statement[],
+        pos: statement.pos
       }
       return {error:false, result:new_loop}
     }
@@ -258,7 +262,8 @@ function transform_loop (statement: S1.While | S1.Until, ast: S1.AST, module_nam
       const new_loop: S2.Until = {
         type: statement.type,
         condition: new_condition.result as S2.ExpElement[],
-        body: new_body.result as S2.Statement[]
+        body: new_body.result as S2.Statement[],
+        pos: statement.pos
       }
       return {error:false, result:new_loop}
     }
@@ -294,7 +299,8 @@ function transform_if (statement: S1.If, ast: S1.AST, module_name: string) : Fai
       type: 'if',
       condition: new_condition.result as S2.ExpElement[],
       true_branch: new_true_branch.result as S2.Statement[],
-      false_branch: new_false_branch.result as S2.Statement[]
+      false_branch: new_false_branch.result as S2.Statement[],
+      pos: statement.pos
     }
 
     return {error:false, result:new_if}
@@ -330,7 +336,8 @@ function transform_for (statement: S1.For, ast: S1.AST, module_name: string) : F
       type: 'for',
       counter_init: new_init.result as S2.Assignment,
       last_value: new_goal.result as S2.ExpElement[],
-      body: new_body.result as S2.Statement[]
+      body: new_body.result as S2.Statement[],
+      pos: statement.pos
     }
 
     return {error:false, result: new_for}
@@ -349,7 +356,8 @@ function transform_return (ret_statement: S0.Return, ast: S1.AST, module_name: s
     const new_return: S2.Return = {
       type: 'return',
       expression: exp_returned.result as S2.ExpElement[],
-      expected: ret_typename
+      expected: ret_typename,
+      pos: ret_statement.pos
     }
 
     return {error:false, result:new_return}
