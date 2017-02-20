@@ -1,10 +1,10 @@
 import {Failure, Success, ParsedProgram, S1, S2, S3, Typed, CompileError, TransformedProgram} from '../interfaces'
 
-import stage1 from '../transformer/Declarator'
-import stage2 from '../transformer/CallDecorator'
-import stage3 from '../transformer/Interpretable'
+import stage1 from '../transforms/Declarator'
+import stage2 from '../transforms/CallDecorator'
+import stage3 from '../transforms/Interpretable'
 import typecheck from '../typechecker/TSChecker'
-import typer from '../transformer/TSTyper'
+import typer from '../transforms/TSTyper'
 
 export default function transform (p: ParsedProgram) : CompileError | Success<S3.Program> {
     const s1 = stage1(p)

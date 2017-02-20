@@ -65,6 +65,14 @@ export class Evaluator {
   }
 
   /**
+   * get_value_stack
+   * devuelve la pila de valores
+   */
+  get_value_stack() {
+    return this.state.value_stack
+  }
+
+  /**
    * get_locals
    * devuelve las variables locales del modulo en ejecucion.
    */

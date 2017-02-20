@@ -8,7 +8,7 @@ import {Vector, Scalar} from '../src/interfaces'
 
 import { Evaluator } from '../src/interpreter/Evaluator'
 
-import transform from '../src/transformer/transform'
+import transform from '../src/transforms/transform'
 
 import fr_writer from '../src/utility/fr_writer'
 
@@ -90,6 +90,31 @@ describe('Evaluacion de programas y expresiones', () => {
     const a = evaluator.get_globals()['a'] as Scalar
 
     a.value.should.equal(2)
+  })
+
+  it('asignar una cadena a un vector', () => {
+    const code = `variables
+      caracter v[4]
+    inicio
+      v <- "hola"
+    fin`
+
+    const p = compile(parse(code))
+
+    const evaluator = new Evaluator(p)
+
+    let output = evaluator.step()
+
+    while (output.result.done == false) {
+      output = evaluator.step()
+    }
+
+    const v = evaluator.get_globals()['v'] as Vector
+
+    v.values[0].should.equal("h")
+    v.values[1].should.equal("o")
+    v.values[2].should.equal("l")
+    v.values[3].should.equal("a")
   })
 
   it('programa con una asignacion a un vector', () => {
@@ -272,6 +297,22 @@ describe('Evaluacion de programas y expresiones', () => {
 
     output.error.should.equal(false)
     output.result.should.deepEqual({ done: true, action: 'write', value: 4 })
+  })
+
+  it('escribir una cadena literal', () => {
+    const code = `variables
+    inicio
+      escribir("hola")
+    fin`
+
+    const p = compile(parse(code))
+
+    const evaluator = new Evaluator(p)
+
+    let output = run(evaluator)
+
+    output.error.should.equal(false)
+    output.result.should.deepEqual({ done: true, action: 'write', value: "hola" })
   })
 
   it('programa con un llamado a escribir con varios argumentos', () => {
@@ -510,6 +551,49 @@ describe('Evaluacion de programas y expresiones', () => {
 
     v.values[0].should.equal(9)
   })
+
+  it('lectura de una cadena', () => {
+    const code = `
+        variables
+          caracter v[4]
+        inicio
+          leer(v)
+        fin`
+
+    const p = compile(parse(code))
+
+    const e = new Evaluator(p)
+
+    let output = run(e)
+
+    output.error.should.equal(false)
+
+    const { done, action, name } = output.result as Read
+
+    done.should.equal(false)
+    action.should.equal('read')
+    name.should.equal('v')
+
+    e.input('\0')
+    e.input('h')
+    e.input('o')
+    e.input('l')
+    e.input('a')
+
+    output = run(e)
+
+    output.error.should.equal(false)
+
+    output.should.deepEqual({ error: false, result: { done: true, action: 'none' } })
+
+    const v = e.get_globals()['v'] as Vector
+    v.values[0].should.equal('h')
+    v.values[1].should.equal('o')
+    v.values[2].should.equal('l')
+    v.values[3].should.equal('a')
+
+    e.get_value_stack().length.should.equal(0)
+  })  
 
   it('programa con un enunciado si', () => {
     const code = `variables

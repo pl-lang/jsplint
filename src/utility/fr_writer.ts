@@ -1,5 +1,5 @@
 import {Failure, Success, ParsedProgram, S3} from '../interfaces'
-import transform from '../transformer/transform'
+import transform from '../transforms/transform'
 import Parser from '../parser/Parser'
 
 function parse (s: string) {
