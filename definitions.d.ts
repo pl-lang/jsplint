@@ -979,6 +979,13 @@ export namespace S2 {
 
 export type CompileError = Failure<Errors.RepeatedVar[] | S2.Error[] | Typed.Error[] | Errors.TypeError[]>;
 
+export type Value = boolean | number | string
+
+export interface Position {
+  line: number
+  column: number
+}
+
 export class Parser extends Emitter {
   constructor();
   parse(code: string): Failure<Errors.Lexical[] | Errors.Pattern[]> | Success<ParsedProgram>;
