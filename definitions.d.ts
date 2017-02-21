@@ -1,253 +1,360 @@
-/**
- * Interfaces que representan el retorno de una funcion que puede fallar
- */
-export interface Failure<A> {
-  error: true,
-  result: A
+export type ICallback = (...params: any[]) => void;
+
+export class Emitter {
+  public_events: string[];
+  private callbacks;
+  constructor(public_event_list: string[]);
+  on(event_name: string, callback: ICallback): void;
+  /**
+   * Se encarga de llamar a los callbacks de los eventos.
+   * Si se registro un callback para 'any' entonces se lo llama para cada evento que sea emitido. Es el callback por defecto.
+   * Si un evento tiene registrado un callback entonces este se ejecuta despues del callback por defecto.
+   */
+  emit(event_name: string, ...args: any[]): void;
+  /**
+   * Repite un evento de otro emisor como si fuera propio. El evento puede registrar como publico o no.
+   */
+  repeat(event_name: string, emitter: Emitter, make_public: boolean, ...args: any[]): void;
+  /**
+   * Emitir los eventos de otro emisor como si fueran propios.
+   */
+  repeatAllPublicEvents(emitter: Emitter): void;
 }
 
+export interface Failure<A> {
+  error: true;
+  result: A;
+}
 export interface Success<A> {
-  error: false,
-  result: A
+  error: false;
+  result: A;
 }
 
 export namespace Errors {
-  export type TypeError = IncompatibleArgument
-  | IncompatibleTypes
-  | BadWriteArg
-  | BadCondition
-  | BadCounter
-  | BadInitValue
-  | BadLastValue
-  | BadReturn
-  | WrongArgAmount
-  | BadIndex
-  | LongString
-  | BadRefArg
-  | BadReadArg;
-
-  export interface Base {
-    reason: string
-    where: string
-    pos?: {
-      column: number
-      line: number
-    }
+  type TypeError = IncompatibleArgument | IncompatibleTypes | BadWriteArg | BadCondition | BadCounter | BadInitValue | BadLastValue | BadReturn | WrongArgAmount | BadIndex | LongString | BadRefArg | BadReadArg;
+  interface Base {
+    reason: string;
+    where: string;
+    pos?: Position;
   }
-
   /**
    * Emitido cuando se pasa un literal a 'leer'
    */
-  export interface BadReadArg extends Base {
-    reason: '@read-bad-arg'
-    where: 'typechecker'
+  interface BadReadArg extends Base {
+    reason: '@read-bad-arg';
+    where: 'typechecker';
     /**
      * Indice del argumento literal que de esta llamada
      */
-    index: number
+    index: number;
   }
-
   /**
    * Emitido cuando se llama un modulo con un literal como
    * parametro por referencia
    */
-  export interface BadRefArg extends Base {
-    reason: '@call-bad-ref-arg'
-    where: 'typechecker'
+  interface BadRefArg extends Base {
+    reason: '@call-bad-ref-arg';
+    where: 'typechecker';
     /**
      * Tipo del parametro en cuestion
      */
-    param_expected: string
+    param_expected: string;
     /**
      * Nombre del parametro en cuestion
      */
-    param_name: string
+    param_name: string;
     /**
      * Nombre del modulo al que pertenece
      */
-    module: string
+    module: string;
     /**
      * Tipo del valor literal recibido como argumento
      */
-    received: string
+    received: string;
     /**
      * Indice (en la lista de parametros del modulo)
      */
-    index: number
+    index: number;
   }
-
-  export interface LongString extends Base {
-    reason: '@assignment-long-string' | '@read-long-string'
-    where: 'typechecker' | 'interpreter'
-    name: string
-    type: string
-    vector_length: number
-    string_length: number
+  interface LongString extends Base {
+    reason: '@assignment-long-string' | '@read-long-string';
+    where: 'typechecker' | 'interpreter';
+    name: string;
+    type: string;
+    vector_length: number;
+    string_length: number;
   }
-
-  export interface BadIndex extends Base {
-    reason: '@invocation-bad-index'
-    where: 'typechecker'
-    received: string
-    name: string
-    at: number
+  interface BadIndex extends Base {
+    reason: '@invocation-bad-index';
+    where: 'typechecker';
+    received: string;
+    name: string;
+    at: number;
   }
-
-  export interface WrongArgAmount extends Base {
-    reason: '@call-wrong-arg-amount'
-    where: 'typechecker'
-    expected: number
-    received: number
-    name: string
+  interface WrongArgAmount extends Base {
+    reason: '@call-wrong-arg-amount';
+    where: 'typechecker';
+    expected: number;
+    received: number;
+    name: string;
   }
-
-  export interface BadComparisonOperands extends Base {
-    reason: '@comparison-bad-operands'
-    where: 'typechecker'
-    left: string
-    right: string
+  interface BadComparisonOperands extends Base {
+    reason: '@comparison-bad-operands';
+    where: 'typer';
+    left: string;
+    right: string;
   }
-
-  export interface Lexical extends Base {
-    unexpected: string
-    expected: string[]
+  interface Lexical extends Base {
+    unexpected: string;
+    expected: string[];
   }
-
-  export interface UndefinedModule extends Base {
-    name: string
-    reason: '@call-undefined-module'
-    where: 'call-decorator-transform'
+  interface UndefinedModule extends Base {
+    name: string;
+    reason: '@call-undefined-module';
+    where: 'call-decorator-transform';
   }
-
-  export interface UndefinedVariable extends Base {
-    name: string
-    reason: 'undefined-variable'
-    where: 'call-decorator-transform'
+  interface UndefinedVariable extends Base {
+    name: string;
+    reason: 'undefined-variable';
+    where: 'call-decorator-transform';
   }
-
-  export interface Pattern extends Base {
-    unexpected: ValueKind | ReservedKind | SymbolKind | OtherKind
-    expected: string[],
-    reason: string
-    where: 'parser'
+  interface Pattern extends Base {
+    unexpected: ValueKind | ReservedKind | SymbolKind | OtherKind;
+    expected: string[];
+    reason: string;
+    where: 'parser';
   }
-
-  export interface RepeatedVar {
-    reason: 'repeated-variable'
-    name: string
-    first_type: string
-    second_type: string
-    where: 'declarator-transform'
+  interface RepeatedVar extends Base {
+    reason: 'repeated-variable';
+    name: string;
+    first_type: string;
+    second_type: string;
+    where: 'declarator-transform';
   }
-
-  export interface ExtraIndexes {
-    reason: '@invocation-extra-indexes'
-    name: string
-    dimensions: number
-    indexes: number
-    where: 'typer'
+  interface ExtraIndexes extends Base {
+    reason: '@invocation-extra-indexes';
+    name: string;
+    dimensions: number;
+    indexes: number;
+    where: 'typer';
   }
-
-  export interface MissingOperands extends Base {
-    reason: 'missing-operands'
-    where: 'typechecker'
-    operator: string
-    required: number
+  interface MissingOperands extends Base {
+    reason: 'missing-operands';
+    where: 'typer';
+    operator: string;
+    required: number;
   }
-
-  export interface IncompatibleOperand extends Base {
-    reason: 'incompatible-operand'
-    where: 'typechecker'
-    operator: string
-    bad_type: string
+  interface IncompatibleOperand extends Base {
+    reason: 'incompatible-operand';
+    where: 'typer';
+    operator: string;
+    bad_type: string;
   }
-
-  export interface IncompatibleOperands extends Base {
-    reason: 'incompatible-operands'
-    where: 'typechecker'
-    operator: string
-    bad_type_a: string
-    bad_type_b: string
+  interface IncompatibleOperands extends Base {
+    reason: 'incompatible-operands';
+    where: 'typer';
+    operator: string;
+    bad_type_a: string;
+    bad_type_b: string;
   }
-
-  export interface IncompatibleTypes extends Base {
-    reason: '@assignment-incompatible-types' | '@read-incompatible-types'
-    where: 'typechecker' | 'interpreter'
-    expected: string
-    received: string
+  interface IncompatibleTypes extends Base {
+    reason: '@assignment-incompatible-types' | '@read-incompatible-types';
+    where: 'typechecker' | 'interpreter';
+    expected: string;
+    received: string;
   }
-
-  export interface IncompatibleArgument extends Base {
-    reason: '@call-incompatible-argument'
-    name: string
-    where: 'typechecker'
-    expected: string
-    received: string
-    index: number
+  interface IncompatibleArgument extends Base {
+    reason: '@call-incompatible-argument';
+    name: string;
+    where: 'typechecker';
+    expected: string;
+    received: string;
+    index: number;
   }
-
-  export interface BadWriteArg extends Base {
-    reason: 'bad-write-arg'
-    where: 'typechecker'
-    received: string
-    index: number
-    name: string
+  interface BadWriteArg extends Base {
+    reason: 'bad-write-arg';
+    where: 'typechecker';
+    received: string;
+    index: number;
+    name: string;
   }
-
-  export interface OutOfBounds extends Base {
-    reason: 'index-out-of-bounds'
-    where: 'evaluator'
-    name: string
-    bad_index: number
-    dimensions: number[]
-
+  interface OutOfBounds extends Base {
+    reason: 'index-out-of-bounds';
+    where: 'evaluator';
+    name: string;
+    bad_index: number;
+    dimensions: number[];
     /**
      * Propiedad especifica de los retornos del evaluador
      */
-    done: boolean
+    done: boolean;
   }
-
-  export interface BadCondition extends Base {
-    reason: 'bad-condition'
-    where: 'typechecker'
-    received: string
+  interface BadCondition extends Base {
+    reason: 'bad-condition';
+    where: 'typechecker';
+    received: string;
   }
-
-  export interface BadCounter extends Base {
-    reason: '@for-bad-counter'
-    where: 'typechecker'
-    received: string
+  interface BadCounter extends Base {
+    reason: '@for-bad-counter';
+    where: 'typechecker';
+    received: string;
   }
-
-  export interface BadInitValue extends Base {
-    reason: '@for-bad-init'
-    where: 'typechecker'
-    received: string
+  interface BadInitValue extends Base {
+    reason: '@for-bad-init';
+    where: 'typechecker';
+    received: string;
   }
-
-  export interface BadLastValue extends Base {
-    reason: '@for-bad-last'
-    where: 'typechecker'
-    received: string
+  interface BadLastValue extends Base {
+    reason: '@for-bad-last';
+    where: 'typechecker';
+    received: string;
   }
-
-  export interface BadReturn extends Base {
-    reason: 'bad-return'
-    where: 'typechecker'
-    declared: string
-    received: string
+  interface BadReturn extends Base {
+    reason: 'bad-return';
+    where: 'typechecker';
+    declared: string;
+    received: string;
   }
 }
 
-/**
- * Interfaces para elementos sintacticos
- */
+export namespace S0 {
+  interface NumberInfo {
+    value: number;
+    type: ValueKind.Integer | ValueKind.Real;
+  }
+  type Statement = Call | Assignment | If | While | For | Until | Return | Declaration;
+  interface DeclarationInfo {
+    name: string;
+    is_array: boolean;
+    dimensions: number[];
+  }
+  /**
+   * InvocationInfo se usa del lado izquierdo de
+   * una asignacion, es decir, contiene informacion
+   * sobre la variable a la que se va a asignar algo.
+   */
+  interface InvocationInfo {
+    name: string;
+    is_array: boolean;
+    indexes: ExpElement[][];
+  }
+  type ExpValue = LiteralValue | InvocationValue | Call;
+  interface ExpElement {
+    type: 'invocation' | 'literal' | 'operator' | 'parenthesis' | 'call';
+    name?: string;
+  }
+  interface LiteralValue {
+    type: 'literal';
+    value: boolean | string | number;
+  }
+  interface InvocationValue {
+    type: 'invocation';
+    name: string;
+    is_array: boolean;
+    indexes: ExpElement[][];
+  }
+  interface OperatorElement extends ExpElement {
+    type: 'operator';
+    name: 'plus' | 'minus' | 'slash' | 'times' | 'power' | 'minor-eq' | 'different' | 'minor' | 'major-eq' | 'major' | 'equal' | 'and' | 'or' | 'not' | 'div' | 'mod' | 'neg';
+  }
+  interface Parameter {
+    name: string;
+    by_ref: boolean;
+    type: TypeNameString;
+    is_array: boolean;
+    dimensions: number[];
+  }
+  interface Call {
+    type: 'call';
+    args: ExpElement[][];
+    name: string;
+    pos: Position;
+  }
+  interface Assignment {
+    type: 'assignment';
+    left: InvocationInfo;
+    right: ExpElement[];
+    pos: Position;
+  }
+  interface If {
+    type: 'if';
+    condition: ExpElement[];
+    true_branch: Statement[];
+    false_branch: Statement[];
+    pos: Position;
+  }
+  interface While {
+    type: 'while';
+    condition: ExpElement[];
+    body: Statement[];
+    pos: Position;
+  }
+  interface For {
+    type: 'for';
+    counter_init: Assignment;
+    last_value: ExpElement[];
+    body: Statement[];
+    pos: Position;
+  }
+  interface Until {
+    type: 'until';
+    condition: ExpElement[];
+    body: Statement[];
+    pos: Position;
+  }
+  interface Return {
+    type: 'return';
+    expression: ExpElement[];
+    pos: Position;
+  }
+  interface TypedDeclaration extends DeclarationInfo {
+    datatype: TypeNameString;
+    by_ref: boolean;
+  }
+  interface Declaration {
+    type: 'declaration';
+    variables: TypedDeclaration[];
+    pos: Position;
+  }
+  type Module = Function | Procedure;
+  interface Main {
+    type: 'module';
+    name: 'main';
+    module_type: 'main';
+    body: Statement[];
+  }
+  interface Function {
+    type: 'module';
+    name: string;
+    module_type: 'function';
+    body: Statement[];
+    parameters: Parameter[];
+    return_type: 'entero' | 'real' | 'caracter' | 'logico';
+  }
+  interface Procedure {
+    type: 'module';
+    name: string;
+    module_type: 'procedure';
+    body: Statement[];
+    parameters: Parameter[];
+    return_type: 'ninguno';
+  }
+}
+
+export interface ParsedProgram {
+  main: S0.Main;
+  user_modules: {
+    [m: string]: S0.Module;
+  };
+}
+
+export type TypeNameString = 'entero' | 'real' | 'logico' | 'caracter' | 'ninguno';
+
 export enum ValueKind {
   Integer = 0,
   Real = 1,
   String = 2,
 }
-
 export enum SymbolKind {
   Plus = 3,
   Minus = 4,
@@ -269,7 +376,6 @@ export enum SymbolKind {
   EOF = 20,
   EOL = 21,
 }
-
 export enum ReservedKind {
   Si = 22,
   Or = 23,
@@ -302,442 +408,38 @@ export enum ReservedKind {
   FinMientras = 50,
   Procedimiento = 51,
   FinProcedimiento = 52,
-  Neg = 53
+  Neg = 53,
 }
 export enum OtherKind {
   Word = 54,
   Unknown = 55,
 }
 
-/**
- * Interfaz de un token generico
- */
-export interface Token {
-  kind: ValueKind | SymbolKind | OtherKind | ReservedKind
-  column: number
-  line: number
-  error_found: boolean
-  error_info: Errors.Lexical
-  name: string
-  value?: number | string
-  text?: string
-}
-
-export type TokenKind = ValueKind | ReservedKind | SymbolKind | OtherKind
-
-/**
- * ====================================================
- * PARSING INTERFACES
- * ====================================================
- */
-
-export type DataTypeKind = ReservedKind.Entero | ReservedKind.Real | ReservedKind.Logico | ReservedKind.Caracter
-
-export type TypeNameString = 'entero' | 'real' | 'logico' | 'caracter' | 'ninguno'
-
-/**
- * Stage0 (not yet transformed) statements and expressions
- */
-export namespace S0 {
-  export interface NumberInfo {
-    value: number,
-    type: ValueKind.Integer | ValueKind.Real
-  }
-
-  export type Statement = Call | Assignment | If | While | For | Until | Return | Declaration
-
-  export interface DeclarationInfo {
-    name: string
-    is_array: boolean
-    dimensions: number[]
-  }
-
-  /**
-   * InvocationInfo se usa del lado izquierdo de
-   * una asignacion, es decir, contiene informacion
-   * sobre la variable a la que se va a asignar algo.
-   */
-  export interface InvocationInfo {
-    name: string
-    is_array: boolean
-    indexes: ExpElement[][]
-  }
-
-  export type ExpValue = LiteralValue | InvocationValue | Call
-
-  export interface ExpElement {
-    type: 'invocation' | 'literal' | 'operator' | 'parenthesis' | 'call'
-    name?: string
-  }
-
-  export interface LiteralValue {
-    type: 'literal'
-    value: boolean | string | number
-  }
-
-  export interface InvocationValue {
-    type: 'invocation'
-    name: string
-    is_array: boolean
-    indexes: ExpElement[][]
-  }
-
-  export interface OperatorElement extends ExpElement {
-    type: 'operator'
-    name: 'plus' | 'minus' | 'slash' | 'times' | 'power' | 'minor-eq' | 'different' | 'minor' | 'major-eq' | 'major' | 'equal' | 'and' | 'or' | 'not' | 'div' | 'mod' | 'neg'
-  }
-
-  export interface Parameter {
-    name: string
-    by_ref: boolean
-    type: TypeNameString
-    is_array: boolean
-    dimensions: number[]
-  }
-
-  export interface Call {
-    type: 'call'
-    args: ExpElement[][]
-    name: string
-  }
-
-  export interface Assignment {
-    type: 'assignment'
-    left: InvocationInfo
-    right: ExpElement[]
-  }
-
-  export interface If {
-    type: 'if'
-    condition: ExpElement[]
-    true_branch: Statement[]
-    false_branch: Statement[]
-  }
-
-  export interface While {
-    type: 'while'
-    condition: ExpElement[]
-    body: Statement[]
-  }
-
-  export interface For {
-    type: 'for'
-    counter_init: Assignment
-    last_value: ExpElement[]
-    body: Statement[]
-  }
-
-  export interface Until {
-    type: 'until'
-    condition: ExpElement[]
-    body: Statement[]
-  }
-
-  export interface Return {
-    type: 'return'
-    expression: ExpElement[]
-  }
-
-  export interface TypedDeclaration extends DeclarationInfo {
-    datatype: TypeNameString
-  }
-
-  export interface Declaration {
-    type: 'declaration'
-    variables: TypedDeclaration[]
-  }
-
-  export type Module = Function | Procedure
-
-  export interface Main {
-    type: 'module'
-    name: 'main'
-    module_type: 'main'
-    body: Statement[]
-  }
-
-  export interface Function {
-    type: 'module'
-    name: string
-    module_type: 'function'
-    body: Statement[]
-    parameters: Parameter[]
-    return_type: 'entero' | 'real' | 'caracter' | 'logico'
-  }
-
-  export interface Procedure {
-    type: 'module'
-    name: string
-    module_type: 'procedure'
-    body: Statement[]
-    parameters: Parameter[]
-    return_type: 'ninguno'
-  }
-}
-
-export interface ParsedProgram {
-  main: S0.Main,
-  user_modules: {
-    [m: string]: S0.Module
-  }
-}
-
-/**
- * ====================================================
- * TRANSFORMS' INTERFACES
- * ====================================================
- */
-
-/**
- * Stage 1: given a program it returns the same program minus all the variable
- * declaration statements plus the program's variables (declared in a separate object).
- */
-
-export namespace S1 {
-
-  /**
-   * Interface of this stage's final result
-   */
-  export interface AST {
-    modules: {
-      main: Main
-      user_modules: {
-        [m: string]: Function | Procedure
-      }
-    }
-    local_variables: {
-      main: VariableDict
-      [m: string]: VariableDict
-    }
-  }
-
-  export interface TransformedModule {
-    new_module: Module
-    locals: VariableDict
-  }
-
-  export interface TransformedMain {
-    new_module: Main
-    locals: VariableDict
-  }
-
-  export type Module = Function | Procedure
-
-  export interface Main {
-    type: 'module'
-    name: 'main'
-    module_type: 'main'
-    body: Statement[]
-  }
-
-  export interface Function {
-    type: 'module'
-    name: string
-    module_type: 'function'
-    body: Statement[]
-    parameters: S0.Parameter[]
-    return_type: 'entero' | 'real' | 'caracter' | 'logico'
-  }
-
-  export interface Procedure {
-    type: 'module'
-    name: string
-    module_type: 'procedure'
-    body: Statement[]
-    parameters: S0.Parameter[]
-    return_type: 'ninguno'
-  }
-
-  export type Statement = S0.Call | Assignment | If | While | For | Until | S0.Return
-
-  export interface Assignment extends S0.Assignment {
-    body: Statement[]
-  }
-
-  export interface If extends S0.If {
-    true_branch: Statement[]
-    false_branch: Statement[]
-  }
-
-  export interface While extends S0.While {
-    body: Statement[]
-  }
-
-  export interface For extends S0.For {
-    body: Statement[]
-  }
-
-  export interface Until extends S0.Until {
-    body: Statement[]
-  }
-
-  export interface VariableDict {
-    [v: string]: Variable
-  }
-
-  export type Variable = ArrayVariable | RegularVariable
-
-  export interface ArrayVariable {
-    type: 'array'
-    name: string
-    dimensions: number[]
-    datatype: TypeNameString
-    by_ref: boolean
-  }
-
-  export interface RegularVariable {
-    type: 'scalar'
-    name: string
-    datatype: TypeNameString
-    by_ref: boolean
-  }
-}
-
-/**
- * Stage 2: decorates module (calls with return type 
- * and parameter info) and variable invocations (with
- * their respective variables' dimension).
- */
-
-export namespace S2 {
-
-  export type Error = Errors.UndefinedModule | Errors.UndefinedVariable
-
-  export interface AST {
-    modules: {
-      main: Main
-      user_modules: {
-        [m: string]: Module
-      }
-    }
-    local_variables: {
-      main: S1.VariableDict
-      [m: string]: S1.VariableDict
-    }
-  }
-
-  // estas propiedades extra deben ser iguales a las de PI.UserModule 
-  export interface ModuleCall extends S0.Call {
-    args: ExpElement[][]
-    module_type: 'function' | 'procedure'
-    parameters: S0.Parameter[]
-    return_type: TypeNameString
-  }
-
-  export interface Assignment {
-    type: 'assignment'
-    left: InvocationInfo
-    right: ExpElement[]
-  }
-
-  export type ExpValue = InvocationValue | ModuleCall | S0.LiteralValue
-
-  export type ExpElement = ExpValue | S0.OperatorElement
-
-  export interface If extends S0.If {
-    condition: ExpElement[]
-    true_branch: Statement[]
-    false_branch: Statement[]
-  }
-
-  export interface While extends S0.While {
-    condition: ExpElement[]
-    body: Statement[]
-  }
-
-  export interface For extends S0.For {
-    last_value: ExpElement[]
-    body: Statement[]
-    counter_init: Assignment
-  }
-
-  export interface Until extends S0.Until {
-    condition: ExpElement[]
-    body: Statement[]
-  }
-
-  export type Statement = ModuleCall | Assignment | If | While | For | Until | S0.Return
-
-  export type Module = Function | Procedure
-
-  export interface Main {
-    type: 'module'
-    name: 'main'
-    module_type: 'main'
-    body: Statement[]
-  }
-
-  export interface Function {
-    type: 'module'
-    name: string
-    module_type: 'function'
-    body: Statement[]
-    parameters: S0.Parameter[]
-    return_type: 'entero' | 'real' | 'caracter' | 'logico'
-  }
-
-  export interface Procedure {
-    type: 'module'
-    name: string
-    module_type: 'procedure'
-    body: Statement[]
-    parameters: S0.Parameter[]
-    return_type: 'ninguno'
-  }
-
-  export interface VarInfo {
-    datatype: TypeNameString
-    dimensions: number[]
-    is_array: boolean
-  }
-
-  export interface InvocationInfo extends S0.InvocationInfo {
-    datatype: TypeNameString
-    dimensions: number[]
-    indexes: ExpElement[][]
-  }
-
-  export interface InvocationValue extends S0.InvocationValue {
-    dimensions: number[]
-    datatype: TypeNameString
-    indexes: ExpElement[][]
-  }
-}
-
-/**
- * Stage 3: transforms a program into another that's equivalent
- * and can be executed by the interpreter
- */
-
 export namespace S3 {
-  export interface Program {
-    entry_point: Statement
+  interface Program {
+    entry_point: Statement;
     modules: {
-      [p: string]: Module
-    }
+      [p: string]: Module;
+    };
     local_variables: {
-      main: S1.VariableDict
-      [p: string]: S1.VariableDict
-    }
+      main: S1.VariableDict;
+      [p: string]: S1.VariableDict;
+    };
   }
-
-  export interface Module {
-    name: string
-    entry_point: Statement
+  interface Module {
+    name: string;
+    entry_point: Statement;
     parameters: {
-      [p: string]: Parameter
-    }
+      [p: string]: Parameter;
+    };
   }
-
-  export interface Parameter {
-    name: string
-    by_ref: boolean
-    is_array: boolean
+  interface Parameter {
+    name: string;
+    by_ref: boolean;
+    is_array: boolean;
   }
-
-  export function get_last(s: Statement): Statement;
-
-  export enum StatementKinds {
+  function get_last(s: Statement): Statement;
+  enum StatementKinds {
     Plus = 0,
     Minus = 1,
     Times = 2,
@@ -773,510 +475,509 @@ export namespace S3 {
     CopyVec = 32,
     Neg = 33,
     MakeFrame = 34,
-    InitV = 35
+    InitV = 35,
   }
-
-  export class BaseStatement {
-    readonly kind: StatementKinds
-    protected _exit_point: Statement
-    protected exit_set: boolean
-    exit_point: Statement
-    readonly owner: string
-
-    constructor()
+  class BaseStatement {
+    readonly kind: StatementKinds;
+    protected _exit_point: Statement;
+    protected exit_set: boolean;
+    readonly owner: string;
+    is_user_stmnt: boolean;
+    pos?: Position;
+    constructor(owner: string);
+    exit_point: Statement;
   }
-
-  export class MakeFrame extends BaseStatement {
-    readonly kind: StatementKinds.MakeFrame
+  class MakeFrame extends BaseStatement {
+    readonly kind: StatementKinds.MakeFrame;
     /**
      * Nombre del modulo del cual se hara un frame
      */
-    readonly name: string
-
-    constructor(owner: string, name: string)
+    readonly name: string;
+    constructor(owner: string, name: string);
   }
-
-  // Los contenidos de esta clase son parecidos a los de CopyVec al proposito
-  export class InitV extends BaseStatement {
-    readonly kind: StatementKinds.InitV
-    readonly source: VectorData
-    readonly target_name: string
-
-    constructor (owner: string, source: VectorData, target_name: string)
+  class InitV extends BaseStatement {
+    readonly kind: StatementKinds.InitV;
+    readonly source: VectorData;
+    readonly target_name: string;
+    constructor(owner: string, source: VectorData, target_name: string);
   }
-
-  export interface VectorData {
-      name: string
-      indexes: number
-      dimensions: number[]
+  interface VectorData {
+    name: string;
+    indexes: number;
+    dimensions: number[];
   }
-
-  export class CopyVec extends BaseStatement {
-    readonly kind: StatementKinds.CopyVec
+  class CopyVec extends BaseStatement {
+    readonly kind: StatementKinds.CopyVec;
     /**
      * datos del vector que recibe los datos
      */
-    readonly target: VectorData
+    readonly target: VectorData;
     /**
      * datos del vector del cual se originan los datos
      */
-    readonly source: VectorData
-
+    readonly source: VectorData;
+    pos: Position;
     /**
      * target datos del vector que recibe los datos;
      * source datos del vector del cual se copian los datos;
      */
-    constructor (owner: string, target: VectorData, source: VectorData)
+    constructor(owner: string, target: VectorData, source: VectorData, pos: Position);
   }
-
-  export class Alias extends BaseStatement {
-    readonly kind: StatementKinds.Alias
-    readonly varname: string
-    readonly var_indexes: number
-    readonly local_alias: string
-    readonly dimensions: number[]
-    readonly module_name: string
-
-    constructor (owner: string, varname: string, indexes: number, dimensions: number[], alias: string, module_name: string)
+  class Alias extends BaseStatement {
+    readonly kind: StatementKinds.Alias;
+    readonly varname: string;
+    readonly var_indexes: number;
+    readonly local_alias: string;
+    readonly dimensions: number[];
+    readonly module_name: string;
+    constructor(owner: string, varname: string, indexes: number, dimensions: number[], alias: string, module_name: string);
   }
-
-  export class AssignString extends BaseStatement {
-    readonly kind: StatementKinds.AssignString
-    readonly length: number
-    readonly varname: string
-    readonly indexes: number
-
-    constructor (owner: string, varname: string, length: number, indexes: number)
+  class AssignString extends BaseStatement {
+    readonly kind: StatementKinds.AssignString;
+    readonly length: number;
+    readonly varname: string;
+    readonly indexes: number;
+    pos?: Position;
+    constructor(owner: string, varname: string, length: number, indexes: number, user: boolean, pos?: Position);
   }
-
-  export class Concat extends BaseStatement {
-    readonly kind: StatementKinds.Concat
-    readonly length: number
-
-    constructor (owner: string, length: number)
+  class Concat extends BaseStatement {
+    readonly kind: StatementKinds.Concat;
+    readonly length: number;
+    constructor(owner: string, length: number);
   }
-
   class Return extends BaseStatement {
-    readonly kind: StatementKinds.Return
-
-    constructor(owner:string, )
+    readonly kind: StatementKinds.Return;
+    pos: Position;
+    constructor(owner: string, pos: Position);
   }
-
   class UserModuleCall extends BaseStatement {
-    readonly kind: StatementKinds.UserModuleCall
-    readonly name: string
-    readonly total_args: number
-
-    constructor(owner:string, name: string, total_args: number)
+    readonly name: string;
+    readonly total_args: number;
+    readonly kind: StatementKinds.UserModuleCall;
+    pos: Position;
+    constructor(owner: string, name: string, total_args: number, pos: Position);
   }
-
   class ReadCall extends BaseStatement {
-    readonly name: 'leer'
-    readonly kind: StatementKinds.ReadCall
-    readonly varname: string
+    readonly varname: string;
+    readonly name: 'leer';
+    readonly kind: StatementKinds.ReadCall;
+    pos: Position;
     /**
      * Tipo de datos de la variable que v a a recibir el dato
      * leido.
      */
-    readonly type: Typed.AtomicType | Typed.StringType
-
-    constructor(owner:string, varname: string)
+    readonly type: Typed.AtomicType | Typed.StringType;
+    constructor(owner: string, varname: string, type: Typed.AtomicType | Typed.StringType, pos: Position);
   }
-
   class WriteCall extends BaseStatement {
-    readonly name: 'escribir'
-    readonly kind: StatementKinds.WriteCall
-
-    constructor(owner:string, )
+    readonly name: 'escribir';
+    readonly kind: StatementKinds.WriteCall;
+    pos: Position;
+    constructor(owner: string, pos: Position);
   }
-
   class Assign extends BaseStatement {
-    readonly kind: StatementKinds.Assign
-    readonly varname: string
-
-    constructor(owner:string, varname: string)
+    readonly varname: string;
+    readonly kind: StatementKinds.Assign;
+    pos?: Position;
+    constructor(owner: string, varname: string, user: boolean, pos?: Position);
   }
-
   class AssignV extends BaseStatement {
-    readonly kind: StatementKinds.AssignV
-    readonly total_indexes: number
-    readonly dimensions: number[]
-    readonly varname: string
-
-    constructor(owner:string, total_indexes: number, dimensions: number[], varname: string)
+    readonly total_indexes: number;
+    readonly dimensions: number[];
+    readonly varname: string;
+    readonly kind: StatementKinds.AssignV;
+    pos?: Position;
+    constructor(owner: string, total_indexes: number, dimensions: number[], varname: string, user: boolean, pos?: Position);
   }
-
   class Get extends BaseStatement {
-    readonly kind: StatementKinds.Get
-    readonly varname: string
-
-    constructor(owner:string, varname: string)
+    readonly varname: string;
+    readonly kind: StatementKinds.Get;
+    constructor(owner: string, varname: string);
   }
-
   class GetV extends BaseStatement {
-    readonly kind: StatementKinds.GetV
-    readonly total_indexes: number
-    readonly dimensions: number[]
-    readonly varname: string
-
-    constructor(owner:string, total_indexes: number, dimensions: number, varname: string)
+    readonly total_indexes: number;
+    readonly dimensions: number[];
+    readonly varname: string;
+    readonly kind: StatementKinds.GetV;
+    constructor(owner: string, total_indexes: number, dimensions: number[], varname: string);
   }
-
   class Push extends BaseStatement {
-    readonly kind: StatementKinds.Push
-    readonly value: number | boolean | string
-
-    constructor(owner:string, value: number | boolean | string)
+    readonly value: number | boolean | string;
+    readonly kind: StatementKinds.Push;
+    constructor(owner: string, value: number | boolean | string);
   }
-
   class Pop extends BaseStatement {
-    readonly kind: StatementKinds.Pop
-
-    constructor(owner:string, )
+    readonly kind: StatementKinds.Pop;
+    constructor(owner: string);
   }
-
   class Operation extends BaseStatement {
-    readonly kind: OperationKinds
-
-    constructor(owner:string, kind: OperationKinds)
+    readonly kind: OperationKinds;
+    constructor(owner: string, kind: OperationKinds);
   }
-
   class While extends BaseStatement {
-    readonly kind: StatementKinds.While
-    readonly entry_point: Statement
-
-    constructor(owner:string, entry_point: Statement)
+    readonly entry_point: Statement;
+    readonly kind: StatementKinds.While;
+    pos: Position;
+    constructor(owner: string, entry_point: Statement, pos: Position);
   }
-
   class Until extends BaseStatement {
-    readonly kind: StatementKinds.Until
-    readonly entry_point: Statement
-
-    constructor(owner:string, entry_point: Statement)
+    readonly entry_point: Statement;
+    readonly kind: StatementKinds.Until;
+    pos: Position;
+    constructor(owner: string, entry_point: Statement, pos: Position);
   }
-
   class If extends BaseStatement {
-    readonly kind: StatementKinds.If
-    readonly true_branch_entry: Statement
-    readonly false_branch_entry: Statement
-    exit_point: Statement
-
-    constructor(owner:string, true_branch_entry: Statement, false_branch_entry: Statement)
+    readonly true_branch_entry: Statement;
+    readonly false_branch_entry: Statement;
+    readonly kind: StatementKinds.If;
+    pos: Position;
+    constructor(owner: string, true_branch_entry: Statement, false_branch_entry: Statement, pos: Position);
+    exit_point: Statement;
   }
-
-  export type OperationKinds = MathOps | ComparisonOps | LogicOps
-
-  export type MathOps = StatementKinds.Plus | StatementKinds.Minus | StatementKinds.Times | StatementKinds.Slash | StatementKinds.Power | StatementKinds.Div | StatementKinds.Mod | StatementKinds.Neg
-
-  export type ComparisonOps = StatementKinds.Minor | StatementKinds.MinorEq | StatementKinds.Different | StatementKinds.Equal | StatementKinds.Major | StatementKinds.MajorEq
-
-  export type LogicOps = StatementKinds.And | StatementKinds.Or | StatementKinds.Not
-
-  export type Statement = While
-    | If
-    | Until
-    | UserModuleCall
-    | ReadCall
-    | WriteCall
-    | Assign
-    | Get
-    | Operation
-    | AssignV
-    | GetV
-    | Push
-    | Pop
-    | Return
-    | Concat
-    | AssignString
-    | Alias
-    | CopyVec
-    | MakeFrame
-    | InitV;
+  type OperationKinds = MathOps | ComparisonOps | LogicOps;
+  type MathOps = StatementKinds.Plus | StatementKinds.Minus | StatementKinds.Times | StatementKinds.Slash | StatementKinds.Power | StatementKinds.Div | StatementKinds.Mod | StatementKinds.Neg;
+  type ComparisonOps = StatementKinds.Minor | StatementKinds.MinorEq | StatementKinds.Different | StatementKinds.Equal | StatementKinds.Major | StatementKinds.MajorEq;
+  type LogicOps = StatementKinds.And | StatementKinds.Or | StatementKinds.Not;
+  type Statement = While | If | Until | UserModuleCall | ReadCall | WriteCall | Assign | Get | Operation | AssignV | GetV | Push | Pop | Return | Concat | AssignString | Alias | CopyVec | MakeFrame | InitV;
 }
 
-/**
- * Stage 4:
- */
+export interface StatementInfo {
+  kind: 'info';
+  pos: Position;
+  is_user_statement: boolean;
+}
+
+export interface InterpreterState {
+  done: boolean;
+  kind: 'state';
+}
 
 export namespace Typed {
-  export type Error = Errors.ExtraIndexes
-    | Errors.IncompatibleOperand
-    | Errors.IncompatibleOperands
-    | Errors.MissingOperands
-    | Errors.BadComparisonOperands
-    | Errors.LongString;
-
-  export interface Program {
+  type Error = Errors.ExtraIndexes | Errors.IncompatibleOperand | Errors.IncompatibleOperands | Errors.MissingOperands | Errors.BadComparisonOperands | Errors.LongString;
+  interface Program {
     modules: {
-      main: Module
-      [m: string]: Module
-    }
-    
+      main: Module;
+      [m: string]: Module;
+    };
     variables_per_module: {
-      main: S1.VariableDict
-      [p: string]: S1.VariableDict
-    }
+      main: S1.VariableDict;
+      [p: string]: S1.VariableDict;
+    };
   }
-
-  export interface Module {
-    module_type: 'function' | 'procedure' | 'main'
-    body: Statement[]
-    return_type: 'entero' | 'real' | 'caracter' | 'logico' | 'ninguno'
-    parameters: S0.Parameter[]
+  interface Module {
+    module_type: 'function' | 'procedure' | 'main';
+    body: Statement[];
+    return_type: 'entero' | 'real' | 'caracter' | 'logico' | 'ninguno';
+    parameters: Parameter[];
   }
-
-  export type Statement = For
-    | While
-    | Until
-    | If
-    | Assignment
-    | Call
-    | Return;
-
-  export interface Return {
-    type: 'return'
-    expression: ExpElement[]
+  interface Parameter {
+    name: string;
+    by_ref: boolean;
+    type: Type;
+    is_array: boolean;
+    dimensions: number[];
+  }
+  type Statement = For | While | Until | If | Assignment | Call | Return;
+  interface Return {
+    type: 'return';
+    expression: ExpElement[];
     typings: {
-      actual: Type
-      expected: Type
-    }
+      actual: Type;
+      expected: Type;
+    };
+    pos: Position;
   }
-
-  export interface For {
-    type: 'for'
-    counter_init: Assignment
-    last_value: ExpElement[]
-    body: Statement[]
+  interface For {
+    type: 'for';
+    counter_init: Assignment;
+    last_value: ExpElement[];
+    body: Statement[];
     typings: {
-      init_value: Type
-      last_value: Type
-    }
+      init_value: Type;
+      last_value: Type;
+    };
+    pos: Position;
   }
-
-  export interface While {
-    type: 'while'
-    condition: ExpElement[]
-    body: Statement[]
+  interface While {
+    type: 'while';
+    condition: ExpElement[];
+    body: Statement[];
     typings: {
-      condition: Type
-      body: Statement[]
-    }
+      condition: Type;
+      body: Statement[];
+    };
+    pos: Position;
   }
-
-  export interface Until {
-    type: 'until'
-    condition: ExpElement[]
-    body: Statement[]
+  interface Until {
+    type: 'until';
+    condition: ExpElement[];
+    body: Statement[];
     typings: {
-      condition: Type
-      body: Statement[]
-    }
+      condition: Type;
+      body: Statement[];
+    };
+    pos: Position;
   }
-
-  export interface If {
-    type: 'if'
-    true_branch: Statement[]
-    false_branch: Statement[]
-    condition: ExpElement[]
+  interface If {
+    type: 'if';
+    true_branch: Statement[];
+    false_branch: Statement[];
+    condition: ExpElement[];
     typings: {
-      condition: Type
-    }
+      condition: Type;
+    };
+    pos: Position;
   }
-
-  export interface Assignment {
-    type: 'assignment'
-    left: Invocation
-    right: ExpElement[]
+  interface Assignment {
+    type: 'assignment';
+    left: Invocation;
+    right: ExpElement[];
+    pos: Position;
     typings: {
-      left: Type
-      right: Type
-    }
+      left: Type;
+      right: Type;
+    };
   }
-
-  export interface Invocation {
-    type: 'invocation'
-    name: string
-    is_array: boolean
-    indexes: ExpElement[][]
-    dimensions: number[]
+  interface Invocation {
+    type: 'invocation';
+    name: string;
+    is_array: boolean;
+    indexes: ExpElement[][];
+    dimensions: number[];
     typings: {
-      type: Type
-      indexes: Type[]
-    }
+      type: Type;
+      indexes: Type[];
+    };
   }
-
-  export interface Call {
-    type: 'call'
-    name: string
-    args: ExpElement[][]
-    parameters: S0.Parameter[]
+  interface Call {
+    type: 'call';
+    name: string;
+    args: ExpElement[][];
+    parameters: S0.Parameter[];
     typings: {
-      args: Type[]
-      return: AtomicType
-      parameters: Type[]
-    }
+      args: Type[];
+      return: AtomicType;
+      parameters: Type[];
+    };
+    pos: Position;
   }
-
-  export interface Literal extends S0.LiteralValue {
+  interface Literal extends S0.LiteralValue {
     typings: {
-      type: Typed.AtomicType | Typed.StringType
-    }
+      type: Typed.AtomicType | Typed.StringType;
+    };
   }
-
-  export type ExpElement = Literal | Invocation | Call | Operator
-
-  export interface Type {
-    type: 'type'
-    kind: 'atomic' | 'array'
+  type ExpElement = Literal | Invocation | Call | Operator;
+  interface Type {
+    type: 'type';
+    kind: 'atomic' | 'array';
     /**
      * Esta propiedad indica si este tipo pertenece a un valor
      * literal o a un valor invocado.
      */
-    represents: 'literal' | 'invocation'
+    represents: 'literal' | 'invocation';
   }
-
-  export interface Operator {
-    type: 'operator'
-    name: string
+  interface Operator {
+    type: 'operator';
+    name: string;
   }
-
-  export class ArrayType implements Type {
-    readonly type: 'type'
-    readonly kind: 'array'
-    readonly length: number
-    readonly cell_type: Type
-    readonly represents: 'literal' | 'invocation'
-
-    constructor(element_type: Type, length: number)
+  class ArrayType implements Type {
+    readonly type: 'type';
+    readonly kind: 'array';
+    readonly length: number;
+    readonly cell_type: Type;
+    readonly represents: 'literal' | 'invocation';
+    constructor(represents: 'literal' | 'invocation', element_type: Type, length: number);
   }
-
-  export class AtomicType implements Type {
-    readonly type: 'type'
-    readonly kind: 'atomic'
-    readonly typename: TypeNameString
-    readonly represents: 'literal' | 'invocation'
-
-    constructor(tn: TypeNameString)
+  class AtomicType implements Type {
+    readonly type: 'type';
+    readonly kind: 'atomic';
+    readonly typename: TypeNameString;
+    readonly represents: 'literal' | 'invocation';
+    constructor(represents: 'literal' | 'invocation', tn: TypeNameString);
   }
-
-  export class StringType extends ArrayType {
-    constructor(length: number)
+  class StringType extends ArrayType {
+    constructor(length: number, represents: 'literal' | 'invocation');
   }
 }
 
-export type CompileError = Failure<Errors.RepeatedVar[] | S2.Error[] | Typed.Error[] | Errors.TypeError[]>
-
-export interface TransformedProgram {
-  typed_program: Typed.Program,
-  program: S3.Program
-}
-
-/**
- * Value
- * representa un valor resultante de una expresion
- */
-export type Value = boolean | number | string
-
-export interface Read {
-  action: 'read'
-  // agregar esto mas adelante
-  // type: 'entero' | 'real' | 'caracter' | 'cadena'
-  done: boolean
-}
-
-export interface Write {
-  action: 'write',
-  value: Value
-  done: boolean
-}
-
-export interface NullAction {
-  action: 'none'
-  done: boolean
-}
-
-export interface Paused {
-  action: 'paused'
-  done: boolean
-}
-
-export type SuccessfulReturn = Success<Read> | Success<Write> | Success<NullAction>
-
-export interface Alias {
-  type: 'alias'
+export namespace S1 {
   /**
-   * Nombre de la variable a la que este alias hace referencia
+   * Interface of this stage's final result
    */
-  name: string
-  /**
-   * Indices utilizados al crear este alias
-   */
-  indexes: number[]
+  interface AST {
+    modules: {
+      main: Main;
+      user_modules: {
+        [m: string]: Function | Procedure;
+      };
+    };
+    local_variables: {
+      main: VariableDict;
+      [m: string]: VariableDict;
+    };
+  }
+  interface TransformedModule {
+    new_module: Module;
+    locals: VariableDict;
+  }
+  interface TransformedMain {
+    new_module: Main;
+    locals: VariableDict;
+  }
+  type Module = Function | Procedure;
+  interface Main {
+    type: 'module';
+    name: 'main';
+    module_type: 'main';
+    body: Statement[];
+  }
+  interface Function {
+    type: 'module';
+    name: string;
+    module_type: 'function';
+    body: Statement[];
+    parameters: S0.Parameter[];
+    return_type: 'entero' | 'real' | 'caracter' | 'logico';
+  }
+  interface Procedure {
+    type: 'module';
+    name: string;
+    module_type: 'procedure';
+    body: Statement[];
+    parameters: S0.Parameter[];
+    return_type: 'ninguno';
+  }
+  type Statement = S0.Call | Assignment | If | While | For | Until | S0.Return;
+  interface Assignment extends S0.Assignment {
+    body: Statement[];
+  }
+  interface If extends S0.If {
+    true_branch: Statement[];
+    false_branch: Statement[];
+  }
+  interface While extends S0.While {
+    body: Statement[];
+  }
+  interface For extends S0.For {
+    body: Statement[];
+  }
+  interface Until extends S0.Until {
+    body: Statement[];
+  }
+  interface VariableDict {
+    [v: string]: Variable;
+  }
+  type Variable = ArrayVariable | RegularVariable;
+  interface ArrayVariable {
+    type: 'array';
+    name: string;
+    dimensions: number[];
+    datatype: TypeNameString;
+    by_ref: boolean;
+  }
+  interface RegularVariable {
+    type: 'scalar';
+    name: string;
+    datatype: TypeNameString;
+    by_ref: boolean;
+  }
 }
 
-export interface Scalar {
-  type: 'variable'
-  value: Value
+export namespace S2 {
+  type Error = Errors.UndefinedModule | Errors.UndefinedVariable;
+  interface AST {
+    modules: {
+      main: Main;
+      user_modules: {
+        [m: string]: Module;
+      };
+    };
+    local_variables: {
+      main: S1.VariableDict;
+      [m: string]: S1.VariableDict;
+    };
+  }
+  interface ModuleCall extends S0.Call {
+    args: ExpElement[][];
+    module_type: 'function' | 'procedure';
+    parameters: S0.Parameter[];
+    return_type: TypeNameString;
+    pos: Position;
+  }
+  interface Assignment {
+    type: 'assignment';
+    left: InvocationInfo;
+    right: ExpElement[];
+    pos: Position;
+  }
+  type ExpValue = InvocationValue | ModuleCall | S0.LiteralValue;
+  type ExpElement = ExpValue | S0.OperatorElement;
+  interface If extends S0.If {
+    condition: ExpElement[];
+    true_branch: Statement[];
+    false_branch: Statement[];
+  }
+  interface While extends S0.While {
+    condition: ExpElement[];
+    body: Statement[];
+  }
+  interface For extends S0.For {
+    last_value: ExpElement[];
+    body: Statement[];
+    counter_init: Assignment;
+  }
+  interface Until extends S0.Until {
+    condition: ExpElement[];
+    body: Statement[];
+  }
+  interface Return {
+    type: 'return';
+    expression: ExpElement[];
+    expected: TypeNameString;
+    pos: Position;
+  }
+  type Statement = ModuleCall | Assignment | If | While | For | Until | Return;
+  type Module = Function | Procedure;
+  interface Main {
+    type: 'module';
+    name: 'main';
+    module_type: 'main';
+    body: Statement[];
+  }
+  interface Function {
+    type: 'module';
+    name: string;
+    module_type: 'function';
+    body: Statement[];
+    parameters: S0.Parameter[];
+    return_type: 'entero' | 'real' | 'caracter' | 'logico';
+  }
+  interface Procedure {
+    type: 'module';
+    name: string;
+    module_type: 'procedure';
+    body: Statement[];
+    parameters: S0.Parameter[];
+    return_type: 'ninguno';
+  }
+  interface VarInfo {
+    datatype: TypeNameString;
+    dimensions: number[];
+    is_array: boolean;
+  }
+  interface InvocationInfo extends S0.InvocationInfo {
+    datatype: TypeNameString;
+    dimensions: number[];
+    indexes: ExpElement[][];
+  }
+  interface InvocationValue extends S0.InvocationValue {
+    dimensions: number[];
+    datatype: TypeNameString;
+    indexes: ExpElement[][];
+  }
 }
 
-// se llama vector para no 'sobreescribir' al tipo Array de JS
-export interface Vector {
-  type: 'vector'
-  values: Value[]
-  dimensions: number[]
-}
-
-export type ValueContainer = Scalar | Vector
-
-export interface Frame {
-  [name: string]: ValueContainer | Alias
-}
-
-type ICallback = (...params: any[]) => void;
-
-export class Emitter {
-  public_events: string[];
-  private callbacks;
-  constructor(public_event_list: string[]);
-  on(event_name: string, callback: ICallback): void;
-  /**
-   * Se encarga de llamar a los callbacks de los eventos.
-   * Si se registro un callback para 'any' entonces se lo llama para cada evento que sea emitido. Es el callback por defecto.
-   * Si un evento tiene registrado un callback entonces este se ejecuta despues del callback por defecto.
-   */
-  emit(event_name: string, ...args: any[]): void;
-  /**
-   * Repite un evento de otro emisor como si fuera propio. El evento puede registrar como publico o no.
-   */
-  repeat(event_name: string, emitter: Emitter, make_public: boolean, ...args: any[]): void;
-  /**
-   * Emitir los eventos de otro emisor como si fueran propios.
-   */
-  repeatAllPublicEvents(emitter: Emitter): void;
-}
-
-export interface Read {
-  action: 'read'
-  type: Typed.AtomicType | Typed.StringType
-  name: string
-  done: boolean
-}
-
-export interface Write {
-  action: 'write',
-  value: Value
-  done: boolean
-}
-
-export interface NullAction {
-  action: 'none'
-  done: boolean
-}
-
-export interface Paused {
-  action: 'paused'
-  done: boolean
-}
+export type CompileError = Failure<Errors.RepeatedVar[] | S2.Error[] | Typed.Error[] | Errors.TypeError[]>;
 
 export class Parser extends Emitter {
   constructor();
@@ -1285,16 +986,19 @@ export class Parser extends Emitter {
 
 export class Interpreter extends Emitter {
   private evaluator;
-  running: boolean;
+  private running;
   paused: boolean;
   data_read: boolean;
+  private read_stack;
   constructor(p: S3.Program);
   run(): void;
-  send(value: Value): void;
+  step(): InterpreterState | StatementInfo;
+  send(value: string): void;
+  parse(value: string): S0.LiteralValue;
 }
 
-export function transform(p: ParsedProgram): CompileError | Success<S3.Program>
+export function transform(p: ParsedProgram): CompileError | Success<S3.Program>;
 
-export function typecheck(p: Typed.Program): Errors.TypeError[]
+export function typecheck(p: Typed.Program): Errors.TypeError[];
 
-export function fr_writer (p: S3.Program) : string
+export function fr_writer(p: S3.Program): string;
