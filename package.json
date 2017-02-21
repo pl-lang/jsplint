@@ -3,8 +3,8 @@
   "version": "0.7.1",
   "description": "interprete",
   "scripts": {
-    "test": "mocha -w ./lib/test/Test_8_TestableEvaluator.js",
-    "m_watch": "mocha -w --reporter min",
+    "test": "mocha ./lib/test/",
+    "m_watch": "mocha -w --reporter min ./lib/test/",
     "build": "tsc -p . && cp ./definitions.d.ts ./lib/index.d.ts",
     "preversion": "npm run build",
     "postversion": "git push && git push --tags && npm publish"

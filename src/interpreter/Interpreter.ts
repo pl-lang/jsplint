@@ -10,11 +10,11 @@
  *  - read
  */
 
-import {Evaluator} from './Evaluator'
+import Evaluator from './Evaluator'
 
 import Emitter from '../utility/Emitter.js'
 
-import {S3, Value, Failure, Success, S0, Typed, Errors} from '../interfaces'
+import { S3, Value, Failure, Success, S0, Typed, Errors, StatementInfo, InterpreterState} from '../interfaces'
 
 import {type_literal, types_are_equal, stringify} from '../utility/helpers'
 
@@ -55,28 +55,30 @@ export default class Interpreter extends Emitter {
 
       const evaluation_report = this.evaluator.step()
 
-      if (evaluation_report.error) {
+      if (evaluation_report.error == true) {
         done = true
         this.emit('evaluation-error', evaluation_report.result)
       }
-      else if (evaluation_report.error == false) {
-        switch (evaluation_report.result.action) {
-          case 'read':
-            this.emit('read')
-            this.read_stack.push({name: evaluation_report.result.name, type: evaluation_report.result.type})
-            break
-          case 'write':
-            this.emit('write', evaluation_report.result.value)
-          case 'none':
-            break
-          case 'paused':
-            this.paused = true
+      else {
+        if (evaluation_report.result.kind == 'action') {
+          switch (evaluation_report.result.action) {
+            case 'read':
+              this.emit('read')
+              this.read_stack.push({ name: evaluation_report.result.name, type: evaluation_report.result.type })
+              break
+            case 'write':
+              this.emit('write', evaluation_report.result.value)
+            case 'none':
+              break
+            case 'paused':
+              this.paused = true
+              this.running = false
+              break
+          }
+          done = evaluation_report.result.done
+          if (done) {
             this.running = false
-            break
-        }
-        done = evaluation_report.result.done
-        if (done) {
-          this.running = false
+          }
         }
       }
     }
@@ -93,6 +95,74 @@ export default class Interpreter extends Emitter {
     else {
       this.emit('program-finished')
     }
+  }
+
+  step(): InterpreterState | StatementInfo {
+    // Esto es necesario porque el interprete se "pausa" cuando un modulo hace
+    // una llamada a leer
+    if (this.paused && this.data_read) {
+      this.emit('program-resumed')
+      this.paused = false
+      this.running = true
+      this.data_read = false
+    }
+    else {
+      this.emit('program-started')
+    }
+
+    let done = false
+
+    while (this.running && done == false) {
+
+      const evaluation_report = this.evaluator.step()
+
+      if (evaluation_report.error == true) {
+        done = true
+        this.emit('evaluation-error', evaluation_report.result)
+      }
+      else {
+        if (evaluation_report.result.kind == 'info') {
+          if (evaluation_report.result.is_user_statement) {
+            return evaluation_report.result
+          }
+        }
+        else if (evaluation_report.result.kind == 'action') {
+          switch (evaluation_report.result.action) {
+            case 'read':
+              this.emit('read')
+              this.read_stack.push({ name: evaluation_report.result.name, type: evaluation_report.result.type })
+              break
+            case 'write':
+              this.emit('write', evaluation_report.result.value)
+            case 'none':
+              break
+            case 'paused':
+              this.paused = true
+              this.running = false
+              break
+          }
+          done = evaluation_report.result.done
+          if (done) {
+            this.running = false
+          }
+        }
+      }
+    }
+
+    /**
+     * Esto determina que evento emitir si la ejecucion sale del
+     * bucle anterior. Hay dos motivos para salir de ese bucle:
+     *  - el evaluador esta pausado esperando que finalice una lectura
+     *  - hubo un error o el programa finalizó
+     */
+    if (this.paused) {
+      this.emit('program-paused')
+    }
+    else {
+      this.emit('program-finished')
+    }
+
+    return { kind: 'state', done: this.paused || !this.running }
   }
 
   send (value: string) {

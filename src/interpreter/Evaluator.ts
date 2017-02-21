@@ -26,7 +26,7 @@ interface Range {
   to: number
 }
 
-export class Evaluator {
+export default class Evaluator {
   private readonly modules: {[p:string]: S3.Module}
   private readonly entry_point: S3.Statement
   private current_statement: S3.Statement

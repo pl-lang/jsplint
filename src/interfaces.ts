@@ -825,6 +825,7 @@ export namespace S3 {
     protected exit_set: boolean
     readonly owner: string
     is_user_stmnt: boolean
+    pos?: Position
 
     constructor(owner: string) {
       this.owner = owner
@@ -1400,6 +1401,7 @@ export interface TransformedProgram {
 export type Value = boolean | number | string
 
 export interface Read {
+  kind: 'action'
   action: 'read'
   type: Typed.AtomicType | Typed.StringType
   name: string
@@ -1407,22 +1409,31 @@ export interface Read {
 }
 
 export interface Write {
+  kind: 'action'
   action: 'write',
   value: Value
   done: boolean
 }
 
 export interface NullAction {
+  kind: 'action'
   action: 'none'
   done: boolean
 }
 
 export interface Paused {
+  kind: 'action'
   action: 'paused'
   done: boolean
 }
 
 export type SuccessfulReturn = Success<Read> | Success<Write> | Success<NullAction>
+
+export interface StatementInfo {
+  kind: 'info'
+  pos: Position
+  is_user_statement: boolean
+}
 
 export interface Alias {
   type: 'alias'
@@ -1452,4 +1463,9 @@ export type ValueContainer = Scalar | Vector
 
 export interface Frame {
   [name: string]: ValueContainer | Alias
+}
+
+export interface InterpreterState {
+  done: boolean
+  kind: 'state'
 }

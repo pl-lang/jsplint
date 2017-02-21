@@ -6,11 +6,9 @@ import Parser from '../src/parser/Parser.js'
 import { ParsedProgram, S1, S3, Errors, Success, Failure, Read, Write, NullAction, Paused } from '../src/interfaces'
 import { Vector, Scalar } from '../src/interfaces'
 
-import { Evaluator } from '../src/interpreter/Evaluator'
+import Evaluator from '../src/interpreter/Evaluator'
 
 import transform from '../src/transforms/transform'
-
-import fr_writer from '../src/utility/fr_writer'
 
 function run(e: Evaluator) {
   let output = e.step()
