@@ -3,8 +3,8 @@ import 'should'
 
 import Parser from '../src/parser/Parser.js'
 
-import { ParsedProgram, S1, S3, Errors, Success, Failure, Read } from '../src/interfaces'
-import {Vector, Scalar} from '../src/interfaces'
+import { ParsedProgram, S1, S3, Errors, Success, Failure, Read, Write, NullAction, Paused } from '../src/interfaces'
+import { Vector, Scalar } from '../src/interfaces'
 
 import { Evaluator } from '../src/interpreter/Evaluator'
 
@@ -12,14 +12,22 @@ import transform from '../src/transforms/transform'
 
 import fr_writer from '../src/utility/fr_writer'
 
-function run (e: Evaluator) {
+function run(e: Evaluator) {
   let output = e.step()
 
-  while (output.error == false && output.result.done == false && output.result.action != 'read' && output.result.action != 'write') {
-    output = e.step()
+  while (output.error == false) {
+    if (output.result.kind == 'info') {
+      output = e.step()
+    }
+    else if (output.result.kind == 'action') {
+      if (output.result.done || output.result.action == 'read' || output.result.action == 'write') {
+        return output as (Success<Read> | Success<Write> | Success<NullAction>)
+      }
+      else {
+        output = e.step()
+      }
+    }
   }
-
-  return output
 }
 
 function compile(p: Failure<Errors.Lexical[] | Errors.Pattern[]> | Success<ParsedProgram>): S3.Program {
@@ -65,7 +73,7 @@ describe('Evaluacion de programas y expresiones', () => {
     const output = evaluator.step()
 
     output.result.should.deepEqual({
-      action: 'none',
+      kind: 'action', action: 'none',
       done: true
     })
   })
@@ -79,15 +87,11 @@ describe('Evaluacion de programas y expresiones', () => {
 
     const p = compile(parse(code))
 
-    const evaluator = new Evaluator(p)
+    const e = new Evaluator(p)
 
-    let output = evaluator.step()
+    let output = run(e)
 
-    while (output.error == false && !output.result.done) {
-      output = evaluator.step()
-    }
-
-    const a = evaluator.get_globals()['a'] as Scalar
+    const a = e.get_globals()['a'] as Scalar
 
     a.value.should.equal(2)
   })
@@ -101,15 +105,11 @@ describe('Evaluacion de programas y expresiones', () => {
 
     const p = compile(parse(code))
 
-    const evaluator = new Evaluator(p)
+    const e = new Evaluator(p)
 
-    let output = evaluator.step()
+    let output = run(e)
 
-    while (output.result.done == false) {
-      output = evaluator.step()
-    }
-
-    const v = evaluator.get_globals()['v'] as Vector
+    const v = e.get_globals()['v'] as Vector
 
     v.values[0].should.equal("h")
     v.values[1].should.equal("o")
@@ -130,15 +130,11 @@ describe('Evaluacion de programas y expresiones', () => {
 
     const p = compile(parse(code))
 
-    const evaluator = new Evaluator(p)
+    const e = new Evaluator(p)
 
-    let output = evaluator.step()
+    let output = run(e)
 
-    while (output.result.done == false) {
-      output = evaluator.step()
-    }
-
-    const v = evaluator.get_globals()['v'] as Vector
+    const v = e.get_globals()['v'] as Vector
 
     v.values[0].should.equal(5)
     v.values[1].should.equal(8)
@@ -159,15 +155,11 @@ describe('Evaluacion de programas y expresiones', () => {
 
     const p = compile(parse(code))
 
-    const evaluator = new Evaluator(p)
+    const e = new Evaluator(p)
 
-    let output = evaluator.step()
+    let output = run(e)
 
-    while (output.result.done == false) {
-      output = evaluator.step()
-    }
-
-    const b = evaluator.get_globals()['b'] as Vector
+    const b = e.get_globals()['b'] as Vector
 
     b.values[0].should.equal(1)
     b.values[1].should.equal(2)
@@ -186,15 +178,11 @@ describe('Evaluacion de programas y expresiones', () => {
 
     const p = compile(parse(code))
 
-    const evaluator = new Evaluator(p)
+    const e = new Evaluator(p)
 
-    let output = evaluator.step()
+    let output = run(e)
 
-    while (output.result.done == false) {
-      output = evaluator.step()
-    }
-
-    const m = evaluator.get_globals()['m'] as Vector
+    const m = e.get_globals()['m'] as Vector
 
     m.values[0].should.equal(5)
     m.values[1].should.equal(8)
@@ -215,15 +203,11 @@ describe('Evaluacion de programas y expresiones', () => {
 
     const p = compile(parse(code))
 
-    const evaluator = new Evaluator(p)
+    const e = new Evaluator(p)
 
-    let output = evaluator.step()
+    let output = run(e)
 
-    while (output.result.done == false) {
-      output = evaluator.step()
-    }
-
-    const n = evaluator.get_globals()['n'] as Vector
+    const n = e.get_globals()['n'] as Vector
 
     n.values[0].should.equal(5)
     n.values[1].should.equal(8)
@@ -242,15 +226,11 @@ describe('Evaluacion de programas y expresiones', () => {
 
     const p = compile(parse(code))
 
-    const evaluator = new Evaluator(p)
+    const e = new Evaluator(p)
 
-    let output = evaluator.step()
+    let output = run(e)
 
-    while (output.result.done == false) {
-      output = evaluator.step()
-    }
-
-    const m = evaluator.get_globals()['m'] as Vector
+    const m = e.get_globals()['m'] as Vector
 
     m.values[0].should.equal(5)
     m.values[1].should.equal(8)
@@ -267,15 +247,11 @@ describe('Evaluacion de programas y expresiones', () => {
 
     const p = compile(parse(code))
 
-    const evaluator = new Evaluator(p)
+    const e = new Evaluator(p)
 
-    let output = evaluator.step()
+    let output = run(e)
 
-    while (output.result.done == false) {
-      output = evaluator.step()
-    }
-
-    const n = evaluator.get_globals()['n'] as Vector
+    const n = e.get_globals()['n'] as Vector
 
     n.values[0].should.equal(5)
     n.values[1].should.equal(8)
@@ -289,14 +265,12 @@ describe('Evaluacion de programas y expresiones', () => {
 
     const p = compile(parse(code))
 
-    const evaluator = new Evaluator(p)
+    const e = new Evaluator(p)
 
-    evaluator.step()
-
-    let output = evaluator.step()
+    let output = run(e)
 
     output.error.should.equal(false)
-    output.result.should.deepEqual({ done: true, action: 'write', value: 4 })
+    output.result.should.deepEqual({ done: true, kind: 'action', action: 'write', value: 4 })
   })
 
   it('escribir una cadena literal', () => {
@@ -312,7 +286,7 @@ describe('Evaluacion de programas y expresiones', () => {
     let output = run(evaluator)
 
     output.error.should.equal(false)
-    output.result.should.deepEqual({ done: true, action: 'write', value: "hola" })
+    output.result.should.deepEqual({ done: true, kind: 'action', action: 'write', value: "hola" })
   })
 
   it('programa con un llamado a escribir con varios argumentos', () => {
@@ -323,31 +297,23 @@ describe('Evaluacion de programas y expresiones', () => {
 
     const p = compile(parse(code))
 
-    const evaluator = new Evaluator(p)
+    const e = new Evaluator(p)
 
-    let output = evaluator.step()
+    let output = run(e)
 
-    output = evaluator.step()
+    output.result.should.deepEqual({ done: false, kind: 'action', action: 'write', value: 4 })
 
-    output.result.should.deepEqual({ done: false, action: 'write', value: 4 })
+    output = run(e)
 
-    evaluator.step()
+    output.result.should.deepEqual({ done: false, kind: 'action', action: 'write', value: 3 })
 
-    output = evaluator.step()
+    output = run(e)
 
-    output.result.should.deepEqual({ done: false, action: 'write', value: 3 })
+    output.result.should.deepEqual({ done: false, kind: 'action', action: 'write', value: 2 })
 
-    evaluator.step()
+    output = run(e)
 
-    output = evaluator.step()
-
-    output.result.should.deepEqual({ done: false, action: 'write', value: 2 })
-
-    evaluator.step()
-
-    output = evaluator.step()
-
-    output.result.should.deepEqual({ done: true, action: 'write', value: 1 })
+    output.result.should.deepEqual({ done: true, kind: 'action', action: 'write', value: 1 })
   })
 
   it('programa que escribe el valor de una variable', () => {
@@ -360,15 +326,11 @@ describe('Evaluacion de programas y expresiones', () => {
 
     const p = compile(parse(code))
 
-    const evaluator = new Evaluator(p)
+    const e = new Evaluator(p)
 
-    let output = evaluator.step()
+    let output = run(e)
 
-    while (output.result.done == false) {
-      output = evaluator.step()
-    }
-
-    output.result.should.deepEqual({ done: true, action: 'write', value: 32 })
+    output.result.should.deepEqual({ done: true, kind: 'action', action: 'write', value: 32 })
   })
 
   it('programa que escribe los valores de un vector', () => {
@@ -383,29 +345,15 @@ describe('Evaluacion de programas y expresiones', () => {
 
     const p = compile(parse(code))
 
-    const evaluator = new Evaluator(p)
+    const e = new Evaluator(p)
 
-    let output = evaluator.step()
+    let output = run(e)
 
-    let w1: boolean = false, w2: boolean = false;
+    output.result.should.deepEqual({ done: false, kind: 'action', action: 'write', value: 5 })
 
-    while (output.result.done == false) {
-      output = evaluator.step()
+    output = run(e)
 
-      if (output.error == false) {
-        if (output.result.action == 'write') {
-          if (output.result.value == 5) {
-            w1 = true
-          }
-          else if (output.result.value == 8) {
-            w2 = true
-          }
-        }
-      }
-    }
-
-    w1.should.equal(true)
-    w2.should.equal(true)
+    output.result.should.deepEqual({ done: true, kind: 'action', action: 'write', value: 8 })
   })
 
   it('programa que escribe los valores de una matriz', () => {
@@ -420,29 +368,15 @@ describe('Evaluacion de programas y expresiones', () => {
 
     const p = compile(parse(code))
 
-    const evaluator = new Evaluator(p)
+    const e = new Evaluator(p)
 
-    let output = evaluator.step()
+    let output = run(e)
 
-    let w1: boolean = false, w2: boolean = false;
+    output.result.should.deepEqual({ done: false, kind: 'action', action: 'write', value: 5 })
 
-    while (output.result.done == false) {
-      output = evaluator.step()
+    output = run(e)
 
-      if (output.error == false) {
-        if (output.result.action == 'write') {
-          if (output.result.value == 5) {
-            w1 = true
-          }
-          else if (output.result.value == 8) {
-            w2 = true
-          }
-        }
-      }
-    }
-
-    w1.should.equal(true)
-    w2.should.equal(true)
+    output.result.should.deepEqual({ done: true, kind: 'action', action: 'write', value: 8 })
   })
 
   it('programa con una llamada a leer', () => {
@@ -454,49 +388,28 @@ describe('Evaluacion de programas y expresiones', () => {
 
     const p = compile(parse(code))
 
-    const evaluator = new Evaluator(p)
+    const e = new Evaluator(p)
 
-    let output = evaluator.step()
+    let output = run(e)
 
-    let error = output.error
-    let data_read = false
+    output.error.should.equal(false)
 
-    while (!error && output.result.done == false && !data_read) {
-      if (output.error == false) {
-        data_read = output.result.action == 'read'
-      }
-      else {
-        error = true
-      }
+    const { done, action, name } = output.result as Read
 
-      if (!data_read) {
-        output = evaluator.step()
-      }
-    }
-
-    let {done, action} = (output as Success<Read>).result
     done.should.equal(false)
     action.should.equal('read')
+    name.should.equal('m')
 
-    evaluator.input(9)
+    e.input(2)
 
-    output = evaluator.step()
+    output = run(e)
 
-    error = output.error
+    output.error.should.equal(false)
 
-    while (!error && output.result.done == false) {
-      output = evaluator.step()
-      error = output.error
-    }
+    output.should.deepEqual({ error: false, result: { done: true, kind: 'action', action: 'none' } })
 
-    done = (output as Success<Read>).result.done
-    action = (output as Success<Read>).result.action
-    done.should.equal(true)
-    action.should.equal('none')
-
-    const m = evaluator.get_globals()['m'] as Scalar
-
-    m.value.should.equal(9)
+    const m = e.get_globals()['m'] as Scalar
+    m.value.should.equal(2)
   })
 
   it('programa con una llamada a leer una celda de un vector', () => {
@@ -508,46 +421,27 @@ describe('Evaluacion de programas y expresiones', () => {
 
     const p = compile(parse(code))
 
-    const evaluator = new Evaluator(p)
+    const e = new Evaluator(p)
 
-    let output = evaluator.step()
+    let output = run(e)
 
-    let error = output.error
-    let data_read = false
+    output.error.should.equal(false)
 
-    while (!error && output.result.done == false && !data_read) {
-      if (output.error == false) {
-        data_read = output.result.action == 'read'
-      }
-      else {
-        error = true
-      }
-      if (!data_read) {
-        output = evaluator.step()
-      }
-    }
+    const { done, action, name } = output.result as Read
 
-    let {done, action} = (output as Success<Read>).result
     done.should.equal(false)
     action.should.equal('read')
+    name.should.equal('v')
 
-    evaluator.input(9)
+    e.input(9)
 
-    output = evaluator.step()
+    output = run(e)
 
-    error = output.error
+    output.error.should.equal(false)
 
-    while (!error && output.result.done == false) {
-      output = evaluator.step()
-      error = output.error
-    }
+    output.should.deepEqual({ error: false, result: { done: true, kind: 'action', action: 'none' } })
 
-    done = (output as Success<Read>).result.done
-    action = (output as Success<Read>).result.action
-    done.should.equal(true)
-    action.should.equal('none')
-
-    const v = evaluator.get_globals()['v'] as Vector
+    const v = e.get_globals()['v'] as Vector
 
     v.values[0].should.equal(9)
   })
@@ -580,7 +474,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
     output.error.should.equal(false)
 
-    output.should.deepEqual({ error: false, result: { done: true, action: 'none' } })
+    output.should.deepEqual({ error: false, result: { done: true, kind: 'action', action: 'none' } })
 
     const v = e.get_globals()['v'] as Vector
     v.values[0].should.equal('h')
@@ -618,7 +512,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
     output = run(e)
 
-    output.should.deepEqual({ error: false, result: { done: true, action: 'write', value: 'hola' } })
+    output.should.deepEqual({ error: false, result: { done: true, kind: 'action', action: 'write', value: 'hola' } })
   })
 
   it('escribir cadena asignada', () => {
@@ -636,7 +530,7 @@ describe('Evaluacion de programas y expresiones', () => {
 
     let output = run(e)
 
-    output.should.deepEqual({ error: false, result: { done: true, action: 'write', value: 'hola' } })
+    output.should.deepEqual({ error: false, result: { done: true, kind: 'action', action: 'write', value: 'hola' } })
   })
 
   it('programa con un enunciado si', () => {
@@ -649,15 +543,11 @@ describe('Evaluacion de programas y expresiones', () => {
 
     const p = compile(parse(code))
 
-    const evaluator = new Evaluator(p)
+    const e = new Evaluator(p)
 
-    let output = evaluator.step() // evalua la condicion
+    let output = run(e)
 
-    while (output.result.done == false) {
-      output = evaluator.step()
-    }
-
-    output.result.should.deepEqual({ done: true, action: 'write', value: 3 })
+    output.result.should.deepEqual({ done: true, kind: 'action', action: 'write', value: 3 })
   })
 
   it('programa con un enunciado si/sino', () => {
@@ -672,25 +562,11 @@ describe('Evaluacion de programas y expresiones', () => {
 
     const p = compile(parse(code))
 
-    const evaluator = new Evaluator(p)
+    const e = new Evaluator(p)
 
-    let w: boolean = false
+    let output = run(e)
 
-    let output = evaluator.step()
-
-    while (output.result.done == false) {
-      output = evaluator.step()
-
-      if (output.error == false) {
-        if (output.result.action == 'write') {
-          if (output.result.value == 4) {
-            w = true
-          }
-        }
-      }
-    }
-
-    w.should.equal(true)
+    output.result.should.deepEqual({ done: true, kind: 'action', action: 'write', value: 4 })
   })
 
   it('programa con un bucle mientras', () => {
@@ -707,35 +583,19 @@ describe('Evaluacion de programas y expresiones', () => {
 
     const p = compile(parse(code))
 
-    const evaluator = new Evaluator(p)
+    const e = new Evaluator(p)
 
-    let w1: boolean = false, w2: boolean = false, w3: boolean = false;
+    let output = run(e)
 
-    let output = evaluator.step()
+    output.result.should.deepEqual({ done: false, kind: 'action', action: 'write', value: 0 })
 
-    while (output.result.done == false) {
-      output = evaluator.step()
+    output = run(e)
 
-      if (output.error == false) {
-        if (output.result.action == 'write') {
-          switch (output.result.value) {
-            case 0:
-              w1 = true
-              break
-            case 1:
-              w2 = true
-              break
-            case 2:
-              w3 = true
-              break
-          }
-        }
-      }
-    }
+    output.result.should.deepEqual({ done: false, kind: 'action', action: 'write', value: 1 })
 
-    w1.should.equal(true)
-    w2.should.equal(true)
-    w3.should.equal(true)
+    output = run(e)
+
+    output.result.should.deepEqual({ done: true, kind: 'action', action: 'write', value: 2 })
   })
 
   it('programa con un bucle para', () => {
@@ -749,35 +609,21 @@ describe('Evaluacion de programas y expresiones', () => {
 
     const p = compile(parse(code))
 
-    const evaluator = new Evaluator(p)
+    const e = new Evaluator(p)
 
-    let w1: boolean = false, w2: boolean = false, w3: boolean = false;
+    let output = run(e)
 
-    let output = evaluator.step()
+    output.result.should.deepEqual({ done: false, kind: 'action', action: 'write', value: 0 })
 
-    while (output.result.done == false) {
-      output = evaluator.step()
+    output = run(e)
 
-      if (output.error == false) {
-        if (output.result.action == 'write') {
-          switch (output.result.value) {
-            case 0:
-              w1 = true
-              break
-            case 1:
-              w2 = true
-              break
-            case 2:
-              w3 = true
-              break
-          }
-        }
-      }
-    }
+    output.result.should.deepEqual({ done: false, kind: 'action', action: 'write', value: 1 })
 
-    w1.should.equal(true)
-    w2.should.equal(true)
-    w3.should.equal(true)
+    output = run(e)
+
+    // en este retorno `done` es `false` porque despues del ultimo enunciado del cuerpo del bucle
+    // va la evaluacion de la condicon
+    output.result.should.deepEqual({ done: false, kind: 'action', action: 'write', value: 2 })
   })
 
   it('programa con un bucle repetir', () => {
@@ -794,35 +640,19 @@ describe('Evaluacion de programas y expresiones', () => {
 
     const p = compile(parse(code))
 
-    const evaluator = new Evaluator(p)
+    const e = new Evaluator(p)
 
-    let w1: boolean = false, w2: boolean = false, w3: boolean = false;
+    let output = run(e)
 
-    let output = evaluator.step()
+    output.result.should.deepEqual({ done: false, kind: 'action', action: 'write', value: 0 })
 
-    while (output.result.done == false) {
-      output = evaluator.step()
+    output = run(e)
 
-      if (output.error == false) {
-        if (output.result.action == 'write') {
-          switch (output.result.value) {
-            case 0:
-              w1 = true
-              break
-            case 1:
-              w2 = true
-              break
-            case 2:
-              w3 = true
-              break
-          }
-        }
-      }
-    }
+    output.result.should.deepEqual({ done: false, kind: 'action', action: 'write', value: 1 })
 
-    w1.should.equal(true)
-    w2.should.equal(true)
-    w3.should.equal(true)
+    output = run(e)
+
+    output.result.should.deepEqual({ done: true, kind: 'action', action: 'write', value: 2 })
   })
 
   describe('Evaluacion de expresiones', () => {
@@ -836,15 +666,11 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p)
+        const e = new Evaluator(p)
 
-        let output = evaluator.step()
+        let output = run(e)
 
-        while (output.result.done == false) {
-          output = evaluator.step()
-        }
-
-        const a = evaluator.get_globals()['a'] as Scalar
+        const a = e.get_globals()['a'] as Scalar
 
         a.value.should.equal(2 * 3)
       })
@@ -859,44 +685,36 @@ describe('Evaluacion de programas y expresiones', () => {
 
         const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p)
+        const e = new Evaluator(p)
 
-        let output = evaluator.step()
+        let output = run(e)
 
-        while (output.result.done == false) {
-          output = evaluator.step()
-        }
-
-        const a = evaluator.get_globals()['a'] as Scalar
+        const a = e.get_globals()['a'] as Scalar
 
         a.value.should.equal(-2 * -3)
       })
 
-      // 2*2*2
-      it('2*2*2', () => {
-        const code = `variables
+    // 2*2*2
+    it('2*2*2', () => {
+      const code = `variables
           entero a
         inicio
           a <- 2*2*2
         fin`
 
-        const p = compile(parse(code))
+      const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p)
+      const e = new Evaluator(p)
 
-        let output = evaluator.step()
+      let output = run(e)
 
-        while (output.result.done == false) {
-          output = evaluator.step()
-        }
+      const a = e.get_globals()['a'] as Scalar
 
-        const a = evaluator.get_globals()['a'] as Scalar
+      a.value.should.equal(2 * 2 * 2)
+    })
 
-        a.value.should.equal(2 * 2 * 2)
-      })
-
-      it('a*b', () => {
-        const code = `variables
+    it('a*b', () => {
+      const code = `variables
           entero a, b, c
         inicio
           a <- 2
@@ -904,23 +722,19 @@ describe('Evaluacion de programas y expresiones', () => {
           c <- a * b
         fin`
 
-        const p = compile(parse(code))
+      const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p)
+      const e = new Evaluator(p)
 
-        let output = evaluator.step()
+      let output = run(e)
 
-        while (output.result.done == false) {
-          output = evaluator.step()
-        }
+      const c = e.get_globals()['c'] as Scalar
 
-        const c = evaluator.get_globals()['c'] as Scalar
+      c.value.should.equal(12)
+    })
 
-        c.value.should.equal(12)
-      })
-
-      it('v[1]*v[2]', () => {
-        const code = `variables
+    it('v[1]*v[2]', () => {
+      const code = `variables
           entero v[3]
         inicio
           v[1] <- 2
@@ -928,626 +742,514 @@ describe('Evaluacion de programas y expresiones', () => {
           v[3] <- v[1] * v[2]
         fin`
 
-        const p = compile(parse(code))
+      const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p)
+      const e = new Evaluator(p)
 
-        let output = evaluator.step()
+      let output = run(e)
 
-        while (output.result.done == false) {
-          output = evaluator.step()
-        }
+      const v = e.get_globals()['v'] as Vector
 
-        const v = evaluator.get_globals()['v'] as Vector
-
-        v.values[2].should.equal(12)
-      })
+      v.values[2].should.equal(12)
     })
+  })
 
-    describe('division', () => {
-      it('3/2', () => {
-        const code = `variables
+  describe('division', () => {
+    it('3/2', () => {
+      const code = `variables
           real a
         inicio
           a <- 3/2
         fin`
 
-        const p = compile(parse(code))
+      const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p)
+      const e = new Evaluator(p)
 
-        let output = evaluator.step()
+      let output = run(e)
 
-        while (output.result.done == false) {
-          output = evaluator.step()
-        }
+      const a = e.get_globals()['a'] as Scalar
 
-        const a = evaluator.get_globals()['a'] as Scalar
+      a.value.should.equal(3 / 2)
+    })
 
-        a.value.should.equal(3 / 2)
-      })
+    it('neg 3/neg 2', () => {
 
-      it('neg 3/neg 2', () => {
-
-        const code = `variables
+      const code = `variables
           real a
         inicio
           a <- neg 3/neg 2
         fin`
 
-        const p = compile(parse(code))
+      const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p)
+      const e = new Evaluator(p)
 
-        let output = evaluator.step()
+      let output = run(e)
 
-        while (output.result.done == false) {
-          output = evaluator.step()
-        }
+      const a = e.get_globals()['a'] as Scalar
 
-        const a = evaluator.get_globals()['a'] as Scalar
+      a.value.should.equal(-3 / -2)
+    })
 
-        a.value.should.equal(-3 / -2)
-      })
-
-      it('2+3/3+4', () => {
-        const code = `variables
+    it('2+3/3+4', () => {
+      const code = `variables
           real a
         inicio
           a <- 2+3/3+4
         fin`
 
-        const p = compile(parse(code))
+      const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p)
+      const e = new Evaluator(p)
 
-        let output = evaluator.step()
+      let output = run(e)
 
-        while (output.result.done == false) {
-          output = evaluator.step()
-        }
+      const a = e.get_globals()['a'] as Scalar
 
-        const a = evaluator.get_globals()['a'] as Scalar
+      a.value.should.equal(2 + 3 / 3 + 4)
+    })
 
-        a.value.should.equal(2 + 3 / 3 + 4)
-      })
-
-      it('3/2/2', () => {
-        const code = `variables
+    it('3/2/2', () => {
+      const code = `variables
           real a
         inicio
           a <- 3/2/2
         fin`
 
-        const p = compile(parse(code))
+      const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p)
+      const e = new Evaluator(p)
 
-        let output = evaluator.step()
+      let output = run(e)
 
-        while (output.result.done == false) {
-          output = evaluator.step()
-        }
+      const a = e.get_globals()['a'] as Scalar
 
-        const a = evaluator.get_globals()['a'] as Scalar
+      a.value.should.equal(3 / 2 / 2)
+    })
 
-        a.value.should.equal(3 / 2 / 2)
-      })
-
-      it('2/2/2/2', () => {
-        const code = `variables
+    it('2/2/2/2', () => {
+      const code = `variables
           real a
         inicio
           a <- 2/2/2/2
         fin`
 
-        const p = compile(parse(code))
+      const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p)
+      const e = new Evaluator(p)
 
-        let output = evaluator.step()
+      let output = run(e)
 
-        while (output.result.done == false) {
-          output = evaluator.step()
-        }
+      const a = e.get_globals()['a'] as Scalar
 
-        const a = evaluator.get_globals()['a'] as Scalar
+      a.value.should.equal(2 / 2 / 2 / 2)
+    })
 
-        a.value.should.equal(2 / 2 / 2 / 2)
-      })
-
-      it('4/2/2/2', () => {
-        const code = `variables
+    it('4/2/2/2', () => {
+      const code = `variables
           real a
         inicio
           a <- 4/2/2/2
         fin`
 
-        const p = compile(parse(code))
+      const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p)
+      const e = new Evaluator(p)
 
-        let output = evaluator.step()
+      let output = run(e)
 
-        while (output.result.done == false) {
-          output = evaluator.step()
-        }
+      const a = e.get_globals()['a'] as Scalar
 
-        const a = evaluator.get_globals()['a'] as Scalar
+      a.value.should.equal(4 / 2 / 2 / 2)
+    })
 
-        a.value.should.equal(4 / 2 / 2 / 2)
-      })
-
-      it('2/2/2/4', () => {
-        const code = `variables
+    it('2/2/2/4', () => {
+      const code = `variables
             real a
           inicio
             a <- 2/2/2/4
           fin`
 
-        const p = compile(parse(code))
+      const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p)
+      const e = new Evaluator(p)
 
-        let output = evaluator.step()
+      let output = run(e)
 
-        while (output.result.done == false) {
-          output = evaluator.step()
-        }
+      const a = e.get_globals()['a'] as Scalar
 
-        const a = evaluator.get_globals()['a'] as Scalar
+      a.value.should.equal(2 / 2 / 2 / 4)
+    })
+  })
 
-        a.value.should.equal(2 / 2 / 2 / 4)
-      })
+  describe('resta', () => {
+    it('3-3-3', () => {
+      const code = `variables \n entero a \n inicio \n a <- 3-3-3 \n fin`
+
+      const p = compile(parse(code))
+
+      const e = new Evaluator(p)
+
+      let output = run(e)
+
+      const a = e.get_globals()['a'] as Scalar
+
+      a.value.should.equal(3 - 3 - 3)
     })
 
-    describe('resta', () => {
-      it('3-3-3', () => {
-        const code = `variables \n entero a \n inicio \n a <- 3-3-3 \n fin`
-
-        const p = compile(parse(code))
-
-        const evaluator = new Evaluator(p)
-
-        let output = evaluator.step()
-
-        while (output.result.done == false) {
-          output = evaluator.step()
-        }
-
-        const a = evaluator.get_globals()['a'] as Scalar
-
-        a.value.should.equal(3 - 3 - 3)
-      })
-
-      it('(3-3-3)', () => {
-        const code = `variables
+    it('(3-3-3)', () => {
+      const code = `variables
           entero a
         inicio
           a <- (3-3-3)
         fin`
 
-        const p = compile(parse(code))
+      const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p)
+      const e = new Evaluator(p)
 
-        let output = evaluator.step()
+      let output = run(e)
 
-        while (output.result.done == false) {
-          output = evaluator.step()
-        }
+      const a = e.get_globals()['a'] as Scalar
 
-        const a = evaluator.get_globals()['a'] as Scalar
-
-        a.value.should.equal((3 - 3 - 3))
-      })
+      a.value.should.equal((3 - 3 - 3))
     })
+  })
 
-    describe('suma', () => {
-      it('2+43', () => {
-        const code = `variables
+  describe('suma', () => {
+    it('2+43', () => {
+      const code = `variables
           entero a
         inicio
           a <- 2+43
         fin`
 
-        const p = compile(parse(code))
+      const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p)
+      const e = new Evaluator(p)
 
-        let output = evaluator.step()
+      let output = run(e)
 
-        while (output.result.done == false) {
-          output = evaluator.step()
-        }
+      const a = e.get_globals()['a'] as Scalar
 
-        const a = evaluator.get_globals()['a'] as Scalar
-
-        a.value.should.equal(2 + 43)
-      })
+      a.value.should.equal(2 + 43)
     })
+  })
 
-    describe('operaciones combinadas', () => {
-      it('2-(2-3)', () => {
-        const code = `variables
+  describe('operaciones combinadas', () => {
+    it('2-(2-3)', () => {
+      const code = `variables
           entero a
         inicio
           a <- 2-(2-3)
         fin`
 
-        const p = compile(parse(code))
+      const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p)
+      const e = new Evaluator(p)
 
-        let output = evaluator.step()
+      let output = run(e)
 
-        while (output.result.done == false) {
-          output = evaluator.step()
-        }
+      const a = e.get_globals()['a'] as Scalar
 
-        const a = evaluator.get_globals()['a'] as Scalar
-
-        a.value.should.equal(2 - (2 - 3))
-      })
+      a.value.should.equal(2 - (2 - 3))
     })
+  })
 
-    it('2+(2+3)', () => {
-      const code = `variables
+  it('2+(2+3)', () => {
+    const code = `variables
           entero a
         inicio
           a <- 2+(2+3)
         fin`
 
-      const p = compile(parse(code))
+    const p = compile(parse(code))
 
-      const evaluator = new Evaluator(p)
+    const e = new Evaluator(p)
 
-      let output = evaluator.step()
+    let output = run(e)
+    const a = e.get_globals()['a'] as Scalar
 
-      while (output.result.done == false) {
-        output = evaluator.step()
-      }
-      const a = evaluator.get_globals()['a'] as Scalar
+    a.value.should.equal(2 + (2 + 3))
+  })
 
-      a.value.should.equal(2 + (2 + 3))
-    })
-
-    it('2+(2+3*4)', () => {
-      const code = `variables
+  it('2+(2+3*4)', () => {
+    const code = `variables
           entero a
         inicio
           a <- 2+(2+3*4)
         fin`
 
-      const p = compile(parse(code))
+    const p = compile(parse(code))
 
-      const evaluator = new Evaluator(p)
+    const e = new Evaluator(p)
 
-      let output = evaluator.step()
+    let output = run(e)
 
-      while (output.result.done == false) {
-        output = evaluator.step()
-      }
+    const a = e.get_globals()['a'] as Scalar
 
-      const a = evaluator.get_globals()['a'] as Scalar
+    a.value.should.equal(2 + (2 + 3 * 4))
+  })
 
-      a.value.should.equal(2 + (2 + 3 * 4))
-    })
-
-    it('3*(2-6)', () => {
-      const code = `variables
+  it('3*(2-6)', () => {
+    const code = `variables
           entero a
         inicio
           a <- (3*2)-6
         fin`
 
-      const p = compile(parse(code))
+    const p = compile(parse(code))
 
-      const evaluator = new Evaluator(p)
+    const e = new Evaluator(p)
 
-      let output = evaluator.step()
+    let output = run(e)
 
-      while (output.result.done == false) {
-        output = evaluator.step()
-      }
+    const a = e.get_globals()['a'] as Scalar
 
-      const a = evaluator.get_globals()['a'] as Scalar
+    a.value.should.equal((3 * 2) - 6)
+  })
 
-      a.value.should.equal((3 * 2) - 6)
-    })
-
-    it('(neg(neg(2+2)))', () => {
-      const code = `variables
+  it('(neg(neg(2+2)))', () => {
+    const code = `variables
           entero a
         inicio
           a <- (neg(neg(2+2)))
         fin`
 
-      const p = compile(parse(code))
+    const p = compile(parse(code))
 
-      const evaluator = new Evaluator(p)
+    const e = new Evaluator(p)
 
-      let output = evaluator.step()
+    let output = run(e)
 
-      while (output.result.done == false) {
-        output = evaluator.step()
-      }
+    const a = e.get_globals()['a'] as Scalar
 
-      const a = evaluator.get_globals()['a'] as Scalar
+    a.value.should.equal((-(-(2 + 2))))
+  })
 
-      a.value.should.equal((-(-(2 + 2))))
-    })
-
-    it('2+8/2', () => {
-      const code = `variables
+  it('2+8/2', () => {
+    const code = `variables
           real a
         inicio
           a <- 2+8/2
         fin`
 
-      const p = compile(parse(code))
+    const p = compile(parse(code))
 
-      const evaluator = new Evaluator(p)
+    const e = new Evaluator(p)
 
-      let output = evaluator.step()
+    let output = run(e)
 
-      while (output.result.done == false) {
-        output = evaluator.step()
-      }
+    const a = e.get_globals()['a'] as Scalar
 
-      const a = evaluator.get_globals()['a'] as Scalar
+    a.value.should.equal(2 + 8 / 2)
+  })
 
-      a.value.should.equal(2 + 8 / 2)
-    })
-
-    describe('relacionales', () => {
-      it('2 = 2', () => {
-        const code = `variables
+  describe('relacionales', () => {
+    it('2 = 2', () => {
+      const code = `variables
           logico a
         inicio
           a <- 2 = 2
         fin`
 
-        const p = compile(parse(code))
+      const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p)
+      const e = new Evaluator(p)
 
-        let output = evaluator.step()
+      let output = run(e)
 
-        while (output.result.done == false) {
-          output = evaluator.step()
-        }
+      const a = e.get_globals()['a'] as Scalar
 
-        const a = evaluator.get_globals()['a'] as Scalar
+      a.value.should.equal(true)
+    })
 
-        a.value.should.equal(true)
-      })
-
-      it('2 <> 2', () => {
-        const code = `variables
+    it('2 <> 2', () => {
+      const code = `variables
           logico a
         inicio
           a <- 2 <> 2
         fin`
 
-        const p = compile(parse(code))
+      const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p)
+      const e = new Evaluator(p)
 
-        let output = evaluator.step()
+      let output = run(e)
 
-        while (output.result.done == false) {
-          output = evaluator.step()
-        }
+      const a = e.get_globals()['a'] as Scalar
 
-        const a = evaluator.get_globals()['a'] as Scalar
+      a.value.should.equal(false)
+    })
 
-        a.value.should.equal(false)
-      })
-
-      it('2 >= 2', () => {
-        const code = `variables
+    it('2 >= 2', () => {
+      const code = `variables
           logico a
         inicio
           a <- 2 >= 2
         fin`
 
-        const p = compile(parse(code))
+      const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p)
+      const e = new Evaluator(p)
 
-        let output = evaluator.step()
+      let output = run(e)
 
-        while (output.result.done == false) {
-          output = evaluator.step()
-        }
+      const a = e.get_globals()['a'] as Scalar
 
-        const a = evaluator.get_globals()['a'] as Scalar
+      a.value.should.equal(true)
+    })
 
-        a.value.should.equal(true)
-      })
-
-      it('2 <= 2', () => {
-        const code = `variables
+    it('2 <= 2', () => {
+      const code = `variables
           logico a
         inicio
           a <- 2 <= 2
         fin`
 
-        const p = compile(parse(code))
+      const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p)
+      const e = new Evaluator(p)
 
-        let output = evaluator.step()
+      let output = run(e)
 
-        while (output.result.done == false) {
-          output = evaluator.step()
-        }
+      const a = e.get_globals()['a'] as Scalar
 
-        const a = evaluator.get_globals()['a'] as Scalar
+      a.value.should.equal(true)
+    })
 
-        a.value.should.equal(true)
-      })
-
-      it('5 > 4', () => {
-        const code = `variables
+    it('5 > 4', () => {
+      const code = `variables
           logico a
         inicio
           a <- 5 > 4
         fin`
 
-        const p = compile(parse(code))
+      const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p)
+      const e = new Evaluator(p)
 
-        let output = evaluator.step()
+      let output = run(e)
 
-        while (output.result.done == false) {
-          output = evaluator.step()
-        }
+      const a = e.get_globals()['a'] as Scalar
 
-        const a = evaluator.get_globals()['a'] as Scalar
+      a.value.should.equal(true)
+    })
 
-        a.value.should.equal(true)
-      })
-
-      it('2 < 4', () => {
-        const code = `variables
+    it('2 < 4', () => {
+      const code = `variables
           logico a
         inicio
           a <- 2 < 4
         fin`
 
-        const p = compile(parse(code))
+      const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p)
+      const e = new Evaluator(p)
 
-        let output = evaluator.step()
+      let output = run(e)
 
-        while (output.result.done == false) {
-          output = evaluator.step()
-        }
+      const a = e.get_globals()['a'] as Scalar
 
-        const a = evaluator.get_globals()['a'] as Scalar
+      a.value.should.equal(true)
+    })
 
-        a.value.should.equal(true)
-      })
-
-      it('verdadero or falso', () => {
-        const code = `variables
+    it('verdadero or falso', () => {
+      const code = `variables
           logico a
         inicio
           a <- verdadero or falso
         fin`
 
-        const p = compile(parse(code))
+      const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p)
+      const e = new Evaluator(p)
 
-        let output = evaluator.step()
+      let output = run(e)
 
-        while (output.result.done == false) {
-          output = evaluator.step()
-        }
+      const a = e.get_globals()['a'] as Scalar
 
-        const a = evaluator.get_globals()['a'] as Scalar
+      a.value.should.equal(true)
+    })
 
-        a.value.should.equal(true)
-      })
-
-      it('verdadero and falso', () => {
-        const code = `variables
+    it('verdadero and falso', () => {
+      const code = `variables
           logico a
         inicio
           a <- verdadero and falso
         fin`
 
-        const p = compile(parse(code))
+      const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p)
+      const e = new Evaluator(p)
 
-        let output = evaluator.step()
+      let output = run(e)
 
-        while (output.result.done == false) {
-          output = evaluator.step()
-        }
+      const a = e.get_globals()['a'] as Scalar
 
-        const a = evaluator.get_globals()['a'] as Scalar
+      a.value.should.equal(false)
+    })
 
-        a.value.should.equal(false)
-      })
-
-      it('not verdadero', () => {
-        const code = `variables
+    it('not verdadero', () => {
+      const code = `variables
           logico a
         inicio
           a <- not verdadero
         fin`
 
-        const p = compile(parse(code))
+      const p = compile(parse(code))
 
-        const evaluator = new Evaluator(p)
+      const e = new Evaluator(p)
 
-        let output = evaluator.step()
+      let output = run(e)
 
-        while (output.result.done == false) {
-          output = evaluator.step()
-        }
+      const a = e.get_globals()['a'] as Scalar
 
-        const a = evaluator.get_globals()['a'] as Scalar
+      a.value.should.equal(false)
+    })
 
-        a.value.should.equal(false)
-      })
-
-      it('not falso', () => {
-        const code = `variables
+    it('not falso', () => {
+      const code = `variables
           logico a
         inicio
           a <- not falso
         fin`
 
-        const p = compile(parse(code))
-
-        const evaluator = new Evaluator(p)
-
-        let output = evaluator.step()
-
-        while (output.result.done == false) {
-          output = evaluator.step()
-        }
-
-        const a = evaluator.get_globals()['a'] as Scalar
-
-        a.value.should.equal(true)
-      })
-    })
-
-    it('prueba que no deberia fallar', () => {
-      const code = `variables
-        logico a
-      inicio
-        a <- 2 + 2 = 4
-      fin`
-
       const p = compile(parse(code))
 
-      const evaluator = new Evaluator(p)
+      const e = new Evaluator(p)
 
-      let output = evaluator.step()
+      let output = run(e)
 
-      while (output.result.done == false) {
-        output = evaluator.step()
-      }
-
-      const a = evaluator.get_globals()['a'] as Scalar
+      const a = e.get_globals()['a'] as Scalar
 
       a.value.should.equal(true)
     })
   })
 
-  describe('Programas con funciones o procedimientos', () => {
-    it('procedimiento sencillo', () => {
-      const code = `variables
+  it('prueba que no deberia fallar', () => {
+    const code = `variables
+        logico a
+      inicio
+        a <- 2 + 2 = 4
+      fin`
+
+    const p = compile(parse(code))
+
+    const e = new Evaluator(p)
+
+    let output = run(e)
+
+    const a = e.get_globals()['a'] as Scalar
+
+    a.value.should.equal(true)
+  })
+})
+
+describe('Programas con funciones o procedimientos', () => {
+  it('procedimiento sencillo', () => {
+    const code = `variables
       inicio
         informar(2)
       fin
@@ -1557,21 +1259,17 @@ describe('Evaluacion de programas y expresiones', () => {
         escribir(a)
       finprocedimiento
       `
-      const p = compile(parse(code))
+    const p = compile(parse(code))
 
-      const evaluator = new Evaluator(p)
+    const e = new Evaluator(p)
 
-      let output = evaluator.step()
+    let output = run(e)
 
-      while (output.error == false && output.result.done == false && output.result.action != 'write') {
-        output = evaluator.step()
-      }
+    output.result.should.deepEqual({ done: true, kind: 'action', action: 'write', value: 2 })
+  })
 
-      output.result.should.deepEqual({done: true, action: 'write', value: 2 })
-    })
-
-    it('funcion sencilla', () => {
-      const code = `
+  it('funcion sencilla', () => {
+    const code = `
       variables
         entero a
       inicio
@@ -1584,20 +1282,20 @@ describe('Evaluacion de programas y expresiones', () => {
       finfuncion
       `
 
-      const p = compile(parse(code))
+    const p = compile(parse(code))
 
-      const e = new Evaluator(p)
+    const e = new Evaluator(p)
 
-      const output = run(e)
+    const output = run(e)
 
-      output.should.deepEqual({error: false, result: {done: true, action: 'none'}})
+    output.should.deepEqual({ error: false, result: { done: true, kind: 'action', action: 'none' } })
 
-      const a = e.get_globals()['a'] as Scalar
-      a.value.should.equal(8)
-    })
+    const a = e.get_globals()['a'] as Scalar
+    a.value.should.equal(8)
+  })
 
-      it('pasar un vector como argumento', () => {
-        const code = `
+  it('pasar un vector como argumento', () => {
+    const code = `
         variables
           entero a[3]
         inicio
@@ -1615,25 +1313,25 @@ describe('Evaluacion de programas y expresiones', () => {
         finprocedimiento
         `
 
-        const p = compile(parse(code))
+    const p = compile(parse(code))
 
-        const e = new Evaluator(p)
+    const e = new Evaluator(p)
 
-        let output = run(e)
+    let output = run(e)
 
-        output.should.deepEqual({error: false, result: {done: false, action: 'write', value: 1}})
+    output.should.deepEqual({ error: false, result: { done: false, kind: 'action', action: 'write', value: 1 } })
 
-        output = run(e)
+    output = run(e)
 
-        output.should.deepEqual({error: false, result: {done: false, action: 'write', value: 2}})
+    output.should.deepEqual({ error: false, result: { done: false, kind: 'action', action: 'write', value: 2 } })
 
-        output = run(e)
+    output = run(e)
 
-        output.should.deepEqual({error: false, result: {done: true, action: 'write', value: 3}})
-      })
+    output.should.deepEqual({ error: false, result: { done: true, kind: 'action', action: 'write', value: 3 } })
+  })
 
-      it('pasar una fila de matriz como argumento', () => {
-        const code = `
+  it('pasar una fila de matriz como argumento', () => {
+    const code = `
         variables
           entero a[2, 3]
         inicio
@@ -1651,25 +1349,25 @@ describe('Evaluacion de programas y expresiones', () => {
         finprocedimiento
         `
 
-        const p = compile(parse(code))
+    const p = compile(parse(code))
 
-        const e = new Evaluator(p)
+    const e = new Evaluator(p)
 
-        let output = run(e)
+    let output = run(e)
 
-        output.should.deepEqual({error: false, result: {done: false, action: 'write', value: 1}})
+    output.should.deepEqual({ error: false, result: { done: false, kind: 'action', action: 'write', value: 1 } })
 
-        output = run(e)
+    output = run(e)
 
-        output.should.deepEqual({error: false, result: {done: false, action: 'write', value: 2}})
+    output.should.deepEqual({ error: false, result: { done: false, kind: 'action', action: 'write', value: 2 } })
 
-        output = run(e)
+    output = run(e)
 
-        output.should.deepEqual({error: false, result: {done: true, action: 'write', value: 3}})
-      })
+    output.should.deepEqual({ error: false, result: { done: true, kind: 'action', action: 'write', value: 3 } })
+  })
 
-      it('pasar un matriz como argumento', () => {
-        const code = `
+  it('pasar un matriz como argumento', () => {
+    const code = `
         variables
           entero a[2, 2]
         inicio
@@ -1689,31 +1387,31 @@ describe('Evaluacion de programas y expresiones', () => {
         finprocedimiento
         `
 
-        const p = compile(parse(code))
+    const p = compile(parse(code))
 
-        const e = new Evaluator(p)
+    const e = new Evaluator(p)
 
-        let output = run(e)
+    let output = run(e)
 
-        output.should.deepEqual({error: false, result: {done: false, action: 'write', value: 1}})
+    output.should.deepEqual({ error: false, result: { done: false, kind: 'action', action: 'write', value: 1 } })
 
-        output = run(e)
+    output = run(e)
 
-        output.should.deepEqual({error: false, result: {done: false, action: 'write', value: 2}})
+    output.should.deepEqual({ error: false, result: { done: false, kind: 'action', action: 'write', value: 2 } })
 
-        output = run(e)
+    output = run(e)
 
-        output.should.deepEqual({error: false, result: {done: false, action: 'write', value: 3}})
+    output.should.deepEqual({ error: false, result: { done: false, kind: 'action', action: 'write', value: 3 } })
 
-        output = run(e)
-        
+    output = run(e)
 
-        output.should.deepEqual({error: false, result: {done: true, action: 'write', value: 4}})
-      })
 
-    describe('parametros por referencia', () => {
-      it('variable normal por referencia ', () => {
-        const code = `
+    output.should.deepEqual({ error: false, result: { done: true, kind: 'action', action: 'write', value: 4 } })
+  })
+
+  describe('parametros por referencia', () => {
+    it('variable normal por referencia ', () => {
+      const code = `
         variables
           entero a
         inicio
@@ -1727,20 +1425,20 @@ describe('Evaluacion de programas y expresiones', () => {
         finprocedimiento
         `
 
-        const p = compile(parse(code))
+      const p = compile(parse(code))
 
-        const e = new Evaluator(p)
+      const e = new Evaluator(p)
 
-        const output = run(e)
+      const output = run(e)
 
-        output.should.deepEqual({error: false, result: {done: true, action: 'none'}})
+      output.should.deepEqual({ error: false, result: { done: true, kind: 'action', action: 'none' } })
 
-        const a = e.get_globals()['a'] as Scalar
-        a.value.should.equal(32)
-      })
+      const a = e.get_globals()['a'] as Scalar
+      a.value.should.equal(32)
+    })
 
-      it('pasar celda de vector', () => {
-        const code = `
+    it('pasar celda de vector', () => {
+      const code = `
         variables
           entero a[2]
         inicio
@@ -1754,20 +1452,20 @@ describe('Evaluacion de programas y expresiones', () => {
         finprocedimiento
         `
 
-        const p = compile(parse(code))
+      const p = compile(parse(code))
 
-        const e = new Evaluator(p)
+      const e = new Evaluator(p)
 
-        const output = run(e)
+      const output = run(e)
 
-        output.should.deepEqual({error: false, result: {done: true, action: 'none'}})
+      output.should.deepEqual({ error: false, result: { done: true, kind: 'action', action: 'none' } })
 
-        const a = e.get_globals()['a'] as Vector
-        a.values[0].should.equal(32)
-      })
+      const a = e.get_globals()['a'] as Vector
+      a.values[0].should.equal(32)
+    })
 
-      it('pasar variable de un modulo a otro', () => {
-        const code = `
+    it('pasar variable de un modulo a otro', () => {
+      const code = `
         variables
           entero a
         inicio
@@ -1788,20 +1486,20 @@ describe('Evaluacion de programas y expresiones', () => {
         finprocedimiento
         `
 
-        const p = compile(parse(code))
+      const p = compile(parse(code))
 
-        const e = new Evaluator(p)
+      const e = new Evaluator(p)
 
-        const output = run(e)
+      const output = run(e)
 
-        output.should.deepEqual({error: false, result: {done: true, action: 'none'}})
+      output.should.deepEqual({ error: false, result: { done: true, kind: 'action', action: 'none' } })
 
-        const a = e.get_globals()['a'] as Scalar
-        a.value.should.equal(48)
-      })
+      const a = e.get_globals()['a'] as Scalar
+      a.value.should.equal(48)
+    })
 
-      it('parametro tomado por referencia pasado por referencia a otro modulo', () => {
-        const code = `
+    it('parametro tomado por referencia pasado por referencia a otro modulo', () => {
+      const code = `
         variables
           entero a
         inicio
@@ -1820,20 +1518,20 @@ describe('Evaluacion de programas y expresiones', () => {
         finprocedimiento
         `
 
-        const p = compile(parse(code))
+      const p = compile(parse(code))
 
-        const e = new Evaluator(p)
+      const e = new Evaluator(p)
 
-        const output = run(e)
+      const output = run(e)
 
-        output.should.deepEqual({error: false, result: {done: true, action: 'none'}})
+      output.should.deepEqual({ error: false, result: { done: true, kind: 'action', action: 'none' } })
 
-        const a = e.get_globals()['a'] as Scalar
-        a.value.should.equal(48)
-      })
+      const a = e.get_globals()['a'] as Scalar
+      a.value.should.equal(48)
+    })
 
-      it('pasar vector entero', () => {
-        const code = `
+    it('pasar vector entero', () => {
+      const code = `
         variables
           entero v[3]
         inicio
@@ -1849,22 +1547,22 @@ describe('Evaluacion de programas y expresiones', () => {
         finprocedimiento
         `
 
-        const p = compile(parse(code))
+      const p = compile(parse(code))
 
-        const e = new Evaluator(p)
+      const e = new Evaluator(p)
 
-        const output = run(e)
+      const output = run(e)
 
-        output.should.deepEqual({error: false, result: {done: true, action: 'none'}})
+      output.should.deepEqual({ error: false, result: { done: true, kind: 'action', action: 'none' } })
 
-        const a = e.get_globals()['v'] as Vector
-        a.values[0].should.equal(1)
-        a.values[1].should.equal(2)
-        a.values[2].should.equal(3)
-      })
-      
-      it('pasar matriz entera', () => {
-        const code = `
+      const a = e.get_globals()['v'] as Vector
+      a.values[0].should.equal(1)
+      a.values[1].should.equal(2)
+      a.values[2].should.equal(3)
+    })
+
+    it('pasar matriz entera', () => {
+      const code = `
         variables
           entero m[2, 2]
         inicio
@@ -1882,23 +1580,23 @@ describe('Evaluacion de programas y expresiones', () => {
         finprocedimiento
         `
 
-        const p = compile(parse(code))
+      const p = compile(parse(code))
 
-        const e = new Evaluator(p)
+      const e = new Evaluator(p)
 
-        const output = run(e)
+      const output = run(e)
 
-        output.should.deepEqual({error: false, result: {done: true, action: 'none'}})
+      output.should.deepEqual({ error: false, result: { done: true, kind: 'action', action: 'none' } })
 
-        const m = e.get_globals()['m'] as Vector
-        m.values[0].should.equal(2)
-        m.values[1].should.equal(3)
-        m.values[2].should.equal(3)
-        m.values[3].should.equal(4)
-      })
+      const m = e.get_globals()['m'] as Vector
+      m.values[0].should.equal(2)
+      m.values[1].should.equal(3)
+      m.values[2].should.equal(3)
+      m.values[3].should.equal(4)
+    })
 
-      it('pasar fila de matriz', () => {
-        const code = `
+    it('pasar fila de matriz', () => {
+      const code = `
         variables
           entero m[2, 2]
         inicio
@@ -1914,21 +1612,21 @@ describe('Evaluacion de programas y expresiones', () => {
         finprocedimiento
         `
 
-        const p = compile(parse(code))
+      const p = compile(parse(code))
 
-        const e = new Evaluator(p)
+      const e = new Evaluator(p)
 
-        const output = run(e)
+      const output = run(e)
 
-        output.should.deepEqual({error: false, result: {done: true, action: 'none'}})
+      output.should.deepEqual({ error: false, result: { done: true, kind: 'action', action: 'none' } })
 
-        const m = e.get_globals()['m'] as Vector
-        m.values[0].should.equal(1)
-        m.values[1].should.equal(2)
-      })
+      const m = e.get_globals()['m'] as Vector
+      m.values[0].should.equal(1)
+      m.values[1].should.equal(2)
+    })
 
-      it('copiar vector a parametro referenciado', () => {
-        const code = `
+    it('copiar vector a parametro referenciado', () => {
+      const code = `
         variables
           entero v[3]
         inicio
@@ -1945,22 +1643,22 @@ describe('Evaluacion de programas y expresiones', () => {
         finprocedimiento
         `
 
-        const p = compile(parse(code))
+      const p = compile(parse(code))
 
-        const e = new Evaluator(p)
+      const e = new Evaluator(p)
 
-        const output = run(e)
+      const output = run(e)
 
-        output.should.deepEqual({error: false, result: {done: true, action: 'none'}})
+      output.should.deepEqual({ error: false, result: { done: true, kind: 'action', action: 'none' } })
 
-        const v = e.get_globals()['v'] as Vector
-        v.values[0].should.equal(1)
-        v.values[1].should.equal(2)
-        v.values[2].should.equal(3)
-      })
+      const v = e.get_globals()['v'] as Vector
+      v.values[0].should.equal(1)
+      v.values[1].should.equal(2)
+      v.values[2].should.equal(3)
+    })
 
-      it('copiar valores desde un vector referenciado', () => {
-        const code = `
+    it('copiar valores desde un vector referenciado', () => {
+      const code = `
         variables
           entero v[3]
         inicio
@@ -1980,25 +1678,25 @@ describe('Evaluacion de programas y expresiones', () => {
         finprocedimiento
         `
 
-        const p = compile(parse(code))
+      const p = compile(parse(code))
 
-        const e = new Evaluator(p)
+      const e = new Evaluator(p)
 
-        let output = run(e)
+      let output = run(e)
 
-        output.should.deepEqual({error: false, result: {done: false, action: 'write', value: 1}})
+      output.should.deepEqual({ error: false, result: { done: false, kind: 'action', action: 'write', value: 1 } })
 
-        output = run(e)
+      output = run(e)
 
-        output.should.deepEqual({error: false, result: {done: false, action: 'write', value: 2}})
+      output.should.deepEqual({ error: false, result: { done: false, kind: 'action', action: 'write', value: 2 } })
 
-        output = run(e)
+      output = run(e)
 
-        output.should.deepEqual({error: false, result: {done: true, action: 'write', value: 3}})
-      })
+      output.should.deepEqual({ error: false, result: { done: true, kind: 'action', action: 'write', value: 3 } })
+    })
 
-      it('copia de vectores referenciados', () => {
-        const code = `
+    it('copia de vectores referenciados', () => {
+      const code = `
         variables
           entero v[3], w[3]
         inicio
@@ -2014,19 +1712,19 @@ describe('Evaluacion de programas y expresiones', () => {
         finprocedimiento
         `
 
-        const p = compile(parse(code))
+      const p = compile(parse(code))
 
-        const e = new Evaluator(p)
+      const e = new Evaluator(p)
 
-        const output = run(e)
+      const output = run(e)
 
-        output.should.deepEqual({error: false, result: {done: true, action: 'none'}})
+      output.should.deepEqual({ error: false, result: { done: true, kind: 'action', action: 'none' } })
 
-        const w = e.get_globals()['w'] as Vector
-        w.values[0].should.equal(1)
-        w.values[1].should.equal(2)
-        w.values[2].should.equal(3)
-      })
+      const w = e.get_globals()['w'] as Vector
+      w.values[0].should.equal(1)
+      w.values[1].should.equal(2)
+      w.values[2].should.equal(3)
     })
   })
+})
 })
