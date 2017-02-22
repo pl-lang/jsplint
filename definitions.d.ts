@@ -991,7 +991,7 @@ export class Parser extends Emitter {
   parse(code: string): Failure<Errors.Lexical[] | Errors.Pattern[]> | Success<ParsedProgram>;
 }
 
-export default class Interpreter extends Emitter {
+export class Interpreter extends Emitter {
   private evaluator;
   private running;
   paused: boolean;
