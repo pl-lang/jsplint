@@ -24,15 +24,37 @@ export default class Interpreter extends Emitter {
   paused: boolean
   data_read: boolean
   private read_stack: {name: string, type: (Typed.AtomicType | Typed.StringType)}[]
+  private current_program: S3.Program
 
-  constructor(p: S3.Program) {
+  constructor(p?: S3.Program) {
     super(['program-started', 'program-resumed', 'program-paused', 'program-finished'])
 
-    this.evaluator = new Evaluator(p)
-    this.running = true
-    this.paused = false
-    this.data_read = false
-    this.read_stack = []
+    if (p) {
+      this.current_program = p
+      this.evaluator = new Evaluator(p)
+      this.running = true
+      this.paused = false
+      this.data_read = false
+      this.read_stack = []
+    }
+  }
+
+  get program(): S3.Program {
+    return this.current_program
+  }
+
+  set program(p: S3.Program) {
+    if (!this.running) {
+      this.current_program = p
+      this.evaluator = new Evaluator(p)
+      this.running = true
+      this.paused = false
+      this.data_read = false
+      this.read_stack = []
+    }
+    else {
+      throw new Error("Error: tried to change this interpreter's program while it's still running")
+    }
   }
 
   run() {

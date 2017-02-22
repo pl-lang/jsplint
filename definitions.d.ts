@@ -991,13 +991,15 @@ export class Parser extends Emitter {
   parse(code: string): Failure<Errors.Lexical[] | Errors.Pattern[]> | Success<ParsedProgram>;
 }
 
-export class Interpreter extends Emitter {
+export default class Interpreter extends Emitter {
   private evaluator;
   private running;
   paused: boolean;
   data_read: boolean;
   private read_stack;
-  constructor(p: S3.Program);
+  private current_program;
+  constructor(p?: S3.Program);
+  program: S3.Program;
   run(): void;
   step(): InterpreterState | StatementInfo;
   send(value: string): void;
