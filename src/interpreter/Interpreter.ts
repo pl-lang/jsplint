@@ -1,34 +1,21 @@
 'use strict'
 
-/**
- * Eventos que emite:
- * 	- program-started
- * 	- program-paused
- * 	- program-finished
- * 	- evaluation-error
- *  - write
- *  - read
- */
-
 import Evaluator from './Evaluator'
 
-import Emitter from '../utility/Emitter.js'
-
-import { S3, Value, Failure, Success, S0, Typed, Errors, StatementInfo, InterpreterState} from '../interfaces'
+import { S3, Value, Failure, Success, S0, Typed, Errors, InterpreterRead, InterpreterState, InterpreterStatementInfo, InterpreterWrite, StatementInfo } from '../interfaces'
 
 import {type_literal, types_are_equal, stringify} from '../utility/helpers'
 
-export default class Interpreter extends Emitter {
+export default class Interpreter {
   private evaluator: Evaluator
   private running: boolean
-  paused: boolean
-  data_read: boolean
+  private paused: boolean
+  private data_read: boolean
   private read_stack: {name: string, type: (Typed.AtomicType | Typed.StringType)}[]
   private current_program: S3.Program
+  private statement_visited: boolean
 
   constructor(p?: S3.Program) {
-    super(['program-started', 'program-resumed', 'program-paused', 'program-finished'])
-
     if (p) {
       this.current_program = p
       this.evaluator = new Evaluator(p)
@@ -37,6 +24,8 @@ export default class Interpreter extends Emitter {
       this.data_read = false
       this.read_stack = []
     }
+
+    this.statement_visited = false
   }
 
   get program(): S3.Program {
@@ -57,137 +46,106 @@ export default class Interpreter extends Emitter {
     }
   }
 
-  run() {
+  run(): Failure<Errors.OutOfBounds> | Success<InterpreterRead | InterpreterWrite | InterpreterState> {
 
     // Esto es necesario porque el interprete se "pausa" cuando un modulo hace
     // una llamada a leer
     if (this.paused && this.data_read) {
-      this.emit('program-resumed')
       this.paused = false
       this.running = true
       this.data_read = false
     }
-    else {
-      this.emit('program-started')
-    }
 
-    let done = false
-
-    while (this.running && done == false) {
-
+    while (this.running) {
       const evaluation_report = this.evaluator.step()
 
       if (evaluation_report.error == true) {
-        done = true
-        this.emit('evaluation-error', evaluation_report.result)
+        this.running = false
+        return evaluation_report
       }
       else {
         if (evaluation_report.result.kind == 'action') {
+          
+          const { done } = evaluation_report.result
+
           switch (evaluation_report.result.action) {
             case 'read':
-              this.emit('read')
               this.read_stack.push({ name: evaluation_report.result.name, type: evaluation_report.result.type })
-              break
+              return { error: false, result: { kind: 'action', done, action: 'read' } }
             case 'write':
-              this.emit('write', evaluation_report.result.value)
+              return { error: false, result: { kind: 'action', done, action: 'write', value: evaluation_report.result.value } }
             case 'none':
               break
             case 'paused':
               this.paused = true
               this.running = false
-              break
+              return { error: false, result: { kind: 'info', type: 'interpreter', done: false } }
           }
-          done = evaluation_report.result.done
+
           if (done) {
             this.running = false
           }
+
         }
       }
     }
-
-    /**
-     * Esto determina que evento emitir si la ejecucion sale del
-     * bucle anterior. Hay dos motivos para salir de ese bucle:
-     *  - el evaluador esta pausado esperando que finalice una lectura
-     *  - hubo un error o el programa finalizó
-     */
-    if (this.paused) {
-      this.emit('program-paused')
-    }
-    else {
-      this.emit('program-finished')
-    }
   }
 
-  step(): InterpreterState | StatementInfo {
+  step(): Failure<Errors.OutOfBounds> | Success<InterpreterRead | InterpreterState | InterpreterStatementInfo | InterpreterWrite> {
     // Esto es necesario porque el interprete se "pausa" cuando un modulo hace
     // una llamada a leer
     if (this.paused && this.data_read) {
-      this.emit('program-resumed')
       this.paused = false
       this.running = true
       this.data_read = false
     }
-    else {
-      this.emit('program-started')
-    }
 
-    let done = false
+    // obtener informacion del siguiente enunciado
+    let info_maybe = this.evaluator.get_statement_info()
 
-    while (this.running && done == false) {
+    if (info_maybe.error == false) {
+      let info = info_maybe.result
 
-      const evaluation_report = this.evaluator.step()
+      while (this.running && (!info.is_user_statement || this.statement_visited)) {
+        this.statement_visited = false
 
-      if (evaluation_report.error == true) {
-        done = true
-        this.emit('evaluation-error', evaluation_report.result)
-      }
-      else {
-        if (evaluation_report.result.kind == 'info') {
-          if (evaluation_report.result.is_user_statement) {
-            return evaluation_report.result
-          }
+        // evaluar el enunciado actual
+        let evaluation_report = this.evaluator.step()
+
+        if (evaluation_report.error == true) {
+          return evaluation_report
         }
-        else if (evaluation_report.result.kind == 'action') {
+        else {
+          this.running = !evaluation_report.result.done
+
           switch (evaluation_report.result.action) {
             case 'read':
-              this.emit('read')
               this.read_stack.push({ name: evaluation_report.result.name, type: evaluation_report.result.type })
-              break
+              return { error: false, result: { kind: 'action', done: this.running, action: 'read' } }
             case 'write':
-              this.emit('write', evaluation_report.result.value)
+              return { error: false, result: { kind: 'action', done: this.running, action: 'write', value: evaluation_report.result.value } }
             case 'none':
               break
             case 'paused':
               this.paused = true
               this.running = false
-              break
-          }
-          done = evaluation_report.result.done
-          if (done) {
-            this.running = false
+              return { error: false, result: { kind: 'info', type: 'interpreter', done: false } }
           }
         }
-      }
-    }
 
-    /**
-     * Esto determina que evento emitir si la ejecucion sale del
-     * bucle anterior. Hay dos motivos para salir de ese bucle:
-     *  - el evaluador esta pausado esperando que finalice una lectura
-     *  - hubo un error o el programa finalizó
-     */
-    if (this.paused) {
-      this.emit('program-paused')
+        info = (this.evaluator.get_statement_info() as Success<StatementInfo>).result
+      }
+
+      this.statement_visited = true
+
+      return { error: false, result: { kind: 'info', done: false, type: 'statement', pos: info.pos } }
     }
     else {
-      this.emit('program-finished')
+      return { error: false, result: { kind: 'info', type: 'interpreter', done: true } }
     }
-
-    return { kind: 'state', done: this.paused || !this.running }
   }
 
-  send (value: string) {
+  send(value: string): Failure<Errors.IncompatibleTypes | Errors.LongString> | Success<null> {
     /**
      * tipar value
      * revisar que coincida con el tipo que el evaluador espera
@@ -216,10 +174,8 @@ export default class Interpreter extends Emitter {
          * Terminar la ejecucion de este programa debido al error
          */
         this.running = false
-        /**
-         * Emitir el error
-         */
-        this.emit('evaluation-error', error)
+
+        return { error: true, result: error }
       }
       else {
         const error: Errors.IncompatibleTypes = {
@@ -232,10 +188,8 @@ export default class Interpreter extends Emitter {
          * Terminar la ejecucion de este programa debido al error
          */
         this.running = false
-        /**
-         * Emitir el error
-         */
-        this.emit('evaluation-error', error)
+
+        return { error: true, result: error }
       }
     }
     else {
@@ -244,6 +198,8 @@ export default class Interpreter extends Emitter {
        */
       this.evaluator.input(l.value)
       this.data_read = true
+
+      return { error: false, result: null }
     }
   }
 

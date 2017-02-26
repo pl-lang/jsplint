@@ -1,7 +1,7 @@
 'use strict'
 
 import {Failure, Success, S1, S3} from '../interfaces'
-import {Value, Errors, Read, Write, NullAction, Paused, SuccessfulReturn, StatementInfo} from '../interfaces'
+import {Value, Errors, Read, Write, NullAction, Paused, SuccessfulReturn, StatementInfo, Position} from '../interfaces'
 import {Alias, Vector, ValueContainer, Scalar, Frame} from '../interfaces'
 import {drop} from '../utility/helpers'
 
@@ -42,7 +42,6 @@ export default class Evaluator {
     next_statement: S3.Statement
     next_frame: Frame
     paused: boolean
-    statement_visited: boolean
   }
 
   constructor (program: S3.Program) {
@@ -62,7 +61,6 @@ export default class Evaluator {
       next_statement: null,
       next_frame: null,
       paused: false,
-      statement_visited: false
     }
   }
 
@@ -98,7 +96,34 @@ export default class Evaluator {
     this.state.value_stack.push(v)
   }
 
-  step(): Failure<Errors.OutOfBounds> | SuccessfulReturn | Success<Paused> | Success<StatementInfo> {
+  get_statement_info(): Failure<null> | Success<StatementInfo> {
+    if (this.current_statement != null) {
+      let pos: Position;
+
+      if ('pos' in this.current_statement) {
+        pos = this.current_statement.pos
+      }
+      else {
+        pos = { line: 0, column: 0 }
+      }
+
+      let is_user_statement: boolean
+
+      if ('is_user_stmnt' in this.current_statement) {
+        is_user_statement = this.current_statement.is_user_stmnt
+      }
+      else {
+        is_user_statement = false
+      }
+
+      return { error: false, result: { is_user_statement, pos } }
+    }
+    else {
+      return { error: true, result: null }
+    }
+  }
+
+  step(): Failure<Errors.OutOfBounds> | SuccessfulReturn | Success<Paused> {
     /**
      * El evaluador esta en pausa cuando esta esperando que sea realice alguna lectura.
      */
@@ -110,62 +135,50 @@ export default class Evaluator {
       return this.state.last_report
     }
 
+    const report = this.evaluate(this.current_statement)
+
+    this.state.last_report = report
+
     /**
-     * Antes de evaluar un enunciado retornar informacion sobre este
+     * Determinar si la ejecución terminó:
+     * Pudo haber terminado porque se llegó al fin del
+     * programa o porque hubo un error al evaluar el
+     * enunciado anterior.
      */
-    if (this.state.statement_visited == false) {
-      this.state.statement_visited = true
 
-      return { error: false, result: { kind: 'info', is_user_statement: this.current_statement.is_user_stmnt, pos: this.current_statement.pos }}
+    if (report.error) {
+      this.state.done = true
+      return this.state.last_report
     }
-    else {
-      const report = this.evaluate(this.current_statement)
-
-      this.state.statement_visited = false
-
-      this.state.last_report = report
-
+    else if (report.error == false) {
       /**
-       * Determinar si la ejecución terminó:
-       * Pudo haber terminado porque se llegó al fin del
-       * programa o porque hubo un error al evaluar el
-       * enunciado anterior.
+       * Determinar si se llegó al fin del programa.
+       * this.state.next_statement ya fue establecido
+       * durante la llamada a this.evaluate
        */
 
-      if (report.error) {
-        this.state.done = true
-        return this.state.last_report
+      /**
+       * Si se llegó al final del modulo actual, desapilar modulos hasta
+       * que se encuentre uno que todavia no haya finalizado.
+       */
+      while (this.state.next_statement == null && this.state.statement_stack.length > 0) {
+        this.state.next_statement = this.state.statement_stack.pop()
+        this.current_module = this.state.module_stack.pop()
+        this.frame_stack.pop()
       }
-      else if (report.error == false) {
-        /**
-         * Determinar si se llegó al fin del programa.
-         * this.state.next_statement ya fue establecido
-         * durante la llamada a this.evaluate
-         */
 
-        /**
-         * Si se llegó al final del modulo actual, desapilar modulos hasta
-         * que se encuentre uno que todavia no haya finalizado.
-         */
-        while (this.state.next_statement == null && this.state.statement_stack.length > 0) {
-          this.state.next_statement = this.state.statement_stack.pop()
-          this.current_module = this.state.module_stack.pop()
-          this.frame_stack.pop()
-        }
+      /**
+       * Si aun despues de desapilar todo se encuentra que no hay
+       * un enunciado para ejecutar, se llegó al fin del programa.
+       */
+      if (this.state.next_statement == null) {
+        this.state.done = true
+        report.result.done = this.state.done
+      }
 
-        /**
-         * Si aun despues de desapilar todo se encuentra que no hay
-         * un enunciado para ejecutar, se llegó al fin del programa.
-         */
-        if (this.state.next_statement == null) {
-          this.state.done = true
-          report.result.done = this.state.done
-        }
+      this.current_statement = this.state.next_statement
 
-        this.current_statement = this.state.next_statement
-
-        return report
-      } 
+      return report
     }
   }
 

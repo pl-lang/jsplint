@@ -522,7 +522,7 @@ function create_assignment (v: Typed.Invocation, module_name: string) : S3.State
         }
     }
     else {
-        const assignment = new S3.Assign(module_name, v.name, false)
+        const assignment = new S3.Assign(module_name, v.name, false,  { line: -1, column: -1 })
 
         return assignment
     }

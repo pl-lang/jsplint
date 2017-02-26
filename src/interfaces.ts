@@ -1021,9 +1021,9 @@ export namespace S3 {
 
   export class Assign extends BaseStatement {
     readonly kind: StatementKinds.Assign
-    pos?: Position
+    pos: Position
 
-    constructor(owner: string, readonly varname: string, user: boolean, pos?: Position) {
+    constructor(owner: string, readonly varname: string, user: boolean, pos: Position) {
       super(owner)
       this.kind = StatementKinds.Assign
       this.is_user_stmnt = user
@@ -1430,7 +1430,6 @@ export interface Paused {
 export type SuccessfulReturn = Success<Read> | Success<Write> | Success<NullAction>
 
 export interface StatementInfo {
-  kind: 'info'
   pos: Position
   is_user_statement: boolean
 }
@@ -1466,6 +1465,27 @@ export interface Frame {
 }
 
 export interface InterpreterState {
+  kind: 'info'
+  type: 'interpreter'
   done: boolean
-  kind: 'state'
+}
+
+export interface InterpreterStatementInfo {
+  kind: 'info'
+  type: 'statement'
+  done: boolean
+  pos: Position
+}
+
+export interface InterpreterWrite {
+  kind: 'action'
+  action: 'write'
+  done: boolean
+  value: Value
+}
+
+export interface InterpreterRead {
+  kind: 'action'
+  action: 'read'
+  done: boolean
 }

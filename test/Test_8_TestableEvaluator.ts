@@ -14,16 +14,11 @@ function run(e: Evaluator) {
   let output = e.step()
 
   while (output.error == false) {
-    if (output.result.kind == 'info') {
-      output = e.step()
+    if (output.result.done || output.result.action == 'read' || output.result.action == 'write') {
+      return output as (Success<Read> | Success<Write> | Success<NullAction>)
     }
-    else if (output.result.kind == 'action') {
-      if (output.result.done || output.result.action == 'read' || output.result.action == 'write') {
-        return output as (Success<Read> | Success<Write> | Success<NullAction>)
-      }
-      else {
-        output = e.step()
-      }
+    else {
+      output = e.step()
     }
   }
 }

@@ -40,7 +40,7 @@ function compile(p: Failure<Errors.Lexical[] | Errors.Pattern[]> | Success<Parse
 }
 
 describe('Interpreter', () => {
-    it('Interpreter.step se detiene al encontrar un enunciado', () => {
+    it('Interpreter.step se detiene al encontrar los enunciados creados por el usuario', () => {
         const code = `variables
                 entero i
             inicio
@@ -54,14 +54,38 @@ describe('Interpreter', () => {
 
         let output = interpreter.step()
 
-        output.should.deepEqual({ kind: 'info', is_user_statement: true, pos: { line: 3, column: 16 } })
+        output.result.should.deepEqual({ kind: 'info', type: 'statement',  done: false, pos: { line: 3, column: 16 } })
 
         output = interpreter.step()
 
-        output.should.deepEqual({ kind: 'info', is_user_statement: true, pos: { line: 4, column: 16 } })
+        output.result.should.deepEqual({ kind: 'info', type: 'statement', done: false, pos: { line: 4, column: 16 } })
 
         output = interpreter.step()
 
-        output.should.deepEqual({ kind: 'state', done: true })
+        output.result.should.deepEqual({ kind: 'action', action: 'write', done: false, value: 'hola' })
+
+        output = interpreter.step()
+
+        output.result.should.deepEqual({ kind: 'info', type: 'interpreter', done: true })
+    })
+
+    it('Interpreter.run se detiene al encontrar un enunciado escribir', () => {
+        const code = `variables
+                entero i
+            inicio
+                i <- 22
+                i <- 1
+                i <- 2
+                i <- 23
+                escribir("hola")
+            fin
+            `
+        const p = compile(parse(code))
+
+        const interpreter = new Interpreter(p)
+
+        let output = interpreter.run()
+
+        output.result.should.deepEqual({ kind: 'action', action: 'write', done: true, value: 'hola' })
     })
 })
