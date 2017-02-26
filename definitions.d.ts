@@ -578,8 +578,8 @@ export namespace S3 {
   class Assign extends BaseStatement {
     readonly varname: string;
     readonly kind: StatementKinds.Assign;
-    pos?: Position;
-    constructor(owner: string, varname: string, user: boolean, pos?: Position);
+    pos: Position;
+    constructor(owner: string, varname: string, user: boolean, pos: Position);
   }
   class AssignV extends BaseStatement {
     readonly total_indexes: number;
@@ -986,24 +986,53 @@ export interface Position {
   column: number
 }
 
+export interface InterpreterState {
+  kind: 'info'
+  type: 'interpreter'
+  done: boolean
+}
+
+export interface InterpreterStatementInfo {
+  kind: 'info'
+  type: 'statement'
+  done: boolean
+  pos: Position
+}
+
+export interface InterpreterWrite {
+  kind: 'action'
+  action: 'write'
+  done: boolean
+  value: Value
+}
+
+export interface InterpreterRead {
+  kind: 'action'
+  action: 'read'
+  done: boolean
+}
+
+// exports de este modulo
+
 export class Parser extends Emitter {
   constructor();
   parse(code: string): Failure<Errors.Lexical[] | Errors.Pattern[]> | Success<ParsedProgram>;
 }
 
-export class Interpreter extends Emitter {
-  private evaluator;
-  private running;
-  paused: boolean;
-  data_read: boolean;
-  private read_stack;
-  private current_program;
-  constructor(p?: S3.Program);
-  program: S3.Program;
-  run(): void;
-  step(): InterpreterState | StatementInfo;
-  send(value: string): void;
-  parse(value: string): S0.LiteralValue;
+export class Interpreter {
+    private evaluator;
+    private running;
+    private paused;
+    private data_read;
+    private read_stack;
+    private current_program;
+    private statement_visited;
+    constructor(p?: S3.Program);
+    program: S3.Program;
+    run(): Failure<Errors.OutOfBounds> | Success<InterpreterRead | InterpreterWrite | InterpreterState>;
+    step(): Failure<Errors.OutOfBounds> | Success<InterpreterRead | InterpreterState | InterpreterStatementInfo | InterpreterWrite>;
+    send(value: string): Failure<Errors.IncompatibleTypes | Errors.LongString> | Success<null>;
+    parse(value: string): S0.LiteralValue;
 }
 
 export function transform(p: ParsedProgram): CompileError | Success<S3.Program>;
