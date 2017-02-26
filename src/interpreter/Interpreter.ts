@@ -55,6 +55,9 @@ export default class Interpreter {
       this.running = true
       this.data_read = false
     }
+    else {
+      this.running = true
+    }
 
     while (this.running) {
       const evaluation_report = this.evaluator.step()
@@ -66,24 +69,20 @@ export default class Interpreter {
       else {
         if (evaluation_report.result.kind == 'action') {
           
-          const { done } = evaluation_report.result
+          this.running = !evaluation_report.result.done
 
           switch (evaluation_report.result.action) {
             case 'read':
               this.read_stack.push({ name: evaluation_report.result.name, type: evaluation_report.result.type })
-              return { error: false, result: { kind: 'action', done, action: 'read' } }
+              return { error: false, result: { kind: 'action', done: !this.running, action: 'read' } }
             case 'write':
-              return { error: false, result: { kind: 'action', done, action: 'write', value: evaluation_report.result.value } }
+              return { error: false, result: { kind: 'action', done: !this.running, action: 'write', value: evaluation_report.result.value } }
             case 'none':
               break
             case 'paused':
               this.paused = true
               this.running = false
               return { error: false, result: { kind: 'info', type: 'interpreter', done: false } }
-          }
-
-          if (done) {
-            this.running = false
           }
 
         }
@@ -121,9 +120,9 @@ export default class Interpreter {
           switch (evaluation_report.result.action) {
             case 'read':
               this.read_stack.push({ name: evaluation_report.result.name, type: evaluation_report.result.type })
-              return { error: false, result: { kind: 'action', done: this.running, action: 'read' } }
+              return { error: false, result: { kind: 'action', done: !this.running, action: 'read' } }
             case 'write':
-              return { error: false, result: { kind: 'action', done: this.running, action: 'write', value: evaluation_report.result.value } }
+              return { error: false, result: { kind: 'action', done: !this.running, action: 'write', value: evaluation_report.result.value } }
             case 'none':
               break
             case 'paused':
