@@ -647,11 +647,6 @@ export interface StatementInfo {
   is_user_statement: boolean;
 }
 
-export interface InterpreterState {
-  done: boolean;
-  kind: 'state';
-}
-
 export namespace Typed {
   type Error = Errors.ExtraIndexes | Errors.IncompatibleOperand | Errors.IncompatibleOperands | Errors.MissingOperands | Errors.BadComparisonOperands | Errors.LongString;
   interface Program {
