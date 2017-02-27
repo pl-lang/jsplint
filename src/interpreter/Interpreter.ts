@@ -2,29 +2,27 @@
 
 import Evaluator from './Evaluator'
 
-import { S3, Value, Failure, Success, S0, Typed, Errors, InterpreterRead, InterpreterState, InterpreterStatementInfo, InterpreterWrite, StatementInfo } from '../interfaces'
+import { S3, Value, Failure, Success, S0, Typed, Errors, InterpreterRead, InterpreterStatementInfo, InterpreterDone, InterpreterWrite, StatementInfo } from '../interfaces'
 
 import {type_literal, types_are_equal, stringify} from '../utility/helpers'
 
 export default class Interpreter {
   private evaluator: Evaluator
-  private running: boolean
   private paused: boolean
   private data_read: boolean
   private read_stack: {name: string, type: (Typed.AtomicType | Typed.StringType)}[]
   private current_program: S3.Program
   private statement_visited: boolean
+  private error_ocurred: boolean
+  private program_set: boolean
+  private last_info: StatementInfo
 
-  constructor(p?: S3.Program) {
-    if (p) {
-      this.current_program = p
-      this.evaluator = new Evaluator(p)
-      this.running = true
-      this.paused = false
-      this.data_read = false
-      this.read_stack = []
-    }
-
+  constructor() {
+    this.paused = false
+    this.data_read = false
+    this.read_stack = []
+    this.error_ocurred = false
+    this.program_set = false
     this.statement_visited = false
   }
 
@@ -33,114 +31,115 @@ export default class Interpreter {
   }
 
   set program(p: S3.Program) {
-    if (!this.running) {
-      this.current_program = p
-      this.evaluator = new Evaluator(p)
-      this.running = true
-      this.paused = false
-      this.data_read = false
-      this.read_stack = []
-    }
-    else {
-      throw new Error("Error: tried to change this interpreter's program while it's still running")
-    }
+    this.current_program = p
+    this.evaluator = new Evaluator(p)
+    this.paused = false
+    this.data_read = false
+    this.read_stack = []
+    this.error_ocurred = false
+    this.program_set = true
   }
 
-  run(): Failure<Errors.OutOfBounds> | Success<InterpreterRead | InterpreterWrite | InterpreterState> {
-
-    // Esto es necesario porque el interprete se "pausa" cuando un modulo hace
-    // una llamada a leer
-    if (this.paused && this.data_read) {
-      this.paused = false
-      this.running = true
-      this.data_read = false
-    }
-    else {
-      this.running = true
-    }
-
-    while (this.running) {
-      const evaluation_report = this.evaluator.step()
-
-      if (evaluation_report.error == true) {
-        this.running = false
-        return evaluation_report
-      }
-      else {
-        if (evaluation_report.result.kind == 'action') {
-          
-          this.running = !evaluation_report.result.done
-
-          switch (evaluation_report.result.action) {
-            case 'read':
-              this.read_stack.push({ name: evaluation_report.result.name, type: evaluation_report.result.type })
-              return { error: false, result: { kind: 'action', done: !this.running, action: 'read' } }
-            case 'write':
-              return { error: false, result: { kind: 'action', done: !this.running, action: 'write', value: evaluation_report.result.value } }
-            case 'none':
-              break
-            case 'paused':
-              this.paused = true
-              this.running = false
-              return { error: false, result: { kind: 'info', type: 'interpreter', done: false } }
-          }
-
-        }
-      }
-    }
+  is_done() {
+    return this.error_ocurred || this.evaluator.is_done()
   }
 
-  step(): Failure<Errors.OutOfBounds> | Success<InterpreterRead | InterpreterState | InterpreterStatementInfo | InterpreterWrite> {
-    // Esto es necesario porque el interprete se "pausa" cuando un modulo hace
-    // una llamada a leer
-    if (this.paused && this.data_read) {
-      this.paused = false
-      this.running = true
-      this.data_read = false
-    }
+  run(): Failure<Errors.OutOfBounds> | Success<InterpreterRead | InterpreterWrite | InterpreterDone> {
+    if (this.program_set && !this.error_ocurred) {
+      // Esto es necesario porque el interprete se "pausa" cuando un modulo hace
+      // una llamada a leer
 
-    // obtener informacion del siguiente enunciado
-    let info_maybe = this.evaluator.get_statement_info()
-
-    if (info_maybe.error == false) {
-      let info = info_maybe.result
-
-      while (this.running && (!info.is_user_statement || this.statement_visited)) {
-        this.statement_visited = false
-
-        // evaluar el enunciado actual
-        let evaluation_report = this.evaluator.step()
+      while (!this.evaluator.is_done() && !this.error_ocurred) {
+        const evaluation_report = this.evaluator.step()
 
         if (evaluation_report.error == true) {
+          this.error_ocurred = true
           return evaluation_report
         }
         else {
-          this.running = !evaluation_report.result.done
+          if (evaluation_report.result.kind == 'action') {
 
-          switch (evaluation_report.result.action) {
-            case 'read':
-              this.read_stack.push({ name: evaluation_report.result.name, type: evaluation_report.result.type })
-              return { error: false, result: { kind: 'action', done: !this.running, action: 'read' } }
-            case 'write':
-              return { error: false, result: { kind: 'action', done: !this.running, action: 'write', value: evaluation_report.result.value } }
-            case 'none':
-              break
-            case 'paused':
-              this.paused = true
-              this.running = false
-              return { error: false, result: { kind: 'info', type: 'interpreter', done: false } }
+            switch (evaluation_report.result.action) {
+              case 'read':
+                this.read_stack.push({ name: evaluation_report.result.name, type: evaluation_report.result.type })
+                return { error: false, result: { kind: 'action', done: this.evaluator.is_done(), action: 'read' } }
+              case 'write':
+                return { error: false, result: { kind: 'action', done: this.evaluator.is_done(), action: 'write', value: evaluation_report.result.value } }
+              case 'none':
+                break
+              case 'paused':
+                break
+            }
+          }
+        }
+      }
+
+      return { error: false, result: { kind: 'info', type: 'interpreter', done: this.evaluator.is_done(), error_ocurred: this.error_ocurred } }
+    }
+    else {
+      if (!this.program_set) {
+        throw new Error('No program set')
+      }
+      else {
+        throw new Error('Trying to resume the execution of a program with errors')
+      }
+    }
+  }
+
+  step(): Failure<Errors.OutOfBounds> | Success<InterpreterRead | InterpreterStatementInfo | InterpreterWrite> {
+    if (this.program_set && !this.error_ocurred) {
+      // Esto es necesario porque el interprete se "pausa" cuando un modulo hace
+      // una llamada a leer
+
+      if (!this.evaluator.is_done() && !this.error_ocurred) {
+
+        let info = this.evaluator.get_statement_info()
+        this.last_info = info
+
+        while (!this.evaluator.is_done() && !this.error_ocurred && (!info.is_user_statement || this.statement_visited)) {
+          this.statement_visited = false
+
+          // evaluar el enunciado actual
+          let evaluation_report = this.evaluator.step()
+
+          if (evaluation_report.error == true) {
+            this.error_ocurred = true
+            return evaluation_report
+          }
+          else {
+
+            switch (evaluation_report.result.action) {
+              case 'read':
+                this.read_stack.push({ name: evaluation_report.result.name, type: evaluation_report.result.type })
+                return { error: false, result: { kind: 'action', done: this.evaluator.is_done(), action: 'read' } }
+              case 'write':
+                return { error: false, result: { kind: 'action', done: this.evaluator.is_done(), action: 'write', value: evaluation_report.result.value } }
+              case 'none':
+                break
+              case 'paused':
+                this.paused = true
+                return { error: false, result: { kind: 'info', type: 'statement', pos: this.last_info.pos } }
+            }
+          }
+
+          if (!this.evaluator.is_done()) {
+            info = this.evaluator.get_statement_info()
+            this.last_info = info
           }
         }
 
-        info = (this.evaluator.get_statement_info() as Success<StatementInfo>).result
+        this.statement_visited = true
+
+        return { error: false, result: { kind: 'info', done: false, type: 'statement', pos: info.pos } }
       }
-
-      this.statement_visited = true
-
-      return { error: false, result: { kind: 'info', done: false, type: 'statement', pos: info.pos } }
     }
     else {
-      return { error: false, result: { kind: 'info', type: 'interpreter', done: true } }
+      if (!this.program_set) {
+        throw new Error('No program set')
+      }
+      else {
+        throw new Error('Trying to resume the execution of a program with errors')
+      }
     }
   }
 
@@ -172,7 +171,7 @@ export default class Interpreter {
         /**
          * Terminar la ejecucion de este programa debido al error
          */
-        this.running = false
+        this.error_ocurred = true
 
         return { error: true, result: error }
       }
@@ -186,7 +185,7 @@ export default class Interpreter {
         /**
          * Terminar la ejecucion de este programa debido al error
          */
-        this.running = false
+        this.error_ocurred = true
 
         return { error: true, result: error }
       }

@@ -96,31 +96,26 @@ export default class Evaluator {
     this.state.value_stack.push(v)
   }
 
-  get_statement_info(): Failure<null> | Success<StatementInfo> {
-    if (this.current_statement != null) {
-      let pos: Position;
+  get_statement_info(): StatementInfo {
+    let pos: Position;
 
-      if ('pos' in this.current_statement) {
-        pos = this.current_statement.pos
-      }
-      else {
-        pos = { line: 0, column: 0 }
-      }
-
-      let is_user_statement: boolean
-
-      if ('is_user_stmnt' in this.current_statement) {
-        is_user_statement = this.current_statement.is_user_stmnt
-      }
-      else {
-        is_user_statement = false
-      }
-
-      return { error: false, result: { is_user_statement, pos } }
+    if ('pos' in this.current_statement) {
+      pos = this.current_statement.pos
     }
     else {
-      return { error: true, result: null }
+      pos = { line: 0, column: 0 }
     }
+
+    let is_user_statement: boolean
+
+    if ('is_user_stmnt' in this.current_statement) {
+      is_user_statement = this.current_statement.is_user_stmnt
+    }
+    else {
+      is_user_statement = false
+    }
+
+    return { is_user_statement, pos }
   }
 
   step(): Failure<Errors.OutOfBounds> | SuccessfulReturn | Success<Paused> {
@@ -280,6 +275,10 @@ export default class Evaluator {
         case S3.StatementKinds.InitV:
           return this.initv(s)
     }
+  }
+
+  is_done() {
+    return this.state.done
   }
 
   private initv(s: S3.InitV): Success<NullAction> {

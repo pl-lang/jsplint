@@ -50,23 +50,27 @@ describe('Interpreter', () => {
             `
         const p = compile(parse(code))
 
-        const interpreter = new Interpreter(p)
+        const interpreter = new Interpreter()
+
+        interpreter.program = p
 
         let output = interpreter.step()
+
+        interpreter.is_done().should.equal(false)
 
         output.result.should.deepEqual({ kind: 'info', type: 'statement',  done: false, pos: { line: 3, column: 16 } })
 
         output = interpreter.step()
 
+        interpreter.is_done().should.equal(false)
+
         output.result.should.deepEqual({ kind: 'info', type: 'statement', done: false, pos: { line: 4, column: 16 } })
 
         output = interpreter.step()
 
-        output.result.should.deepEqual({ kind: 'action', action: 'write', done: false, value: 'hola' })
+        interpreter.is_done().should.equal(true)
 
-        output = interpreter.step()
-
-        output.result.should.deepEqual({ kind: 'info', type: 'interpreter', done: true })
+        output.result.should.deepEqual({ kind: 'action', action: 'write', done: true, value: 'hola' })
     })
 
     it('Interpreter.run se detiene al encontrar un enunciado escribir', () => {
@@ -82,10 +86,81 @@ describe('Interpreter', () => {
             `
         const p = compile(parse(code))
 
-        const interpreter = new Interpreter(p)
+        const interpreter = new Interpreter()
+
+        interpreter.program = p
 
         let output = interpreter.run()
 
         output.result.should.deepEqual({ kind: 'action', action: 'write', done: true, value: 'hola' })
+    })
+
+    it('Interpreter.run tira una excepcion cuando se intenta resumir un programa con errores ', () => {
+        const code = `variables
+                entero v[2]
+            inicio
+                v[3] <- 22
+            fin
+            `
+        const p = compile(parse(code))
+
+        const interpreter = new Interpreter()
+
+        interpreter.program = p
+
+        let output = interpreter.run()
+
+        output.error.should.equal(true)
+
+        output.result.should.deepEqual({ bad_index: 0, dimensions: [2], name: 'v', reason: 'index-out-of-bounds', where: 'evaluator', done: true })
+
+        try {
+            output = interpreter.run()
+        }
+        catch (e) {
+            (<Error>e).message.should.equal('Trying to resume the execution of a program with errors')
+        }
+    })
+
+    it('Interpreter.run tira una execepcion cuando se intenta ejecutar un interprete sin programa', () => {
+        const code = `variables
+                        entero v[2]
+                    inicio
+                        v[3] <- 22
+                    fin
+`
+        const p = compile(parse(code))
+
+        const interpreter = new Interpreter()
+
+        try {
+            let output = interpreter.run()
+        }
+        catch (e) {
+            (<Error>e).message.should.equal('No program set')
+        }
+    })
+
+    it('Los bucles para ya no generan errores', () => {
+        const code = `variables
+                        entero i
+                    inicio
+                        para i <- 1 hasta 2
+                            escribir(i)
+                        finpara
+                    fin`
+        const p = compile(parse(code))
+
+        const interpreter = new Interpreter()
+
+        interpreter.program = p
+
+        let output = interpreter.run()
+
+        output = interpreter.run()
+
+        output = interpreter.run()
+
+        interpreter.is_done().should.equal(true)
     })
 })

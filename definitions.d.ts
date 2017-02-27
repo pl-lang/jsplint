@@ -981,29 +981,26 @@ export interface Position {
   column: number
 }
 
-export interface InterpreterState {
-  kind: 'info'
-  type: 'interpreter'
-  done: boolean
-}
-
 export interface InterpreterStatementInfo {
   kind: 'info'
   type: 'statement'
-  done: boolean
   pos: Position
 }
 
 export interface InterpreterWrite {
   kind: 'action'
   action: 'write'
-  done: boolean
   value: Value
 }
 
 export interface InterpreterRead {
   kind: 'action'
   action: 'read'
+}
+
+export interface InterpreterDone {
+  kind: 'info'
+  type: 'interpreter'
   done: boolean
 }
 
@@ -1015,19 +1012,22 @@ export class Parser extends Emitter {
 }
 
 export class Interpreter {
-    private evaluator;
-    private running;
-    private paused;
-    private data_read;
-    private read_stack;
-    private current_program;
-    private statement_visited;
-    constructor(p?: S3.Program);
-    program: S3.Program;
-    run(): Failure<Errors.OutOfBounds> | Success<InterpreterRead | InterpreterWrite | InterpreterState>;
-    step(): Failure<Errors.OutOfBounds> | Success<InterpreterRead | InterpreterState | InterpreterStatementInfo | InterpreterWrite>;
-    send(value: string): Failure<Errors.IncompatibleTypes | Errors.LongString> | Success<null>;
-    parse(value: string): S0.LiteralValue;
+  private evaluator;
+  private paused;
+  private data_read;
+  private read_stack;
+  private current_program;
+  private statement_visited;
+  private error_ocurred;
+  private program_set;
+  private last_info;
+  constructor();
+  program: S3.Program;
+  is_done(): boolean;
+  run(): Failure<Errors.OutOfBounds> | Success<InterpreterRead | InterpreterWrite | InterpreterDone>;
+  step(): Failure<Errors.OutOfBounds> | Success<InterpreterRead | InterpreterStatementInfo | InterpreterWrite>;
+  send(value: string): Failure<Errors.IncompatibleTypes | Errors.LongString> | Success<null>;
+  parse(value: string): S0.LiteralValue;
 }
 
 export function transform(p: ParsedProgram): CompileError | Success<S3.Program>;

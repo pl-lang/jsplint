@@ -1464,28 +1464,25 @@ export interface Frame {
   [name: string]: ValueContainer | Alias
 }
 
-export interface InterpreterState {
-  kind: 'info'
-  type: 'interpreter'
-  done: boolean
-}
-
 export interface InterpreterStatementInfo {
   kind: 'info'
   type: 'statement'
-  done: boolean
   pos: Position
 }
 
 export interface InterpreterWrite {
   kind: 'action'
   action: 'write'
-  done: boolean
   value: Value
 }
 
 export interface InterpreterRead {
   kind: 'action'
   action: 'read'
+}
+
+export interface InterpreterDone {
+  kind: 'info'
+  type: 'interpreter'
   done: boolean
 }
