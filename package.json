@@ -5,6 +5,7 @@
   "scripts": {
     "test": "mocha ./lib/test/",
     "m_watch": "mocha -w --reporter min ./lib/test/",
+    "postbuild": "npm test",
     "build": "tsc -p . && cp ./definitions.d.ts ./lib/index.d.ts",
     "preversion": "npm run build",
     "postversion": "git push && git push --tags && npm publish"
