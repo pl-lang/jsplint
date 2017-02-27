@@ -243,7 +243,7 @@ function transform_for (statement: Typed.For, module_name: string) : S3.Statemen
     /**
      * Ahora ese enunciado de S2 debe convertirse en uno de Program
      */
-    const incremement_entry = transform_assignment(assingment, module_name)
+    const incremement_entry = transform_assignment(assingment, module_name, false) // este false indica que este no es un enunciado de asignacion del usuario
     const increment_last = S3.get_last(incremement_entry)
 
     /**
@@ -592,7 +592,16 @@ function transform_statement (statement: Typed.Statement, module_name: string) :
     }
 }
 
-function transform_assignment (a: Typed.Assignment, module_name: string) : S3.Statement {
+function transform_assignment (a: Typed.Assignment, module_name: string, user_statement?: boolean) : S3.Statement {
+    let is_user_statement: boolean;
+
+    if (typeof user_statement != 'undefined') {
+        is_user_statement = user_statement
+    }
+    else {
+        is_user_statement = true
+    }
+
     if (a.left.dimensions.length > 0 && a.left.indexes.length < a.left.dimensions.length) {
         /**
          * Asignacion vectorial: copiar los contenidos de un vector a otro o asignar
@@ -604,7 +613,7 @@ function transform_assignment (a: Typed.Assignment, module_name: string) : S3.St
              * Enunciados que apilan la cadena
              */
             const stack_string = transform_expression(a.right, module_name)
-            const assignment = new S3.AssignString(module_name, a.left.name, a.typings.left.length, a.left.indexes.length, true, a.pos)
+            const assignment = new S3.AssignString(module_name, a.left.name, a.typings.left.length, a.left.indexes.length, is_user_statement, a.pos)
             assignment.pos = a.pos
             S3.get_last(stack_string).exit_point = assignment
             return stack_string
@@ -705,7 +714,7 @@ function transform_assignment (a: Typed.Assignment, module_name: string) : S3.St
                 index_last_st.exit_point = next_index
                 index_last_st = S3.get_last(next_index) 
             }
-            const assignv = new S3.AssignV(module_name, v.indexes.length, v.dimensions, v.name, true, a.pos)
+            const assignv = new S3.AssignV(module_name, v.indexes.length, v.dimensions, v.name, is_user_statement, a.pos)
 
             index_last_st.exit_point = assignv
             last_statement.exit_point = first_index
@@ -713,7 +722,7 @@ function transform_assignment (a: Typed.Assignment, module_name: string) : S3.St
             return entry_point
         }
         else {
-            const assign = new S3.Assign(module_name, a.left.name, true, a.pos)
+            const assign = new S3.Assign(module_name, a.left.name, is_user_statement, a.pos)
             last_statement.exit_point = assign
 
             return entry_point
