@@ -1004,6 +1004,18 @@ export interface InterpreterDone {
   done: boolean
 }
 
+export type BoxedValue = BoxedScalar | BoxedVector
+
+export interface BoxedScalar {
+  type: 'scalar'
+  value: Value
+}
+
+export interface BoxedVector {
+  type: 'vector'
+  cells: { index: number, value: Value }[]
+}
+
 // exports de este modulo
 
 export class Parser extends Emitter {

@@ -3,7 +3,7 @@ import 'should'
 
 import Parser from '../src/parser/Parser.js'
 
-import { ParsedProgram, S1, S3, Errors, Success, Failure } from '../src/interfaces'
+import { ParsedProgram, S1, S3, Errors, Success, Failure, BoxedScalar, BoxedVector, BoxedValue } from '../src/interfaces'
 import { StatementInfo, Scalar } from '../src/interfaces'
 
 import Interpreter from '../src/interpreter/Interpreter'
@@ -162,5 +162,44 @@ describe('Interpreter', () => {
         output = interpreter.run()
 
         interpreter.is_done().should.equal(true)
+    })
+
+    it('Interpreter.export_var funciona', () => {
+        const code = `variables
+                entero i, v[2]
+            inicio
+                i <- 22
+                v[1] <- 48
+                v[2] <- 49
+                escribir("hola")
+                escribir("chau")
+            fin
+            `
+        const p = compile(parse(code))
+
+        const interpreter = new Interpreter()
+
+        interpreter.program = p
+
+        const output = interpreter.run()
+
+        interpreter.is_done().should.equal(false)
+
+        output.result.should.deepEqual({ kind: 'action', action: 'write', done: false, value: 'hola' })
+
+        const i_maybe = interpreter.export_var('i')
+        const v_maybe = interpreter.export_var('v')
+
+        i_maybe.error.should.equal(false)
+        v_maybe.error.should.equal(false)
+
+        const i = i_maybe.result as BoxedScalar
+        const v = v_maybe.result as BoxedVector
+
+        i.value.should.equal(22)
+        v.cells[0].index.should.equal(0)
+        v.cells[0].value.should.equal(48)
+        v.cells[1].index.should.equal(1)
+        v.cells[1].value.should.equal(49)
     })
 })

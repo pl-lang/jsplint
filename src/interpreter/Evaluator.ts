@@ -1,7 +1,7 @@
 'use strict'
 
 import {Failure, Success, S1, S3} from '../interfaces'
-import {Value, Errors, Read, Write, NullAction, Paused, SuccessfulReturn, StatementInfo, Position} from '../interfaces'
+import {Value, Errors, Read, Write, NullAction, Paused, SuccessfulReturn, StatementInfo, Position, BoxedValue } from '../interfaces'
 import {Alias, Vector, ValueContainer, Scalar, Frame} from '../interfaces'
 import {drop} from '../utility/helpers'
 
@@ -70,6 +70,64 @@ export default class Evaluator {
    */
   get_value_stack() {
     return this.state.value_stack
+  }
+
+  /**
+   * search_var
+   * busca una variable que puede o no existir en el programa de este evaluador
+   */
+  search_var(name: string): Failure<null> | Success<Scalar | Vector | Alias> {
+    const locals = this.get_locals()
+    const globals = this.get_globals()
+
+    if (name in locals) {
+      return { error: false, result: locals[name] }
+    }
+    else {
+      if (name in globals) {
+        return { error: false, result: globals[name] }
+      }
+      else {
+        return { error: true, result: null }
+      }
+    }
+  }
+
+  /**
+   * export_var
+   * busca una variable y devuelve su valor/un arreglo de sus valores.
+   */
+  export_var(name: string): Failure<null> | Success<BoxedValue> {
+    const var_found = this.search_var(name)
+
+    if (var_found.error == false) {
+      if (var_found.result.type == 'alias') {
+
+        const { variable, pre_indexes } = this.resolve_alias(var_found.result)
+
+        // Por ahora se ignoran los pre_indexes porque se devuelven todos los valores de los arreglos.
+        // No hay manera (todavia) de devolver solo un "segmento" de un arreglo
+
+        if (variable.type == 'variable') {
+          return { error: false, result: { type: 'scalar', value: variable.value } }
+        }
+        else {
+          return { error: false, result: { type: 'vector', cells: variable.values.filter(v => typeof v != 'undefined').map((value, index) => { return { index, value } }) } }
+        }
+      }
+      else {
+        const variable = var_found.result
+        if (variable.type == 'variable') {
+          return { error: false, result: { type: 'scalar', value: variable.value } }
+        }
+        else {
+          return { error: false, result: { type: 'vector', cells: variable.values.filter(v => typeof v != 'undefined').map((value, index) => { return { index, value } }) } }
+        }
+      }
+    }
+    else {
+      return { error: false, result: null }
+    }
   }
 
   /**

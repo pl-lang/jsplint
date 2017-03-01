@@ -2,7 +2,7 @@
 
 import Evaluator from './Evaluator'
 
-import { S3, Value, Failure, Success, S0, Typed, Errors, InterpreterRead, InterpreterStatementInfo, InterpreterDone, InterpreterWrite, StatementInfo } from '../interfaces'
+import { S3, Value, Failure, Success, S0, Typed, Errors, InterpreterRead, InterpreterStatementInfo, InterpreterDone, InterpreterWrite, StatementInfo, BoxedValue } from '../interfaces'
 
 import {type_literal, types_are_equal, stringify} from '../utility/helpers'
 
@@ -16,6 +16,7 @@ export default class Interpreter {
   private error_ocurred: boolean
   private program_set: boolean
   private last_info: StatementInfo
+  private breakpoints: number[]
 
   constructor() {
     this.paused = false
@@ -24,6 +25,7 @@ export default class Interpreter {
     this.error_ocurred = false
     this.program_set = false
     this.statement_visited = false
+    // this.breakpoints = []
   }
 
   get program(): S3.Program {
@@ -38,13 +40,14 @@ export default class Interpreter {
     this.read_stack = []
     this.error_ocurred = false
     this.program_set = true
+    // this.breakpoints = []
   }
 
   is_done() {
     return this.error_ocurred || this.evaluator.is_done()
   }
 
-  run(): Failure<Errors.OutOfBounds> | Success<InterpreterRead | InterpreterWrite | InterpreterDone> {
+  run(): Failure<Errors.OutOfBounds> | Success<InterpreterRead | InterpreterWrite | InterpreterDone | InterpreterStatementInfo> {
     if (this.program_set && !this.error_ocurred) {
       // Esto es necesario porque el interprete se "pausa" cuando un modulo hace
       // una llamada a leer
@@ -230,5 +233,25 @@ export default class Interpreter {
     }
 
     return {type: 'literal', value: v}
+  }
+
+  // add_breakpoint(line: number) {
+  //   const index = this.breakpoints.indexOf(line)
+
+  //   if (index == -1) {
+  //     this.breakpoints.push(line)
+  //   }
+  // }
+
+  // remove_breakpoint(line: number) {
+  //   const index = this.breakpoints.indexOf(line)
+
+  //   if (index != -1) {
+  //     this.breakpoints = [...this.breakpoints.slice(0, index), ...this.breakpoints.slice(index + 1)]
+  //   }
+  // }
+
+  export_var(name: string): Failure<null> | Success<BoxedValue> {
+    return this.evaluator.export_var(name)
   }
 }
