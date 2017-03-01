@@ -126,7 +126,7 @@ export default class Evaluator {
       }
     }
     else {
-      return { error: false, result: null }
+      return { error: true, result: null }
     }
   }
 
