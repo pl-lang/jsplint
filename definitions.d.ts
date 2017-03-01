@@ -1033,13 +1033,15 @@ export class Interpreter {
   private error_ocurred;
   private program_set;
   private last_info;
+  private breakpoints;
   constructor();
   program: S3.Program;
   is_done(): boolean;
-  run(): Failure<Errors.OutOfBounds> | Success<InterpreterRead | InterpreterWrite | InterpreterDone>;
+  run(): Failure<Errors.OutOfBounds> | Success<InterpreterRead | InterpreterWrite | InterpreterDone | InterpreterStatementInfo>;
   step(): Failure<Errors.OutOfBounds> | Success<InterpreterRead | InterpreterStatementInfo | InterpreterWrite>;
   send(value: string): Failure<Errors.IncompatibleTypes | Errors.LongString> | Success<null>;
   parse(value: string): S0.LiteralValue;
+  export_var(name: string): Failure<null> | Success<BoxedValue>;
 }
 
 export function transform(p: ParsedProgram): CompileError | Success<S3.Program>;
