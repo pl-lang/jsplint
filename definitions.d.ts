@@ -1016,11 +1016,11 @@ export interface BoxedVector {
   cells: { index: number, value: Value }[]
 }
 
-export enum VarState {
+export declare enum VarState {
   ExistsInit = 0,
-  ExistsNotInit,
-  ExistsOutOfScope,
-  DoesntExist
+  ExistsNotInit = 1,
+  ExistsOutOfScope = 2,
+  DoesntExist = 3,
 }
 
 // exports de este modulo
