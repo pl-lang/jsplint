@@ -106,10 +106,11 @@ export default class Evaluator {
       else {
         // buscar en los otros ambitos
         const other_scopes = this.frame_stack.slice(1, this.frame_stack.length - 2)
-        for (let scope of other_scopes) {
+        for (let scope_name in this.frame_templates) {
+          const scope = this.frame_templates[scope_name] 
           if (name in scope) {
-            const var_maybe = scope[name]
-            const type = var_maybe.type == 'alias' ? var_maybe.varkind : (var_maybe.type == 'vector' ? 'vector' : 'scalar')
+            const variable = scope[name]
+            const type = variable.type == 'array' ? 'vector' : 'scalar'
             return { type, state: VarState.ExistsOutOfScope }
           }
         }
