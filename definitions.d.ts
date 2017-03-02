@@ -530,7 +530,8 @@ export namespace S3 {
     readonly local_alias: string;
     readonly dimensions: number[];
     readonly module_name: string;
-    constructor(owner: string, varname: string, indexes: number, dimensions: number[], alias: string, module_name: string);
+    readonly varkind: 'scalar' | 'vector'
+    constructor(owner: string, varname: string, indexes: number, dimensions: number[], alias: string, module_name: string, varkind: 'scalar' | 'vector');
   }
   class AssignString extends BaseStatement {
     readonly kind: StatementKinds.AssignString;
@@ -1024,6 +1025,8 @@ export enum VarState {
   DoesntExist = 3,
 }
 
+export type VarInfo = { type: 'scalar' | 'vector', state: VarState }
+
 // exports de este modulo
 
 export class Parser extends Emitter {
@@ -1050,7 +1053,7 @@ export class Interpreter {
   send(value: string): Failure<Errors.IncompatibleTypes | Errors.LongString> | Success<null>;
   parse(value: string): S0.LiteralValue;
   export_var(name: string): BoxedValue;
-  search_var(name: string): VarState;
+  search_var(name: string): VarInfo;
 }
 
 export function transform(p: ParsedProgram): CompileError | Success<S3.Program>;

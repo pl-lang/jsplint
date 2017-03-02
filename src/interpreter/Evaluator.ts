@@ -2,7 +2,7 @@
 
 import {Failure, Success, S1, S3} from '../interfaces'
 import {Value, Errors, Read, Write, NullAction, Paused, SuccessfulReturn, StatementInfo, Position, BoxedValue, VarState } from '../interfaces'
-import {Alias, Vector, ValueContainer, Scalar, Frame} from '../interfaces'
+import { Alias, Vector, ValueContainer, Scalar, Frame, VarInfo } from '../interfaces'
 import {drop} from '../utility/helpers'
 
 /*
@@ -76,7 +76,7 @@ export default class Evaluator {
    * Busca una variable y devuelve su estado
    * @param {name} nombre de la variable buscada
    */
-  search_var(name: string): VarState {
+  search_var(name: string): VarInfo {
     const locals = this.get_locals()
     const globals = this.get_globals()
 
@@ -85,10 +85,10 @@ export default class Evaluator {
       const var_maybe = this.get_var(name)
       if (var_maybe.type == 'alias') {
         const { variable } = this.resolve_alias(var_maybe)
-        return variable.init ? VarState.ExistsInit : VarState.ExistsNotInit
+        return { type: variable.type == 'vector' ? 'vector' : 'scalar', state: variable.init ? VarState.ExistsInit : VarState.ExistsNotInit }
       }
       else {
-        return var_maybe.init ? VarState.ExistsInit : VarState.ExistsNotInit
+        return { type: var_maybe.type == 'vector' ? 'vector' : 'scalar', state: var_maybe.init ? VarState.ExistsInit : VarState.ExistsNotInit }
       }
     }
     else {
@@ -97,10 +97,10 @@ export default class Evaluator {
         const var_maybe = this.get_var(name)
         if (var_maybe.type == 'alias') {
           const { variable } = this.resolve_alias(var_maybe)
-          return variable.init ? VarState.ExistsInit : VarState.ExistsNotInit
+          return { type: variable.type == 'vector' ? 'vector' : 'scalar', state: variable.init ? VarState.ExistsInit : VarState.ExistsNotInit }
         }
         else {
-          return var_maybe.init ? VarState.ExistsInit : VarState.ExistsNotInit
+          return { type: var_maybe.type == 'vector' ? 'vector' : 'scalar', state: var_maybe.init ? VarState.ExistsInit : VarState.ExistsNotInit }
         }
       }
       else {
@@ -108,10 +108,12 @@ export default class Evaluator {
         const other_scopes = this.frame_stack.slice(1, this.frame_stack.length - 2)
         for (let scope of other_scopes) {
           if (name in scope) {
-            return VarState.ExistsOutOfScope
+            const var_maybe = scope[name]
+            const type = var_maybe.type == 'alias' ? var_maybe.varkind : (var_maybe.type == 'vector' ? 'vector' : 'scalar')
+            return { type, state: VarState.ExistsOutOfScope }
           }
         }
-        return VarState.DoesntExist
+        return { type: 'scalar', state: VarState.DoesntExist }
       }
     }
   }
@@ -412,7 +414,7 @@ export default class Evaluator {
       const template = templates[name]
       const {type, datatype, by_ref} = template
       if (by_ref) {
-        frame[name] = {type: 'alias', name: '', indexes: []}
+        frame[name] = {type: 'alias', name: '', indexes: [], varkind: type == 'array' ? 'vector' : 'scalar'}
       }
       else {
         if (type == 'array') {

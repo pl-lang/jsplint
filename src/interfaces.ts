@@ -918,8 +918,9 @@ export namespace S3 {
     readonly local_alias: string
     readonly dimensions: number[]
     readonly module_name: string
+    readonly varkind: 'scalar' | 'vector'
 
-    constructor (owner: string, varname: string, indexes: number, dimensions: number[], alias: string, module_name: string) {
+    constructor(owner: string, varname: string, indexes: number, dimensions: number[], alias: string, module_name: string, varkind: 'scalar' | 'vector') {
       super(owner)
       this.kind = StatementKinds.Alias
       this.varname = varname
@@ -928,6 +929,7 @@ export namespace S3 {
       this.dimensions = dimensions
       this.module_name = module_name
       this.is_user_stmnt = false
+      this.varkind = varkind
     }
   }
 
@@ -1444,6 +1446,10 @@ export interface Alias {
    * Indices utilizados al crear este alias
    */
   indexes: number[]
+  /**
+   * Indica si la variable referenciada es un vector o un escalar
+   */
+  varkind: 'scalar' | 'vector'
 }
 
 export interface Scalar {
@@ -1513,3 +1519,5 @@ export enum VarState {
   ExistsOutOfScope,
   DoesntExist
 }
+
+export type VarInfo = { type: 'scalar' | 'vector', state: VarState }

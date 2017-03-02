@@ -2,7 +2,7 @@
 
 import Evaluator from './Evaluator'
 
-import { S3, Value, Failure, Success, S0, Typed, Errors, InterpreterRead, InterpreterStatementInfo, InterpreterDone, InterpreterWrite, StatementInfo, BoxedValue, VarState } from '../interfaces'
+import { S3, Value, Failure, Success, S0, Typed, Errors, InterpreterRead, InterpreterStatementInfo, InterpreterDone, InterpreterWrite, StatementInfo, BoxedValue, VarState, VarInfo } from '../interfaces'
 
 import {type_literal, types_are_equal, stringify} from '../utility/helpers'
 
@@ -255,7 +255,7 @@ export default class Interpreter {
     return this.evaluator.export_var(name)
   }
 
-  search_var(name: string): VarState {
+  search_var(name: string): VarInfo {
     return this.evaluator.search_var(name)
   }
 }

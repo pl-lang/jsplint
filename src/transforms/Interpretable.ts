@@ -300,7 +300,9 @@ function transform_call (call: Typed.Call, module_name: string) : S3.Statement {
                 }
             }
 
-            const make_alias = new S3.Alias(module_name, invocation.name, invocation.indexes.length, invocation.dimensions, call.parameters[i].name, call.name)
+            const varkind = call.parameters[i].is_array ? 'vector' : 'scalar'
+
+            const make_alias = new S3.Alias(module_name, invocation.name, invocation.indexes.length, invocation.dimensions, call.parameters[i].name, call.name, varkind)
 
             if (index_initd) {
                 last_index_st.exit_point = make_alias
