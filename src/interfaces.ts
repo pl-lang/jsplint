@@ -1449,6 +1449,10 @@ export interface Alias {
 export interface Scalar {
   type: 'variable'
   value: Value
+  /**
+   * inidica si esta variable fue inicializada
+   */
+  init: boolean
 }
 
 // se llama vector para no 'sobreescribir' al tipo Array de JS
@@ -1456,6 +1460,10 @@ export interface Vector {
   type: 'vector'
   values: Value[]
   dimensions: number[]
+  /**
+   * inidica si esta variable fue inicializada
+   */
+  init: boolean
 }
 
 export type ValueContainer = Scalar | Vector
@@ -1497,4 +1505,11 @@ export interface BoxedScalar {
 export interface BoxedVector {
   type: 'vector'
   cells: { index: number, value: Value }[]
+}
+
+export enum VarState {
+  ExistsInit = 0,
+  ExistsNotInit,
+  ExistsOutOfScope,
+  DoesntExist
 }

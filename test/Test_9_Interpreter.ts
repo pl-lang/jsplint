@@ -166,11 +166,11 @@ describe('Interpreter', () => {
 
     it('Interpreter.export_var funciona', () => {
         const code = `variables
-                entero i, v[2]
+                entero i, v[4]
             inicio
                 i <- 22
-                v[1] <- 48
-                v[2] <- 49
+                v[3] <- 48
+                v[4] <- 49
                 escribir("hola")
                 escribir("chau")
             fin
@@ -187,19 +187,15 @@ describe('Interpreter', () => {
 
         output.result.should.deepEqual({ kind: 'action', action: 'write', done: false, value: 'hola' })
 
-        const i_maybe = interpreter.export_var('i')
-        const v_maybe = interpreter.export_var('v')
-
-        i_maybe.error.should.equal(false)
-        v_maybe.error.should.equal(false)
-
-        const i = i_maybe.result as BoxedScalar
-        const v = v_maybe.result as BoxedVector
+        const i = interpreter.export_var('i') as BoxedScalar
 
         i.value.should.equal(22)
-        v.cells[0].index.should.equal(0)
+
+        const v = interpreter.export_var('v') as BoxedVector
+
+        v.cells[0].index.should.equal(2)
         v.cells[0].value.should.equal(48)
-        v.cells[1].index.should.equal(1)
+        v.cells[1].index.should.equal(3)
         v.cells[1].value.should.equal(49)
     })
 })

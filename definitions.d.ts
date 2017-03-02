@@ -1016,6 +1016,13 @@ export interface BoxedVector {
   cells: { index: number, value: Value }[]
 }
 
+export enum VarState {
+  ExistsInit = 0,
+  ExistsNotInit,
+  ExistsOutOfScope,
+  DoesntExist
+}
+
 // exports de este modulo
 
 export class Parser extends Emitter {
@@ -1041,7 +1048,8 @@ export class Interpreter {
   step(): Failure<Errors.OutOfBounds> | Success<InterpreterRead | InterpreterStatementInfo | InterpreterWrite>;
   send(value: string): Failure<Errors.IncompatibleTypes | Errors.LongString> | Success<null>;
   parse(value: string): S0.LiteralValue;
-  export_var(name: string): Failure<null> | Success<BoxedValue>;
+  export_var(name: string): BoxedValue;
+  search_var(name: string): VarState;
 }
 
 export function transform(p: ParsedProgram): CompileError | Success<S3.Program>;

@@ -1,7 +1,7 @@
 'use strict'
 
 import {Failure, Success, S1, S3} from '../interfaces'
-import {Value, Errors, Read, Write, NullAction, Paused, SuccessfulReturn, StatementInfo, Position, BoxedValue } from '../interfaces'
+import {Value, Errors, Read, Write, NullAction, Paused, SuccessfulReturn, StatementInfo, Position, BoxedValue, VarState } from '../interfaces'
 import {Alias, Vector, ValueContainer, Scalar, Frame} from '../interfaces'
 import {drop} from '../utility/helpers'
 
@@ -73,22 +73,45 @@ export default class Evaluator {
   }
 
   /**
-   * search_var
-   * busca una variable que puede o no existir en el programa de este evaluador
+   * Busca una variable y devuelve su estado
+   * @param {name} nombre de la variable buscada
    */
-  search_var(name: string): Failure<null> | Success<Scalar | Vector | Alias> {
+  search_var(name: string): VarState {
     const locals = this.get_locals()
     const globals = this.get_globals()
 
     if (name in locals) {
-      return { error: false, result: locals[name] }
+      // la variable existe, hay que ver si esta inicializada
+      const var_maybe = this.get_var(name)
+      if (var_maybe.type == 'alias') {
+        const { variable } = this.resolve_alias(var_maybe)
+        return variable.init ? VarState.ExistsInit : VarState.ExistsNotInit
+      }
+      else {
+        return var_maybe.init ? VarState.ExistsInit : VarState.ExistsNotInit
+      }
     }
     else {
       if (name in globals) {
-        return { error: false, result: globals[name] }
+        // la variable existe, hay que ver si esta inicializada
+        const var_maybe = this.get_var(name)
+        if (var_maybe.type == 'alias') {
+          const { variable } = this.resolve_alias(var_maybe)
+          return variable.init ? VarState.ExistsInit : VarState.ExistsNotInit
+        }
+        else {
+          return var_maybe.init ? VarState.ExistsInit : VarState.ExistsNotInit
+        }
       }
       else {
-        return { error: true, result: null }
+        // buscar en los otros ambitos
+        const other_scopes = this.frame_stack.slice(1, this.frame_stack.length - 2)
+        for (let scope of other_scopes) {
+          if (name in scope) {
+            return VarState.ExistsOutOfScope
+          }
+        }
+        return VarState.DoesntExist
       }
     }
   }
@@ -97,36 +120,31 @@ export default class Evaluator {
    * export_var
    * busca una variable y devuelve su valor/un arreglo de sus valores.
    */
-  export_var(name: string): Failure<null> | Success<BoxedValue> {
-    const var_found = this.search_var(name)
+  export_var(name: string): BoxedValue {
+    const var_found = this.get_var(name)
 
-    if (var_found.error == false) {
-      if (var_found.result.type == 'alias') {
+    if (var_found.type == 'alias') {
 
-        const { variable, pre_indexes } = this.resolve_alias(var_found.result)
+      const { variable, pre_indexes } = this.resolve_alias(var_found)
 
-        // Por ahora se ignoran los pre_indexes porque se devuelven todos los valores de los arreglos.
-        // No hay manera (todavia) de devolver solo un "segmento" de un arreglo
+      // Por ahora se ignoran los pre_indexes porque se devuelven todos los valores de los arreglos.
+      // No hay manera (todavia) de devolver solo un "segmento" de un arreglo
 
-        if (variable.type == 'variable') {
-          return { error: false, result: { type: 'scalar', value: variable.value } }
-        }
-        else {
-          return { error: false, result: { type: 'vector', cells: variable.values.filter(v => typeof v != 'undefined').map((value, index) => { return { index, value } }) } }
-        }
+      if (variable.type == 'variable') {
+        return { type: 'scalar', value: variable.value }
       }
       else {
-        const variable = var_found.result
-        if (variable.type == 'variable') {
-          return { error: false, result: { type: 'scalar', value: variable.value } }
-        }
-        else {
-          return { error: false, result: { type: 'vector', cells: variable.values.filter(v => typeof v != 'undefined').map((value, index) => { return { index, value } }) } }
-        }
+        return { type: 'vector', cells: variable.values.map((value, index) => { return { index, value } }).filter(v => typeof v.value != 'undefined') }
       }
     }
     else {
-      return { error: true, result: null }
+      const variable = var_found
+      if (variable.type == 'variable') {
+        return { type: 'scalar', value: variable.value }
+      }
+      else {
+        return { type: 'vector', cells: variable.values.map((value, index) => { return { index, value } }).filter(v => typeof v.value != 'undefined') }
+      }
     }
   }
 
@@ -399,10 +417,10 @@ export default class Evaluator {
       else {
         if (type == 'array') {
           const values = new Array<Value>((template as S1.ArrayVariable).dimensions.reduce((a, b) => a*b))
-          frame[name] = {type: 'vector', dimensions: (template as S1.ArrayVariable).dimensions, values}
+          frame[name] = { init: false, type: 'vector', dimensions: (template as S1.ArrayVariable).dimensions, values}
         }
         else {
-          frame[name] = {type: 'variable', value: null}
+          frame[name] = { init: false, type: 'variable', value: null}
         }
       }
     }
@@ -526,6 +544,8 @@ export default class Evaluator {
         i++
       }
 
+      v.init = true
+
       return {error: false, result: {done: false, kind: 'action', action: 'none'}}
     }
     else {
@@ -575,6 +595,8 @@ export default class Evaluator {
 
       variable.value = this.state.value_stack.pop()
 
+      variable.init = true
+
       return {error: false, result: {kind: 'action', action: 'none', done: this.state.done}}
     }
     else {
@@ -584,9 +606,11 @@ export default class Evaluator {
         const v: Vector = variable as Vector
         const index = this.calculate_index(pre_indexes.map(i => i-1), v.dimensions)
         v.values[index] = this.state.value_stack.pop()
+        v.init = true
         return {error: false, result: {kind: 'action', action: 'none', done: this.state.done}}
       }
       else {
+        (variable as Scalar).init;
         (variable as Scalar).value = this.state.value_stack.pop()
         return {error: false, result: {kind: 'action', action: 'none', done: this.state.done}}
       }
@@ -636,6 +660,7 @@ export default class Evaluator {
         const value = this.state.value_stack.pop()
         const variable = this.get_var(s.varname) as Vector
         variable.values[index] = value
+        variable.init = true
 
         return {error:false, result: {kind: 'action', action: 'none', done: false}}
       }
@@ -672,6 +697,7 @@ export default class Evaluator {
         const v: Vector = variable as Vector
 
         v.values[index] = this.state.value_stack.pop()
+        v.init = true
 
         return {error: false, result: {kind: 'action', action: 'none', done: false}}
       }
