@@ -1191,6 +1191,228 @@ export namespace S3 {
     | InitV;
 }
 
+export namespace N3 {
+  export interface Programa {
+    modulos: {
+      principal: Enunciado[],
+      [m: string]: Enunciado[]
+    },
+    variablesLocales: {
+      main: S1.VariableDict,
+      [m: string]: S1.VariableDict
+    }
+  }
+
+  export enum TipoEnunciado {
+    SUMAR = 0,
+    RESTAR,
+    DIV_REAL,
+    DIV_ENTERO,
+    MODULO,
+    MULTIPLICAR,
+    ELEVAR,
+    NEGAR,
+    NOT,
+    AND,
+    OR,
+    MENOR,
+    MENORIGUAL,
+    MAYOR,
+    MAYORIGUAL,
+    IGUAL,
+    DIFERENTE,
+    APILAR,
+    APILAR_VAR,
+    APILAR_ARR,
+    ASIGNAR,
+    ASIGNAR_ARR,
+    JIF,
+    JMP,
+    LLAMAR,
+    LEER,
+    ESCRIBIR,
+    ASIGNAR_CAD,
+    CONCATENAR,
+    ALIAS,
+    MKFRAME,
+    COPIAR_ARR,
+    INIT_ARR
+  }
+
+  export type Enunciado = 
+    SUMAR
+    | RESTAR
+    | DIV_REAL
+    | DIV_ENTERO
+    | MODULO
+    | MULTIPLICAR
+    | ELEVAR
+    | NEGAR
+    | NOT
+    | AND
+    | OR
+    | MENOR
+    | MENORIGUAL
+    | MAYOR
+    | MAYORIGUAL
+    | IGUAL
+    | DIFERENTE
+    | APILAR
+    | APILAR_VAR
+    | APILAR_ARR
+    | ASIGNAR
+    | ASIGNAR_ARR
+    | JIF
+    | JMP
+    | LLAMAR
+    | LEER
+    | ESCRIBIR
+    | ASIGNAR_CAD
+    | CONCATENAR
+    | ALIAS
+    | MKFRAME
+    | COPIAR_ARR
+    | INIT_ARR
+  
+  export interface SUMAR {
+    tipo: TipoEnunciado.SUMAR
+  }
+
+  export interface RESTAR {
+    tipo: TipoEnunciado.RESTAR
+  }
+  export interface DIV_REAL {
+    tipo: TipoEnunciado.DIV_REAL
+  }
+  export interface DIV_ENTERO {
+    tipo: TipoEnunciado.DIV_ENTERO
+  }
+  export interface MODULO {
+    tipo: TipoEnunciado.MODULO
+  }
+  export interface MULTIPLICAR {
+    tipo: TipoEnunciado.MULTIPLICAR
+  }
+  export interface ELEVAR {
+    tipo: TipoEnunciado.ELEVAR
+  }
+  export interface NEGAR {
+    tipo: TipoEnunciado.NEGAR
+  }
+  export interface NOT {
+    tipo: TipoEnunciado.NOT
+  }
+  export interface AND {
+    tipo: TipoEnunciado.AND
+  }
+  export interface OR {
+    tipo: TipoEnunciado.OR
+  }
+  export interface MENOR {
+    tipo: TipoEnunciado.MENOR
+  }
+  export interface MENORIGUAL {
+    tipo: TipoEnunciado.MENORIGUAL
+  }
+  export interface MAYOR {
+    tipo: TipoEnunciado.MAYOR
+  }
+  export interface MAYORIGUAL {
+    tipo: TipoEnunciado.MAYORIGUAL
+  }
+  export interface IGUAL {
+    tipo: TipoEnunciado.IGUAL
+  }
+  export interface DIFERENTE {
+    tipo: TipoEnunciado.DIFERENTE
+  }
+  export interface APILAR {
+    tipo: TipoEnunciado.APILAR
+  }
+
+  export interface APILAR_VAR {
+    tipo: TipoEnunciado.APILAR_VAR
+    nombreVariable: string
+  }
+
+  export interface APILAR_ARR {
+    tipo: TipoEnunciado.APILAR_ARR
+    nombreVariable: string
+    cantidadIndices: number
+  }
+
+  export interface ASIGNAR {
+    tipo: TipoEnunciado.ASIGNAR
+    nombreVariable: string
+  }
+
+  export interface ASIGNAR_ARR {
+    tipo: TipoEnunciado.ASIGNAR_ARR
+    nombreVariable: string
+    cantidadIndices: number
+  }
+
+  export interface JIF {
+    tipo: TipoEnunciado.JIF
+    numeroLinea: number
+  }
+
+  export interface JMP {
+    tipo: TipoEnunciado.JMP
+    numeroLinea: number
+  }
+
+  export interface LLAMAR {
+    tipo: TipoEnunciado.LLAMAR
+    nombreModulo: string
+  }
+
+  export interface LEER {
+    tipo: TipoEnunciado.LEER
+    nombreVariable: string
+    tipoVariable: Typed.AtomicType | Typed.StringType
+  }
+
+  export interface ESCRIBIR {
+    tipo: TipoEnunciado.ESCRIBIR
+  }
+
+  export interface CONCATENAR {
+    tipo: TipoEnunciado.CONCATENAR
+    cantidadCaracteres: number
+  }
+
+  export interface ASIGNAR_CAD {
+    tipo: TipoEnunciado.ASIGNAR_CAD
+    nombreVariable: string
+    longitudCadena: number
+    cantidadIndices: number
+  }
+
+  export interface ALIAS {
+    tipo: TipoEnunciado.ALIAS
+    nombreAlias: string
+    nombreVariable: string
+    indices: number[]
+  }
+
+  export interface COPIAR_ARR {
+    tipo: TipoEnunciado.COPIAR_ARR
+    arregloObjetivo: S3.VectorData
+    arregloFuente: S3.VectorData
+  }
+
+  export interface MKFRAME {
+    tipo: TipoEnunciado.MKFRAME
+    nombreModulo: string
+  }
+  
+  export interface INIT_ARR {
+    tipo: TipoEnunciado.INIT_ARR
+    arreglo: S3.VectorData
+  }
+}
+
 /**
  * Stage 4:
  */
