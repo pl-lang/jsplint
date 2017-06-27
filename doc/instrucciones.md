@@ -1,10 +1,10 @@
-# Instrucciones soportadas por Evaluator
+# Instrucciones soportadas por el Evaluador
 
 ## Operaciones matematicas, logicas, y de comparacion
 
 Toman como operadores la cantidad de elementos que necesiten de la pila, realizan la operacion correspondiente, y apilan el resultado.
 
-Operaciones matematicas: SUMAR, RESTAR, DIVR, DIVE, MODULO, MULTIPLICAR, ELEVAR, NEGAR
+Operaciones matematicas: SUMAR, RESTAR, DIV\_REAL, DIV\_ENTERO, MODULO, MULTIPLICAR, ELEVAR, NEGAR
 
 Operaciones logicas: NOT, AND, OR
 
