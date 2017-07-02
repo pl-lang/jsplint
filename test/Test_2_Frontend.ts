@@ -1,8 +1,9 @@
 'use strict'
 
 import SourceWrapper from '../src/parser/SourceWrapper.js'
-import { Token, WordToken, NumberToken, StringToken, SpecialSymbolToken } from '../src/parser/TokenTypes.js'
-import { ValueKind, SymbolKind, ReservedKind, OtherKind } from '../src/parser/TokenTypes.js'
+import { Token } from '../src/interfaces'
+import { WordToken, NumberToken, StringToken, SpecialSymbolToken } from '../src/parser/TokenTypes'
+import { ValueKind, SymbolKind, ReservedKind, OtherKind } from '../src/interfaces'
 import Lexer from '../src/parser/Lexer.js'
 import TokenQueue from '../src/parser/TokenQueue.js'
 
@@ -195,8 +196,8 @@ describe('NumberToken', () => {
     token.kind.should.equal(ValueKind.Integer)
     token.text.should.equal('3.')
     token.error_info.unexpected.should.equal('A')
-    token.error_info.line.should.equal(0)
-    token.error_info.column.should.equal(2)
+    token.error_info.pos.line.should.equal(0)
+    token.error_info.pos.column.should.equal(2)
   })
 })
 
@@ -227,8 +228,8 @@ describe('StringToken', () => {
 
     token.kind.should.equal(ValueKind.String)
     token.error_info.unexpected.should.equal('\n')
-    token.error_info.line.should.equal(0)
-    token.error_info.column.should.equal(6)
+    token.error_info.pos.line.should.equal(0)
+    token.error_info.pos.column.should.equal(6)
   })
 })
 
