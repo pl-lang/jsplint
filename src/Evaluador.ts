@@ -2,7 +2,7 @@
 
 import { N3, Typed, Value } from './interfaces'
 
-type EstadoEvaluador = EJECUTANDO_PROGRAMA | ESPERANDO_LECTURA | ESPERANDO_PASO | LECTURA_REALIZADA | PROGRAMA_FINALIZADO | ERROR_ENCONTRADO
+type EstadoEvaluador = EJECUTANDO_PROGRAMA | ESPERANDO_LECTURA | ESPERANDO_PASO | LECTURA_REALIZADA | ESCRIBIENDO_VALOR | PROGRAMA_FINALIZADO | ERROR_ENCONTRADO
 
 type Valor = Value
 
@@ -26,6 +26,12 @@ interface LECTURA_REALIZADA extends EstadoAbstracto {
     id: Estado.LECTURA_REALIZADA
 }
 
+interface ESCRIBIENDO_VALOR extends EstadoAbstracto {
+    id: Estado.ESCRIBIENDO_VALOR
+    numeroLinea: number
+    valor: Valor
+}
+
 interface ESPERANDO_PASO extends EstadoAbstracto {
     id: Estado.ESPERANDO_PASO
     numeroLinea: number
@@ -45,6 +51,7 @@ enum Estado {
     EJECUTANDO_PROGRAMA = 0,
     ESPERANDO_LECTURA, // luego de una llamada a leer
     LECTURA_REALIZADA, // luego de realizar una lectura
+    ESCRIBIENDO_VALOR, // al hacer una llamada a "escribir"
     ESPERANDO_PASO, // luego de haber ejecutado un paso o sub-paso
     PROGRAMA_FINALIZADO,
     ERROR_ENCONTRADO
@@ -63,14 +70,13 @@ export default class Evaluador {
     private breakpointsRegistrados: number[]
     private breakpointCumplido: boolean
     private lineaVisitada: boolean
-    private lineasFuentePorLineaFinal: { [l: number]: number } // indica a que numero de linea fuente corresponde un numero de linea final
-    private lineasFuente: number[] // indica los numeros de las instrucciones que se corresponden con enunciados del codigo fuente
+    private lineasPorModulo: N3.lineasPorModulo
 
     private pilaValores: Valor[]
 
-    constructor(programa: N3.Programa, lineasFuentePorLineaFinal: { [l: number]: number }) {
-        this.programaActual = programa
-        this.lineasFuente = unicos(Object.keys(lineasFuentePorLineaFinal).map(k => lineasFuentePorLineaFinal[k]))
+    constructor(programaCompilado: N3.ProgramaCompilado) {
+        this.programaActual = programaCompilado.programa
+        this.lineasPorModulo = programaCompilado.lineasPorModulo
         this.lineaVisitada = true
         this.contadorInstruccion = 0
         this.pilaContadorInstruccion = []
@@ -86,14 +92,28 @@ export default class Evaluador {
         return this.estadoActual
     }
 
+    /**
+     * Ejecuta sub-enunciados hasta encontrarse con uno que tiene un
+     * enunciado correspondiente en el codigo fuente.
+     */
     ejecutarEnunciadoSiguiente(): EstadoEvaluador {
-        if (this.sePuedeEjecutar()) { // solo para no sobrecargar la condicion del while...
-            while (this.sePuedeEjecutar && (!existe(this.contadorInstruccion, this.lineasFuente) || this.lineaVisitada)) {
+        if (this.sePuedeEjecutar()) {
+            while (!this.esLineaFuente(this.contadorInstruccion) || this.lineaVisitada) {
                 this.estadoActual = this.ejecutarEnunciadoSiguiente()
             }
             this.lineaVisitada = true
         }
         return this.estadoActual
+    }
+
+    /**
+     * Dice si un numero de linea dado corresponde a una de las lineas de codigo fuente
+     * @param n numero de linea que buscar entre las lineas del modulo
+     */
+    private esLineaFuente(n: number): boolean {
+        const moduloActual = this.pilaNombreModulo[this.pilaNombreModulo.length - 1]
+        const lineasFuenteModulo = this.lineasPorModulo[moduloActual].subEnunciados
+        return existe(n, lineasFuenteModulo)
     }
 
     private ejecutarSubEnunciadoSiguiente(): EstadoEvaluador {
@@ -140,8 +160,8 @@ export default class Evaluador {
         return false
     }
 
-    private evaluarSubEnunciado(enunciado: N3.Enunciado): EstadoEvaluador {
-        switch (enunciado.tipo) {
+    private evaluarSubEnunciado(subEnunciado: N3.Enunciado): EstadoEvaluador {
+        switch (subEnunciado.tipo) {
             case N3.TipoEnunciado.SUMAR:
                 return this.SUMAR()
             case N3.TipoEnunciado.RESTAR:
@@ -176,6 +196,8 @@ export default class Evaluador {
                 return this.IGUAL()
             case N3.TipoEnunciado.DIFERENTE:
                 return this.DIFERENTE()
+            case N3.TipoEnunciado.APILAR:
+                return this.APILAR(subEnunciado)
         }
     }
 
@@ -293,6 +315,11 @@ export default class Evaluador {
         const a = this.pilaValores.pop() as number
         const b = this.pilaValores.pop() as number
         this.pilaValores.push(a != b)
+        return this.estadoActual
+    }
+
+    private APILAR(subEnunciado: N3.APILAR): EstadoEvaluador {
+        this.pilaValores.push(subEnunciado.valor)
         return this.estadoActual
     }
 }
