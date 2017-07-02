@@ -29,6 +29,7 @@ de la pila) y usando las longitudes de las dimensiones del arreglo.
 Cambian el numero de instruccion en ejecucion.
 
 JIF X: Saltar si falso. Salta a la instruccion numero X si el valor al tope de la pila es falso.
+JIT X: Saltar si verdadero. Salta a la instruccion numero X si el valor al tope de la pila es verdadero.
 JMP X: Saltar incondicionalmente. Salta a la instruccion numero X.
 
 ## Llamadas
@@ -48,10 +49,10 @@ al tope de la pila y las longitudes de las dimensiones de X.
 
 ## Otras operaciones
 
-ALIAS X, Y, Z: hacer un alias X a la variable Y invocada con Z indices (Z es de tipo number[]). Un alias es una referencia hacia una variable ubicada en otro modulo.
+ALIAS X, Y, Z: hacer un alias X a la variable Y invocada con Z indices (Z es de tipo number). Un alias es una referencia hacia una variable ubicada en otro modulo.
 
-COPIAR ARR X, Y: copiar los contenidos del vector Y al vector X. X e Y son del tipo VectorData.
+COPIAR ARR X, Y: copiar (todos o parte de) los contenidos del vector Y al vector X. X e Y son del tipo VectorData.
 
 MKFRAME X: crear un nuevo "cuadro" del modulo X en la pila de cuadros. Un cuadro es el espacio de memoria de un modulo, en el viven sus variables y/o aliases.
 
-INIT ARR X: inicializa el vector X de un modulo con un vector pasado como argumento en la llamada. X es del tipo VectorData.
+INIT ARR X, Y: inicializa el arreglo de nombre X de un modulo con un vector Y pasado como argumento en la llamada. Y es del tipo VectorData.

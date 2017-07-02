@@ -1,5 +1,9 @@
-import {Failure, Success, ParsedProgram, S3} from '../interfaces'
+import {Failure, Success, ParsedProgram, N3} from '../interfaces'
+
+import { stringify as convertirTipoCadena } from './helpers'
+
 import transform from '../transforms/transform'
+
 import Parser from '../parser/Parser'
 
 function parse (s: string) {
@@ -13,197 +17,99 @@ function parse (s: string) {
 
 const espacios = 2
 
-export default function fr_writer (p: S3.Program) : string {
-    let variables = 'VARIABLES\n'
+export default function fr_writer (p: N3.Programa) : string {
+    let programaRF = ""
 
-    for (let vn in p.local_variables['main']) {
-        const v = p.local_variables['main'][vn] 
-        variables += `${repetir(' ', espacios)}${v.datatype} ${vn}`
-        if (v.type == 'array') {
-            variables += `[${v.dimensions.toString()}]`
-        }
-        variables += '\n'
-    }
+    for (let mn in p.modulos) {
+        let moduloRF = ""
 
-    let s = `${variables}INICIO\n`
+        const modulo = p.modulos[mn]
 
-    /**
-     * Procesar main
-     */
-    let c = p.entry_point
-    while (c != null) {
-        s += procesar_enunciado(c, 1) + '\n'
-        c = c.exit_point
-    }
+        moduloRF += `INICIO ${mn.toUpperCase()}\n`
 
-    s += `FIN\n`
-
-    for (let mn in p.modules) {
-        s += `\n${mn} (${procesar_parametros(p.modules[mn].parameters)})\n`
-
-        let variables = ''   
-        /**
-         * imprimir las variables
-         */
-        for (let vn in p.local_variables[mn]) {
-            const v = p.local_variables[mn][vn] 
-            variables += `${repetir(' ', espacios)}${v.datatype} ${vn}`
-            if (v.type == 'array') {
-                variables += `[${v.dimensions.toString()}]`
-            }
-            variables += '\n'
+        for (let subEnunciado of modulo) {
+            moduloRF += procesar_enunciado(subEnunciado, 1) + '\n'
         }
 
-        s += `${variables}INICIO\n`
+        moduloRF += `FIN ${mn.toUpperCase()}\n\n`
 
-        /**
-         * Procesar main
-         */
-        let c = p.modules[mn].entry_point
-        while (c != null) {
-            s += procesar_enunciado(c, 1) + '\n'
-            c = c.exit_point
-        }
-
-        s += `FIN\n`
+        programaRF += moduloRF
     }
 
-    return s
+    return programaRF
 }
 
-function procesar_parametros (ps: {[p: string]: S3.Parameter}) {
-    let s = ''
-    const length = Object.keys(ps).length
-    let i = 0
-    for (let pn in ps) {
-         s += `${ps[pn].by_ref ? 'ref ':''}${pn}${ps[pn].is_array ? '[]':''}`
-         if (i < length - 1) {
-             s += ', '
-         }
-         i++
+function procesar_enunciado (e: N3.Enunciado, nivel: number) : string {
+    switch (e.tipo) {
+        case N3.TipoEnunciado.SUMAR:
+            return `${repetir(' ', nivel * espacios)}SUMAR`
+        case N3.TipoEnunciado.RESTAR:
+            return `return ${repetir(' ', nivel * espacios)}RESTAR`
+        case N3.TipoEnunciado.DIV_REAL:
+        return `${repetir(' ', nivel*espacios)}DIV_REAL`
+        case N3.TipoEnunciado.DIV_ENTERO:
+        return `${repetir(' ', nivel*espacios)}DIV_ENTERO`
+        case N3.TipoEnunciado.MODULO:
+        return `${repetir(' ', nivel*espacios)}MODULO`
+        case N3.TipoEnunciado.MULTIPLICAR:
+        return `${repetir(' ', nivel*espacios)}MULTIPLICAR`
+        case N3.TipoEnunciado.ELEVAR:
+        return `${repetir(' ', nivel*espacios)}ELEVAR`
+        case N3.TipoEnunciado.NEGAR:
+        return `${repetir(' ', nivel*espacios)}NEGAR`
+        case N3.TipoEnunciado.NOT:
+        return `${repetir(' ', nivel*espacios)}NOT`
+        case N3.TipoEnunciado.AND:
+        return `${repetir(' ', nivel*espacios)}AND`
+        case N3.TipoEnunciado.OR:
+        return `${repetir(' ', nivel*espacios)}OR`
+        case N3.TipoEnunciado.MENOR:
+        return `${repetir(' ', nivel*espacios)}MENOR`
+        case N3.TipoEnunciado.MENORIGUAL:
+        return `${repetir(' ', nivel*espacios)}MENORIGUAL`
+        case N3.TipoEnunciado.MAYOR:
+        return `${repetir(' ', nivel*espacios)}MAYOR`
+        case N3.TipoEnunciado.MAYORIGUAL:
+        return `${repetir(' ', nivel*espacios)}MAYORIGUAL`
+        case N3.TipoEnunciado.IGUAL:
+        return `${repetir(' ', nivel*espacios)}IGUAL`
+        case N3.TipoEnunciado.DIFERENTE:
+        return `${repetir(' ', nivel*espacios)}DIFERENTE`
+        case N3.TipoEnunciado.APILAR:
+            return `${repetir(' ', nivel * espacios)}APILAR ${e.valor}`
+        case N3.TipoEnunciado.APILAR_VAR:
+            return `${repetir(' ', nivel * espacios)}APILAR_VAR ${e.nombreVariable}`
+        case N3.TipoEnunciado.APILAR_ARR:
+            return `${repetir(' ', nivel * espacios)}APILAR_ARR ${e.nombreVariable} ${e.cantidadIndices}`
+        case N3.TipoEnunciado.ASIGNAR:
+            return `${repetir(' ', nivel * espacios)}ASIGNAR ${e.nombreVariable}`
+        case N3.TipoEnunciado.ASIGNAR_ARR:
+            return `${repetir(' ', nivel * espacios)}ASIGNAR_ARR ${e.nombreVariable} ${e.cantidadIndices}`
+        case N3.TipoEnunciado.JIF:
+            return `${repetir(' ', nivel * espacios)}JIF ${e.numeroLinea}`
+        case N3.TipoEnunciado.JIT:
+            return `${repetir(' ', nivel * espacios)}JIT ${e.numeroLinea}`
+        case N3.TipoEnunciado.JMP:
+            return `${repetir(' ', nivel * espacios)}JMP ${e.numeroLinea}`
+        case N3.TipoEnunciado.LLAMAR:
+            return `${repetir(' ', nivel * espacios)}LLAMAR ${e.nombreModulo}`
+        case N3.TipoEnunciado.LEER:
+            return `${repetir(' ', nivel * espacios)}LEER ${e.nombreVariable} ${convertirTipoCadena(e.tipoVariable)}`
+        case N3.TipoEnunciado.ESCRIBIR:
+            return `${repetir(' ', nivel * espacios)}ESCRIBIR`
+        case N3.TipoEnunciado.ASIGNAR_CAD:
+            return `${repetir(' ', nivel * espacios)}ASIGNAR_CAD ${e.nombreVariable} ${e.longitudCadena} ${e.cantidadIndices}`
+        case N3.TipoEnunciado.CONCATENAR:
+            return `${repetir(' ', nivel * espacios)}CONCATENAR ${e.cantidadCaracteres}`
+        case N3.TipoEnunciado.ALIAS:
+            return `${repetir(' ', nivel * espacios)}ALIAS ${e.nombreAlias} ${e.nombreVariable} ${e.cantidadIndices}`
+        case N3.TipoEnunciado.MKFRAME:
+            return `${repetir(' ', nivel * espacios)}MKFRAME ${e.nombreModulo}`
+        case N3.TipoEnunciado.COPIAR_ARR:
+            return `${repetir(' ', nivel * espacios)}COPIAR_ARR ${e.arregloObjetivo} ${e.arregloFuente}`
+        case N3.TipoEnunciado.INIT_ARR:
+            return `${repetir(' ', nivel * espacios)}INIT_ARR ${e.nombreArregloObjetivo} ${e.arregloFuente}`
     }
-    return s
-}
-
-function procesar_enunciado (e: S3.Statement, nivel: number) : string {
-    switch (e.kind) {
-        case S3.StatementKinds.Plus:
-            return `${repetir(' ', nivel*espacios)}SUMAR`
-        case S3.StatementKinds.Minus:
-            return `${repetir(' ', nivel*espacios)}RESTAR`
-        case S3.StatementKinds.Times:
-            return `${repetir(' ', nivel*espacios)}MULTIPLICAR`
-        case S3.StatementKinds.Slash:
-            return `${repetir(' ', nivel*espacios)}DIVIDIR`
-        case S3.StatementKinds.Div:
-            return `${repetir(' ', nivel*espacios)}DIV`
-        case S3.StatementKinds.Mod:
-            return `${repetir(' ', nivel*espacios)}MODULO`
-        case S3.StatementKinds.Power:
-            return `${repetir(' ', nivel*espacios)}POTENCIA`
-        case S3.StatementKinds.Assign:
-            return `${repetir(' ', nivel*espacios)}ASIGNAR ${e.varname}`
-        case S3.StatementKinds.Get:
-            return `${repetir(' ', nivel*espacios)}INVOCAR ${e.varname}`
-        case S3.StatementKinds.AssignV:
-            return `${repetir(' ', nivel*espacios)}ASIGNARV ${e.varname} ${e.total_indexes}`
-        case S3.StatementKinds.GetV:
-            return `${repetir(' ', nivel*espacios)}INVOCARV ${e.varname} ${e.total_indexes}`
-        case S3.StatementKinds.Push:
-            return `${repetir(' ', nivel*espacios)}APILAR ${e.value}`
-        case S3.StatementKinds.Pop:
-            return `${repetir(' ', nivel*espacios)}DESAPILAR`
-        case S3.StatementKinds.Minor:
-            return `${repetir(' ', nivel*espacios)}MENOR`
-        case S3.StatementKinds.MinorEq:
-            return `${repetir(' ', nivel*espacios)}MENOR IGUAL`
-        case S3.StatementKinds.Different:
-            return `${repetir(' ', nivel*espacios)}DISTINTO`
-        case S3.StatementKinds.Equal:
-            return `${repetir(' ', nivel*espacios)}IGUAL`
-        case S3.StatementKinds.Major:
-            return `${repetir(' ', nivel*espacios)}MAYOR`
-        case S3.StatementKinds.MajorEq:
-            return `${repetir(' ', nivel*espacios)}MAYOR IGUAL`
-        case S3.StatementKinds.Not:
-            return `${repetir(' ', nivel*espacios)}NOT`
-        case S3.StatementKinds.And:
-            return `${repetir(' ', nivel*espacios)}AND`
-        case S3.StatementKinds.Or:
-            return `${repetir(' ', nivel*espacios)}O`
-        case S3.StatementKinds.If:
-            return procesar_si(e, nivel + 1)
-        case S3.StatementKinds.While:
-            return procesar_mientras(e, nivel + 1)
-        case S3.StatementKinds.Until:
-            // return procesar_hasta(e, nivel + 1)
-            return '"REPETIR HASTA QUE" NO IMPLEMENTADO'
-        case S3.StatementKinds.UserModuleCall:
-            return `${repetir(' ', nivel*espacios)}LLAMAR ${e.name} ${e.total_args}`
-        case S3.StatementKinds.ReadCall:
-            return `${repetir(' ', nivel*espacios)}LEER ${e.varname}`
-        case S3.StatementKinds.WriteCall:
-            return `${repetir(' ', nivel*espacios)}ESCRIBIR`
-        case S3.StatementKinds.Return:
-            return `${repetir(' ', nivel*espacios)}RETORNAR`
-        case S3.StatementKinds.Concat:
-            return `${repetir(' ', nivel*espacios)}CONCATENAR ${e.length}`
-        case S3.StatementKinds.AssignString:
-            return `${repetir(' ', nivel*espacios)}ASIGNAR CADENA ${e.varname} ${e.length} ${e.indexes}`
-        case S3.StatementKinds.Alias:
-            return `${repetir(' ', nivel*espacios)}ALIAS ${e.varname} ${e.var_indexes} [${e.dimensions}] ${e.local_alias}`
-        case S3.StatementKinds.CopyVec:
-            return `${repetir(' ', nivel*espacios)}CPYVEC ${e.target.name} [${e.target.dimensions}] ${e.target.indexes} ${e.source.name} [${e.source.dimensions}] ${e.source.indexes}`
-        case S3.StatementKinds.MakeFrame:
-            return `${repetir(' ', nivel*espacios)}MAKEFRAME ${e.name}`
-        case S3.StatementKinds.InitV:
-            return `${repetir(' ', nivel*espacios)}INITV ${e.source.name} ${e.source.indexes} [${e.source.dimensions}] ${e.target_name}`
-    }
-}
-
-function procesar_si(e: S3.If, nivel: number) : string {
-    let s = ''
-
-    s += `${repetir(' ', (nivel - 1)*espacios)}SI VERDADERO:\n`
-    /**
-     * Procesar rama verdadera
-     */
-    let c = e.true_branch_entry
-    while (c != null) {
-        s += procesar_enunciado(c, nivel + 1) + '\n'
-        c = c.exit_point
-    }
-
-    if (e.false_branch_entry) {
-        s += `${repetir(' ', (nivel - 1)*espacios)}SI FALSO:\n`
-        let c = e.false_branch_entry
-        while (c != null) {
-            s += procesar_enunciado(c, nivel + 1) + '\n'
-            c = c.exit_point
-        }   
-    }
-
-    s += `${repetir(' ', (nivel - 1)*espacios)}FIN SI`
-
-    return s
-}
-
-function procesar_mientras(e: S3.While, nivel: number) : string {
-    let s = ''
-
-    s += `${repetir(' ', (nivel - 1)*espacios)}MIENTRAS VERDADERO:\n`
-    /**
-     * Procesar rama verdadera
-     */
-    let c = e.entry_point
-    while (c != e) {
-        s += procesar_enunciado(c, nivel + 1) + '\n'
-        c = c.exit_point
-    }
-
-    s += `${repetir(' ', (nivel - 1)*espacios)}FIN MIENTRAS`
-
-    return s
 }
 
 function repetir (c: string, n: number) {

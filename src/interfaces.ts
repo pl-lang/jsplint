@@ -1192,6 +1192,16 @@ export namespace S3 {
 }
 
 export namespace N3 {
+  export interface ProgramaCompilado {
+    lineasPorModulo: lineasPorModulo,
+    programa: Programa
+  }
+
+  export interface lineasPorModulo {
+    principal: { enunciados: number[], subEnunciados: number[] }
+    [m: string]: { enunciados: number[], subEnunciados: number[] }
+  }
+
   export interface Programa {
     modulos: {
       principal: Enunciado[],
@@ -1227,6 +1237,7 @@ export namespace N3 {
     ASIGNAR,
     ASIGNAR_ARR,
     JIF,
+    JIT,
     JMP,
     LLAMAR,
     LEER,
@@ -1263,6 +1274,7 @@ export namespace N3 {
     | ASIGNAR
     | ASIGNAR_ARR
     | JIF
+    | JIT
     | JMP
     | LLAMAR
     | LEER
@@ -1328,6 +1340,7 @@ export namespace N3 {
   }
   export interface APILAR {
     tipo: TipoEnunciado.APILAR
+    valor: string | number | boolean
   }
 
   export interface APILAR_VAR {
@@ -1354,6 +1367,11 @@ export namespace N3 {
 
   export interface JIF {
     tipo: TipoEnunciado.JIF
+    numeroLinea: number
+  }
+
+  export interface JIT {
+    tipo: TipoEnunciado.JIT
     numeroLinea: number
   }
 
@@ -1393,7 +1411,7 @@ export namespace N3 {
     tipo: TipoEnunciado.ALIAS
     nombreAlias: string
     nombreVariable: string
-    indices: number[]
+    cantidadIndices: number
   }
 
   export interface COPIAR_ARR {
@@ -1408,8 +1426,9 @@ export namespace N3 {
   }
   
   export interface INIT_ARR {
-    tipo: TipoEnunciado.INIT_ARR
-    arreglo: S3.VectorData
+    tipo: TipoEnunciado.INIT_ARR,
+    nombreArregloObjetivo: string,
+    arregloFuente: S3.VectorData
   }
 }
 

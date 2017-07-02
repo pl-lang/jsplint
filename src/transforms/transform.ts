@@ -1,12 +1,16 @@
-import {Failure, Success, ParsedProgram, S1, S2, S3, Typed, CompileError, TransformedProgram} from '../interfaces'
+import {Failure, Success, ParsedProgram, S1, S2, N3, Typed, CompileError, TransformedProgram} from '../interfaces'
 
 import stage1 from '../transforms/Declarator'
+
 import stage2 from '../transforms/CallDecorator'
-import stage3 from '../transforms/Interpretable'
+
+import TransformadorEvaluable from '../transforms/TransformacionEvaluable'
+
 import typecheck from '../typechecker/TSChecker'
+
 import typer from '../transforms/TSTyper'
 
-export default function transform (p: ParsedProgram) : CompileError | Success<S3.Program> {
+export default function transform (p: ParsedProgram) : CompileError | Success<N3.Programa> {
     const s1 = stage1(p)
 
     if (s1.error) {
@@ -31,9 +35,11 @@ export default function transform (p: ParsedProgram) : CompileError | Success<S3
                     return {error: true, result: type_errors}
                 }
                 else {
-                    const s3 = stage3(typed_program.result as Typed.Program)
+                    const transformador = new TransformadorEvaluable()
 
-                    return {error:false, result: s3.result}
+                    const programa = transformador.transformar((typed_program.result as Typed.Program))
+
+                    return {error:false, result: programa.result.programa}
                 }
             }
         }
