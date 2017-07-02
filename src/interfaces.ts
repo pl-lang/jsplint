@@ -17,6 +17,14 @@ export interface Position {
 }
 
 export namespace Errors {
+  export type Compilation = Lexical
+  | Pattern
+  | RepeatedVar
+  | UndefinedModule
+  | UndefinedVariable
+  | TypeError
+  | Typed.Error
+
   export type TypeError = IncompatibleArgument
   | IncompatibleTypes
   | BadWriteArg
