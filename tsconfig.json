@@ -9,8 +9,7 @@
     },
     "files": [
         "index.ts",
-        "test/Test_8_TestableEvaluator.ts",
-        "test/Test_9_Interpreter.ts"
+        "test/Test_11_Evaluador.ts"
     ],
     "exclude": [
       "test/*"  
