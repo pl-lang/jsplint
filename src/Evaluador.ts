@@ -300,6 +300,8 @@ export default class Evaluador {
                 return this.APILAR_ARR(subEnunciado)
             case N3.TipoEnunciado.ASIGNAR:
                 return this.ASIGNAR(subEnunciado)
+            case N3.TipoEnunciado.ASIGNAR_ARR:
+                return this.ASIGNAR_ARR(subEnunciado)
             case N3.TipoEnunciado.JIF:
                 return this.JIF(subEnunciado)
             case N3.TipoEnunciado.JIT:
@@ -560,6 +562,39 @@ export default class Evaluador {
 
                 variable.valores[indice] = this.pilaValores.pop()
             }
+        }
+
+        return this.estadoActual
+    }
+
+    private ASIGNAR_ARR(subEnunciado: N3.ASIGNAR_ARR): EstadoEvaluador {
+        /**
+         * El type assert es correcto porque el verificador de tipos
+         * ya garantizó que la variable que se apilará es un escalar
+         * o una referencia a uno
+         */
+        const variableOReferencia = this.recuperarVariable(subEnunciado.nombreVariable) as (Referencia | Vector2)
+
+        if (variableOReferencia.tipo == "vector") {
+            const indices = this.recuperarIndices(subEnunciado.cantidadIndices).map(i => i - 1)
+
+            const indice = this.calcularIndice(indices, variableOReferencia.dimensiones)
+
+            variableOReferencia.valores[indice] = this.pilaValores.pop()
+        }
+        else {
+            // esto no es necesario, solo hace que el codigo sea mas legible (discutible...)
+            const referencia = variableOReferencia
+
+            const referenciaResuelta = this.resolverReferencia(referencia)
+
+            const variable = referenciaResuelta.variable as Vector2
+
+            const indices = [...referenciaResuelta.indicesPrevios, ...this.recuperarIndices(subEnunciado.cantidadIndices)].map(i => i - 1)
+
+            const indice = this.calcularIndice(indices, variable.dimensiones)
+
+            variable.valores[indice] = this.pilaValores.pop()
         }
 
         return this.estadoActual
