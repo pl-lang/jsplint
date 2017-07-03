@@ -1253,7 +1253,6 @@ export namespace N3 {
     ASIGNAR_CAD,
     CONCATENAR,
     REFERENCIA,
-    MKFRAME,
     COPIAR_ARR,
     INIT_ARR
   }
@@ -1290,7 +1289,6 @@ export namespace N3 {
     | ASIGNAR_CAD
     | CONCATENAR
     | REFERENCIA
-    | MKFRAME
     | COPIAR_ARR
     | INIT_ARR
   
@@ -1426,11 +1424,6 @@ export namespace N3 {
     tipo: TipoEnunciado.COPIAR_ARR
     arregloObjetivo: S3.VectorData
     arregloFuente: S3.VectorData
-  }
-
-  export interface MKFRAME {
-    tipo: TipoEnunciado.MKFRAME
-    nombreModulo: string
   }
   
   export interface INIT_ARR {

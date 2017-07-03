@@ -86,8 +86,7 @@ export default class Evaluador {
     // Pilas
     private pilaContadorInstruccion: number[]
     private pilaValores: Valor[]
-    private pilaModulos: N3.Enunciado[][]
-    private pilaNombresModulo: string[]
+    private pilaModulos: { subEnunciados: N3.Enunciado[], nombre: string }[]
     private pilaMemoria: Memoria[]
 
     constructor(programaCompilado: N3.ProgramaCompilado) {
@@ -115,7 +114,6 @@ export default class Evaluador {
         this.pilaContadorInstruccion = []
         this.pilaValores = []
         this.pilaModulos = []
-        this.pilaNombresModulo = []
     }
 
     private crearMemoriaModulo(nombreModulo: string): Memoria {
@@ -181,8 +179,7 @@ export default class Evaluador {
      * @param n numero de linea que buscar entre las lineas del modulo
      */
     private esLineaFuente(n: number): boolean {
-        const nombreModuloActual = this.pilaNombresModulo[this.pilaNombresModulo.length - 1]
-        const lineasFuenteModulo = this.lineasPorModulo[nombreModuloActual].subEnunciados
+        const lineasFuenteModulo = this.lineasPorModulo[this.moduloActual.nombre].subEnunciados
         return existe(n, lineasFuenteModulo)
     }
 
@@ -214,23 +211,25 @@ export default class Evaluador {
      * significa que el programa ha finalizado.
      */
     private incrementarContadorInstruccion() {
-        this.contadorInstruccion++
+        if (this.moduloLLamado == false) {
+            this.contadorInstruccion++
 
-        while (this.sePuedeEjecutar() && (this.contadorInstruccion >= this.moduloActual.subEnunciados.length)) {
-            if (this.pilaModulos.length > 0) {
+            while (this.sePuedeEjecutar() && (this.contadorInstruccion >= this.moduloActual.subEnunciados.length)) {
+                if (this.pilaModulos.length > 0) {
 
-                const subEnunciadosProximoModulo = this.pilaModulos.pop()
-                const nombreProximoModulo = this.pilaNombresModulo.pop()
+                    this.moduloActual = this.pilaModulos.pop()
 
-                this.moduloActual = { nombre: nombreProximoModulo, subEnunciados: subEnunciadosProximoModulo }
+                    this.contadorInstruccion = this.pilaContadorInstruccion.pop()
 
-                this.contadorInstruccion = this.pilaContadorInstruccion.pop()
-
-                this.contadorInstruccion++
+                    this.contadorInstruccion++
+                }
+                else {
+                    this.estadoActual = { id: Estado.PROGRAMA_FINALIZADO }
+                }
             }
-            else {
-                this.estadoActual = { id: Estado.PROGRAMA_FINALIZADO }
-            }
+        }
+        else {
+            this.moduloLLamado = false
         }
     }
 
@@ -609,7 +608,31 @@ export default class Evaluador {
     private LLAMAR(subEnunciado: N3.LLAMAR): EstadoEvaluador {
         const moduloLLamado = this.programaActual.modulos[subEnunciado.nombreModulo]
 
+        // apilar el modulo actual
+        this.pilaModulos.push(this.moduloActual)
 
+        // apilar el contador de instruccion
+        this.pilaContadorInstruccion.push(this.contadorInstruccion)
+
+        // apilar la memoria del modulo actual
+        this.pilaMemoria.push(this.memoriaModuloActual)
+
+        // crear espacio de memoria del modulo llamado
+        this.memoriaModuloActual = this.crearMemoriaModulo(subEnunciado.nombreModulo)
+
+        // poner contador instruccion en 0
+        this.contadorInstruccion = 0
+
+        // establecer moduloActual = moduloLLamado
+        this.moduloActual = {
+            subEnunciados: this.programaActual.modulos[subEnunciado.nombreModulo],
+            nombre: subEnunciado.nombreModulo
+        }
+
+        // poner bandera moduloLlamado en verdadero
+        this.moduloLLamado = true
+
+        // hacer que incrementar instruccion no ocurra si la bandera anterior esta en verdadero
 
         return this.estadoActual
     }
@@ -631,7 +654,7 @@ export default class Evaluador {
              * en ejecución el anterior. Si no hay más modulos que ejecutar
              * entonces terminó la ejecución del programa.
              */
-            if (this.contadorInstruccion >= moduloActual.length) {
+            if (this.contadorInstruccion >= moduloActual.subEnunciados.length) {
                 this.pilaModulos.pop()
                 if (this.pilaModulos.length > 0) {
                     this.contadorInstruccion = this.pilaContadorInstruccion[this.pilaContadorInstruccion.length - 1]
@@ -663,7 +686,7 @@ export default class Evaluador {
              * en ejecución el anterior. Si no hay más modulos que ejecutar
              * entonces terminó la ejecución del programa.
              */
-            if (this.contadorInstruccion >= moduloActual.length) {
+            if (this.contadorInstruccion >= moduloActual.subEnunciados.length) {
                 this.pilaModulos.pop()
                 if (this.pilaModulos.length > 0) {
                     this.contadorInstruccion = this.pilaContadorInstruccion[this.pilaContadorInstruccion.length - 1]
@@ -689,7 +712,7 @@ export default class Evaluador {
          * en ejecución el anterior. Si no hay más modulos que ejecutar
          * entonces terminó la ejecución del programa.
          */
-        if (this.contadorInstruccion >= moduloActual.length) {
+        if (this.contadorInstruccion >= moduloActual.subEnunciados.length) {
             this.pilaModulos.pop()
             if (this.pilaModulos.length > 0) {
                 this.contadorInstruccion = this.pilaContadorInstruccion[this.pilaContadorInstruccion.length - 1]

@@ -482,11 +482,9 @@ export default class TrasnformadorEvaluable {
                 }
             }
 
-            const crearFrame: N3.MKFRAME = { tipo: N3.TipoEnunciado.MKFRAME, nombreModulo: e.name }
-
             const llamado: N3.LLAMAR = { tipo: N3.TipoEnunciado.LLAMAR, nombreModulo: e.name }
 
-            return [...argumentos, crearFrame, llamado]
+            return [...argumentos, llamado]
         }
     }
 

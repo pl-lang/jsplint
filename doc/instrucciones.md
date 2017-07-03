@@ -53,6 +53,4 @@ REFERENCIA X, Y, Z: crea una referencia X a la variable Y invocada con Z indices
 
 COPIAR ARR X, Y: copiar (todos o parte de) los contenidos del vector Y al vector X. X e Y son del tipo VectorData.
 
-MKFRAME X: crear un nuevo espacio de memoria del modulo X en la pila. En el viven sus variables y/o referencias hacia variables en otros modulos.
-
 INIT ARR X, Y: inicializa el arreglo de nombre X de un modulo con un vector Y pasado como argumento en la llamada. Y es del tipo VectorData.

@@ -103,8 +103,6 @@ function procesar_enunciado (e: N3.Enunciado, nivel: number) : string {
             return `${repetir(' ', nivel * espacios)}CONCATENAR ${e.cantidadCaracteres}`
         case N3.TipoEnunciado.REFERENCIA:
             return `${repetir(' ', nivel * espacios)}REFERENCIA ${e.nombreReferencia} ${e.nombreVariable} ${e.cantidadIndices}`
-        case N3.TipoEnunciado.MKFRAME:
-            return `${repetir(' ', nivel * espacios)}MKFRAME ${e.nombreModulo}`
         case N3.TipoEnunciado.COPIAR_ARR:
             return `${repetir(' ', nivel * espacios)}COPIAR_ARR ${e.arregloObjetivo} ${e.arregloFuente}`
         case N3.TipoEnunciado.INIT_ARR:
