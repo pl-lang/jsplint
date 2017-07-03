@@ -2,51 +2,49 @@
 
 import { N3, Typed, Value, Memoria, Referencia, Escalar, Vector2 } from './interfaces'
 
-type EstadoEvaluador = EJECUTANDO_PROGRAMA | ESPERANDO_LECTURA | ESPERANDO_PASO | LECTURA_REALIZADA | ESCRIBIENDO_VALOR | PROGRAMA_FINALIZADO | ERROR_ENCONTRADO
+export type EstadoEvaluador = EJECUTANDO_PROGRAMA | ESPERANDO_LECTURA | ESPERANDO_PASO | LECTURA_REALIZADA | ESCRIBIENDO_VALOR | PROGRAMA_FINALIZADO | ERROR_ENCONTRADO
 
-type Valor = Value
-
-interface EstadoAbstracto {
+export interface EstadoAbstracto {
     id: Estado
     numeroLinea?: number // numero de linea que se ejecutará al reanudar la ejecución
 }
 
-interface EJECUTANDO_PROGRAMA extends EstadoAbstracto {
+export interface EJECUTANDO_PROGRAMA extends EstadoAbstracto {
     id: Estado.EJECUTANDO_PROGRAMA
 }
 
-interface ESPERANDO_LECTURA extends EstadoAbstracto {
+export interface ESPERANDO_LECTURA extends EstadoAbstracto {
     id: Estado.ESPERANDO_LECTURA
     nombreVariable: string
     tipoVariable: Typed.AtomicType | Typed.StringType
     numeroLinea: number
 }
 
-interface LECTURA_REALIZADA extends EstadoAbstracto {
+export interface LECTURA_REALIZADA extends EstadoAbstracto {
     id: Estado.LECTURA_REALIZADA
 }
 
-interface ESCRIBIENDO_VALOR extends EstadoAbstracto {
+export interface ESCRIBIENDO_VALOR extends EstadoAbstracto {
     id: Estado.ESCRIBIENDO_VALOR
     numeroLinea: number
-    valor: Valor
+    valor: Value
 }
 
-interface ESPERANDO_PASO extends EstadoAbstracto {
+export interface ESPERANDO_PASO extends EstadoAbstracto {
     id: Estado.ESPERANDO_PASO
     numeroLinea: number
 }
 
-interface PROGRAMA_FINALIZADO extends EstadoAbstracto {
+export interface PROGRAMA_FINALIZADO extends EstadoAbstracto {
     id: Estado.PROGRAMA_FINALIZADO
 }
 
-interface ERROR_ENCONTRADO extends EstadoAbstracto {
+export interface ERROR_ENCONTRADO extends EstadoAbstracto {
     id: Estado.ERROR_ENCONTRADO
     numeroLinea: number
 }
 
-enum Estado {
+export enum Estado {
     EJECUTANDO_PROGRAMA = 0,
     ESPERANDO_LECTURA, // luego de una llamada a leer
     LECTURA_REALIZADA, // luego de realizar una lectura
@@ -57,7 +55,7 @@ enum Estado {
 }
 
 
-export default class Evaluador {
+export class Evaluador {
 
     private programaActual: N3.Programa
 
@@ -85,7 +83,7 @@ export default class Evaluador {
     
     // Pilas
     private pilaContadorInstruccion: number[]
-    private pilaValores: Valor[]
+    private pilaValores: Value[]
     private pilaModulos: { subEnunciados: N3.Enunciado[], nombre: string }[]
     private pilaMemoria: Memoria[]
 
