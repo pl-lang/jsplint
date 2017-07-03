@@ -100,8 +100,6 @@ export class Evaluador {
 
         this.memoriaModuloActual = memoriaModuloPrincipal
 
-        this.estadoActual = { id: Estado.EJECUTANDO_PROGRAMA }
-
         this.lineaVisitada = true
 
         this.breakpointsRegistrados = []
@@ -112,6 +110,16 @@ export class Evaluador {
         this.pilaContadorInstruccion = []
         this.pilaValores = []
         this.pilaModulos = []
+
+        /**
+         * Determinar el estado inicial
+         */
+        if (this.moduloActual.subEnunciados.length == 0) {
+            this.estadoActual = { id: Estado.PROGRAMA_FINALIZADO }
+        }
+        else {
+            this.estadoActual = { id: Estado.EJECUTANDO_PROGRAMA }
+        }
     }
 
     private crearMemoriaModulo(nombreModulo: string): Memoria {
