@@ -78,6 +78,10 @@ export default class Evaluador {
     // Banderas
     private breakpointCumplido: boolean
     private lineaVisitada: boolean
+    /**
+     * Cuando esta en verdadero indica que no se debe incrementar el contador de instruccion
+     */
+    private moduloLLamado: boolean
     
     // Pilas
     private pilaContadorInstruccion: number[]
@@ -302,6 +306,8 @@ export default class Evaluador {
                 return this.ASIGNAR(subEnunciado)
             case N3.TipoEnunciado.ASIGNAR_ARR:
                 return this.ASIGNAR_ARR(subEnunciado)
+            case N3.TipoEnunciado.LLAMAR:
+                return this.LLAMAR(subEnunciado)
             case N3.TipoEnunciado.JIF:
                 return this.JIF(subEnunciado)
             case N3.TipoEnunciado.JIT:
@@ -596,6 +602,14 @@ export default class Evaluador {
 
             variable.valores[indice] = this.pilaValores.pop()
         }
+
+        return this.estadoActual
+    }
+
+    private LLAMAR(subEnunciado: N3.LLAMAR): EstadoEvaluador {
+        const moduloLLamado = this.programaActual.modulos[subEnunciado.nombreModulo]
+
+
 
         return this.estadoActual
     }
