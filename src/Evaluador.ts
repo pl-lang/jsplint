@@ -298,6 +298,8 @@ export default class Evaluador {
                 return this.APILAR_VAR(subEnunciado)
             case N3.TipoEnunciado.APILAR_ARR:
                 return this.APILAR_ARR(subEnunciado)
+            case N3.TipoEnunciado.ASIGNAR:
+                return this.ASIGNAR(subEnunciado)
             case N3.TipoEnunciado.JIF:
                 return this.JIF(subEnunciado)
             case N3.TipoEnunciado.JIT:
@@ -505,10 +507,59 @@ export default class Evaluador {
             const variable = referenciaResuelta.variable as Vector2
 
             const indices = [...referenciaResuelta.indicesPrevios, ...this.recuperarIndices(subEnunciado.cantidadIndices)].map(i => i - 1)
-            
+
             const indice = this.calcularIndice(indices, variable.dimensiones)
 
             this.pilaValores.push(variable.valores[indice])
+        }
+
+        return this.estadoActual
+    }
+
+    private ASIGNAR(subEnunciado: N3.ASIGNAR): EstadoEvaluador {
+        /**
+         * El type assert es correcto porque el verificador de tipos
+         * ya garantizó que la variable que se apilará es un escalar
+         * o una referencia a uno
+         */
+        const variableOReferencia = this.recuperarVariable(subEnunciado.nombreVariable) as (Referencia | Escalar)
+
+        if (variableOReferencia.tipo == "escalar") {
+            variableOReferencia.valor = this.pilaValores.pop()
+        }
+        else {
+            // esto no es necesario, solo hace que el codigo sea mas legible (discutible...)
+            const referencia = variableOReferencia
+
+            const referenciaResuelta = this.resolverReferencia(referencia)
+
+            if (referenciaResuelta.indicesPrevios.length == 0) {
+                /**
+                 * Si la referencia resuelta no trae indices, entonces era una referencia
+                 * hacia otro escalar.
+                 */
+                const variable = referenciaResuelta.variable as Escalar
+
+                variable.valor = this.pilaValores.pop()
+            }
+            else {
+                /**
+                 * En cambio, si la referencia resuelta trae indices, entonces era una
+                 * referencia hacia una celda de un arreglo.
+                 */
+                const variable = referenciaResuelta.variable as Vector2
+
+                /**
+                 * Sobre el "map(i => i - 1)":
+                 * Los indices de un arreglo de N elementos del lenguaje
+                 * que este Evaluador...evalua...van de 1 a N, mientras que los
+                 * de JS van de 0 a N-1. De ahi que es necesario restarle 1 a cada
+                 * indice para convertirlos en un indice de JS valido.
+                 */
+                const indice = this.calcularIndice(referenciaResuelta.indicesPrevios.map(i => i - 1), variable.dimensiones)
+
+                variable.valores[indice] = this.pilaValores.pop()
+            }
         }
 
         return this.estadoActual
