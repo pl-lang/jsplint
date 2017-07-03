@@ -63,6 +63,8 @@ export default class Evaluador {
 
     private moduloActual: { subEnunciados: N3.Enunciado[], nombre: string }
 
+    private memoriaGlobal: Memoria
+
     private memoriaModuloActual: Memoria
 
     private estadoActual: EstadoEvaluador
@@ -91,7 +93,11 @@ export default class Evaluador {
 
         this.moduloActual = { nombre: "principal", subEnunciados: this.programaActual.modulos.principal }
 
-        this.memoriaModuloActual = this.crearMemoriaModulo("principal")
+        const memoriaModuloPrincipal = this.crearMemoriaModulo("principal")
+
+        this.memoriaGlobal = memoriaModuloPrincipal
+
+        this.memoriaModuloActual = memoriaModuloPrincipal
 
         this.estadoActual = { id: Estado.EJECUTANDO_PROGRAMA }
 
@@ -288,6 +294,8 @@ export default class Evaluador {
                 return this.DIFERENTE()
             case N3.TipoEnunciado.APILAR:
                 return this.APILAR(subEnunciado)
+            case N3.TipoEnunciado.APILAR_VAR:
+                return  this.APILAR_VAR(subEnunciado)
             case N3.TipoEnunciado.JIF:
                 return this.JIF(subEnunciado)
             case N3.TipoEnunciado.JIT:
@@ -419,6 +427,58 @@ export default class Evaluador {
         return this.estadoActual
     }
 
+    private APILAR_VAR(subEnunciado: N3.APILAR_VAR): EstadoEvaluador {
+        /**
+         * El type assert es correcto porque el verificador de tipos
+         * ya garantizó que la variable que se apilará es un escalar
+         * o una referencia a uno
+         */
+        const variableOReferencia = this.recuperarVariable(subEnunciado.nombreVariable) as (Referencia | Escalar)
+
+        if (variableOReferencia.tipo == "escalar") {
+            // esto no es necesario, solo hace que el codigo sea mas legible (discutible...)
+            const escalar = variableOReferencia as Escalar
+
+            this.pilaValores.push(escalar.valor)
+        }
+        else {
+            // esto no es necesario, solo hace que el codigo sea mas legible (discutible...)
+            const referencia = variableOReferencia
+            
+            const referenciaResuelta = this.resolverReferencia(referencia)
+
+            if (referenciaResuelta.indicesPrevios.length == 0) {
+                /**
+                 * Si la referencia resuelta no trae indices, entonces era una referencia
+                 * hacia otro escalar.
+                 */
+                const variable = referenciaResuelta.variable as Escalar
+
+                this.pilaValores.push(variable.valor)
+            }
+            else {
+                /**
+                 * En cambio, si la referencia resuelta trae indices, entonces era una
+                 * referencia hacia una celda de un arreglo.
+                 */
+                const variable = referenciaResuelta.variable as Vector2
+
+                /**
+                 * Sobre el "map(i => i - 1)":
+                 * Los indices de un arreglo de N elementos del lenguaje
+                 * que este Evaluador...evalua...van de 1 a N, mientras que los
+                 * de JS van de 0 a N-1. De ahi que es necesario restarle 1 a cada
+                 * indice para convertirlos en un indice de JS valido.
+                 */
+                const indice = this.calcularIndice(referenciaResuelta.indicesPrevios.map(i => i - 1), variable.dimensiones)
+
+                this.pilaValores.push(variable.valores[indice])
+            }
+        }
+
+        return this.estadoActual
+    }
+
     private JIF(subEnunciado: N3.JIF): EstadoEvaluador {
         const condicion = this.pilaValores.pop() as boolean
 
@@ -506,6 +566,61 @@ export default class Evaluador {
         }
 
         return this.estadoActual
+    }
+
+    private recuperarVariable(nombreVariable: string): Escalar | Vector2 | Referencia {
+        // buscar en locales
+        if (nombreVariable in this.memoriaModuloActual) {
+            return this.memoriaModuloActual[nombreVariable]
+        }
+        // buscar en globales
+        else {
+            return this.memoriaGlobal[nombreVariable]
+        }
+    }
+
+    private resolverReferencia(referencia: Referencia): { variable: Escalar | Vector2, indicesPrevios: number[] } {
+        let nombreVariableBuscada = referencia.nombreVariable
+
+        let variable: Escalar | Vector2
+
+        let indicesPrevios: number[] = []
+        
+        let variableEncontrada = false
+
+        for (let i = this.pilaMemoria.length - 1; i >= 0 && variableEncontrada == false; i--) {
+            const memoria = this.pilaMemoria[i]
+            const variableOReferencia = memoria[nombreVariableBuscada]
+            if (variableOReferencia.tipo == "referencia") {
+                indicesPrevios = [...indicesPrevios, ...variableOReferencia.indices]
+                nombreVariableBuscada = variableOReferencia.nombreVariable
+            }
+            else {
+                variable = variableOReferencia
+                variableEncontrada = true
+            }
+        }
+
+        return { variable, indicesPrevios }
+    }
+
+    private calcularIndice(indices: number[], dimensiones: number[]) {
+        let indice = 0
+        let cantidadIndices = indices.length
+        let i = 0
+
+        while (i < cantidadIndices) {
+            let term = 1
+            let j = i + 1
+            while (j < cantidadIndices) {
+                term *= dimensiones[j]
+                j++
+            }
+            term *= indices[i]
+            indice += term
+            i++
+        }
+        return indice
     }
 }
 
