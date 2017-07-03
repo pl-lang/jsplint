@@ -295,7 +295,9 @@ export default class Evaluador {
             case N3.TipoEnunciado.APILAR:
                 return this.APILAR(subEnunciado)
             case N3.TipoEnunciado.APILAR_VAR:
-                return  this.APILAR_VAR(subEnunciado)
+                return this.APILAR_VAR(subEnunciado)
+            case N3.TipoEnunciado.APILAR_ARR:
+                return this.APILAR_ARR(subEnunciado)
             case N3.TipoEnunciado.JIF:
                 return this.JIF(subEnunciado)
             case N3.TipoEnunciado.JIT:
@@ -479,6 +481,39 @@ export default class Evaluador {
         return this.estadoActual
     }
 
+    private APILAR_ARR(subEnunciado: N3.APILAR_ARR): EstadoEvaluador {
+        /**
+         * El type assert es correcto porque el verificador de tipos
+         * ya garantizó que la variable que se apilará es un vector
+         * o una referencia a uno.
+         */
+        const variableOReferencia = this.recuperarVariable(subEnunciado.nombreVariable) as (Referencia | Vector2)
+
+        if (variableOReferencia.tipo == "vector") {
+            const indices = this.recuperarIndices(subEnunciado.cantidadIndices).map(i => i - 1)
+
+            const indice = this.calcularIndice(indices, variableOReferencia.dimensiones)
+
+            this.pilaValores.push(variableOReferencia.valores[indice])
+        }
+        else {
+            // esto no es necesario, solo hace que el codigo sea mas legible (discutible...)
+            const referencia = variableOReferencia
+
+            const referenciaResuelta = this.resolverReferencia(referencia)
+
+            const variable = referenciaResuelta.variable as Vector2
+
+            const indices = [...referenciaResuelta.indicesPrevios, ...this.recuperarIndices(subEnunciado.cantidadIndices)].map(i => i - 1)
+            
+            const indice = this.calcularIndice(indices, variable.dimensiones)
+
+            this.pilaValores.push(variable.valores[indice])
+        }
+
+        return this.estadoActual
+    }
+
     private JIF(subEnunciado: N3.JIF): EstadoEvaluador {
         const condicion = this.pilaValores.pop() as boolean
 
@@ -621,6 +656,16 @@ export default class Evaluador {
             i++
         }
         return indice
+    }
+
+    private recuperarIndices(cantidadIndices: number): number[] {
+        let indices: number[] = []
+
+        for (let i = 0; i < cantidadIndices; i++) {
+            indices.unshift(this.pilaValores.pop() as number)
+        }
+
+        return indices
     }
 }
 
