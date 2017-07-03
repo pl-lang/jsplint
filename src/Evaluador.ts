@@ -39,7 +39,6 @@ interface ESPERANDO_PASO extends EstadoAbstracto {
 
 interface PROGRAMA_FINALIZADO extends EstadoAbstracto {
     id: Estado.PROGRAMA_FINALIZADO
-    numeroLinea: number
 }
 
 interface ERROR_ENCONTRADO extends EstadoAbstracto {
@@ -62,27 +61,46 @@ export default class Evaluador {
 
     private programaActual: N3.Programa
 
+    private moduloActual: { subEnunciados: N3.Enunciado[], nombre: string }
+
     private estadoActual: EstadoEvaluador
 
     private contadorInstruccion: number // indica cual es la proxima instruccion que se ejecutara
-    private pilaContadorInstruccion: number[]
-    private pilaNombreModulo: string[]
+
     private breakpointsRegistrados: number[]
-    private breakpointCumplido: boolean
-    private lineaVisitada: boolean
+
     private lineasPorModulo: N3.lineasPorModulo
 
+    // Banderas
+    private breakpointCumplido: boolean
+    private lineaVisitada: boolean
+    
+    // Pilas
+    private pilaContadorInstruccion: number[]
     private pilaValores: Valor[]
+    private pilaModulos: N3.Enunciado[][]
+    private pilaNombresModulo: string[]
 
     constructor(programaCompilado: N3.ProgramaCompilado) {
         this.programaActual = programaCompilado.programa
+
         this.lineasPorModulo = programaCompilado.lineasPorModulo
+
+        this.moduloActual = { nombre: "principal", subEnunciados: this.programaActual.modulos.principal }
+
+        this.estadoActual = { id: Estado.EJECUTANDO_PROGRAMA }
+
         this.lineaVisitada = true
-        this.contadorInstruccion = 0
-        this.pilaContadorInstruccion = []
-        this.pilaNombreModulo = []
+
         this.breakpointsRegistrados = []
         this.breakpointCumplido = false
+
+        this.contadorInstruccion = 0
+
+        this.pilaContadorInstruccion = []
+        this.pilaValores = []
+        this.pilaModulos = []
+        this.pilaNombresModulo = []
     }
 
     ejecutarPrograma(): EstadoEvaluador {
@@ -99,6 +117,9 @@ export default class Evaluador {
     ejecutarEnunciadoSiguiente(): EstadoEvaluador {
         if (this.sePuedeEjecutar()) {
             while (!this.esLineaFuente(this.contadorInstruccion) || this.lineaVisitada) {
+                if (this.lineaVisitada) {
+                    this.lineaVisitada = false
+                }
                 this.estadoActual = this.ejecutarEnunciadoSiguiente()
             }
             this.lineaVisitada = true
@@ -111,8 +132,8 @@ export default class Evaluador {
      * @param n numero de linea que buscar entre las lineas del modulo
      */
     private esLineaFuente(n: number): boolean {
-        const moduloActual = this.pilaNombreModulo[this.pilaNombreModulo.length - 1]
-        const lineasFuenteModulo = this.lineasPorModulo[moduloActual].subEnunciados
+        const nombreModuloActual = this.pilaNombresModulo[this.pilaNombresModulo.length - 1]
+        const lineasFuenteModulo = this.lineasPorModulo[nombreModuloActual].subEnunciados
         return existe(n, lineasFuenteModulo)
     }
 
@@ -124,14 +145,44 @@ export default class Evaluador {
                 this.estadoActual = { id: Estado.ESPERANDO_PASO, numeroLinea: this.contadorInstruccion }
             }
             else {
-                const enunciado = this.programaActual.modulos[this.pilaNombreModulo[0]][this.contadorInstruccion]
-                this.contadorInstruccion++
                 this.breakpointCumplido = false
-                // const retorno = this.evaluarSubEnunciado(enunciado)
-                // return retorno
+
+                const nuevoEstado = this.evaluarSubEnunciado(this.moduloActual.subEnunciados[this.contadorInstruccion])
+
+                this.incrementarContadorInstruccion()
+
+                return nuevoEstado
             }
         }
         return this.estadoActual
+    }
+
+    /**
+     * Este metodo se encarga de incrementar el contador de instruccion.
+     * Si luego del incremento el contador apunta a un sub-enunciado
+     * que no existe en el modulo que esta en ejecucion, desapila dicho modulo
+     * y pone en ejecucion al siguiente. Si no hay modulos que desapilar, entonces
+     * significa que el programa ha finalizado.
+     */
+    private incrementarContadorInstruccion() {
+        this.contadorInstruccion++
+
+        while (this.sePuedeEjecutar() && (this.contadorInstruccion >= this.moduloActual.subEnunciados.length)) {
+            if (this.pilaModulos.length > 0) {
+
+                const subEnunciadosProximoModulo = this.pilaModulos.pop()
+                const nombreProximoModulo = this.pilaNombresModulo.pop()
+
+                this.moduloActual = { nombre: nombreProximoModulo, subEnunciados: subEnunciadosProximoModulo }
+
+                this.contadorInstruccion = this.pilaContadorInstruccion.pop()
+
+                this.contadorInstruccion++
+            }
+            else {
+                this.estadoActual = { id: Estado.PROGRAMA_FINALIZADO }
+            }
+        }
     }
 
     private sePuedeEjecutar(): boolean {
@@ -198,6 +249,12 @@ export default class Evaluador {
                 return this.DIFERENTE()
             case N3.TipoEnunciado.APILAR:
                 return this.APILAR(subEnunciado)
+            case N3.TipoEnunciado.JIF:
+                return this.JIF(subEnunciado)
+            case N3.TipoEnunciado.JIT:
+                return this.JIT(subEnunciado)
+            case N3.TipoEnunciado.JMP:
+                return this.JMP(subEnunciado)
         }
     }
 
@@ -320,6 +377,95 @@ export default class Evaluador {
 
     private APILAR(subEnunciado: N3.APILAR): EstadoEvaluador {
         this.pilaValores.push(subEnunciado.valor)
+        return this.estadoActual
+    }
+
+    private JIF(subEnunciado: N3.JIF): EstadoEvaluador {
+        const condicion = this.pilaValores.pop() as boolean
+
+        /**
+         * Saltar solo si la condicion evaluó a "falso"
+         */
+        if (condicion == false) {
+            this.contadorInstruccion = subEnunciado.numeroLinea
+
+            const moduloActual = this.pilaModulos[this.pilaModulos.length - 1]
+
+            /**
+             * Si el contador de instruccion apunta a una linea que no existe
+             * entonces la ejecución de este modulo terminó y hay que poner
+             * en ejecución el anterior. Si no hay más modulos que ejecutar
+             * entonces terminó la ejecución del programa.
+             */
+            if (this.contadorInstruccion >= moduloActual.length) {
+                this.pilaModulos.pop()
+                if (this.pilaModulos.length > 0) {
+                    this.contadorInstruccion = this.pilaContadorInstruccion[this.pilaContadorInstruccion.length - 1]
+                    this.pilaContadorInstruccion.pop()
+                }
+                else {
+                    this.estadoActual = { id: Estado.PROGRAMA_FINALIZADO }
+                }
+            }
+        }
+
+        return this.estadoActual
+    }
+    
+    private JIT(subEnunciado: N3.JIT): EstadoEvaluador {
+        const condicion = this.pilaValores.pop() as boolean
+
+        /**
+         * Saltar solo si la condicion evaluó a "verdadero"
+         */
+        if (condicion == true) {
+            this.contadorInstruccion = subEnunciado.numeroLinea
+
+            const moduloActual = this.pilaModulos[this.pilaModulos.length - 1]
+
+            /**
+             * Si el contador de instruccion apunta a una linea que no existe
+             * entonces la ejecución de este modulo terminó y hay que poner
+             * en ejecución el anterior. Si no hay más modulos que ejecutar
+             * entonces terminó la ejecución del programa.
+             */
+            if (this.contadorInstruccion >= moduloActual.length) {
+                this.pilaModulos.pop()
+                if (this.pilaModulos.length > 0) {
+                    this.contadorInstruccion = this.pilaContadorInstruccion[this.pilaContadorInstruccion.length - 1]
+                    this.pilaContadorInstruccion.pop()
+                }
+                else {
+                    this.estadoActual = { id: Estado.PROGRAMA_FINALIZADO }
+                }
+            }
+        }
+
+        return this.estadoActual
+    }
+
+    private JMP(subEnunciado: N3.JMP): EstadoEvaluador {
+        this.contadorInstruccion = subEnunciado.numeroLinea
+
+        const moduloActual = this.pilaModulos[this.pilaModulos.length - 1]
+
+        /**
+         * Si el contador de instruccion apunta a una linea que no existe
+         * entonces la ejecución de este modulo terminó y hay que poner
+         * en ejecución el anterior. Si no hay más modulos que ejecutar
+         * entonces terminó la ejecución del programa.
+         */
+        if (this.contadorInstruccion >= moduloActual.length) {
+            this.pilaModulos.pop()
+            if (this.pilaModulos.length > 0) {
+                this.contadorInstruccion = this.pilaContadorInstruccion[this.pilaContadorInstruccion.length - 1]
+                this.pilaContadorInstruccion.pop()
+            }
+            else {
+                this.estadoActual = { id: Estado.PROGRAMA_FINALIZADO }
+            }
+        }
+
         return this.estadoActual
     }
 }
