@@ -46,9 +46,6 @@ export default class TrasnformadorEvaluable {
             }
         }
 
-        console.log(this.lineasPorModulo.principal.enunciados)
-        console.log(this.lineasPorModulo.principal.subEnunciados)
-
         return { error: false, result: { programa: resultadoFinal, lineasPorModulo: this.lineasPorModulo } }
     }
 
