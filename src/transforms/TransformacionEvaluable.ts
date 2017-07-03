@@ -30,7 +30,7 @@ export default class TrasnformadorEvaluable {
                 principal: []
             },
             variablesLocales: {
-                main: {}
+                principal: {}
             }
         }
 
@@ -440,9 +440,9 @@ export default class TrasnformadorEvaluable {
 
                     const apilarIndices = invocacion.indexes.map(this.transformarExpresion).reduce(concatenarVectores)
 
-                    const hacerAlias: N3.ALIAS = {
-                        tipo: N3.TipoEnunciado.ALIAS,
-                        nombreAlias: param.name,
+                    const hacerAlias: N3.REFERENCIA = {
+                        tipo: N3.TipoEnunciado.REFERENCIA,
+                        nombreReferencia: param.name,
                         nombreVariable: invocacion.name,
                         cantidadIndices: invocacion.indexes.length
                     }

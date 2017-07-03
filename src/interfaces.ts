@@ -1216,7 +1216,7 @@ export namespace N3 {
       [m: string]: Enunciado[]
     },
     variablesLocales: {
-      main: S1.VariableDict,
+      principal: S1.VariableDict,
       [m: string]: S1.VariableDict
     }
   }
@@ -1252,7 +1252,7 @@ export namespace N3 {
     ESCRIBIR,
     ASIGNAR_CAD,
     CONCATENAR,
-    ALIAS,
+    REFERENCIA,
     MKFRAME,
     COPIAR_ARR,
     INIT_ARR
@@ -1289,7 +1289,7 @@ export namespace N3 {
     | ESCRIBIR
     | ASIGNAR_CAD
     | CONCATENAR
-    | ALIAS
+    | REFERENCIA
     | MKFRAME
     | COPIAR_ARR
     | INIT_ARR
@@ -1415,9 +1415,9 @@ export namespace N3 {
     cantidadIndices: number
   }
 
-  export interface ALIAS {
-    tipo: TipoEnunciado.ALIAS
-    nombreAlias: string
+  export interface REFERENCIA {
+    tipo: TipoEnunciado.REFERENCIA
+    nombreReferencia: string
     nombreVariable: string
     cantidadIndices: number
   }
@@ -1683,6 +1683,39 @@ export type SuccessfulReturn = Success<Read> | Success<Write> | Success<NullActi
 export interface StatementInfo {
   pos: Position
   is_user_statement: boolean
+}
+
+export interface Memoria {
+  [v: string]: Referencia | Contenedor
+}
+
+export interface Referencia {
+  tipo: "referencia"
+  /**
+   * Nombre de la variable referenciada
+   */
+  nombreVariable: string
+
+  /**
+   * Indices utilizados al crear esta referencia
+   */
+  indices: number[]
+}
+
+export type Contenedor = Escalar | Vector2
+
+export interface Escalar {
+  tipo: "escalar"
+  valor: Value
+  inicialiazado: boolean
+}
+
+// Luego de borrar "Vector" (la interfaz vieja), quitar el 2 de este nombre
+export interface Vector2 {
+  tipo: "vector"
+  valores: Value[]
+  dimensiones: number[]
+  inicialiazado: boolean
 }
 
 export interface Alias {

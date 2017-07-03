@@ -1,6 +1,6 @@
 // Clase que se encarga de ejecutar un programa.
 
-import { N3, Typed, Value } from './interfaces'
+import { N3, Typed, Value, Memoria, Referencia, Escalar, Vector2 } from './interfaces'
 
 type EstadoEvaluador = EJECUTANDO_PROGRAMA | ESPERANDO_LECTURA | ESPERANDO_PASO | LECTURA_REALIZADA | ESCRIBIENDO_VALOR | PROGRAMA_FINALIZADO | ERROR_ENCONTRADO
 
@@ -63,6 +63,8 @@ export default class Evaluador {
 
     private moduloActual: { subEnunciados: N3.Enunciado[], nombre: string }
 
+    private memoriaModuloActual: Memoria
+
     private estadoActual: EstadoEvaluador
 
     private contadorInstruccion: number // indica cual es la proxima instruccion que se ejecutara
@@ -80,6 +82,7 @@ export default class Evaluador {
     private pilaValores: Valor[]
     private pilaModulos: N3.Enunciado[][]
     private pilaNombresModulo: string[]
+    private pilaMemoria: Memoria[]
 
     constructor(programaCompilado: N3.ProgramaCompilado) {
         this.programaActual = programaCompilado.programa
@@ -87,6 +90,8 @@ export default class Evaluador {
         this.lineasPorModulo = programaCompilado.lineasPorModulo
 
         this.moduloActual = { nombre: "principal", subEnunciados: this.programaActual.modulos.principal }
+
+        this.memoriaModuloActual = this.crearMemoriaModulo("principal")
 
         this.estadoActual = { id: Estado.EJECUTANDO_PROGRAMA }
 
@@ -101,6 +106,40 @@ export default class Evaluador {
         this.pilaValores = []
         this.pilaModulos = []
         this.pilaNombresModulo = []
+    }
+
+    private crearMemoriaModulo(nombreModulo: string): Memoria {
+        const plantillaMemoria = this.programaActual.variablesLocales[nombreModulo]
+
+        const memoriaModulo: Memoria = {}
+        
+        for (let nombrePlantilla in plantillaMemoria) {
+
+            const plantilla = plantillaMemoria[nombrePlantilla]
+
+            if (plantilla.by_ref) {
+                const referencia: Referencia = { tipo: "referencia", nombreVariable: "", indices: [] }
+                memoriaModulo[nombrePlantilla] = referencia
+            }
+            else {
+                if (plantilla.type == "scalar") {
+                    const escalar: Escalar = { tipo: "escalar", inicialiazado: false, valor: null }
+                    memoriaModulo[nombrePlantilla] = escalar
+                }
+                else {
+                    /**
+                     * Crear un vector con suficientes celdas
+                     */
+                    const valores = new Array<Value>(plantilla.dimensions.reduce((a, b) => a * b))
+
+                    const vector: Vector2 = { tipo: "vector", inicialiazado: false, valores,  dimensiones: plantilla.dimensions }
+
+                    memoriaModulo[nombrePlantilla] = vector
+                }
+            }
+        }
+
+        return memoriaModulo
     }
 
     ejecutarPrograma(): EstadoEvaluador {
