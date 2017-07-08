@@ -225,25 +225,14 @@ export class Evaluador {
     }
 
     private aLineaFuente(numeroInstruccion: number): number {
-        let  mouduloEncontrado = false
-        let i = 0, modulos = Object.keys(this.lineasPorModulo)
-        while (mouduloEncontrado! && i < modulos.length) {
-            const modulo = this.lineasPorModulo[modulos[i]]
-            if (existe(numeroInstruccion, modulo.subEnunciados)) {
-                mouduloEncontrado = true
-            }
-            else {
-                i++
+        for (let nombreModulo in this.lineasPorModulo) {
+            const modulo = this.lineasPorModulo[nombreModulo]
+            const indice = busquedaBinaria(numeroInstruccion, modulo.subEnunciados)
+            if (indice != -1) {
+                return this.lineasPorModulo[nombreModulo].enunciados[indice]
             }
         }
-        if (mouduloEncontrado == false) {
-            return -1
-        }
-        else {
-            const modulo = this.lineasPorModulo[modulos[i]]
-            const lineaFuente = modulo.enunciados[encontrarMayor(numeroInstruccion, modulo.enunciados) - 1]
-            return lineaFuente
-        }
+        return -1
     }
 
     /**
