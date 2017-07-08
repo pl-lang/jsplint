@@ -216,10 +216,33 @@ export class Evaluador {
         }
 
         if (this.estadoActual != Estado.ERROR_ENCONTRADO) {
-            return { error: false, result: this.contadorInstruccion }
+            const numeroLineaFuente = this.aLineaFuente(this.contadorInstruccion)
+            return { error: false, result: numeroLineaFuente }
         }
         else {
             return { error: true, result: null }
+        }
+    }
+
+    private aLineaFuente(numeroInstruccion: number): number {
+        let  mouduloEncontrado = false
+        let i = 0, modulos = Object.keys(this.lineasPorModulo)
+        while (mouduloEncontrado! && i < modulos.length) {
+            const modulo = this.lineasPorModulo[modulos[i]]
+            if (existe(numeroInstruccion, modulo.subEnunciados)) {
+                mouduloEncontrado = true
+            }
+            else {
+                i++
+            }
+        }
+        if (mouduloEncontrado == false) {
+            return -1
+        }
+        else {
+            const modulo = this.lineasPorModulo[modulos[i]]
+            const lineaFuente = modulo.enunciados[encontrarMayor(numeroInstruccion, modulo.enunciados) - 1]
+            return lineaFuente
         }
     }
 
@@ -886,7 +909,7 @@ function encontrarMayor<A>(objetoBuscado: A, arreglo: A[]): number {
     const l = arreglo.length
     let finalizado = false
     while (i < l && !finalizado) {
-        if (objetoBuscado < arreglo[i]) {
+        if (objetoBuscado <= arreglo[i]) {
             finalizado = true
         }
         else {
