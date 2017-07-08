@@ -156,7 +156,7 @@ export class Evaluador {
         const variableOReferencia = this.recuperarVariable(nombreVariable) as (Referencia | Vector2)
 
         if (variableOReferencia.tipo == "vector") {
-            const indice = this.calcularIndice(indices, variableOReferencia.dimensiones)
+            const indice = this.calcularIndice(indices.map(i => i - 1), variableOReferencia.dimensiones)
 
             return variableOReferencia.valores[indice] == valor
         }
