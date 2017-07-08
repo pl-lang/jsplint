@@ -1,59 +1,15 @@
 // Clase que se encarga de ejecutar un programa.
 
-import { N3, Typed, Value, Memoria, Referencia, Escalar, Vector2 } from './interfaces'
-
-export type EstadoEvaluador = EJECUTANDO_PROGRAMA | ESPERANDO_LECTURA | ESPERANDO_PASO | LECTURA_REALIZADA | ESCRIBIENDO_VALOR | PROGRAMA_FINALIZADO | ERROR_ENCONTRADO
-
-export interface EstadoAbstracto {
-    id: Estado
-    numeroLinea?: number // numero de linea que se ejecutará al reanudar la ejecución
-}
-
-export interface EJECUTANDO_PROGRAMA extends EstadoAbstracto {
-    id: Estado.EJECUTANDO_PROGRAMA
-}
-
-export interface ESPERANDO_LECTURA extends EstadoAbstracto {
-    id: Estado.ESPERANDO_LECTURA
-    nombreVariable: string
-    tipoVariable: Typed.AtomicType | Typed.StringType
-    numeroLinea: number
-}
-
-export interface LECTURA_REALIZADA extends EstadoAbstracto {
-    id: Estado.LECTURA_REALIZADA
-}
-
-export interface ESCRIBIENDO_VALOR extends EstadoAbstracto {
-    id: Estado.ESCRIBIENDO_VALOR
-    numeroLinea: number
-    valor: Value
-}
-
-export interface ESPERANDO_PASO extends EstadoAbstracto {
-    id: Estado.ESPERANDO_PASO
-    numeroLinea: number
-}
-
-export interface PROGRAMA_FINALIZADO extends EstadoAbstracto {
-    id: Estado.PROGRAMA_FINALIZADO
-}
-
-export interface ERROR_ENCONTRADO extends EstadoAbstracto {
-    id: Estado.ERROR_ENCONTRADO
-    numeroLinea: number
-}
+import { N3, Typed, Value, Memoria, Referencia, Escalar, Vector2, Failure, Success } from './interfaces'
 
 export enum Estado {
     EJECUTANDO_PROGRAMA = 0,
     ESPERANDO_LECTURA, // luego de una llamada a leer
-    LECTURA_REALIZADA, // luego de realizar una lectura
-    ESCRIBIENDO_VALOR, // al hacer una llamada a "escribir"
+    ESPERANDO_ESCRITURA, // al hacer una llamada a "escribir"
     ESPERANDO_PASO, // luego de haber ejecutado un paso o sub-paso
     PROGRAMA_FINALIZADO,
     ERROR_ENCONTRADO
 }
-
 
 export class Evaluador {
 
@@ -65,7 +21,7 @@ export class Evaluador {
 
     private memoriaModuloActual: Memoria
 
-    private estadoActual: EstadoEvaluador
+    private estadoActual: Estado
 
     private contadorInstruccion: number // indica cual es la proxima instruccion que se ejecutara
 
@@ -87,6 +43,10 @@ export class Evaluador {
     private pilaModulos: { subEnunciados: N3.Enunciado[], nombre: string }[]
     private pilaMemoria: Memoria[]
 
+    // E/S
+    private lecturaPendiente: { nombreVariable: string, tipoVarible: Typed.AtomicType | Typed.StringType }
+    private escrituraPendiente: Value
+
     constructor(programaCompilado: N3.ProgramaCompilado) {
         this.programaActual = programaCompilado.programa
 
@@ -101,6 +61,7 @@ export class Evaluador {
         this.memoriaModuloActual = memoriaModuloPrincipal
 
         this.lineaVisitada = true
+        this.moduloLLamado = false
 
         this.breakpointsRegistrados = []
         this.breakpointCumplido = false
@@ -111,14 +72,107 @@ export class Evaluador {
         this.pilaValores = []
         this.pilaModulos = []
 
+        this.lecturaPendiente = null
+        this.escrituraPendiente = null
+
         /**
          * Determinar el estado inicial
          */
         if (this.moduloActual.subEnunciados.length == 0) {
-            this.estadoActual = { id: Estado.PROGRAMA_FINALIZADO }
+            this.estadoActual = Estado.PROGRAMA_FINALIZADO
         }
         else {
-            this.estadoActual = { id: Estado.EJECUTANDO_PROGRAMA }
+            this.estadoActual = Estado.EJECUTANDO_PROGRAMA
+        }
+    }
+
+    /**
+     * Dice si el valor de una variable escalar en ambito es igual al valor provisto
+     * @param nombreVariable nombre de la variable cuyo valor se quiere consultar
+     * @param valor valor que deberia tener dicha variable
+     */
+    consultarVariableEscalar(nombreVariable: string, valor: Value): boolean {
+        /**
+         * El type assert es correcto porque el verificador de tipos
+         * ya garantizó que la variable que se apilará es un escalar
+         * o una referencia a uno
+         */
+        const variableOReferencia = this.recuperarVariable(nombreVariable) as (Referencia | Escalar)
+
+        if (variableOReferencia.tipo == "escalar") {
+            // esto no es necesario, solo hace que el codigo sea mas legible (discutible...)
+            const escalar = variableOReferencia as Escalar
+
+            return escalar.valor == valor
+        }
+        else {
+            // esto no es necesario, solo hace que el codigo sea mas legible (discutible...)
+            const referencia = variableOReferencia
+
+            const referenciaResuelta = this.resolverReferencia(referencia)
+
+            if (referenciaResuelta.indicesPrevios.length == 0) {
+                /**
+                 * Si la referencia resuelta no trae indices, entonces era una referencia
+                 * hacia otro escalar.
+                 */
+                const variable = referenciaResuelta.variable as Escalar
+
+                return variable.valor == valor
+            }
+            else {
+                /**
+                 * En cambio, si la referencia resuelta trae indices, entonces era una
+                 * referencia hacia una celda de un arreglo.
+                 */
+                const variable = referenciaResuelta.variable as Vector2
+
+                /**
+                 * Sobre el "map(i => i - 1)":
+                 * Los indices de un arreglo de N elementos del lenguaje
+                 * que este Evaluador...evalua...van de 1 a N, mientras que los
+                 * de JS van de 0 a N-1. De ahi que es necesario restarle 1 a cada
+                 * indice para convertirlos en un indice de JS valido.
+                 */
+                const indice = this.calcularIndice(referenciaResuelta.indicesPrevios.map(i => i - 1), variable.dimensiones)
+
+                return variable.valores[indice] == valor
+            }
+        }
+    }
+
+    /**
+     * Dice si el valor de una celda de una variable vectorial en ambito es igual al valor provisto
+     * @param nombreVariable nombre de la variable vectora que contiene la celda cuyo valor se quiere consultar
+     * @param indices indices correspondientes a la celda cuyo valor se quiere consultar
+     * @param valor valor que deberia tener dicha celda
+     */
+    consultarVariableVectorial(nombreVariable: string, indices: number[], valor: Value): boolean {
+        /**
+         * El type assert es correcto porque el verificador de tipos
+         * ya garantizó que la variable que se apilará es un vector
+         * o una referencia a uno.
+         */
+        const variableOReferencia = this.recuperarVariable(nombreVariable) as (Referencia | Vector2)
+
+        if (variableOReferencia.tipo == "vector") {
+            const indice = this.calcularIndice(indices, variableOReferencia.dimensiones)
+
+            return variableOReferencia.valores[indice] == valor
+        }
+        else {
+            // esto no es necesario, solo hace que el codigo sea mas legible (discutible...)
+            const referencia = variableOReferencia
+
+            const referenciaResuelta = this.resolverReferencia(referencia)
+
+            const variable = referenciaResuelta.variable as Vector2
+
+            const indiceCompleto = [...referenciaResuelta.indicesPrevios, ...indices].map(i => i - 1)
+
+            const indice = this.calcularIndice(indiceCompleto, variable.dimensiones)
+
+            return variable.valores[indice] == valor
         }
     }
 
@@ -156,28 +210,34 @@ export class Evaluador {
         return memoriaModulo
     }
 
-    ejecutarPrograma(): EstadoEvaluador {
+    ejecutarPrograma(): Failure<null> | Success<number> {
         while (this.sePuedeEjecutar()) {
-            this.estadoActual = this.ejecutarEnunciadoSiguiente()
+            this.ejecutarSubEnunciadoSiguiente()
         }
-        return this.estadoActual
+
+        if (this.estadoActual != Estado.ERROR_ENCONTRADO) {
+            return { error: false, result: this.contadorInstruccion }
+        }
+        else {
+            return { error: true, result: null }
+        }
     }
 
     /**
      * Ejecuta sub-enunciados hasta encontrarse con uno que tiene un
      * enunciado correspondiente en el codigo fuente.
      */
-    ejecutarEnunciadoSiguiente(): EstadoEvaluador {
-        if (this.sePuedeEjecutar()) {
-            while (!this.esLineaFuente(this.contadorInstruccion) || this.lineaVisitada) {
-                if (this.lineaVisitada) {
-                    this.lineaVisitada = false
-                }
-                this.estadoActual = this.ejecutarEnunciadoSiguiente()
+    ejecutarEnunciadoSiguiente() {
+        while (this.sePuedeEjecutar() && (!this.esLineaFuente(this.contadorInstruccion) || this.lineaVisitada)) {
+            if (this.lineaVisitada) {
+                this.lineaVisitada = false
             }
+            this.ejecutarSubEnunciadoSiguiente()
+        }
+        
+        if (this.esLineaFuente(this.contadorInstruccion)) {
             this.lineaVisitada = true
         }
-        return this.estadoActual
     }
 
     /**
@@ -189,24 +249,18 @@ export class Evaluador {
         return existe(n, lineasFuenteModulo)
     }
 
-    private ejecutarSubEnunciadoSiguiente(): EstadoEvaluador {
-        if (this.sePuedeEjecutar()) {
-            // ver si hay un breakpoint registrado para esta instruccion
-            if (this.hayBreakpoint(this.contadorInstruccion) && !this.breakpointCumplido) {
-                this.breakpointCumplido = true
-                this.estadoActual = { id: Estado.ESPERANDO_PASO, numeroLinea: this.contadorInstruccion }
-            }
-            else {
-                this.breakpointCumplido = false
-
-                const nuevoEstado = this.evaluarSubEnunciado(this.moduloActual.subEnunciados[this.contadorInstruccion])
-
-                this.incrementarContadorInstruccion()
-
-                return nuevoEstado
-            }
+    private ejecutarSubEnunciadoSiguiente() {
+        if (this.hayBreakpoint(this.contadorInstruccion) && !this.breakpointCumplido) {
+            this.breakpointCumplido = true
+            this.estadoActual = Estado.ESPERANDO_PASO
         }
-        return this.estadoActual
+        else {
+            this.breakpointCumplido = false
+
+            this.evaluarSubEnunciado(this.moduloActual.subEnunciados[this.contadorInstruccion])
+
+            this.incrementarContadorInstruccion()
+        }
     }
 
     /**
@@ -230,7 +284,7 @@ export class Evaluador {
                     this.contadorInstruccion++
                 }
                 else {
-                    this.estadoActual = { id: Estado.PROGRAMA_FINALIZADO }
+                    this.estadoActual = Estado.PROGRAMA_FINALIZADO
                 }
             }
         }
@@ -240,9 +294,9 @@ export class Evaluador {
     }
 
     private sePuedeEjecutar(): boolean {
-        return this.estadoActual.id == Estado.EJECUTANDO_PROGRAMA
-            || this.estadoActual.id == Estado.ESPERANDO_PASO
-            || this.estadoActual.id == Estado.ESPERANDO_LECTURA
+        return this.estadoActual == Estado.EJECUTANDO_PROGRAMA
+            || this.estadoActual == Estado.ESPERANDO_PASO
+            || this.estadoActual == Estado.ESPERANDO_LECTURA
     }
 
     private hayBreakpoint(numeroLinea: number): boolean {
@@ -265,186 +319,211 @@ export class Evaluador {
         return false
     }
 
-    private evaluarSubEnunciado(subEnunciado: N3.Enunciado): EstadoEvaluador {
+    private evaluarSubEnunciado(subEnunciado: N3.Enunciado) {
         switch (subEnunciado.tipo) {
             case N3.TipoEnunciado.SUMAR:
-                return this.SUMAR()
+                this.SUMAR()
+                break
             case N3.TipoEnunciado.RESTAR:
-                return this.RESTAR()
+                this.RESTAR()
+                break
             case N3.TipoEnunciado.DIV_REAL:
-                return this.DIV_REAL()
+                this.DIV_REAL()
+                break
             case N3.TipoEnunciado.DIV_ENTERO:
-                return this.DIV_ENTERO()
+                this.DIV_ENTERO()
+                break
             case N3.TipoEnunciado.MODULO:
-                return this.MODULO()
+                this.MODULO()
+                break
             case N3.TipoEnunciado.MULTIPLICAR:
-                return this.MULTIPLICAR()
+                this.MULTIPLICAR()
+                break
             case N3.TipoEnunciado.ELEVAR:
-                return this.ELEVAR()
+                this.ELEVAR()
+                break
             case N3.TipoEnunciado.NEGAR:
-                return this.NEGAR()
+                this.NEGAR()
+                break
             case N3.TipoEnunciado.NOT:
-                return this.NOT()
+                this.NOT()
+                break
             case N3.TipoEnunciado.AND:
-                return this.AND()
+                this.AND()
+                break
             case N3.TipoEnunciado.OR:
-                return this.OR()
+                this.OR()
+                break
             case N3.TipoEnunciado.MENOR:
-                return this.MENOR()
+                this.MENOR()
+                break
             case N3.TipoEnunciado.MENORIGUAL:
-                return this.MENORIGUAL()
+                this.MENORIGUAL()
+                break
             case N3.TipoEnunciado.MAYOR:
-                return this.MAYOR()
+                this.MAYOR()
+                break
             case N3.TipoEnunciado.MAYORIGUAL:
-                return this.MAYORIGUAL()
+                this.MAYORIGUAL()
+                break
             case N3.TipoEnunciado.IGUAL:
-                return this.IGUAL()
+                this.IGUAL()
+                break
             case N3.TipoEnunciado.DIFERENTE:
-                return this.DIFERENTE()
+                this.DIFERENTE()
+                break
             case N3.TipoEnunciado.APILAR:
-                return this.APILAR(subEnunciado)
+                this.APILAR(subEnunciado)
+                break
             case N3.TipoEnunciado.APILAR_VAR:
-                return this.APILAR_VAR(subEnunciado)
+                this.APILAR_VAR(subEnunciado)
+                break
             case N3.TipoEnunciado.APILAR_ARR:
-                return this.APILAR_ARR(subEnunciado)
+                this.APILAR_ARR(subEnunciado)
+                break
             case N3.TipoEnunciado.ASIGNAR:
-                return this.ASIGNAR(subEnunciado)
+                this.ASIGNAR(subEnunciado)
+                break
             case N3.TipoEnunciado.ASIGNAR_ARR:
-                return this.ASIGNAR_ARR(subEnunciado)
+                this.ASIGNAR_ARR(subEnunciado)
+                break
             case N3.TipoEnunciado.LLAMAR:
-                return this.LLAMAR(subEnunciado)
+                this.LLAMAR(subEnunciado)
+                break
             case N3.TipoEnunciado.JIF:
-                return this.JIF(subEnunciado)
+                this.JIF(subEnunciado)
+                break
             case N3.TipoEnunciado.JIT:
-                return this.JIT(subEnunciado)
+                this.JIT(subEnunciado)
+                break
             case N3.TipoEnunciado.JMP:
-                return this.JMP(subEnunciado)
+                this.JMP(subEnunciado)
+                break
         }
     }
 
-    private SUMAR(): EstadoEvaluador {
+    private SUMAR() {
         const a = this.pilaValores.pop() as number
         const b = this.pilaValores.pop() as number
         this.pilaValores.push(a + b)
         return this.estadoActual
     }
 
-    private RESTAR(): EstadoEvaluador {
+    private RESTAR() {
         const a = this.pilaValores.pop() as number
         const b = this.pilaValores.pop() as number
         this.pilaValores.push(a - b)
         return this.estadoActual
     }
 
-    private DIV_REAL(): EstadoEvaluador {
+    private DIV_REAL() {
         const a = this.pilaValores.pop() as number
         const b = this.pilaValores.pop() as number
         this.pilaValores.push(a / b)
         return this.estadoActual
     }
 
-    private DIV_ENTERO(): EstadoEvaluador {
+    private DIV_ENTERO() {
         const a = this.pilaValores.pop() as number
         const b = this.pilaValores.pop() as number
         this.pilaValores.push((a - (a % b)) / b)
         return this.estadoActual
     }
 
-    private MODULO(): EstadoEvaluador {
+    private MODULO() {
         const a = this.pilaValores.pop() as number
         const b = this.pilaValores.pop() as number
         this.pilaValores.push(a % b)
         return this.estadoActual
     }
 
-    private MULTIPLICAR(): EstadoEvaluador {
+    private MULTIPLICAR() {
         const a = this.pilaValores.pop() as number
         const b = this.pilaValores.pop() as number
         this.pilaValores.push(a * b)
         return this.estadoActual
     }
 
-    private ELEVAR(): EstadoEvaluador {
+    private ELEVAR() {
         const a = this.pilaValores.pop() as number
         const b = this.pilaValores.pop() as number
         this.pilaValores.push(Math.pow(a, b))
         return this.estadoActual
     }
 
-    private NEGAR(): EstadoEvaluador {
+    private NEGAR() {
         const a = this.pilaValores.pop() as number
         this.pilaValores.push(-a)
         return this.estadoActual
     }
 
-    private NOT(): EstadoEvaluador {
+    private NOT() {
         const a = this.pilaValores.pop() as boolean
         this.pilaValores.push(!a)
         return this.estadoActual
     }
 
-    private AND(): EstadoEvaluador {
+    private AND() {
         const a = this.pilaValores.pop() as boolean
         const b = this.pilaValores.pop() as boolean
         this.pilaValores.push(a && b)
         return this.estadoActual
     }
 
-    private OR(): EstadoEvaluador {
+    private OR() {
         const a = this.pilaValores.pop() as boolean
         const b = this.pilaValores.pop() as boolean
         this.pilaValores.push(a || b)
         return this.estadoActual
     }
     
-    private MENOR(): EstadoEvaluador {
+    private MENOR() {
         const a = this.pilaValores.pop() as number
         const b = this.pilaValores.pop() as number
         this.pilaValores.push(a < b)
         return this.estadoActual
     }
 
-    private MENORIGUAL(): EstadoEvaluador {
+    private MENORIGUAL() {
         const a = this.pilaValores.pop() as number
         const b = this.pilaValores.pop() as number
         this.pilaValores.push(a <= b)
         return this.estadoActual
     }
 
-    private MAYOR(): EstadoEvaluador {
+    private MAYOR() {
         const a = this.pilaValores.pop() as number
         const b = this.pilaValores.pop() as number
         this.pilaValores.push(a > b)
         return this.estadoActual
     }
 
-    private MAYORIGUAL(): EstadoEvaluador {
+    private MAYORIGUAL() {
         const a = this.pilaValores.pop() as number
         const b = this.pilaValores.pop() as number
         this.pilaValores.push(a >= b)
         return this.estadoActual
     }
 
-    private IGUAL(): EstadoEvaluador {
+    private IGUAL() {
         const a = this.pilaValores.pop() as number
         const b = this.pilaValores.pop() as number
         this.pilaValores.push(a == b)
         return this.estadoActual
     }
 
-    private DIFERENTE(): EstadoEvaluador {
+    private DIFERENTE() {
         const a = this.pilaValores.pop() as number
         const b = this.pilaValores.pop() as number
         this.pilaValores.push(a != b)
         return this.estadoActual
     }
 
-    private APILAR(subEnunciado: N3.APILAR): EstadoEvaluador {
+    private APILAR(subEnunciado: N3.APILAR) {
         this.pilaValores.push(subEnunciado.valor)
-        return this.estadoActual
     }
 
-    private APILAR_VAR(subEnunciado: N3.APILAR_VAR): EstadoEvaluador {
+    private APILAR_VAR(subEnunciado: N3.APILAR_VAR) {
         /**
          * El type assert es correcto porque el verificador de tipos
          * ya garantizó que la variable que se apilará es un escalar
@@ -492,11 +571,9 @@ export class Evaluador {
                 this.pilaValores.push(variable.valores[indice])
             }
         }
-
-        return this.estadoActual
     }
 
-    private APILAR_ARR(subEnunciado: N3.APILAR_ARR): EstadoEvaluador {
+    private APILAR_ARR(subEnunciado: N3.APILAR_ARR) {
         /**
          * El type assert es correcto porque el verificador de tipos
          * ya garantizó que la variable que se apilará es un vector
@@ -525,11 +602,9 @@ export class Evaluador {
 
             this.pilaValores.push(variable.valores[indice])
         }
-
-        return this.estadoActual
     }
 
-    private ASIGNAR(subEnunciado: N3.ASIGNAR): EstadoEvaluador {
+    private ASIGNAR(subEnunciado: N3.ASIGNAR) {
         /**
          * El type assert es correcto porque el verificador de tipos
          * ya garantizó que la variable que se apilará es un escalar
@@ -574,11 +649,9 @@ export class Evaluador {
                 variable.valores[indice] = this.pilaValores.pop()
             }
         }
-
-        return this.estadoActual
     }
 
-    private ASIGNAR_ARR(subEnunciado: N3.ASIGNAR_ARR): EstadoEvaluador {
+    private ASIGNAR_ARR(subEnunciado: N3.ASIGNAR_ARR) {
         /**
          * El type assert es correcto porque el verificador de tipos
          * ya garantizó que la variable que se apilará es un escalar
@@ -607,11 +680,9 @@ export class Evaluador {
 
             variable.valores[indice] = this.pilaValores.pop()
         }
-
-        return this.estadoActual
     }
 
-    private LLAMAR(subEnunciado: N3.LLAMAR): EstadoEvaluador {
+    private LLAMAR(subEnunciado: N3.LLAMAR) {
         const moduloLLamado = this.programaActual.modulos[subEnunciado.nombreModulo]
 
         // apilar el modulo actual
@@ -637,13 +708,9 @@ export class Evaluador {
 
         // poner bandera moduloLlamado en verdadero
         this.moduloLLamado = true
-
-        // hacer que incrementar instruccion no ocurra si la bandera anterior esta en verdadero
-
-        return this.estadoActual
     }
 
-    private JIF(subEnunciado: N3.JIF): EstadoEvaluador {
+    private JIF(subEnunciado: N3.JIF) {
         const condicion = this.pilaValores.pop() as boolean
 
         /**
@@ -667,15 +734,13 @@ export class Evaluador {
                     this.pilaContadorInstruccion.pop()
                 }
                 else {
-                    this.estadoActual = { id: Estado.PROGRAMA_FINALIZADO }
+                    this.estadoActual = Estado.PROGRAMA_FINALIZADO
                 }
             }
         }
-
-        return this.estadoActual
     }
     
-    private JIT(subEnunciado: N3.JIT): EstadoEvaluador {
+    private JIT(subEnunciado: N3.JIT) {
         const condicion = this.pilaValores.pop() as boolean
 
         /**
@@ -699,15 +764,13 @@ export class Evaluador {
                     this.pilaContadorInstruccion.pop()
                 }
                 else {
-                    this.estadoActual = { id: Estado.PROGRAMA_FINALIZADO }
+                    this.estadoActual = Estado.PROGRAMA_FINALIZADO
                 }
             }
         }
-
-        return this.estadoActual
     }
 
-    private JMP(subEnunciado: N3.JMP): EstadoEvaluador {
+    private JMP(subEnunciado: N3.JMP) {
         this.contadorInstruccion = subEnunciado.numeroLinea
 
         const moduloActual = this.pilaModulos[this.pilaModulos.length - 1]
@@ -725,11 +788,9 @@ export class Evaluador {
                 this.pilaContadorInstruccion.pop()
             }
             else {
-                this.estadoActual = { id: Estado.PROGRAMA_FINALIZADO }
+                this.estadoActual = Estado.PROGRAMA_FINALIZADO
             }
         }
-
-        return this.estadoActual
     }
 
     private recuperarVariable(nombreVariable: string): Escalar | Vector2 | Referencia {
