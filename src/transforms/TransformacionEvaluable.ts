@@ -36,9 +36,11 @@ export default class TrasnformadorEvaluable {
 
         for (let clave in p.modules) {
             const moduloOriginal = p.modules[clave]
+            const variables = p.variables_per_module[clave]
             if (clave == 'main') {
                 this.nombreModuloActual = "principal"
                 resultadoFinal.modulos.principal = this.transformarModuloPrincipal(moduloOriginal)
+                resultadoFinal.variablesLocales.principal = variables
             }
             else {
                 this.nombreModuloActual = clave
