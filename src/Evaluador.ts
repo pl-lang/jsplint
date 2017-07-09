@@ -877,8 +877,8 @@ export class Evaluador {
  * Elimina los elementos repetidos de un arreglo
  * @param arreglo Arreglo a filtrar
  */
-function unicos<A>(arreglo : A[]): A[] {
-    let resultado: A[] = []
+function unicos(arreglo : number[]): number[] {
+    let resultado: number[] = []
     for (let elemento of arreglo) {
         if (!existe(elemento, arreglo)) {
             const indiceMayor = encontrarMayor(elemento, resultado)
@@ -893,7 +893,7 @@ function unicos<A>(arreglo : A[]): A[] {
  * @param objetoBuscado El objeto a buscar
  * @param arreglo El arreglo donde buscarlo
  */
-function encontrarMayor<A>(objetoBuscado: A, arreglo: A[]): number {
+function encontrarMayor(objetoBuscado: number, arreglo: number[]): number {
     let i = 0
     const l = arreglo.length
     let finalizado = false
@@ -914,7 +914,7 @@ function encontrarMayor<A>(objetoBuscado: A, arreglo: A[]): number {
  * @param elemento Elemento a insertar
  * @param arreglo Arreglo en el cual insertarlo
  */
-function insertarEn<A>(indice: number, elemento: A, arreglo: A[]): A[] {
+function insertarEn(indice: number, elemento: number, arreglo: number[]): number[] {
     if (indice == 0) {
         arreglo.unshift(elemento)
         return arreglo
@@ -924,7 +924,26 @@ function insertarEn<A>(indice: number, elemento: A, arreglo: A[]): A[] {
         return arreglo
     }
     else {
-        return [...arreglo.slice(0, indice + 1), elemento, ...arreglo.slice(indice + 1)]
+        return [...arreglo.slice(0, indice), elemento, ...arreglo.slice(indice)]
+    }
+}
+
+/**
+ * Remueve el elemento de un indice especifico de un arreglo
+ * @param indice Indice en del elemento a remover
+ * @param arreglo Arreglo del cual removerlo
+ */
+function removerDe(indice: number, arreglo: number[]): number[] {
+    if (indice == 0) {
+        arreglo.shift()
+        return arreglo
+    }
+    else if (indice == arreglo.length) {
+        arreglo.pop()
+        return arreglo
+    }
+    else {
+        return [...arreglo.slice(0, indice), ...arreglo.slice(indice + 1)]
     }
 }
 
@@ -933,7 +952,7 @@ function insertarEn<A>(indice: number, elemento: A, arreglo: A[]): A[] {
  * @param objetoBuscado El objeto a encontrar
  * @param arreglo El arreglo donde buscarlo
  */
-function existe<A>(objetoBuscado: A, arreglo: A[]): boolean {
+function existe(objetoBuscado: number, arreglo: number[]): boolean {
     return busquedaBinaria(objetoBuscado, arreglo) > -1
 }
 
@@ -942,7 +961,7 @@ function existe<A>(objetoBuscado: A, arreglo: A[]): boolean {
  * @param objetoBuscado El objeto a encontrar
  * @param arreglo El arreglo donde buscarlo
  */
-function busquedaBinaria<A>(objetoBuscado: A, arreglo: A[]): number {
+function busquedaBinaria(objetoBuscado: number, arreglo: number[]): number {
     let inicio = 0, fin = arreglo.length - 1
 
     while (inicio < fin) {
