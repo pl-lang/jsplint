@@ -13,9 +13,9 @@ export enum Estado {
 
 export class Evaluador {
 
-    private programaActual: N3.Programa
+    private programaActual: N3.ProgramaCompilado
 
-    private moduloActual: { subEnunciados: N3.Enunciado[], nombre: string }
+    private nombreModuloActual: string
 
     private memoriaGlobal: Memoria
 
@@ -27,11 +27,10 @@ export class Evaluador {
 
     private breakpointsRegistrados: number[]
 
-    private lineasPorModulo: N3.lineasPorModulo
-
     // Banderas
     private breakpointCumplido: boolean
     private lineaVisitada: boolean
+    private saltoRealizado: boolean
     /**
      * Cuando esta en verdadero indica que no se debe incrementar el contador de instruccion
      */
@@ -40,7 +39,7 @@ export class Evaluador {
     // Pilas
     private pilaContadorInstruccion: number[]
     private pilaValores: Value[]
-    private pilaModulos: { subEnunciados: N3.Enunciado[], nombre: string }[]
+    private pilaNombresModulo: string[]
     private pilaMemoria: Memoria[]
 
     // E/S
@@ -48,11 +47,9 @@ export class Evaluador {
     private escrituraPendiente: Value
 
     constructor(programaCompilado: N3.ProgramaCompilado) {
-        this.programaActual = programaCompilado.programa
+        this.programaActual = programaCompilado
 
-        this.lineasPorModulo = programaCompilado.lineasPorModulo
-
-        this.moduloActual = { nombre: "principal", subEnunciados: this.programaActual.modulos.principal }
+        this.nombreModuloActual = "principal"
 
         const memoriaModuloPrincipal = this.crearMemoriaModulo("principal")
 
@@ -62,6 +59,7 @@ export class Evaluador {
 
         this.lineaVisitada = true
         this.moduloLLamado = false
+        this.saltoRealizado = false
 
         this.breakpointsRegistrados = []
         this.breakpointCumplido = false
@@ -70,15 +68,16 @@ export class Evaluador {
 
         this.pilaContadorInstruccion = []
         this.pilaValores = []
-        this.pilaModulos = []
+        this.pilaNombresModulo = []
 
         this.lecturaPendiente = null
         this.escrituraPendiente = null
 
         /**
-         * Determinar el estado inicial
+         * Determinar el estado inicial, si el modulo principal no
+         * tiene enunciados, no hay nada que ejecutar
          */
-        if (this.moduloActual.subEnunciados.length == 0) {
+        if (this.programaActual.rangoModulo.principal.fin == 0) {
             this.estadoActual = Estado.PROGRAMA_FINALIZADO
         }
         else {
@@ -87,64 +86,66 @@ export class Evaluador {
     }
 
     agregarBreakpoint(numeroLinea: number) {
-        let modulos = Object.keys(this.lineasPorModulo)
-        let moduloEncontrado = false
-        let i = 0
-        let l = modulos.length
-
         /**
-         * Buscar modulo al que pertenece la linea para la cual
-         * se quiere establecer un breakpoint
-         */        
-        while (i < l && !moduloEncontrado) {
-            const numerosLineaEnunciados = this.lineasPorModulo[modulos[i]].enunciados
-            const indice = busquedaBinaria(numeroLinea, numerosLineaEnunciados)
-            if (indice > -1) {
-                moduloEncontrado = true
-            }
-            else {
-                i++
-            }
-        }
+         * Si el numero de linea tiene un sub-enunciado asociado, registrar un bp
+         */
+        if (numeroLinea in this.programaActual.subEnunciados) {
+            const numeroSubEnunciado = this.programaActual.subEnunciados[numeroLinea]
 
-        if (moduloEncontrado) {
-            const modulo = this.lineasPorModulo[modulos[i]]
-            const indice = busquedaBinaria(numeroLinea, modulo.enunciados)
-            const numeroSubEnunciado = modulo.subEnunciados[indice]
             // insertar nuevo breakpoint ordenadamente
+            const indiceMayor = encontrarMayor(numeroSubEnunciado, this.breakpointsRegistrados)
+            this.breakpointsRegistrados = insertarEn(indiceMayor, numeroSubEnunciado, this.breakpointsRegistrados)
+        }
+        /**
+         * Si no, buscar el siguiente numero de linea que tenga un sub-enunciado
+         * y registrar un bp para ese.
+         */
+        else {
+            const lineasConSubEnunciado = Object.keys(this.programaActual.subEnunciados).map(k => Number(k))
+
+            /**
+             * Buscar el indice de la siguiente linea que tiene un sub-enunciado correspondiente.
+             */
+            const indiceLineaSiguiente = encontrarMayor(numeroLinea, lineasConSubEnunciado)
+
+            /**
+             * Registrar el bp
+             */
+            const numeroSubEnunciado = this.programaActual.subEnunciados[lineasConSubEnunciado[indiceLineaSiguiente]]
             const indiceMayor = encontrarMayor(numeroSubEnunciado, this.breakpointsRegistrados)
             this.breakpointsRegistrados = insertarEn(indiceMayor, numeroSubEnunciado, this.breakpointsRegistrados)
         }
     }
 
     quitarBreakpoint(numeroLinea: number) {
-        let modulos = Object.keys(this.lineasPorModulo)
-        let moduloEncontrado = false
-        let i = 0
-        let l = modulos.length
-
         /**
-         * Buscar modulo al que pertenece la linea para la cual
-         * se quiere establecer un breakpoint
+         * Si el numero de linea tiene un sub-enunciado asociado, registrar un bp
          */
-        while (i < l && !moduloEncontrado) {
-            const numerosLineaEnunciados = this.lineasPorModulo[modulos[i]].enunciados
-            const indice = busquedaBinaria(numeroLinea, numerosLineaEnunciados)
-            if (indice > -1) {
-                moduloEncontrado = true
-            }
-            else {
-                i++
-            }
-        }
+        if (numeroLinea in this.programaActual.subEnunciados) {
+            const numeroSubEnunciado = this.programaActual.subEnunciados[numeroLinea]
 
-        if (moduloEncontrado) {
-            const modulo = this.lineasPorModulo[modulos[i]]
-            const indice = busquedaBinaria(numeroLinea, modulo.enunciados)
-            const numeroSubEnunciado = modulo.subEnunciados[indice]
-            // insertar nuevo breakpoint ordenadamente
-            const indiceBreakpoint = busquedaBinaria(numeroSubEnunciado, this.breakpointsRegistrados)
-            this.breakpointsRegistrados = removerDe(indiceBreakpoint, this.breakpointsRegistrados)
+            // buscar el indice del breakpoint a eliminar
+            const indice = busquedaBinaria(numeroSubEnunciado, this.breakpointsRegistrados)
+            this.breakpointsRegistrados = removerDe(indice, this.breakpointsRegistrados)
+        }
+        /**
+         * Si no, buscar el siguiente numero de linea que tenga un sub-enunciado
+         * y registrar un bp para ese.
+         */
+        else {
+            const lineasConSubEnunciado = Object.keys(this.programaActual.subEnunciados).map(k => Number(k))
+
+            /**
+             * Buscar el indice de la siguiente linea que tiene un sub-enunciado correspondiente.
+             */
+            const indiceLineaSiguiente = encontrarMayor(numeroLinea, lineasConSubEnunciado)
+
+            /**
+             * Buscar el indice del bp a eliminar
+             */
+            const numeroSubEnunciado = this.programaActual.subEnunciados[lineasConSubEnunciado[indiceLineaSiguiente]]
+            const indice = busquedaBinaria(numeroSubEnunciado, this.breakpointsRegistrados)
+            this.breakpointsRegistrados = removerDe(indice, this.breakpointsRegistrados)
         }
     }
 
@@ -286,7 +287,7 @@ export class Evaluador {
             }
             
 
-            this.evaluarSubEnunciado(this.moduloActual.subEnunciados[this.contadorInstruccion])
+            this.evaluarSubEnunciado(this.programaActual.enunciados[this.contadorInstruccion])
 
             this.incrementarContadorInstruccion()
         }
@@ -309,11 +310,9 @@ export class Evaluador {
     }
 
     private aLineaFuente(numeroInstruccion: number): number {
-        for (let nombreModulo in this.lineasPorModulo) {
-            const modulo = this.lineasPorModulo[nombreModulo]
-            const indice = busquedaBinaria(numeroInstruccion, modulo.subEnunciados)
-            if (indice != -1) {
-                return this.lineasPorModulo[nombreModulo].enunciados[indice]
+        for (let numeroLinea in this.programaActual.subEnunciados) {
+            if (this.programaActual.subEnunciados[numeroLinea] == numeroInstruccion) {
+                return Number(numeroLinea)
             }
         }
         return -1
@@ -341,8 +340,7 @@ export class Evaluador {
      * @param n numero de linea que buscar entre las lineas del modulo
      */
     private esLineaFuente(n: number): boolean {
-        const lineasFuenteModulo = this.lineasPorModulo[this.moduloActual.nombre].subEnunciados
-        return existe(n, lineasFuenteModulo)
+        return n in this.programaActual.subEnunciados
     }
 
     private ejecutarSubEnunciadoSiguiente() {
@@ -353,7 +351,7 @@ export class Evaluador {
         else {
             this.breakpointCumplido = false
 
-            this.evaluarSubEnunciado(this.moduloActual.subEnunciados[this.contadorInstruccion])
+            this.evaluarSubEnunciado(this.programaActual.enunciados[this.contadorInstruccion])
 
             this.incrementarContadorInstruccion()
         }
@@ -368,24 +366,36 @@ export class Evaluador {
      */
     private incrementarContadorInstruccion() {
         if (this.moduloLLamado == false) {
-            this.contadorInstruccion++
-
-            while (this.sePuedeEjecutar() && (this.contadorInstruccion >= this.moduloActual.subEnunciados.length)) {
-                if (this.pilaModulos.length > 0) {
-
-                    this.moduloActual = this.pilaModulos.pop()
-
-                    this.contadorInstruccion = this.pilaContadorInstruccion.pop()
-
-                    this.contadorInstruccion++
-                }
-                else {
-                    this.estadoActual = Estado.PROGRAMA_FINALIZADO
-                }
+            if (this.saltoRealizado == false) {
+                this.contadorInstruccion++
             }
+            else {
+                this.saltoRealizado = false
+            }
+
+            this.desapilarModulo()
         }
         else {
             this.moduloLLamado = false
+        }
+    }
+
+    /**
+     * Desapila modulos hasta encontrar uno cuya ejecucion no haya finalizado, o finaliza la ejecucion del programa.
+     */
+    private desapilarModulo() {
+        while (this.sePuedeEjecutar() && (this.contadorInstruccion >= this.programaActual.rangoModulo[this.nombreModuloActual].fin)) {
+            if (this.pilaContadorInstruccion.length > 0) {
+
+                this.nombreModuloActual = this.pilaNombresModulo.pop()
+
+                this.contadorInstruccion = this.pilaContadorInstruccion.pop()
+
+                this.contadorInstruccion++
+            }
+            else {
+                this.estadoActual = Estado.PROGRAMA_FINALIZADO
+            }
         }
     }
 
@@ -763,13 +773,15 @@ export class Evaluador {
     }
 
     private LLAMAR(subEnunciado: N3.LLAMAR) {
-        const moduloLLamado = this.programaActual.modulos[subEnunciado.nombreModulo]
-
         // apilar el modulo actual
-        this.pilaModulos.push(this.moduloActual)
+        this.pilaNombresModulo.push(this.nombreModuloActual)
 
-        // apilar el contador de instruccion
-        this.pilaContadorInstruccion.push(this.contadorInstruccion)
+        /**
+         * Apilar el contador de instruccion incrementado. Si no
+         * lo incrementara seria como si este enunciado nunca hubiera
+         * sido ejecutado.
+         */
+        this.pilaContadorInstruccion.push(this.contadorInstruccion + 1)
 
         // apilar la memoria del modulo actual
         this.pilaMemoria.push(this.memoriaModuloActual)
@@ -777,14 +789,12 @@ export class Evaluador {
         // crear espacio de memoria del modulo llamado
         this.memoriaModuloActual = this.crearMemoriaModulo(subEnunciado.nombreModulo)
 
-        // poner contador instruccion en 0
-        this.contadorInstruccion = 0
+        // poner contador instruccion en el primer sub-enunciado del modulo llamado
+        const rangoModuloLlamado = this.programaActual.rangoModulo[subEnunciado.nombreModulo]
+        this.contadorInstruccion = rangoModuloLlamado.inicio
 
         // establecer moduloActual = moduloLLamado
-        this.moduloActual = {
-            subEnunciados: this.programaActual.modulos[subEnunciado.nombreModulo],
-            nombre: subEnunciado.nombreModulo
-        }
+        this.nombreModuloActual = subEnunciado.nombreModulo
 
         // poner bandera moduloLlamado en verdadero
         this.moduloLLamado = true
@@ -798,25 +808,7 @@ export class Evaluador {
          */
         if (condicion == false) {
             this.contadorInstruccion = subEnunciado.numeroLinea
-
-            const moduloActual = this.pilaModulos[this.pilaModulos.length - 1]
-
-            /**
-             * Si el contador de instruccion apunta a una linea que no existe
-             * entonces la ejecución de este modulo terminó y hay que poner
-             * en ejecución el anterior. Si no hay más modulos que ejecutar
-             * entonces terminó la ejecución del programa.
-             */
-            if (this.contadorInstruccion >= moduloActual.subEnunciados.length) {
-                this.pilaModulos.pop()
-                if (this.pilaModulos.length > 0) {
-                    this.contadorInstruccion = this.pilaContadorInstruccion[this.pilaContadorInstruccion.length - 1]
-                    this.pilaContadorInstruccion.pop()
-                }
-                else {
-                    this.estadoActual = Estado.PROGRAMA_FINALIZADO
-                }
-            }
+            this.saltoRealizado = true
         }
     }
     
@@ -828,49 +820,13 @@ export class Evaluador {
          */
         if (condicion == true) {
             this.contadorInstruccion = subEnunciado.numeroLinea
-
-            const moduloActual = this.pilaModulos[this.pilaModulos.length - 1]
-
-            /**
-             * Si el contador de instruccion apunta a una linea que no existe
-             * entonces la ejecución de este modulo terminó y hay que poner
-             * en ejecución el anterior. Si no hay más modulos que ejecutar
-             * entonces terminó la ejecución del programa.
-             */
-            if (this.contadorInstruccion >= moduloActual.subEnunciados.length) {
-                this.pilaModulos.pop()
-                if (this.pilaModulos.length > 0) {
-                    this.contadorInstruccion = this.pilaContadorInstruccion[this.pilaContadorInstruccion.length - 1]
-                    this.pilaContadorInstruccion.pop()
-                }
-                else {
-                    this.estadoActual = Estado.PROGRAMA_FINALIZADO
-                }
-            }
+            this.saltoRealizado = true
         }
     }
 
     private JMP(subEnunciado: N3.JMP) {
         this.contadorInstruccion = subEnunciado.numeroLinea
-
-        const moduloActual = this.pilaModulos[this.pilaModulos.length - 1]
-
-        /**
-         * Si el contador de instruccion apunta a una linea que no existe
-         * entonces la ejecución de este modulo terminó y hay que poner
-         * en ejecución el anterior. Si no hay más modulos que ejecutar
-         * entonces terminó la ejecución del programa.
-         */
-        if (this.contadorInstruccion >= moduloActual.subEnunciados.length) {
-            this.pilaModulos.pop()
-            if (this.pilaModulos.length > 0) {
-                this.contadorInstruccion = this.pilaContadorInstruccion[this.pilaContadorInstruccion.length - 1]
-                this.pilaContadorInstruccion.pop()
-            }
-            else {
-                this.estadoActual = Estado.PROGRAMA_FINALIZADO
-            }
-        }
+        this.saltoRealizado = true
     }
 
     private recuperarVariable(nombreVariable: string): Escalar | Vector2 | Referencia {

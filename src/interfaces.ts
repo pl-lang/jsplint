@@ -1201,24 +1201,38 @@ export namespace S3 {
 
 export namespace N3 {
   export interface ProgramaCompilado {
-    lineasPorModulo: lineasPorModulo,
-    programa: Programa
+    /**
+     * Enunciados que componen al programa
+     */
+    enunciados: Enunciado[]
+
+    /**
+     * Variables definidas para cada modulo
+     */
+    variablesLocales: {
+      principal: S1.VariableDict,
+      [m: string]: S1.VariableDict
+    }
+
+    /**
+     * Indice (en el arreglo "programa") del primer y ultimo enunciado de cada modulo
+     */
+    rangoModulo: {
+      principal: { inicio: number, fin: number }
+      [m: string]: { inicio: number, fin: number }
+    }
+
+    /**
+     * Numero de sub-enunciado correspondiante a cada linea de codigo fuente
+     */
+    subEnunciados: {
+      [numeroLinea: number]: number
+    }
   }
 
   export interface lineasPorModulo {
     principal: { enunciados: number[], subEnunciados: number[] }
     [m: string]: { enunciados: number[], subEnunciados: number[] }
-  }
-
-  export interface Programa {
-    modulos: {
-      principal: Enunciado[],
-      [m: string]: Enunciado[]
-    },
-    variablesLocales: {
-      principal: S1.VariableDict,
-      [m: string]: S1.VariableDict
-    }
   }
 
   export enum TipoEnunciado {

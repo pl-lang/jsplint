@@ -10,7 +10,7 @@ import typecheck from '../typechecker/TSChecker'
 
 import typer from '../transforms/TSTyper'
 
-export default function transform (p: ParsedProgram) : CompileError | Success<N3.Programa> {
+export default function transform (p: ParsedProgram) : CompileError | Success<N3.Enunciado[]> {
     const s1 = stage1(p)
 
     if (s1.error) {
@@ -39,7 +39,7 @@ export default function transform (p: ParsedProgram) : CompileError | Success<N3
 
                     const programa = transformador.transformar((typed_program.result as Typed.Program))
 
-                    return {error:false, result: programa.result.programa}
+                    return {error:false, result: programa.result.enunciados}
                 }
             }
         }

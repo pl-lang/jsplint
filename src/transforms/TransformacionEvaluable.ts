@@ -7,39 +7,42 @@ export default class TrasnformadorEvaluable {
     
     private ultimaLinea: number // Indica el numero de la ultima linea que fue generada
 
-    /**
-     * Para cada modulo, contiene dos arreglos: uno con los numeros de linea
-     * de los enuciados del codigo fuente, y otro con los numeros de sub-enunciado correspondientes
-     */
-    private lineasPorModulo: {
-        principal: { enunciados: number[], subEnunciados: number[] }
-        [m: string]: { enunciados: number[], subEnunciados: number[] }
+    private rangoModulo: {
+        principal: { inicio: number, fin: number }
+        [m: string]: { inicio: number, fin: number }
+    }
+
+    private subEnunciados: {
+        [numeroLinea: number]: number
     }
 
     private nombreModuloActual: string
 
     constructor() {
         this.ultimaLinea = 0
-        this.lineasPorModulo = { principal: { enunciados: [], subEnunciados: [] } }
+        this.rangoModulo = { principal: { inicio: 0, fin: 0 } }
         this.nombreModuloActual = ""
+        this.subEnunciados = {}
     }
 
     transformar(p: Typed.Program): Success<N3.ProgramaCompilado> {
-        const resultadoFinal: N3.Programa = {
-            modulos: {
-                principal: []
-            },
-            variablesLocales: {
-                principal: {}
-            }
+        const resultadoFinal: N3.ProgramaCompilado = {
+            enunciados: [],
+            rangoModulo: { principal: { inicio: 0, fin: 0 } },
+            subEnunciados: {},
+            variablesLocales: { principal: {} }
         }
+
+        let enunciados: N3.Enunciado[] = []
 
         for (let clave in p.modules) {
             const moduloOriginal = p.modules[clave]
             const variables = p.variables_per_module[clave]
             if (clave == 'main') {
                 this.nombreModuloActual = "principal"
-                resultadoFinal.modulos.principal = this.transformarModuloPrincipal(moduloOriginal)
+                this.rangoModulo.principal.inicio = this.ultimaLinea
+                enunciados = [...enunciados, ...this.transformarModuloPrincipal(moduloOriginal)]
+                this.rangoModulo.principal.fin = this.ultimaLinea
                 resultadoFinal.variablesLocales.principal = variables
             }
             else {
@@ -48,7 +51,11 @@ export default class TrasnformadorEvaluable {
             }
         }
 
-        return { error: false, result: { programa: resultadoFinal, lineasPorModulo: this.lineasPorModulo } }
+        resultadoFinal.enunciados = enunciados
+        resultadoFinal.rangoModulo = this.rangoModulo
+        resultadoFinal.subEnunciados = this.subEnunciados
+
+        return { error: false, result: resultadoFinal }
     }
 
     private transformarModuloPrincipal(m: Typed.Module): N3.Enunciado[] {
@@ -98,8 +105,7 @@ export default class TrasnformadorEvaluable {
     }
 
     private transformarAsignacion(e: Typed.Assignment): N3.Enunciado[] {
-        this.lineasPorModulo.principal.enunciados.push(e.pos.line)
-        this.lineasPorModulo.principal.subEnunciados.push(this.ultimaLinea)
+        this.subEnunciados[e.pos.line] = this.ultimaLinea
 
         const variableObjetivo = e.left
         const expresionAsignada = e.right
@@ -204,8 +210,7 @@ export default class TrasnformadorEvaluable {
     }
 
     private transformarSi(e: Typed.If): N3.Enunciado[] {
-        this.lineasPorModulo.principal.enunciados.push(e.pos.line)
-        this.lineasPorModulo.principal.subEnunciados.push(this.ultimaLinea)
+        this.subEnunciados[e.pos.line] = this.ultimaLinea
 
         // transformar condicion
 
@@ -282,8 +287,7 @@ export default class TrasnformadorEvaluable {
     }
 
     private transformarMientras(e: Typed.While): N3.Enunciado[] {
-        this.lineasPorModulo.principal.enunciados.push(e.pos.line)
-        this.lineasPorModulo.principal.subEnunciados.push(this.ultimaLinea)
+        this.subEnunciados[e.pos.line] = this.ultimaLinea
 
         const apilarCondicion = this.transformarExpresion(e.condition)
 
@@ -305,8 +309,7 @@ export default class TrasnformadorEvaluable {
     }
 
     private transformarHastaQue(e: Typed.Until): N3.Enunciado[] {
-        this.lineasPorModulo.principal.enunciados.push(e.pos.line)
-        this.lineasPorModulo.principal.subEnunciados.push(this.ultimaLinea)
+        this.subEnunciados[e.pos.line] = this.ultimaLinea
 
         let enunciadosBucle: N3.Enunciado[] = []
 
@@ -324,8 +327,7 @@ export default class TrasnformadorEvaluable {
     }
 
     private transformarPara(e: Typed.For): N3.Enunciado[] {
-        this.lineasPorModulo.principal.enunciados.push(e.pos.line)
-        this.lineasPorModulo.principal.subEnunciados.push(this.ultimaLinea)
+        this.subEnunciados[e.pos.line] = this.ultimaLinea
 
         // inicializacion
         // evaluacion de condicion
@@ -358,15 +360,13 @@ export default class TrasnformadorEvaluable {
     }
 
     private transformarRetornar(e: Typed.Return): N3.Enunciado[] {
-        this.lineasPorModulo.principal.enunciados.push(e.pos.line)
-        this.lineasPorModulo.principal.subEnunciados.push(this.ultimaLinea)
+        this.subEnunciados[e.pos.line] = this.ultimaLinea
 
         return this.transformarExpresion(e.expression)
     }
 
     private transformarLlamado(e: Typed.Call): N3.Enunciado[] {
-        this.lineasPorModulo.principal.enunciados.push(e.pos.line)
-        this.lineasPorModulo.principal.subEnunciados.push(this.ultimaLinea)
+        this.subEnunciados[e.pos.line] = this.ultimaLinea
 
         // La transformacion para los llamados a "leer" y "escribir" es diferente
         // a la transformacion de llamados a modulos del usuario.

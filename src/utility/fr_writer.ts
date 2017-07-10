@@ -17,96 +17,81 @@ function parse (s: string) {
 
 const espacios = 2
 
-export default function fr_writer (p: N3.Programa) : string {
-    let programaRF = ""
+export default function fr_writer (p: N3.ProgramaCompilado) : string {
+    // TODO: actualizar esto para que separe el codigo de los modulos...
+    let enunciados = p.enunciados.map((e, i) => `${i}: ${procesar_enunciado(e)}\n`)
 
-    for (let mn in p.modulos) {
-        let moduloRF = ""
-
-        const modulo = p.modulos[mn]
-
-        moduloRF += `INICIO ${mn.toUpperCase()}\n`
-
-        for (let subEnunciado of modulo) {
-            moduloRF += procesar_enunciado(subEnunciado, 1) + '\n'
-        }
-
-        moduloRF += `FIN ${mn.toUpperCase()}\n\n`
-
-        programaRF += moduloRF
-    }
-
-    return programaRF
+    return enunciados.reduce((p, c) => p + c, '')
 }
 
-function procesar_enunciado (e: N3.Enunciado, nivel: number) : string {
+function procesar_enunciado (e: N3.Enunciado) : string {
     switch (e.tipo) {
         case N3.TipoEnunciado.SUMAR:
-            return `${repetir(' ', nivel * espacios)}SUMAR`
+            return `SUMAR`
         case N3.TipoEnunciado.RESTAR:
-            return `return ${repetir(' ', nivel * espacios)}RESTAR`
+            return `return RESTAR`
         case N3.TipoEnunciado.DIV_REAL:
-        return `${repetir(' ', nivel*espacios)}DIV_REAL`
+            return `DIV_REAL`
         case N3.TipoEnunciado.DIV_ENTERO:
-        return `${repetir(' ', nivel*espacios)}DIV_ENTERO`
+            return `DIV_ENTERO`
         case N3.TipoEnunciado.MODULO:
-        return `${repetir(' ', nivel*espacios)}MODULO`
+            return `MODULO`
         case N3.TipoEnunciado.MULTIPLICAR:
-        return `${repetir(' ', nivel*espacios)}MULTIPLICAR`
+            return `MULTIPLICAR`
         case N3.TipoEnunciado.ELEVAR:
-        return `${repetir(' ', nivel*espacios)}ELEVAR`
+            return `ELEVAR`
         case N3.TipoEnunciado.NEGAR:
-        return `${repetir(' ', nivel*espacios)}NEGAR`
+            return `NEGAR`
         case N3.TipoEnunciado.NOT:
-        return `${repetir(' ', nivel*espacios)}NOT`
+            return `NOT`
         case N3.TipoEnunciado.AND:
-        return `${repetir(' ', nivel*espacios)}AND`
+            return `AND`
         case N3.TipoEnunciado.OR:
-        return `${repetir(' ', nivel*espacios)}OR`
+            return `OR`
         case N3.TipoEnunciado.MENOR:
-        return `${repetir(' ', nivel*espacios)}MENOR`
+            return `MENOR`
         case N3.TipoEnunciado.MENORIGUAL:
-        return `${repetir(' ', nivel*espacios)}MENORIGUAL`
+            return `MENORIGUAL`
         case N3.TipoEnunciado.MAYOR:
-        return `${repetir(' ', nivel*espacios)}MAYOR`
+            return `MAYOR`
         case N3.TipoEnunciado.MAYORIGUAL:
-        return `${repetir(' ', nivel*espacios)}MAYORIGUAL`
+            return `MAYORIGUAL`
         case N3.TipoEnunciado.IGUAL:
-        return `${repetir(' ', nivel*espacios)}IGUAL`
+            return `IGUAL`
         case N3.TipoEnunciado.DIFERENTE:
-        return `${repetir(' ', nivel*espacios)}DIFERENTE`
+            return `DIFERENTE`
         case N3.TipoEnunciado.APILAR:
-            return `${repetir(' ', nivel * espacios)}APILAR ${e.valor}`
+            return `APILAR ${e.valor}`
         case N3.TipoEnunciado.APILAR_VAR:
-            return `${repetir(' ', nivel * espacios)}APILAR_VAR ${e.nombreVariable}`
+            return `APILAR_VAR ${e.nombreVariable}`
         case N3.TipoEnunciado.APILAR_ARR:
-            return `${repetir(' ', nivel * espacios)}APILAR_ARR ${e.nombreVariable} ${e.cantidadIndices}`
+            return `APILAR_ARR ${e.nombreVariable} ${e.cantidadIndices}`
         case N3.TipoEnunciado.ASIGNAR:
-            return `${repetir(' ', nivel * espacios)}ASIGNAR ${e.nombreVariable}`
+            return `ASIGNAR ${e.nombreVariable}`
         case N3.TipoEnunciado.ASIGNAR_ARR:
-            return `${repetir(' ', nivel * espacios)}ASIGNAR_ARR ${e.nombreVariable} ${e.cantidadIndices}`
+            return `ASIGNAR_ARR ${e.nombreVariable} ${e.cantidadIndices}`
         case N3.TipoEnunciado.JIF:
-            return `${repetir(' ', nivel * espacios)}JIF ${e.numeroLinea}`
+            return `JIF ${e.numeroLinea}`
         case N3.TipoEnunciado.JIT:
-            return `${repetir(' ', nivel * espacios)}JIT ${e.numeroLinea}`
+            return `JIT ${e.numeroLinea}`
         case N3.TipoEnunciado.JMP:
-            return `${repetir(' ', nivel * espacios)}JMP ${e.numeroLinea}`
+            return `JMP ${e.numeroLinea}`
         case N3.TipoEnunciado.LLAMAR:
-            return `${repetir(' ', nivel * espacios)}LLAMAR ${e.nombreModulo}`
+            return `LLAMAR ${e.nombreModulo}`
         case N3.TipoEnunciado.LEER:
-            return `${repetir(' ', nivel * espacios)}LEER ${e.nombreVariable} ${convertirTipoCadena(e.tipoVariable)}`
+            return `LEER ${e.nombreVariable} ${convertirTipoCadena(e.tipoVariable)}`
         case N3.TipoEnunciado.ESCRIBIR:
-            return `${repetir(' ', nivel * espacios)}ESCRIBIR`
+            return `ESCRIBIR`
         case N3.TipoEnunciado.ASIGNAR_CAD:
-            return `${repetir(' ', nivel * espacios)}ASIGNAR_CAD ${e.nombreVariable} ${e.longitudCadena} ${e.cantidadIndices}`
+            return `ASIGNAR_CAD ${e.nombreVariable} ${e.longitudCadena} ${e.cantidadIndices}`
         case N3.TipoEnunciado.CONCATENAR:
-            return `${repetir(' ', nivel * espacios)}CONCATENAR ${e.cantidadCaracteres}`
+            return `CONCATENAR ${e.cantidadCaracteres}`
         case N3.TipoEnunciado.REFERENCIA:
-            return `${repetir(' ', nivel * espacios)}REFERENCIA ${e.nombreReferencia} ${e.nombreVariable} ${e.cantidadIndices}`
+            return `REFERENCIA ${e.nombreReferencia} ${e.nombreVariable} ${e.cantidadIndices}`
         case N3.TipoEnunciado.COPIAR_ARR:
-            return `${repetir(' ', nivel * espacios)}COPIAR_ARR ${e.arregloObjetivo} ${e.arregloFuente}`
+            return `COPIAR_ARR ${e.arregloObjetivo} ${e.arregloFuente}`
         case N3.TipoEnunciado.INIT_ARR:
-            return `${repetir(' ', nivel * espacios)}INIT_ARR ${e.nombreArregloObjetivo} ${e.arregloFuente}`
+            return `INIT_ARR ${e.nombreArregloObjetivo} ${e.arregloFuente}`
     }
 }
 
