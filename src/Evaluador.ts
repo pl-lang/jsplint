@@ -86,6 +86,68 @@ export class Evaluador {
         }
     }
 
+    agregarBreakpoint(numeroLinea: number) {
+        let modulos = Object.keys(this.lineasPorModulo)
+        let moduloEncontrado = false
+        let i = 0
+        let l = modulos.length
+
+        /**
+         * Buscar modulo al que pertenece la linea para la cual
+         * se quiere establecer un breakpoint
+         */        
+        while (i < l && !moduloEncontrado) {
+            const numerosLineaEnunciados = this.lineasPorModulo[modulos[i]].enunciados
+            const indice = busquedaBinaria(numeroLinea, numerosLineaEnunciados)
+            if (indice > -1) {
+                moduloEncontrado = true
+            }
+            else {
+                i++
+            }
+        }
+
+        if (moduloEncontrado) {
+            const modulo = this.lineasPorModulo[modulos[i]]
+            const indice = busquedaBinaria(numeroLinea, modulo.enunciados)
+            const numeroSubEnunciado = modulo.subEnunciados[indice]
+            // insertar nuevo breakpoint ordenadamente
+            const indiceMayor = encontrarMayor(numeroSubEnunciado, this.breakpointsRegistrados)
+            this.breakpointsRegistrados = insertarEn(indiceMayor, numeroSubEnunciado, this.breakpointsRegistrados)
+        }
+    }
+
+    quitarBreakpoint(numeroLinea: number) {
+        let modulos = Object.keys(this.lineasPorModulo)
+        let moduloEncontrado = false
+        let i = 0
+        let l = modulos.length
+
+        /**
+         * Buscar modulo al que pertenece la linea para la cual
+         * se quiere establecer un breakpoint
+         */
+        while (i < l && !moduloEncontrado) {
+            const numerosLineaEnunciados = this.lineasPorModulo[modulos[i]].enunciados
+            const indice = busquedaBinaria(numeroLinea, numerosLineaEnunciados)
+            if (indice > -1) {
+                moduloEncontrado = true
+            }
+            else {
+                i++
+            }
+        }
+
+        if (moduloEncontrado) {
+            const modulo = this.lineasPorModulo[modulos[i]]
+            const indice = busquedaBinaria(numeroLinea, modulo.enunciados)
+            const numeroSubEnunciado = modulo.subEnunciados[indice]
+            // insertar nuevo breakpoint ordenadamente
+            const indiceBreakpoint = busquedaBinaria(numeroSubEnunciado, this.breakpointsRegistrados)
+            this.breakpointsRegistrados = removerDe(indiceBreakpoint, this.breakpointsRegistrados)
+        }
+    }
+
     /**
      * Dice si el valor de una variable escalar en ambito es igual al valor provisto
      * @param nombreVariable nombre de la variable cuyo valor se quiere consultar
@@ -211,8 +273,30 @@ export class Evaluador {
     }
 
     ejecutarPrograma(): Failure<null> | Success<number> {
-        while (this.sePuedeEjecutar()) {
-            this.ejecutarSubEnunciadoSiguiente()
+        /**
+         * Bucle de ejecucion
+         */
+        while (this.sePuedeEjecutar() && (!this.hayBreakpoint(this.contadorInstruccion) || this.breakpointCumplido)) {
+            /**
+             * Si se llego hasta este punto, a pesar de que hay un breakpoint
+             * hay que poner breakpointCumplido en falso para el siguiente breakpoint
+             */
+            if (this.hayBreakpoint(this.contadorInstruccion)) {
+                this.breakpointCumplido = false
+            }
+            
+
+            this.evaluarSubEnunciado(this.moduloActual.subEnunciados[this.contadorInstruccion])
+
+            this.incrementarContadorInstruccion()
+        }
+
+        /**
+         * Cuando se sale del bucle de ejecucion porque hay un breakpoint
+         * hay que poner la bandera breakpointCumplido en verdadero.
+         */
+        if (this.hayBreakpoint(this.contadorInstruccion)) {
+            this.breakpointCumplido = true
         }
 
         if (this.estadoActual != Estado.ERROR_ENCONTRADO) {
@@ -312,23 +396,7 @@ export class Evaluador {
     }
 
     private hayBreakpoint(numeroLinea: number): boolean {
-        // hacer busqueda binaria de numeroLinea en el arreglo this.breakpointsRegistrados
-        let inicio = 0, fin = this.breakpointsRegistrados.length - 1
-
-        while (inicio < fin) {
-            const medio = Math.floor(fin - inicio / 2) + inicio
-            if (numeroLinea == this.breakpointsRegistrados[medio]) {
-                return true
-            }
-            else if (numeroLinea > this.breakpointsRegistrados[medio]) {
-                inicio = medio + 1
-            }
-            else {
-                fin = medio - 1
-            }
-        }
-
-        return false
+        return existe(numeroLinea, this.breakpointsRegistrados)
     }
 
     private evaluarSubEnunciado(subEnunciado: N3.Enunciado) {
@@ -964,7 +1032,7 @@ function existe(objetoBuscado: number, arreglo: number[]): boolean {
 function busquedaBinaria(objetoBuscado: number, arreglo: number[]): number {
     let inicio = 0, fin = arreglo.length - 1
 
-    while (inicio < fin) {
+    while (inicio <= fin) {
         const medio = Math.floor(fin - inicio / 2) + inicio
         if (objetoBuscado == arreglo[medio]) {
             return medio
