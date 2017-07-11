@@ -51,6 +51,6 @@ al tope de la pila y las longitudes de las dimensiones de X.
 
 REFERENCIA X, Y, Z: crea una referencia X a la variable Y invocada con Z indices (Z es de tipo number). Ahora X hace referencia a Y, una variable ubicada en otro modulo.
 
-COPIAR ARR X, Y: copiar (todos o parte de) los contenidos del vector Y al vector X. X e Y son del tipo VectorData.
+COPIAR ARR U, V, X, Y: copiar los contenidos del vector X con Y indices al vector U con V indices. U y X son los nombres de los vectores, V e Y son numeros.
 
 INIT ARR X, Y: inicializa el arreglo de nombre X de un modulo con un vector Y pasado como argumento en la llamada. Y es del tipo VectorData.
