@@ -329,14 +329,20 @@ export default class TrasnformadorEvaluable {
         this.subEnunciados[e.pos.line] = this.ultimaLinea
 
         // inicializacion
-        // evaluacion de condicion
+        // evaluar valor final
+        // guardar valor final en registro
+        // evaluacion de condicion usando valor almacenado en registro (condicion: contador >= valor final)
         // salto para evitar cuerpo de bucle
         // cuerpo de bucle
         // incremento
         // salto a evaluacion de condicion
         const inicializacion = this.transformarAsignacion(e.counter_init)
 
-        const condicion = this.crearCondicionPara(e.counter_init.left, e.last_value)
+        const valorFinal = this.transformarExpresion(e.last_value)
+
+        const guardarValorFinal: N3.ASIGNAR_R = { tipo: N3.TipoEnunciado.ASIGNAR_R }
+
+        const condicion = this.crearCondicionPara(e.counter_init.left)
 
         let enunciadosBucle: N3.Enunciado[] = []
 
@@ -346,16 +352,15 @@ export default class TrasnformadorEvaluable {
 
         const incremento = this.crearIncrementoPara(e.counter_init.left)
 
-        const base = this.ultimaLinea + inicializacion.length + condicion.length
+        const base = this.ultimaLinea + inicializacion.length + valorFinal.length + 1 /* guardarValorFinal */ + condicion.length
 
-        const saltearBucle = base + enunciadosBucle.length + incremento.length + 2
+        const saltearBucle = base + enunciadosBucle.length + incremento.length + 2 // los dos saltos
         const saltoCondicional: N3.JIT = { tipo: N3.TipoEnunciado.JIT, numeroLinea: saltearBucle }
 
         const volverACondicion = this.ultimaLinea + inicializacion.length
         const saltoIncondicional: N3.JMP = { tipo: N3.TipoEnunciado.JMP, numeroLinea: volverACondicion }
 
-        return [...inicializacion, ...condicion, saltoCondicional, ...enunciadosBucle, ...incremento, saltoIncondicional]
-        
+        return [...inicializacion, ...valorFinal, guardarValorFinal, ...condicion, saltoCondicional, ...enunciadosBucle, ...incremento, saltoIncondicional]
     }
 
     private transformarRetornar(e: Typed.Return): N3.Enunciado[] {
@@ -489,11 +494,11 @@ export default class TrasnformadorEvaluable {
         }
     }
 
-    private crearCondicionPara(i: Typed.Invocation, e: Typed.ExpElement[]): N3.Enunciado[] {
+    private crearCondicionPara(i: Typed.Invocation): N3.Enunciado[] {
         const invocacion = this.transformarInvocacion(i)
-        const valor = this.transformarExpresion(e)
+        const valorFinal: N3.APILAR_R = { tipo: N3.TipoEnunciado.APILAR_R }
         const comparacion: N3.MAYOR = { tipo: N3.TipoEnunciado.MAYOR }
-        return [...invocacion, ...valor, comparacion]
+        return [...invocacion, valorFinal, comparacion]
     }
 
     private crearIncrementoPara(i: Typed.Invocation): N3.Enunciado[] {

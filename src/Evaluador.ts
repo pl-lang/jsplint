@@ -44,6 +44,9 @@ export class Evaluador {
     private pilaNombresModulo: string[]
     private pilaMemoria: Memoria[]
 
+    // Registro
+    private registro: Value
+
     // E/S
     private lecturaPendiente: { nombreVariable: string, tipoVarible: Typed.AtomicType | Typed.StringType }
     private escrituraPendiente: Value
@@ -71,6 +74,8 @@ export class Evaluador {
         this.pilaContadorInstruccion = []
         this.pilaValores = []
         this.pilaNombresModulo = []
+
+        this.registro = null
 
         this.lecturaPendiente = null
         this.escrituraPendiente = null
@@ -479,6 +484,12 @@ export class Evaluador {
             case N3.TipoEnunciado.ASIGNAR_ARR:
                 this.ASIGNAR_ARR(subEnunciado)
                 break
+            case N3.TipoEnunciado.APILAR_R:
+                this.APILAR_R()
+                break
+            case N3.TipoEnunciado.ASIGNAR_R:
+                this.ASIGNAR_R()
+                break
             case N3.TipoEnunciado.LLAMAR:
                 this.LLAMAR(subEnunciado)
                 break
@@ -775,6 +786,13 @@ export class Evaluador {
 
             variable.valores[indice] = this.pilaValores.pop()
         }
+    }
+
+    private APILAR_R() {
+        this.pilaValores.push(this.registro)
+    }
+    private ASIGNAR_R() {
+        this.registro = this.pilaValores.pop()
     }
 
     private LLAMAR(subEnunciado: N3.LLAMAR) {

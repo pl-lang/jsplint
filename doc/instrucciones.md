@@ -24,6 +24,14 @@ ASIGNAR X: asignar a X el valor que esta al tope de la pila.
 ASIGNAR ARR X, Y: asignar a una celda del arreglo X el valor que esta al tope de la pila. El indice de la celda se calcula usando Y indices (tomados
 de la pila) y usando las longitudes de las dimensiones del arreglo.
 
+## Operaciones de registro
+
+Hay un solo registro.
+
+APILAR_R: pone el valor del registro al tope de la pila.
+
+ASIGNAR_R: asigna el valor al tope de la pila al registro.
+
 ## Operaciones de salto
 
 Cambian el numero de instruccion en ejecucion.

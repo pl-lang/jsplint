@@ -70,6 +70,10 @@ function procesar_enunciado (e: N3.Enunciado) : string {
             return `ASIGNAR ${e.nombreVariable}`
         case N3.TipoEnunciado.ASIGNAR_ARR:
             return `ASIGNAR_ARR ${e.nombreVariable} ${e.cantidadIndices}`
+        case N3.TipoEnunciado.APILAR_R:
+            return 'APILAR_R'
+        case N3.TipoEnunciado.ASIGNAR_R:
+            return 'ASIGNAR_R'
         case N3.TipoEnunciado.JIF:
             return `JIF ${e.numeroLinea}`
         case N3.TipoEnunciado.JIT:

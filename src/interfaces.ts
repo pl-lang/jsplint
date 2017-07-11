@@ -1258,6 +1258,8 @@ export namespace N3 {
     APILAR_ARR,
     ASIGNAR,
     ASIGNAR_ARR,
+    APILAR_R,
+    ASIGNAR_R,
     JIF,
     JIT,
     JMP,
@@ -1294,6 +1296,8 @@ export namespace N3 {
     | APILAR_ARR
     | ASIGNAR
     | ASIGNAR_ARR
+    | APILAR_R
+    | ASIGNAR_R
     | JIF
     | JIT
     | JMP
@@ -1383,6 +1387,14 @@ export namespace N3 {
     tipo: TipoEnunciado.ASIGNAR_ARR
     nombreVariable: string
     cantidadIndices: number
+  }
+  
+  export interface APILAR_R {
+    tipo: TipoEnunciado.APILAR_R
+  }
+
+  export interface ASIGNAR_R {
+    tipo: TipoEnunciado.ASIGNAR_R
   }
 
   export interface JIF {
