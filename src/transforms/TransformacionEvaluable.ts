@@ -357,7 +357,7 @@ export default class TrasnformadorEvaluable {
         const saltearBucle = base + enunciadosBucle.length + incremento.length + 2 // los dos saltos
         const saltoCondicional: N3.JIT = { tipo: N3.TipoEnunciado.JIT, numeroLinea: saltearBucle }
 
-        const volverACondicion = this.ultimaLinea + inicializacion.length
+        const volverACondicion = this.ultimaLinea + inicializacion.length + valorFinal.length + 1
         const saltoIncondicional: N3.JMP = { tipo: N3.TipoEnunciado.JMP, numeroLinea: volverACondicion }
 
         return [...inicializacion, ...valorFinal, guardarValorFinal, ...condicion, saltoCondicional, ...enunciadosBucle, ...incremento, saltoIncondicional]

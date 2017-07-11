@@ -370,6 +370,29 @@ describe('Evaluador', () => {
         asignacionB.should.equal(true)
     })
 
+    it('Bucle PARA con un contador en una celda de un vector ', () => {
+        const code = `variables
+        entero a[2]
+        inicio
+        para a[1] <- 0 hasta 3
+        finpara
+        fin`
+        const programaCompilado = compilador.compilar(code)
+
+        const ev = new Evaluador(programaCompilado.result as N3.ProgramaCompilado)
+
+        const reporte = ev.ejecutarPrograma()
+
+        ev.ejecutarPrograma()
+
+        reporte.error.should.equal(false)
+        reporte.result.should.equal(-1)
+
+        const a1 = ev.consultarVariableVectorial('a', [1], 4)
+
+        a1.should.equal(true)
+    })
+
     it('Si el contador de un bucle PARA es mayor al valor final, el bucle es salteado', () => {
         const code = `variables
         entero a, b
