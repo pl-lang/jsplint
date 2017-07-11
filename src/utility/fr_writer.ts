@@ -19,9 +19,19 @@ const espacios = 2
 
 export default function fr_writer (p: N3.ProgramaCompilado) : string {
     // TODO: actualizar esto para que separe el codigo de los modulos...
-    let enunciados = p.enunciados.map((e, i) => `${i}: ${procesar_enunciado(e)}\n`)
+    let enunciados = p.enunciados.map((e, i) => `${i}: ${procesar_enunciado(e)}`)
 
-    return enunciados.reduce((p, c) => p + c, '')
+    const mayorLongitud = enunciados.map(e => e.length).reduce((p, c) => c > p ? c:p)
+
+    for (let modulo in p.rangoModulo) {
+        const rango = p.rangoModulo[modulo]
+        if (rango.fin > rango.inicio) {
+            enunciados[rango.inicio] += ` ${repetir('-', mayorLongitud + 1)}> INICIO MODULO ${modulo}`
+            enunciados[rango.fin - 1] += ` ${repetir('-', mayorLongitud + 1)}> FIN    MODULO ${modulo}`
+        }
+    }
+
+    return enunciados.map(e => e + '\n').reduce((p, c) => p + c, '')
 }
 
 function procesar_enunciado (e: N3.Enunciado) : string {
