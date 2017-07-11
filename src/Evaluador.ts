@@ -500,29 +500,29 @@ export class Evaluador {
     }
 
     private RESTAR() {
-        const a = this.pilaValores.pop() as number
         const b = this.pilaValores.pop() as number
+        const a = this.pilaValores.pop() as number
         this.pilaValores.push(a - b)
         return this.estadoActual
     }
 
     private DIV_REAL() {
-        const a = this.pilaValores.pop() as number
         const b = this.pilaValores.pop() as number
+        const a = this.pilaValores.pop() as number
         this.pilaValores.push(a / b)
         return this.estadoActual
     }
 
     private DIV_ENTERO() {
-        const a = this.pilaValores.pop() as number
         const b = this.pilaValores.pop() as number
+        const a = this.pilaValores.pop() as number
         this.pilaValores.push((a - (a % b)) / b)
         return this.estadoActual
     }
 
     private MODULO() {
-        const a = this.pilaValores.pop() as number
         const b = this.pilaValores.pop() as number
+        const a = this.pilaValores.pop() as number
         this.pilaValores.push(a % b)
         return this.estadoActual
     }
@@ -535,8 +535,8 @@ export class Evaluador {
     }
 
     private ELEVAR() {
-        const a = this.pilaValores.pop() as number
         const b = this.pilaValores.pop() as number
+        const a = this.pilaValores.pop() as number
         this.pilaValores.push(Math.pow(a, b))
         return this.estadoActual
     }
@@ -568,29 +568,29 @@ export class Evaluador {
     }
     
     private MENOR() {
-        const a = this.pilaValores.pop() as number
         const b = this.pilaValores.pop() as number
+        const a = this.pilaValores.pop() as number
         this.pilaValores.push(a < b)
         return this.estadoActual
     }
 
     private MENORIGUAL() {
-        const a = this.pilaValores.pop() as number
         const b = this.pilaValores.pop() as number
+        const a = this.pilaValores.pop() as number
         this.pilaValores.push(a <= b)
         return this.estadoActual
     }
 
     private MAYOR() {
-        const a = this.pilaValores.pop() as number
         const b = this.pilaValores.pop() as number
+        const a = this.pilaValores.pop() as number
         this.pilaValores.push(a > b)
         return this.estadoActual
     }
 
     private MAYORIGUAL() {
-        const a = this.pilaValores.pop() as number
         const b = this.pilaValores.pop() as number
+        const a = this.pilaValores.pop() as number
         this.pilaValores.push(a >= b)
         return this.estadoActual
     }
