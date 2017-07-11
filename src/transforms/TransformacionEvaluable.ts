@@ -121,7 +121,7 @@ export default class TrasnformadorEvaluable {
                 // 1 - Asignar a una celda de un vector
 
                 // Sub-enunciados que resultan de transformar cada una de las expresiones de los indices
-                const apilarIndices = variableObjetivo.indexes.map(this.transformarExpresion).reduce(concatenarVectores)
+                const apilarIndices = variableObjetivo.indexes.map(this.transformarExpresion).reduce(this.concatenarEnunciados, [])
 
                 // Sub-enunciados que resultan de transformar la expresion
                 const apilarExpresion = this.transformarExpresion(expresionAsignada)
@@ -163,7 +163,7 @@ export default class TrasnformadorEvaluable {
 
                     // Sub-enunciados que resultan de transformar cada una de las expresiones de los indices
                     // del vector que recibe los datos
-                    const apilarIndicesObjetivo = variableObjetivo.indexes.map(this.transformarExpresion).reduce(concatenarVectores)
+                    const apilarIndicesObjetivo = variableObjetivo.indexes.map(this.transformarExpresion).reduce(this.concatenarEnunciados, [])
 
                     /**
                      * Aclaracion: el type assert para e.right es correcto porque ya se verificó
@@ -174,7 +174,7 @@ export default class TrasnformadorEvaluable {
 
                     // Sub-enunciados que resultan de transformar cada una de las expresiones de los indices
                     // del vector de donde se obtienen los datos
-                    const apilarIndicesOrigen = vectorOrigen.indexes.map(this.transformarExpresion).reduce(concatenarVectores)
+                    const apilarIndicesOrigen = vectorOrigen.indexes.map(this.transformarExpresion).reduce(this.concatenarEnunciados, [])
 
                     const arregloObjetivo: S3.VectorData = {
                         name: variableObjetivo.name,
@@ -349,8 +349,8 @@ export default class TrasnformadorEvaluable {
 
         const base = this.ultimaLinea + inicializacion.length + condicion.length
 
-        const saltearBucle = base + enunciadosBucle.length + incremento.length + 1
-        const saltoCondicional: N3.JIF = { tipo: N3.TipoEnunciado.JIF, numeroLinea: saltearBucle }
+        const saltearBucle = base + enunciadosBucle.length + incremento.length + 2
+        const saltoCondicional: N3.JIT = { tipo: N3.TipoEnunciado.JIT, numeroLinea: saltearBucle }
 
         const volverACondicion = this.ultimaLinea + inicializacion.length
         const saltoIncondicional: N3.JMP = { tipo: N3.TipoEnunciado.JMP, numeroLinea: volverACondicion }
@@ -411,7 +411,7 @@ export default class TrasnformadorEvaluable {
                     llamadosALeer = [...llamadosALeer, leer, asignacion]
                 }
                 else {
-                    const apilarIndices = arg.indexes.map(this.transformarExpresion).reduce(concatenarVectores)
+                    const apilarIndices = arg.indexes.map(this.transformarExpresion).reduce(this.concatenarEnunciados, [])
 
                     const asignacion: N3.ASIGNAR_ARR = {
                         tipo: N3.TipoEnunciado.ASIGNAR_ARR,
@@ -440,7 +440,7 @@ export default class TrasnformadorEvaluable {
                      */
                     const invocacion = arg[0] as Typed.Invocation
 
-                    const apilarIndices = invocacion.indexes.map(this.transformarExpresion).reduce(concatenarVectores)
+                    const apilarIndices = invocacion.indexes.map(this.transformarExpresion).reduce(this.concatenarEnunciados, [])
 
                     const hacerAlias: N3.REFERENCIA = {
                         tipo: N3.TipoEnunciado.REFERENCIA,
@@ -460,7 +460,7 @@ export default class TrasnformadorEvaluable {
                          */
                         const arregloFuente = arg[0] as Typed.Invocation
 
-                        const apilarIndices = arregloFuente.indexes.map(this.transformarExpresion).reduce(concatenarVectores)
+                        const apilarIndices = arregloFuente.indexes.map(this.transformarExpresion).reduce(this.concatenarEnunciados, [])
 
                         const datosArregloFuente: S3.VectorData = {
                             name: arregloFuente.name,
@@ -493,7 +493,7 @@ export default class TrasnformadorEvaluable {
     private crearCondicionPara(i: Typed.Invocation, e: Typed.ExpElement[]): N3.Enunciado[] {
         const invocacion = this.transformarInvocacion(i)
         const valor = this.transformarExpresion(e)
-        const comparacion: N3.IGUAL = { tipo: N3.TipoEnunciado.IGUAL }
+        const comparacion: N3.MAYOR = { tipo: N3.TipoEnunciado.MAYOR }
         return [...invocacion, ...valor, comparacion]
     }
 
@@ -503,7 +503,7 @@ export default class TrasnformadorEvaluable {
         const suma: N3.SUMAR = { tipo: N3.TipoEnunciado.SUMAR }
 
         if (i.is_array) {
-            const apilarIndices = i.indexes.map(this.transformarExpresion).reduce(concatenarVectores)
+            const apilarIndices = i.indexes.map(this.transformarExpresion).reduce(this.concatenarEnunciados, [])
             const cantidadIndices = i.indexes.length
             const nombreVariable = i.name
             const asignacion: N3.ASIGNAR_ARR = { tipo: N3.TipoEnunciado.ASIGNAR_ARR, nombreVariable, cantidadIndices}
@@ -613,7 +613,7 @@ export default class TrasnformadorEvaluable {
             if (i.dimensions.length == i.indexes.length) {
                 // 2.a - Se invoca un arreglo con la maxima cantidad de indices
 
-                const apilarIndices = i.indexes.map(this.transformarExpresion).reduce(concatenarVectores)
+                const apilarIndices = i.indexes.map(this.transformarExpresion).reduce(this.concatenarEnunciados, [])
 
                 const cantidadIndices = i.indexes.length
 
@@ -638,7 +638,7 @@ export default class TrasnformadorEvaluable {
                 const cantidadIndices = i.indexes.length
 
                 for (let indices of indicesInvocaciones) {
-                    const apilarIndices = indices.map(this.transformarExpresion).reduce(concatenarVectores)
+                    const apilarIndices = indices.map(this.transformarExpresion).reduce(this.concatenarEnunciados, [])
 
                     const invocacion: N3.APILAR_ARR = { tipo: N3.TipoEnunciado.APILAR_ARR, nombreVariable, cantidadIndices}
 
@@ -681,8 +681,8 @@ export default class TrasnformadorEvaluable {
 
         return literalNumerico
     }
-}
 
-function concatenarVectores<A>(arrA: A[], arrB: A[]): A[] {
-    return [...arrA, ...arrB]
-} 
+    private concatenarEnunciados(a: N3.Enunciado[], b: N3.Enunciado[]): N3.Enunciado[] {
+        return [...a, ...b]
+    }
+}
