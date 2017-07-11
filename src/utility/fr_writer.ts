@@ -89,7 +89,7 @@ function procesar_enunciado (e: N3.Enunciado) : string {
         case N3.TipoEnunciado.REFERENCIA:
             return `REFERENCIA ${e.nombreReferencia} ${e.nombreVariable} ${e.cantidadIndices}`
         case N3.TipoEnunciado.COPIAR_ARR:
-            return `COPIAR_ARR ${e.arregloObjetivo} ${e.arregloFuente}`
+            return `COPIAR_ARR ${e.nombreObjetivo} ${e.cantidadIndicesObjetivo} ${e.nombreFuente} ${e.cantidadIndicesFuente}`
         case N3.TipoEnunciado.INIT_ARR:
             return `INIT_ARR ${e.nombreArregloObjetivo} ${e.arregloFuente}`
     }

@@ -2,6 +2,8 @@
 
 import { N3, Typed, Value, Memoria, Referencia, Escalar, Vector2, Failure, Success } from './interfaces'
 
+import { drop } from './utility/helpers'
+
 export enum Estado {
     EJECUTANDO_PROGRAMA = 0,
     ESPERANDO_LECTURA, // luego de una llamada a leer
@@ -489,6 +491,9 @@ export class Evaluador {
             case N3.TipoEnunciado.JMP:
                 this.JMP(subEnunciado)
                 break
+            case N3.TipoEnunciado.COPIAR_ARR:
+                this.COPIAR_ARR(subEnunciado)
+                break
         }
     }
 
@@ -829,6 +834,63 @@ export class Evaluador {
         this.saltoRealizado = true
     }
 
+    private COPIAR_ARR(subEnunciado: N3.COPIAR_ARR) {
+        // Vector objetivo (al cual se copian los datos)
+        let vectorA: Vector2
+
+        // Indices para el vector objetivo
+        let indicesA: number[]
+
+        // Vector fuente (del cual se obtienen los datos)
+        let vectorB: Vector2
+
+        // Indices para el vector fuente
+        let indicesB: number[]
+
+        const variableOReferenciaA = this.recuperarVariable(subEnunciado.nombreObjetivo) as (Referencia | Vector2)
+
+        const variableOReferenciaB = this.recuperarVariable(subEnunciado.nombreFuente) as (Referencia | Vector2)
+
+        // Resvoler el vector fuente primero porque sus indices estan al tope de la pila
+        if (variableOReferenciaB.tipo == "referencia") {
+            const referenciaResuelta = this.resolverReferencia(variableOReferenciaB)
+
+            vectorB = referenciaResuelta.variable as Vector2
+
+            indicesB = [...referenciaResuelta.indicesPrevios, ...this.recuperarIndices(subEnunciado.cantidadIndicesFuente)].map(i => i - 1)
+        }
+        else {
+            vectorB = variableOReferenciaB
+            indicesB = this.recuperarIndices(subEnunciado.cantidadIndicesFuente).map(i => i - 1)
+        }
+
+        // Resolver el vector objetivo
+        if (variableOReferenciaA.tipo == "referencia") {
+            const referenciaResuelta = this.resolverReferencia(variableOReferenciaA)
+
+            vectorA = referenciaResuelta.variable as Vector2
+
+            indicesA = [...referenciaResuelta.indicesPrevios, ...this.recuperarIndices(subEnunciado.cantidadIndicesObjetivo)].map(i => i - 1)
+        }
+        else {
+            vectorA = variableOReferenciaA
+            indicesA = this.recuperarIndices(subEnunciado.cantidadIndicesObjetivo).map(i => i - 1)
+        }
+
+        // Indice de la primer celda de A a la que se copia un valor...
+        const indiceBaseObjetivo = this.calcularIndice([...indicesA, ...repetir(0, vectorA.dimensiones.length - indicesA.length)], vectorA.dimensiones)
+
+        // Indice de la primer celda de B de la que se copia un valor...
+        const indiceBaseFuente = this.calcularIndice([...indicesB, ...repetir(0, vectorB.dimensiones.length - indicesB.length)], vectorB.dimensiones)
+
+        // Indice de la ultima celda a copiar
+        const indiceUltimaCelda = this.calcularIndice([...indicesB, ...drop(indicesB.length, vectorB.dimensiones).map(i => i - 1)], vectorB.dimensiones)
+
+        for (let i = 0; (i + indiceBaseFuente) <= indiceUltimaCelda; i++) {
+            vectorA.valores[indiceBaseObjetivo + i] = vectorB.valores[indiceBaseFuente + i]
+        }
+    }
+
     private recuperarVariable(nombreVariable: string): Escalar | Vector2 | Referencia {
         // buscar en locales
         if (nombreVariable in this.memoriaModuloActual) {
@@ -896,6 +958,19 @@ export class Evaluador {
 }
 
 // funciones auxiliares
+
+/**
+ * Devuelve un arreglo donde 'a' se repite 'n' veces
+ * @param a elemento a repetir
+ * @param n cuantas veces hay que repetirlo
+ */
+function repetir<A>(a: A, n: number): A[] {
+    const r = new Array<A>(n)
+    for (let i = 0; i < n; i++) {
+        r[i] = a
+    }
+    return r
+}
 
 /**
  * Elimina los elementos repetidos de un arreglo

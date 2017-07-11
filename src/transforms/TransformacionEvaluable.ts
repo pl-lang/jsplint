@@ -131,7 +131,7 @@ export default class TrasnformadorEvaluable {
                 // sub-enunciado de asignacion
                 const asignacion: N3.ASIGNAR_ARR = { tipo: N3.TipoEnunciado.ASIGNAR_ARR, nombreVariable: variableObjetivo.name, cantidadIndices }
 
-                const enunciadoTransformado = [...apilarIndices, ...apilarExpresion, asignacion]
+                const enunciadoTransformado = [...apilarExpresion, ...apilarIndices, asignacion]
 
                 return enunciadoTransformado
             }
@@ -170,25 +170,24 @@ export default class TrasnformadorEvaluable {
                      * (en TSChecker) que el primer y unico componente de esa expresion sea una
                       * invocacion de un vector.
                      */
-                    const vectorOrigen = e.right[0] as Typed.Invocation
+                    const vectorFuente = e.right[0] as Typed.Invocation
 
                     // Sub-enunciados que resultan de transformar cada una de las expresiones de los indices
                     // del vector de donde se obtienen los datos
-                    const apilarIndicesOrigen = vectorOrigen.indexes.map(this.transformarExpresion).reduce(this.concatenarEnunciados, [])
+                    const apilarIndicesOrigen = vectorFuente.indexes.map(this.transformarExpresion).reduce(this.concatenarEnunciados, [])
 
-                    const arregloObjetivo: S3.VectorData = {
-                        name: variableObjetivo.name,
-                        indexes: variableObjetivo.indexes.length,
-                        dimensions: variableObjetivo.dimensions
+                    const nombreObjetivo = variableObjetivo.name
+                    const cantidadIndicesObjetivo = variableObjetivo.indexes.length
+                    const nombreFuente = vectorFuente.name
+                    const cantidadIndicesFuente = vectorFuente.indexes.length
+
+                    const asignacion: N3.COPIAR_ARR = {
+                        tipo: N3.TipoEnunciado.COPIAR_ARR,
+                        nombreObjetivo,
+                        cantidadIndicesObjetivo,
+                        nombreFuente,
+                        cantidadIndicesFuente
                     }
-
-                    const arregloFuente: S3.VectorData = {
-                        name: vectorOrigen.name,
-                        indexes: vectorOrigen.indexes.length,
-                        dimensions: vectorOrigen.dimensions
-                    }
-
-                    const asignacion: N3.COPIAR_ARR = { tipo: N3.TipoEnunciado.COPIAR_ARR, arregloObjetivo, arregloFuente }
 
                     const enunciadoTransformado = [...apilarIndicesObjetivo, ...apilarIndicesOrigen, asignacion]
 

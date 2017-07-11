@@ -1436,8 +1436,10 @@ export namespace N3 {
 
   export interface COPIAR_ARR {
     tipo: TipoEnunciado.COPIAR_ARR
-    arregloObjetivo: S3.VectorData
-    arregloFuente: S3.VectorData
+    nombreObjetivo: string
+    cantidadIndicesObjetivo: number
+    nombreFuente: string
+    cantidadIndicesFuente: number
   }
   
   export interface INIT_ARR {
