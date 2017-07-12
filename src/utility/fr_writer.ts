@@ -21,13 +21,19 @@ export default function fr_writer (p: N3.ProgramaCompilado) : string {
     // TODO: actualizar esto para que separe el codigo de los modulos...
     let enunciados = p.enunciados.map((e, i) => `${i}: ${procesar_enunciado(e)}`)
 
-    const mayorLongitud = enunciados.map(e => e.length).reduce((p, c) => c > p ? c:p)
+    // longitud de la cadena mas larga
+    const mayorLongitud = enunciados.map(e => e.length).reduce((p, c) => c > p ? c : p)
+
+    const margenBase = Math.floor( mayorLongitud / 2)
 
     for (let modulo in p.rangoModulo) {
         const rango = p.rangoModulo[modulo]
         if (rango.fin > rango.inicio) {
-            enunciados[rango.inicio] += ` ${repetir('-', mayorLongitud + 1)}> INICIO MODULO ${modulo}`
-            enunciados[rango.fin - 1] += ` ${repetir('-', mayorLongitud + 1)}> FIN    MODULO ${modulo}`
+            let margen = margenBase + 1 + (mayorLongitud - enunciados[rango.inicio].length)
+            enunciados[rango.inicio] += ` ${repetir('-', margen)}> INICIO MODULO ${modulo}`
+
+            margen = margenBase + 1 + (mayorLongitud - enunciados[rango.fin - 1].length)
+            enunciados[rango.fin - 1] += ` ${repetir('-', margen)}> FIN    MODULO ${modulo}`
         }
     }
 
@@ -102,6 +108,8 @@ function procesar_enunciado (e: N3.Enunciado) : string {
             return `CONCATENAR ${e.cantidadCaracteres}`
         case N3.TipoEnunciado.REFERENCIA:
             return `REFERENCIA ${e.nombreReferencia} ${e.nombreVariable} ${e.cantidadIndices}`
+        case N3.TipoEnunciado.CREAR_MEMORIA:
+            return `CREAR_MEMORIA ${e.nombreModulo}`
         case N3.TipoEnunciado.COPIAR_ARR:
             return `COPIAR_ARR ${e.nombreObjetivo} ${e.cantidadIndicesObjetivo} ${e.nombreFuente} ${e.cantidadIndicesFuente}`
         case N3.TipoEnunciado.INIT_ARR:
