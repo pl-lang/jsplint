@@ -47,7 +47,11 @@ export default class TrasnformadorEvaluable {
             }
             else {
                 this.nombreModuloActual = clave
-                // resultadoFinal.modulos[clave] = this.transformarModulo(moduloOriginal)
+                this.rangoModulo[clave] = { inicio: -1, fin: -1 }
+                this.rangoModulo[clave].inicio = this.ultimaLinea
+                enunciados = [...enunciados, ...this.transformarModulo(moduloOriginal)]
+                this.rangoModulo[clave].fin = this.ultimaLinea
+                resultadoFinal.variablesLocales[clave] = variables
             }
         }
 
@@ -74,16 +78,31 @@ export default class TrasnformadorEvaluable {
         return enunciados
     }
 
-    // private transformarModulo(m: Typed.Module): N3.Enunciado[] {
-    //     // inicializar los parametros que no sean pasados por referencia primero
-    //     for (let i = m.parameters.length - 1; i >= 0; i--) {
-    //         const param = m.parameters[i]
-    //         if (!param.by_ref && !param.is_array) {
+    private transformarModulo(m: Typed.Module): N3.Enunciado[] {
+        const inicializarParametros: N3.Enunciado[] = []
 
-    //         }
-    //     }
-    //     // luego transformar el cuerpo
-    // }
+        // inicializar, de atras para adelante, los parametros que no sean arreglos o referencias
+        for (let i = m.parameters.length - 1; i >= 0; i--) {
+            const param = m.parameters[i]
+            if (!param.by_ref && !param.is_array) {
+                const asignacion: N3.ASIGNAR = { tipo: N3.TipoEnunciado.ASIGNAR, nombreVariable: param.name }
+                inicializarParametros.push(asignacion)
+                this.ultimaLinea += 1
+            }
+        }
+
+        let enunciados: N3.Enunciado[] = []
+
+        for (let enunciado of m.body) {
+            const enunciadoTransformado = this.transformarEnunciado(enunciado)
+
+            enunciados = [...enunciados, ...enunciadoTransformado]
+
+            this.ultimaLinea += enunciadoTransformado.length
+        }
+
+        return [...inicializarParametros, ...enunciados]
+    }
 
     private transformarEnunciado(e: Typed.Statement): N3.Enunciado[] {
         switch (e.type) {
@@ -430,6 +449,8 @@ export default class TrasnformadorEvaluable {
             return llamadosALeer
         }
         else {
+            const crearMemoria: N3.CREAR_MEMORIA = { tipo: N3.TipoEnunciado.CREAR_MEMORIA, nombreModulo: e.name }
+
             let argumentos: N3.Enunciado[] = []
 
             for (let i = 0; i < e.args.length; i++) {
@@ -446,17 +467,26 @@ export default class TrasnformadorEvaluable {
 
                     const apilarIndices = invocacion.indexes.map(this.transformarExpresion).reduce(this.concatenarEnunciados, [])
 
-                    const hacerAlias: N3.REFERENCIA = {
+                    const crearReferencia: N3.REFERENCIA = {
                         tipo: N3.TipoEnunciado.REFERENCIA,
                         nombreReferencia: param.name,
                         nombreVariable: invocacion.name,
                         cantidadIndices: invocacion.indexes.length
                     }
 
-                    argumentos = [...argumentos, ...apilarIndices, hacerAlias]
+                    argumentos = [...argumentos, ...apilarIndices, crearReferencia]
                 }
                 else {
+                    /**
+                     * Si el parametro no es tomado por referencia, el argumento que recibe es:
+                     *  1. Un escalar: en este caso simplemente se invoca el argumento.
+                     *  2. Un vector que recibe...
+                     *      2a. Una cadena literal: en ese caso se usa la instruccion ASIGNAR_CAD
+                     *      2b. Otro vector: en este caso se usa la instruccion INIT_ARR
+                     */
                     if (param.is_array) {
+                        // AGREGAR CASO ESPECIAL: inicializar arreglo con una cadena literal
+
                         /**
                          * Aclaracion: el type assert para arg[0] es correcto porque ya se verificó
                          * (en TSChecker) que el primer y unico componente de esa expresion sea una
@@ -490,7 +520,7 @@ export default class TrasnformadorEvaluable {
 
             const llamado: N3.LLAMAR = { tipo: N3.TipoEnunciado.LLAMAR, nombreModulo: e.name }
 
-            return [...argumentos, llamado]
+            return [crearMemoria, ...argumentos, llamado]
         }
     }
 

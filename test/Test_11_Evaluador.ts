@@ -518,4 +518,44 @@ describe('Evaluador', () => {
 
         asignacion.should.equal(true)
     })
+
+    it('Llamado a un modulo que toma una variable escalar por referencia y la modifica', () => {
+        const code = `variables
+        entero a
+        inicio
+        a <- 2
+        modificar(a)
+        fin
+        
+        procedimiento modificar(entero ref b)
+        inicio
+        b <- 95
+        finprocedimiento`
+
+        const programaCompilado = compilador.compilar(code)
+
+        const ev = new Evaluador(programaCompilado.result as N3.ProgramaCompilado)
+
+        ev.agregarBreakpoint(4)
+
+        let reporte = ev.ejecutarPrograma()
+
+        reporte.error.should.equal(false)
+        reporte.result.should.equal(4)
+
+        // probar que antes de la llamada, a == 2
+        let asignacion = ev.consultarVariableEscalar('a', 2)
+
+        asignacion.should.equal(true)
+
+        reporte = ev.ejecutarPrograma()
+
+        reporte.error.should.equal(false)
+        reporte.result.should.equal(-1)
+
+        // probar que luego de la llamada a == 95
+        asignacion = ev.consultarVariableEscalar('a', 95)
+
+        asignacion.should.equal(true)
+    })
 })

@@ -23,6 +23,8 @@ export class Evaluador {
 
     private memoriaModuloActual: Memoria
 
+    private memoriaProximoModulo: Memoria
+
     private estadoActual: Estado
 
     private contadorInstruccion: number // indica cual es la proxima instruccion que se ejecutara
@@ -78,6 +80,7 @@ export class Evaluador {
         this.pilaContadorInstruccion = []
         this.pilaValores = []
         this.pilaNombresModulo = []
+        this.pilaMemoria = []
 
         this.registro = null
 
@@ -551,6 +554,12 @@ export class Evaluador {
             case N3.TipoEnunciado.ESCRIBIR:
                 this.ESCRIBIR()
                 break
+            case N3.TipoEnunciado.REFERENCIA:
+                this.REFERENCIA(subEnunciado)
+                break
+            case N3.TipoEnunciado.CREAR_MEMORIA:
+                this.CREAR_MEMORIA(subEnunciado)
+                break
             case N3.TipoEnunciado.JIF:
                 this.JIF(subEnunciado)
                 break
@@ -867,8 +876,10 @@ export class Evaluador {
         // apilar la memoria del modulo actual
         this.pilaMemoria.push(this.memoriaModuloActual)
 
-        // crear espacio de memoria del modulo llamado
-        this.memoriaModuloActual = this.crearMemoriaModulo(subEnunciado.nombreModulo)
+        // cargar la memoria del modulo
+        this.memoriaModuloActual = this.memoriaProximoModulo
+
+        this.memoriaProximoModulo = null
 
         // poner contador instruccion en el primer sub-enunciado del modulo llamado
         const rangoModuloLlamado = this.programaActual.rangoModulo[subEnunciado.nombreModulo]
@@ -889,6 +900,19 @@ export class Evaluador {
     private ESCRIBIR() {
         this.escrituraPendiente = this.pilaValores.pop()
         this.estadoActual = Estado.ESPERANDO_ESCRITURA
+    }
+
+    private REFERENCIA(subEnunciado: N3.REFERENCIA) {
+        const indices = this.recuperarIndices(subEnunciado.cantidadIndices)
+        const referencia = this.memoriaProximoModulo[subEnunciado.nombreReferencia] as Referencia
+        // Cargar la referencia con los datos necesarios. La referencia en si fue creada durante un llamado a CREAR_MEMORIA.
+        referencia.indices = indices
+        referencia.nombreVariable = subEnunciado.nombreVariable
+    }
+
+    private CREAR_MEMORIA(subEnunciado: N3.CREAR_MEMORIA) {
+        // crear espacio de memoria del modulo que va a ser llamado
+        this.memoriaProximoModulo = this.crearMemoriaModulo(subEnunciado.nombreModulo)
     }
 
     private JIF(subEnunciado: N3.JIF) {

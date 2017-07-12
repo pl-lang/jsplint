@@ -1269,6 +1269,7 @@ export namespace N3 {
     ASIGNAR_CAD,
     CONCATENAR,
     REFERENCIA,
+    CREAR_MEMORIA,
     COPIAR_ARR,
     INIT_ARR
   }
@@ -1307,6 +1308,7 @@ export namespace N3 {
     | ASIGNAR_CAD
     | CONCATENAR
     | REFERENCIA
+    | CREAR_MEMORIA
     | COPIAR_ARR
     | INIT_ARR
   
@@ -1444,6 +1446,11 @@ export namespace N3 {
     nombreReferencia: string
     nombreVariable: string
     cantidadIndices: number
+  }
+
+  export interface CREAR_MEMORIA {
+    tipo: TipoEnunciado.CREAR_MEMORIA
+    nombreModulo: string
   }
 
   export interface COPIAR_ARR {
