@@ -514,7 +514,7 @@ describe('Evaluador', () => {
         reporte.error.should.equal(false)
         reporte.result.should.equal(-1)
 
-        asignacion = ev.consultarVariableEscalar('a', 2000)
+        asignacion = ev.consultarVariableEscalar('a', 1000)
 
         asignacion.should.equal(true)
     })
