@@ -418,4 +418,104 @@ describe('Evaluador', () => {
 
         asignacion.should.equal(true)
     })
+
+    it('Programa con un llamado a ESCRIBIR con un solo argumento', () => {
+        const code = `variables
+        entero a
+        inicio
+        escribir(38)
+        a <- 1000
+        fin`
+
+        const programaCompilado = compilador.compilar(code)
+
+        const ev = new Evaluador(programaCompilado.result as N3.ProgramaCompilado)
+
+        let reporte = ev.ejecutarPrograma()
+
+        reporte.error.should.equal(false)
+        reporte.result.should.equal(4)
+
+        // probar que haya una escritura pendiente
+        let hayEscrituraPendiente = ev.hayEscrituraPendiente()
+
+        hayEscrituraPendiente.should.equal(true)
+
+        // probar que el valor a escribir sea el correcto
+        const valor = ev.escribir()
+        valor.should.equal(38)
+
+        // probar que luego de escribir ya no hay escrituras pendientes
+        hayEscrituraPendiente = ev.hayEscrituraPendiente()
+
+        hayEscrituraPendiente.should.equal(false)
+
+        // probar que la ejecucion se resume
+        reporte = ev.ejecutarPrograma()
+
+        reporte.error.should.equal(false)
+        reporte.result.should.equal(-1)
+
+        const asignacion = ev.consultarVariableEscalar('a', 1000)
+
+        asignacion.should.equal(true)
+    })
+
+    it('Programa con un llamado a LEER con un solo argumento', () => {
+        const code = `variables
+        entero a
+        inicio
+        leer(a)
+        a <- 1000
+        fin`
+
+        const programaCompilado = compilador.compilar(code)
+
+        const ev = new Evaluador(programaCompilado.result as N3.ProgramaCompilado)
+
+        ev.agregarBreakpoint(4)
+
+        let reporte = ev.ejecutarPrograma()
+
+        reporte.error.should.equal(false)
+        reporte.result.should.equal(3)
+
+        // probar que haya una lectura pendiente
+        let hayLecturaPendiente = ev.hayLecturaPendiente()
+
+        hayLecturaPendiente.should.equal(true)
+
+        // obtener el nombre y el tipo de la variable a leer
+        const datosVariable = ev.obtenerLecturaPendiente()
+        datosVariable.nombreVariable.should.equal('a')
+
+        // enviar valor "leido"
+        ev.leer(2000)
+
+        // probar que luego de leer ya no hay lectura pendiente
+        hayLecturaPendiente = ev.hayLecturaPendiente()
+
+        hayLecturaPendiente.should.equal(false)
+
+        // probar que la ejecucion se resume hasta el breakpoint en la linea 4
+        reporte = ev.ejecutarPrograma()
+
+        reporte.error.should.equal(false)
+        reporte.result.should.equal(4)
+
+        // ahora, la variable 'a' deberia tener el valor que fue "leido", es decir, a == 2000
+        let asignacion = ev.consultarVariableEscalar('a', 2000)
+
+        asignacion.should.equal(true)
+
+        // resumir la ejecucion nuevamente
+        reporte = ev.ejecutarPrograma()
+
+        reporte.error.should.equal(false)
+        reporte.result.should.equal(-1)
+
+        asignacion = ev.consultarVariableEscalar('a', 2000)
+
+        asignacion.should.equal(true)
+    })
 })

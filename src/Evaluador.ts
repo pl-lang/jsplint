@@ -46,10 +46,14 @@ export class Evaluador {
 
     // Registro
     private registro: Value
-
+    
     // E/S
-    private lecturaPendiente: { nombreVariable: string, tipoVarible: Typed.AtomicType | Typed.StringType }
+    private lecturaPendiente: { nombreVariable: string, tipoVariable: Typed.AtomicType | Typed.StringType }
     private escrituraPendiente: Value
+
+    // atributos necesarios para convertir un numero de sub enunciado a un numero de linea fuente
+    private numerosSubEnunciados: number[]
+    private numerosLineasFuente:  number[]
 
     constructor(programaCompilado: N3.ProgramaCompilado) {
         this.programaActual = programaCompilado
@@ -80,6 +84,12 @@ export class Evaluador {
         this.lecturaPendiente = null
         this.escrituraPendiente = null
 
+        this.numerosLineasFuente = Object.keys(this.programaActual.subEnunciados).map(i => Number(i))
+        this.numerosSubEnunciados = []
+        for (let k in this.programaActual.subEnunciados) {
+            this.numerosSubEnunciados.push(this.programaActual.subEnunciados[k])
+        }
+
         /**
          * Determinar el estado inicial, si el modulo principal no
          * tiene enunciados, no hay nada que ejecutar
@@ -90,6 +100,31 @@ export class Evaluador {
         else {
             this.estadoActual = Estado.EJECUTANDO_PROGRAMA
         }
+    }
+
+    hayLecturaPendiente():boolean {
+        return this.estadoActual == Estado.ESPERANDO_LECTURA
+    }
+
+    obtenerLecturaPendiente(): { nombreVariable: string, tipoVariable: Typed.AtomicType | Typed.StringType } {
+        return this.lecturaPendiente
+    }
+
+    leer(v: Value) {
+        this.estadoActual = Estado.EJECUTANDO_PROGRAMA
+        this.pilaValores.push(v)
+        this.lecturaPendiente = null
+    }
+
+    hayEscrituraPendiente(): boolean {
+        return this.estadoActual == Estado.ESPERANDO_ESCRITURA
+    }
+
+    escribir(): Value {
+        this.estadoActual = Estado.EJECUTANDO_PROGRAMA
+        const valorAEscribir = this.escrituraPendiente
+        this.escrituraPendiente = null
+        return valorAEscribir
     }
 
     agregarBreakpoint(numeroLinea: number) {
@@ -317,12 +352,30 @@ export class Evaluador {
     }
 
     private aLineaFuente(numeroInstruccion: number): number {
-        for (let numeroLinea in this.programaActual.subEnunciados) {
-            if (this.programaActual.subEnunciados[numeroLinea] == numeroInstruccion) {
-                return Number(numeroLinea)
+        let indiceEncontrado = false
+        let indice
+        let i = 0
+        const l = this.numerosSubEnunciados.length
+        while (i < l && !indiceEncontrado) {
+            if (numeroInstruccion > this.numerosSubEnunciados[i]) {
+                i++
+            }
+            else {
+                indiceEncontrado = true
+                if (numeroInstruccion < this.numerosSubEnunciados[i]) {
+                    indice = i - 1
+                }
+                else {
+                    indice = i
+                }
             }
         }
-        return -1
+        if (indiceEncontrado) {
+            return this.numerosLineasFuente[indice]
+        }
+        else {
+            return -1
+        }
     }
 
     /**
@@ -409,7 +462,6 @@ export class Evaluador {
     private sePuedeEjecutar(): boolean {
         return this.estadoActual == Estado.EJECUTANDO_PROGRAMA
             || this.estadoActual == Estado.ESPERANDO_PASO
-            || this.estadoActual == Estado.ESPERANDO_LECTURA
     }
 
     private hayBreakpoint(numeroLinea: number): boolean {
@@ -492,6 +544,12 @@ export class Evaluador {
                 break
             case N3.TipoEnunciado.LLAMAR:
                 this.LLAMAR(subEnunciado)
+                break
+            case N3.TipoEnunciado.LEER:
+                this.LEER(subEnunciado)
+                break
+            case N3.TipoEnunciado.ESCRIBIR:
+                this.ESCRIBIR()
                 break
             case N3.TipoEnunciado.JIF:
                 this.JIF(subEnunciado)
@@ -821,6 +879,16 @@ export class Evaluador {
 
         // poner bandera moduloLlamado en verdadero
         this.moduloLLamado = true
+    }
+
+    private LEER(subEnunciado: N3.LEER) {
+        this.lecturaPendiente = { nombreVariable: subEnunciado.nombreVariable, tipoVariable: subEnunciado.tipoVariable }
+        this.estadoActual = Estado.ESPERANDO_LECTURA
+    }
+
+    private ESCRIBIR() {
+        this.escrituraPendiente = this.pilaValores.pop()
+        this.estadoActual = Estado.ESPERANDO_ESCRITURA
     }
 
     private JIF(subEnunciado: N3.JIF) {
