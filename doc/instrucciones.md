@@ -65,4 +65,4 @@ vez que el modulo es llamado, "memoriaProximoModulo" pasa a ser "memoriaModuloAc
 
 COPIAR ARR U, V, X, Y: copiar los contenidos del vector X con Y indices al vector U con V indices. U y X son los nombres de los vectores, V e Y son numeros.
 
-INIT ARR X, Y: inicializa el arreglo de nombre X de un modulo con un vector Y pasado como argumento en la llamada. Y es del tipo VectorData.
+INIT ARR X, Y, Z: inicializa el arreglo de nombre X de un modulo con un arreglo Y (invocado con Z indices) pasado como argumento en la llamada. Z es un numero (cantida de indices).

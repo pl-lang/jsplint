@@ -496,16 +496,11 @@ export default class TrasnformadorEvaluable {
 
                         const apilarIndices = arregloFuente.indexes.map(this.transformarExpresion).reduce(this.concatenarEnunciados, [])
 
-                        const datosArregloFuente: S3.VectorData = {
-                            name: arregloFuente.name,
-                            dimensions: arregloFuente.dimensions,
-                            indexes: arregloFuente.indexes.length
-                        }
-
                         const inicializarArreglo: N3.INIT_ARR = {
                             tipo: N3.TipoEnunciado.INIT_ARR,
                             nombreArregloObjetivo: param.name,
-                            arregloFuente: datosArregloFuente
+                            nombreArregloFuente: arregloFuente.name,
+                            cantidadIndices: arregloFuente.indexes.length
                         }
 
                         argumentos = [...argumentos, ...apilarIndices, inicializarArreglo]

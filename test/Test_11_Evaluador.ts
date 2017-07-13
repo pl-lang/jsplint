@@ -558,4 +558,110 @@ describe('Evaluador', () => {
 
         asignacion.should.equal(true)
     })
+
+    it('Llamado a un modulo que toma un vector como parametro', () => {
+        const code = `variables
+        entero a[2]
+        inicio
+        a[1] <- 26
+        a[2] <- 27
+        recibirVector(a)
+        fin
+        
+        procedimiento recibirVector(entero b[2])
+        inicio
+        escribir("prueba")
+        finprocedimiento`
+
+        const programaCompilado = compilador.compilar(code)
+
+        const ev = new Evaluador(programaCompilado.result as N3.ProgramaCompilado)
+
+        /**
+         * Pongo un breakpoint en el unico enunciado del procedimiento
+         * para poder probar que las celdas de b recibieron los valores
+         * de las celdas de a. Hay que usar un breakpoint porque
+         * consultarVariable[Vectorial | Escalar] solo consulta
+         * variables en ambito.
+         */
+        ev.agregarBreakpoint(10)
+
+        let reporte = ev.ejecutarPrograma()
+
+        reporte.error.should.equal(false)
+        reporte.result.should.equal(10)
+
+        // probar que luego de la llamada b[1] == 26 y b[2] == 27
+        let asignacion = ev.consultarVariableVectorial('b', [1], 26)
+
+        asignacion.should.equal(true)
+
+        asignacion = ev.consultarVariableVectorial('b', [2], 27)
+
+        asignacion.should.equal(true)
+
+        // resumir la ejecucion hasta finalizar el programa
+        reporte = ev.ejecutarPrograma()
+
+        reporte.error.should.equal(false)
+        reporte.result.should.equal(-1)
+    })
+
+    it('Llamado a un modulo que toma una matriz como parametro', () => {
+        const code = `variables
+        entero a[2, 2, 2]
+        inicio
+        a[1, 1, 1] <- 26
+        a[1, 1, 2] <- 27
+        a[1, 2, 1] <- 28
+        a[1, 2, 2] <- 29
+        recibirMatriz(a[1])
+        fin
+        
+        procedimiento recibirMatriz(entero b[2, 2])
+        inicio
+        escribir("prueba")
+        finprocedimiento`
+
+        const programaCompilado = compilador.compilar(code)
+
+        const ev = new Evaluador(programaCompilado.result as N3.ProgramaCompilado)
+
+        /**
+         * Pongo un breakpoint en el unico enunciado del procedimiento
+         * para poder probar que las celdas de b recibieron los valores
+         * de las celdas de a. Hay que usar un breakpoint porque
+         * consultarVariable[Vectorial | Escalar] solo consulta
+         * variables en ambito.
+         */
+        ev.agregarBreakpoint(12)
+
+        let reporte = ev.ejecutarPrograma()
+
+        reporte.error.should.equal(false)
+        reporte.result.should.equal(12)
+
+        // probar que luego de la llamada b[1] == 26 y b[2] == 27
+        let asignacion = ev.consultarVariableVectorial('b', [1, 1], 26)
+
+        asignacion.should.equal(true)
+
+        asignacion = ev.consultarVariableVectorial('b', [1, 2], 27)
+
+        asignacion.should.equal(true)
+
+        asignacion = ev.consultarVariableVectorial('b', [2, 1], 28)
+
+        asignacion.should.equal(true)
+
+        asignacion = ev.consultarVariableVectorial('b', [2, 2], 29)
+
+        asignacion.should.equal(true)
+
+        // resumir la ejecucion hasta finalizar el programa
+        reporte = ev.ejecutarPrograma()
+
+        reporte.error.should.equal(false)
+        reporte.result.should.equal(-1)
+    })
 })

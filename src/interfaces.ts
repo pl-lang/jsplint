@@ -1462,9 +1462,14 @@ export namespace N3 {
   }
   
   export interface INIT_ARR {
-    tipo: TipoEnunciado.INIT_ARR,
-    nombreArregloObjetivo: string,
-    arregloFuente: S3.VectorData
+    tipo: TipoEnunciado.INIT_ARR
+    nombreArregloObjetivo: string
+    nombreArregloFuente: string
+    /**
+     * Cantidad de indices usados para invocar al
+     * arreglo fuente.
+     */
+    cantidadIndices: number
   }
 }
 

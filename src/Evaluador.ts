@@ -572,6 +572,9 @@ export class Evaluador {
             case N3.TipoEnunciado.COPIAR_ARR:
                 this.COPIAR_ARR(subEnunciado)
                 break
+            case N3.TipoEnunciado.INIT_ARR:
+                this.INIT_ARR(subEnunciado)
+                break
         }
     }
 
@@ -998,6 +1001,39 @@ export class Evaluador {
 
         for (let i = 0; (i + indiceBaseFuente) <= indiceUltimaCelda; i++) {
             vectorA.valores[indiceBaseObjetivo + i] = vectorB.valores[indiceBaseFuente + i]
+        }
+    }
+
+    private INIT_ARR(subEnunciado: N3.INIT_ARR) {
+        const vectorObjetivo = this.memoriaProximoModulo[subEnunciado.nombreArregloObjetivo] as Vector2
+
+        let vectorFuente: Vector2
+        let indicesVectorFuente
+
+        // variable o referencia al vector fuente
+        const variableOReferencia = this.recuperarVariable(subEnunciado.nombreArregloFuente) as Vector2 | Referencia
+
+        if (variableOReferencia.tipo == "referencia") {
+            const referenciaResuelta = this.resolverReferencia(variableOReferencia)
+
+            vectorFuente = referenciaResuelta.variable as Vector2
+
+            indicesVectorFuente = [...referenciaResuelta.indicesPrevios, ...this.recuperarIndices(subEnunciado.cantidadIndices)].map(i => i - 1)
+        }
+        else {
+            vectorFuente = variableOReferencia
+
+            indicesVectorFuente = this.recuperarIndices(subEnunciado.cantidadIndices).map(i => i - 1)
+        }
+
+        const indiceBase = this.calcularIndice(indicesVectorFuente, vectorFuente.dimensiones)
+
+        /**
+         * Como los arreglos tiene el mismo tamaño (garantizado por el verificador de tipado)
+         * solo hay que copiar tantas celdas como haya en el arreglo objetivo.
+         */
+        for (let i = 0, l = vectorObjetivo.valores.length; i < l; i++) {
+            vectorObjetivo.valores[i] = vectorFuente.valores[indiceBase + i]
         }
     }
 
