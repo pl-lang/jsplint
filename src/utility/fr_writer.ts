@@ -19,20 +19,22 @@ const espacios = 2
 
 export default function fr_writer (p: N3.ProgramaCompilado) : string {
     // TODO: actualizar esto para que separe el codigo de los modulos...
-    let enunciados = p.enunciados.map((e, i) => `${i}: ${procesar_enunciado(e)}`)
+    let enunciados = p.enunciados.map((e, i) => `: ${procesar_enunciado(e)}`)
+
+    const numeracion = generarNumeracion(enunciados.length)
+
+    enunciados = zip(numeracion, enunciados).map(par => par[0] + par[1])
 
     // longitud de la cadena mas larga
     const mayorLongitud = enunciados.map(e => e.length).reduce((p, c) => c > p ? c : p)
 
-    const margenBase = Math.floor( mayorLongitud / 4)
-
     for (let modulo in p.rangoModulo) {
         const rango = p.rangoModulo[modulo]
         if (rango.fin > rango.inicio) {
-            let margen = margenBase + (mayorLongitud - enunciados[rango.inicio].length)
+            let margen = (mayorLongitud - enunciados[rango.inicio].length) + 5
             enunciados[rango.inicio] += ` ${repetir('-', margen)}> INICIO MODULO ${modulo}`
 
-            margen = margenBase + (mayorLongitud - enunciados[rango.fin - 1].length)
+            margen = (mayorLongitud - enunciados[rango.fin - 1].length) + 5
             enunciados[rango.fin - 1] += ` ${repetir('-', margen)}> FIN    MODULO ${modulo}`
         }
     }
@@ -117,10 +119,46 @@ function procesar_enunciado (e: N3.Enunciado) : string {
     }
 }
 
+function generarNumeracion(fin: number) {
+    const numeros = rango(0, fin).map(i => i.toString())
+
+    const mayorLongitud = numeros.map(n => n.length).reduce((p, c) => c > p ? c : p)
+
+    return numeros.map(n => `${repetir('0', mayorLongitud - n.length)}${n}`)
+}
+
 function repetir (c: string, n: number) {
     let s = ''
     for (let i = 0; i < n; i++) {
         s += c
     }
     return s
+}
+
+/**
+ * Genera un rango de numeros que va desde 'inicio' a 'fin' (no inclusive).
+ * @param inicio primer numero del rango
+ * @param fin ultimo numero del rango + 1
+ */
+function rango(inicio: number, fin: number): number[] {
+    const r: number[] = []
+    for (let i = inicio; i < fin; i++) {
+        r[i] = i
+    }
+    return r
+}
+
+/**
+ * Dados dos arreglos a y b crea un arreglo que en cada elemento
+ * contiene un arreglo donde: el primer item es de a y el segundo
+ * es de b.
+ * @param a Arreglo de 'A's
+ * @param b Arreglo de 'B's
+ */
+function zip<A, B>(a: A[], b: B[]): [A, B][] {
+    let r: [A, B][] = []
+    for (let i = 0, l = a.length; i < l; i++) {
+        r[i] = [a[i], b[i]]
+    }
+    return r
 }
