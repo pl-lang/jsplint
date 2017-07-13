@@ -551,7 +551,7 @@ describe('Evaluador', () => {
         reporte = ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.should.equal(-1)
+        reporte.result.should.equal(9)
 
         // probar que luego de la llamada a == 95
         asignacion = ev.consultarVariableEscalar('a', 95)
@@ -663,5 +663,34 @@ describe('Evaluador', () => {
 
         reporte.error.should.equal(false)
         reporte.result.should.equal(-1)
+    })
+
+    it('Llamado a una funcion que suma dos numeros', () => {
+        const code = `variables
+        entero a, b, c
+        inicio
+        a <- 5
+        b <- 7
+        c <- sumar(a, b)
+        fin
+        
+        entero funcion sumar(entero x, entero y)
+        inicio
+        retornar x + y
+        finfuncion`
+
+        const programaCompilado = compilador.compilar(code)
+
+        const ev = new Evaluador(programaCompilado.result as N3.ProgramaCompilado)
+
+        let reporte = ev.ejecutarPrograma()
+
+        reporte.error.should.equal(false)
+        reporte.result.should.equal(5)
+
+        // probar que luego de la c == 12
+        let asignacion = ev.consultarVariableEscalar('c', 12)
+
+        asignacion.should.equal(true)
     })
 })
