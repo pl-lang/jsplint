@@ -24,15 +24,15 @@ export default function fr_writer (p: N3.ProgramaCompilado) : string {
     // longitud de la cadena mas larga
     const mayorLongitud = enunciados.map(e => e.length).reduce((p, c) => c > p ? c : p)
 
-    const margenBase = Math.floor( mayorLongitud / 2)
+    const margenBase = Math.floor( mayorLongitud / 4)
 
     for (let modulo in p.rangoModulo) {
         const rango = p.rangoModulo[modulo]
         if (rango.fin > rango.inicio) {
-            let margen = margenBase + 1 + (mayorLongitud - enunciados[rango.inicio].length)
+            let margen = margenBase + (mayorLongitud - enunciados[rango.inicio].length)
             enunciados[rango.inicio] += ` ${repetir('-', margen)}> INICIO MODULO ${modulo}`
 
-            margen = margenBase + 1 + (mayorLongitud - enunciados[rango.fin - 1].length)
+            margen = margenBase + (mayorLongitud - enunciados[rango.fin - 1].length)
             enunciados[rango.fin - 1] += ` ${repetir('-', margen)}> FIN    MODULO ${modulo}`
         }
     }
