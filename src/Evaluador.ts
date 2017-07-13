@@ -869,12 +869,7 @@ export class Evaluador {
         // apilar el modulo actual
         this.pilaNombresModulo.push(this.nombreModuloActual)
 
-        /**
-         * Apilar el contador de instruccion incrementado. Si no
-         * lo incrementara seria como si este enunciado nunca hubiera
-         * sido ejecutado.
-         */
-        this.pilaContadorInstruccion.push(this.contadorInstruccion + 1)
+        this.pilaContadorInstruccion.push(this.contadorInstruccion)
 
         // apilar la memoria del modulo actual
         this.pilaMemoria.push(this.memoriaModuloActual)
