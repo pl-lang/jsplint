@@ -1,8 +1,5 @@
 'use strict'
 
-export {default as Parser} from './src/parser/Parser'
-export {default as Interpreter} from './src/interpreter/Interpreter'
-export {default as transform} from './src/transforms/transform'
-export {default as typecheck} from './src/typechecker/TSChecker'
-export {default as fr_writer} from './src/utility/fr_writer'
-export { VarState } from './src/interfaces'
+export { default as Interprete } from './src/Interprete'
+export { default as programaCompiladoACadena } from './src/utility/fr_writer'
+export { Accion } from './src/interfaces'
