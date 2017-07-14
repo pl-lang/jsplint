@@ -96,6 +96,10 @@ export default class Evaluador {
         }
     }
 
+    programaFinalizado(): boolean {
+        return this.estadoActual == Estado.PROGRAMA_FINALIZADO || this.estadoActual == Estado.ERROR_ENCONTRADO
+    }
+
     hayLecturaPendiente():boolean {
         return this.estadoActual == Estado.ESPERANDO_LECTURA
     }
@@ -114,8 +118,18 @@ export default class Evaluador {
         return this.estadoActual == Estado.ESPERANDO_ESCRITURA
     }
 
-    escribir(): Value {
-        this.estadoActual = Estado.EJECUTANDO_PROGRAMA
+    obtenerEscrituraPendiente(): Value {
+        /**
+         * Cuando este metodo se ejecuta, en lo que al Evaluador respecta, la
+         * escritura fue realizada. Ahora hay que determinar en que estado
+         * queda el evaluador luego de esto.
+         */
+        if (this.contadorInstruccion == this.programaActual.instrucciones.length) {
+            this.estadoActual = Estado.PROGRAMA_FINALIZADO
+        }
+        else {
+            this.estadoActual = Estado.EJECUTANDO_PROGRAMA
+        }
         const valorAEscribir = this.escrituraPendiente
         this.escrituraPendiente = null
         return valorAEscribir
