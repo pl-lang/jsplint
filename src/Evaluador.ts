@@ -356,29 +356,27 @@ export class Evaluador {
 
     private aLineaFuente(numeroInstruccion: number): number {
         let indiceEncontrado = false
-        let indice
+
+        let indice = 0
+
         let i = 0
+
         const l = this.numerosSubEnunciados.length
-        while (i < l && !indiceEncontrado) {
-            if (numeroInstruccion > this.numerosSubEnunciados[i]) {
-                i++
+
+        while (i < l && this.numerosSubEnunciados[i] < numeroInstruccion && !indiceEncontrado) {
+            i++
+
+            if (i == l) {
+                indiceEncontrado = true;
+                indice = i - 1
             }
-            else {
+            else if (this.numerosSubEnunciados[i] == numeroInstruccion) {
                 indiceEncontrado = true
-                if (numeroInstruccion < this.numerosSubEnunciados[i]) {
-                    indice = i - 1
-                }
-                else {
-                    indice = i
-                }
+                indice = i
             }
         }
-        if (indiceEncontrado) {
-            return this.numerosLineasFuente[indice]
-        }
-        else {
-            return -1
-        }
+
+        return this.numerosLineasFuente[indice];
     }
 
     /**

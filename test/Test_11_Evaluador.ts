@@ -283,7 +283,7 @@ describe('Evaluador', () => {
         ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.should.equal(-1)
+        reporte.result.should.equal(7)
 
         const asignacion = ev.consultarVariableEscalar('a', 5000)
 
@@ -310,7 +310,7 @@ describe('Evaluador', () => {
         ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.should.equal(-1)
+        reporte.result.should.equal(7)
 
         const asignacion = ev.consultarVariableEscalar('a', 6000)
 
@@ -335,7 +335,7 @@ describe('Evaluador', () => {
         ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.should.equal(-1)
+        reporte.result.should.equal(5)
 
         const asignacion = ev.consultarVariableEscalar('a', 3)
 
@@ -359,7 +359,7 @@ describe('Evaluador', () => {
         ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.should.equal(-1)
+        reporte.result.should.equal(4)
 
         const asignacionA = ev.consultarVariableEscalar('a', 4)
 
@@ -386,7 +386,7 @@ describe('Evaluador', () => {
         ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.should.equal(-1)
+        reporte.result.should.equal(3)
 
         const a1 = ev.consultarVariableVectorial('a', [1], 4)
 
@@ -412,7 +412,7 @@ describe('Evaluador', () => {
         ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.should.equal(-1)
+        reporte.result.should.equal(5)
 
         const asignacion = ev.consultarVariableEscalar('b', 3000)
 
@@ -454,7 +454,7 @@ describe('Evaluador', () => {
         reporte = ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.should.equal(-1)
+        reporte.result.should.equal(4)
 
         const asignacion = ev.consultarVariableEscalar('a', 1000)
 
@@ -512,7 +512,7 @@ describe('Evaluador', () => {
         reporte = ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.should.equal(-1)
+        reporte.result.should.equal(4)
 
         asignacion = ev.consultarVariableEscalar('a', 1000)
 
@@ -604,7 +604,7 @@ describe('Evaluador', () => {
         reporte = ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.should.equal(-1)
+        reporte.result.should.equal(10)
     })
 
     it('Llamado a un modulo que toma una matriz como parametro', () => {
@@ -662,7 +662,7 @@ describe('Evaluador', () => {
         reporte = ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.should.equal(-1)
+        reporte.result.should.equal(12)
     })
 
     it('Llamado a una funcion que suma dos numeros', () => {
@@ -686,7 +686,7 @@ describe('Evaluador', () => {
         let reporte = ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.should.equal(5)
+        reporte.result.should.equal(3)
 
         // probar que luego de la c == 12
         let asignacion = ev.consultarVariableEscalar('c', 12)
