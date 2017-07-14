@@ -1843,3 +1843,14 @@ export enum Estado {
   PROGRAMA_FINALIZADO,
   ERROR_ENCONTRADO
 }
+
+export type MensajeInterprete = { accion: Accion, numeroLinea: number }
+
+/**
+ * Accion que debe ser ejecutada por el quien este utilizando el interprete.
+ */
+export enum Accion {
+  NADA = 0,
+  LEER,
+  ESCRIBIR,
+}
