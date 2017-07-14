@@ -43,13 +43,16 @@ export default class Interprete {
             }
             else {
                 if (this.evaluador.hayEscrituraPendiente()) {
-                    return { error: false, result: { accion: Accion.ESCRIBIR, numeroLinea: reporte.result } }
+                    const { numeroLineaFuente, numeroInstruccion } = reporte.result
+                    return { error: false, result: { accion: Accion.ESCRIBIR, numeroLineaFuente, numeroInstruccion } }
                 }
                 else if (this.evaluador.hayLecturaPendiente()) {
-                    return { error: false, result: { accion: Accion.LEER, numeroLinea: reporte.result } }
+                    const { numeroLineaFuente, numeroInstruccion } = reporte.result
+                    return { error: false, result: { accion: Accion.LEER, numeroLineaFuente, numeroInstruccion } }
                 }
                 else {
-                    return { error: false, result: { accion: Accion.NADA, numeroLinea: reporte.result } }
+                    const { numeroLineaFuente, numeroInstruccion } = reporte.result
+                    return { error: false, result: { accion: Accion.NADA, numeroLineaFuente, numeroInstruccion } }
                 }
             }
         }

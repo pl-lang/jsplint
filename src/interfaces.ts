@@ -1844,7 +1844,7 @@ export enum Estado {
   ERROR_ENCONTRADO
 }
 
-export type MensajeInterprete = { accion: Accion, numeroLinea: number }
+export type MensajeInterprete = { accion: Accion, numeroLineaFuente: number, numeroInstruccion: number }
 
 /**
  * Accion que debe ser ejecutada por el quien este utilizando el interprete.

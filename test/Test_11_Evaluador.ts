@@ -220,7 +220,7 @@ describe('Evaluador', () => {
 
         reporte.error.should.equal(false)
 
-        reporte.result.should.equal(3)
+        reporte.result.numeroLineaFuente.should.equal(3)
 
         /**
          * Luego de haberse detenido en el breakpoint, la ejecucion deberia poder reanudarse
@@ -283,7 +283,7 @@ describe('Evaluador', () => {
         ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.should.equal(7)
+        reporte.result.numeroLineaFuente.should.equal(7)
 
         const asignacion = ev.consultarVariableEscalar('a', 5000)
 
@@ -310,7 +310,7 @@ describe('Evaluador', () => {
         ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.should.equal(7)
+        reporte.result.numeroLineaFuente.should.equal(7)
 
         const asignacion = ev.consultarVariableEscalar('a', 6000)
 
@@ -335,7 +335,7 @@ describe('Evaluador', () => {
         ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.should.equal(5)
+        reporte.result.numeroLineaFuente.should.equal(5)
 
         const asignacion = ev.consultarVariableEscalar('a', 3)
 
@@ -359,7 +359,7 @@ describe('Evaluador', () => {
         ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.should.equal(4)
+        reporte.result.numeroLineaFuente.should.equal(4)
 
         const asignacionA = ev.consultarVariableEscalar('a', 4)
 
@@ -386,7 +386,7 @@ describe('Evaluador', () => {
         ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.should.equal(3)
+        reporte.result.numeroLineaFuente.should.equal(3)
 
         const a1 = ev.consultarVariableVectorial('a', [1], 4)
 
@@ -412,7 +412,7 @@ describe('Evaluador', () => {
         ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.should.equal(5)
+        reporte.result.numeroLineaFuente.should.equal(5)
 
         const asignacion = ev.consultarVariableEscalar('b', 3000)
 
@@ -434,7 +434,7 @@ describe('Evaluador', () => {
         let reporte = ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.should.equal(4)
+        reporte.result.numeroLineaFuente.should.equal(4)
 
         // probar que haya una escritura pendiente
         let hayEscrituraPendiente = ev.hayEscrituraPendiente()
@@ -454,7 +454,7 @@ describe('Evaluador', () => {
         reporte = ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.should.equal(4)
+        reporte.result.numeroLineaFuente.should.equal(4)
 
         const asignacion = ev.consultarVariableEscalar('a', 1000)
 
@@ -478,7 +478,7 @@ describe('Evaluador', () => {
         let reporte = ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.should.equal(3)
+        reporte.result.numeroLineaFuente.should.equal(3)
 
         // probar que haya una lectura pendiente
         let hayLecturaPendiente = ev.hayLecturaPendiente()
@@ -501,7 +501,7 @@ describe('Evaluador', () => {
         reporte = ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.should.equal(4)
+        reporte.result.numeroLineaFuente.should.equal(4)
 
         // ahora, la variable 'a' deberia tener el valor que fue "leido", es decir, a == 2000
         let asignacion = ev.consultarVariableEscalar('a', 2000)
@@ -512,7 +512,7 @@ describe('Evaluador', () => {
         reporte = ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.should.equal(4)
+        reporte.result.numeroLineaFuente.should.equal(4)
 
         asignacion = ev.consultarVariableEscalar('a', 1000)
 
@@ -541,7 +541,7 @@ describe('Evaluador', () => {
         let reporte = ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.should.equal(4)
+        reporte.result.numeroLineaFuente.should.equal(4)
 
         // probar que antes de la llamada, a == 2
         let asignacion = ev.consultarVariableEscalar('a', 2)
@@ -551,7 +551,7 @@ describe('Evaluador', () => {
         reporte = ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.should.equal(9)
+        reporte.result.numeroLineaFuente.should.equal(9)
 
         // probar que luego de la llamada a == 95
         asignacion = ev.consultarVariableEscalar('a', 95)
@@ -589,7 +589,7 @@ describe('Evaluador', () => {
         let reporte = ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.should.equal(10)
+        reporte.result.numeroLineaFuente.should.equal(10)
 
         // probar que luego de la llamada b[1] == 26 y b[2] == 27
         let asignacion = ev.consultarVariableVectorial('b', [1], 26)
@@ -604,7 +604,7 @@ describe('Evaluador', () => {
         reporte = ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.should.equal(10)
+        reporte.result.numeroLineaFuente.should.equal(10)
     })
 
     it('Llamado a un modulo que toma una matriz como parametro', () => {
@@ -639,7 +639,7 @@ describe('Evaluador', () => {
         let reporte = ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.should.equal(12)
+        reporte.result.numeroLineaFuente.should.equal(12)
 
         // probar que luego de la llamada b[1] == 26 y b[2] == 27
         let asignacion = ev.consultarVariableVectorial('b', [1, 1], 26)
@@ -662,7 +662,7 @@ describe('Evaluador', () => {
         reporte = ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.should.equal(12)
+        reporte.result.numeroLineaFuente.should.equal(12)
     })
 
     it('Llamado a una funcion que suma dos numeros', () => {
@@ -686,7 +686,7 @@ describe('Evaluador', () => {
         let reporte = ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.should.equal(3)
+        reporte.result.numeroLineaFuente.should.equal(3)
 
         // probar que luego de la c == 12
         let asignacion = ev.consultarVariableEscalar('c', 12)

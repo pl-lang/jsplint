@@ -1354,10 +1354,7 @@ export declare enum Estado {
   PROGRAMA_FINALIZADO = 4,
   ERROR_ENCONTRADO = 5,
 }
-export declare type MensajeInterprete = {
-  accion: Accion;
-  numeroLinea: number;
-};
+export type MensajeInterprete = { accion: Accion, numeroLineaFuente: number, numeroInstruccion: number };
 /**
  * Accion que debe ser ejecutada por el quien este utilizando el interprete.
  */

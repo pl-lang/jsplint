@@ -323,7 +323,7 @@ export default class Evaluador {
         return memoriaModulo
     }
 
-    ejecutarPrograma(): Failure<null> | Success<number> {
+    ejecutarPrograma(): Failure<null> | Success<{ numeroLineaFuente: number, numeroInstruccion: number }> {
         /**
          * Bucle de ejecucion
          */
@@ -352,7 +352,7 @@ export default class Evaluador {
 
         if (this.estadoActual != Estado.ERROR_ENCONTRADO) {
             const numeroLineaFuente = this.aLineaFuente(this.contadorInstruccion)
-            return { error: false, result: numeroLineaFuente }
+            return { error: false, result: { numeroLineaFuente, numeroInstruccion: this.contadorInstruccion } }
         }
         else {
             return { error: true, result: null }
