@@ -2,9 +2,9 @@ import "should"
 
 import Compilador from '../src/Compilador'
 
-import { Evaluador, Estado } from '../src/Evaluador'
+import Evaluador from '../src/Evaluador'
 
-import { N3, Escalar, Vector2 } from '../src/interfaces'
+import { N3, Escalar, Vector2, Estado } from '../src/interfaces'
 
 import fr_writer from '../src/utility/fr_writer'
 
@@ -442,7 +442,7 @@ describe('Evaluador', () => {
         hayEscrituraPendiente.should.equal(true)
 
         // probar que el valor a escribir sea el correcto
-        const valor = ev.escribir()
+        const valor = ev.obtenerEscrituraPendiente()
         valor.should.equal(38)
 
         // probar que luego de escribir ya no hay escrituras pendientes
