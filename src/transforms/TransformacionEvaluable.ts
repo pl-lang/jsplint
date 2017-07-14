@@ -140,7 +140,7 @@ export default class TrasnformadorEvaluable {
                 // 1 - Asignar a una celda de un vector
 
                 // Sub-enunciados que resultan de transformar cada una de las expresiones de los indices
-                const apilarIndices = variableObjetivo.indexes.map(this.transformarExpresion).reduce(this.concatenarEnunciados, [])
+                const apilarIndices = variableObjetivo.indexes.map(x => this.transformarExpresion(x)).reduce((p, c) => this.concatenarEnunciados(p, c), [])
 
                 // Sub-enunciados que resultan de transformar la expresion
                 const apilarExpresion = this.transformarExpresion(expresionAsignada)
@@ -182,7 +182,7 @@ export default class TrasnformadorEvaluable {
 
                     // Sub-enunciados que resultan de transformar cada una de las expresiones de los indices
                     // del vector que recibe los datos
-                    const apilarIndicesObjetivo = variableObjetivo.indexes.map(this.transformarExpresion).reduce(this.concatenarEnunciados, [])
+                    const apilarIndicesObjetivo = variableObjetivo.indexes.map(x => this.transformarExpresion(x)).reduce((p, c) => this.concatenarEnunciados(p, c), [])
 
                     /**
                      * Aclaracion: el type assert para e.right es correcto porque ya se verificó
@@ -193,7 +193,7 @@ export default class TrasnformadorEvaluable {
 
                     // Sub-enunciados que resultan de transformar cada una de las expresiones de los indices
                     // del vector de donde se obtienen los datos
-                    const apilarIndicesOrigen = vectorFuente.indexes.map(this.transformarExpresion).reduce(this.concatenarEnunciados, [])
+                    const apilarIndicesOrigen = vectorFuente.indexes.map(x => this.transformarExpresion(x)).reduce((p, c) => this.concatenarEnunciados(p, c), [])
 
                     const nombreObjetivo = variableObjetivo.name
                     const cantidadIndicesObjetivo = variableObjetivo.indexes.length
@@ -399,7 +399,7 @@ export default class TrasnformadorEvaluable {
             // argumento
             let llamadosAEscribir: N3.Instruccion[] = []
 
-            const apilarArgumentos = e.args.map(this.transformarExpresion)
+            const apilarArgumentos = e.args.map(x => this.transformarExpresion(x))
 
             for (let argumento of apilarArgumentos) {
                 const escribir: N3.ESCRIBIR = { tipo: N3.TipoInstruccion.ESCRIBIR }
@@ -434,7 +434,7 @@ export default class TrasnformadorEvaluable {
                     llamadosALeer = [...llamadosALeer, leer, asignacion]
                 }
                 else {
-                    const apilarIndices = arg.indexes.map(this.transformarExpresion).reduce(this.concatenarEnunciados, [])
+                    const apilarIndices = arg.indexes.map(x => this.transformarExpresion(x)).reduce((p, c) => this.concatenarEnunciados(p, c), [])
 
                     const asignacion: N3.ASIGNAR_ARR = {
                         tipo: N3.TipoInstruccion.ASIGNAR_ARR,
@@ -465,7 +465,7 @@ export default class TrasnformadorEvaluable {
                      */
                     const invocacion = arg[0] as Typed.Invocation
 
-                    const apilarIndices = invocacion.indexes.map(this.transformarExpresion).reduce(this.concatenarEnunciados, [])
+                    const apilarIndices = invocacion.indexes.map(x => this.transformarExpresion(x)).reduce((p, c) => this.concatenarEnunciados(p, c), [])
 
                     const crearReferencia: N3.REFERENCIA = {
                         tipo: N3.TipoInstruccion.REFERENCIA,
@@ -494,7 +494,7 @@ export default class TrasnformadorEvaluable {
                          */
                         const arregloFuente = arg[0] as Typed.Invocation
 
-                        const apilarIndices = arregloFuente.indexes.map(this.transformarExpresion).reduce(this.concatenarEnunciados, [])
+                        const apilarIndices = arregloFuente.indexes.map(x => this.transformarExpresion(x)).reduce((p, c) => this.concatenarEnunciados(p, c), [])
 
                         const inicializarArreglo: N3.INIT_ARR = {
                             tipo: N3.TipoInstruccion.INIT_ARR,
@@ -532,7 +532,7 @@ export default class TrasnformadorEvaluable {
         const suma: N3.SUMAR = { tipo: N3.TipoInstruccion.SUMAR }
 
         if (i.is_array) {
-            const apilarIndices = i.indexes.map(this.transformarExpresion).reduce(this.concatenarEnunciados, [])
+            const apilarIndices = i.indexes.map(x => this.transformarExpresion(x)).reduce((p, c) => this.concatenarEnunciados(p, c), [])
             const cantidadIndices = i.indexes.length
             const nombreVariable = i.name
             const asignacion: N3.ASIGNAR_ARR = { tipo: N3.TipoInstruccion.ASIGNAR_ARR, nombreVariable, cantidadIndices}
@@ -545,18 +545,14 @@ export default class TrasnformadorEvaluable {
     }
 
     private transformarExpresion(exp: Typed.ExpElement[]): N3.Instruccion[] {
-        const resultado: N3.Instruccion[] = []
+        let resultado: N3.Instruccion[] = []
         for (let elemento of exp){
             switch (elemento.type) {
                 case 'literal':
                     resultado.push({ tipo: N3.TipoInstruccion.APILAR, valor: elemento.value })
                 break
-                case 'invocation': {
-                    const apilarInvocacion = this.transformarInvocacion(elemento)
-                    for (let instruccion of apilarInvocacion) {
-                        resultado.push(instruccion)
-                    }
-                }
+                case 'invocation':
+                    resultado = [...resultado, ...this.transformarInvocacion(elemento)]
                 break
                 case 'operator':
                     switch ((elemento as S0.OperatorElement).name) {
@@ -614,10 +610,7 @@ export default class TrasnformadorEvaluable {
                     }
                 break
                 case 'call': {
-                    const llamado = this.transformarLlamado(elemento)
-                    for (let instruccion of llamado) {
-                        resultado.push(instruccion)
-                    }
+                    resultado = [...resultado, ...this.transformarLlamado(elemento)]
                 }
                 break
             }
@@ -642,7 +635,10 @@ export default class TrasnformadorEvaluable {
             if (i.dimensions.length == i.indexes.length) {
                 // 2.a - Se invoca un arreglo con la maxima cantidad de indices
 
-                const apilarIndices = i.indexes.map(this.transformarExpresion).reduce(this.concatenarEnunciados, [])
+                /**
+                 * No paso los metodos directamente porque eso hace que se "pierda" (?) la definicion de "this" dentro de ellos.
+                 */
+                const apilarIndices = i.indexes.map(x => this.transformarExpresion(x)).reduce((p, c) => this.concatenarEnunciados(p, c), [])
 
                 const cantidadIndices = i.indexes.length
 
@@ -667,7 +663,7 @@ export default class TrasnformadorEvaluable {
                 const cantidadIndices = i.indexes.length
 
                 for (let indices of indicesInvocaciones) {
-                    const apilarIndices = indices.map(this.transformarExpresion).reduce(this.concatenarEnunciados, [])
+                    const apilarIndices = indices.map(x => this.transformarExpresion(x)).reduce((p, c) => this.concatenarEnunciados(p, c), [])
 
                     const invocacion: N3.APILAR_ARR = { tipo: N3.TipoInstruccion.APILAR_ARR, nombreVariable, cantidadIndices}
 
