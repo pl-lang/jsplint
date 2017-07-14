@@ -1204,7 +1204,7 @@ export namespace N3 {
     /**
      * Enunciados que componen al programa
      */
-    enunciados: Enunciado[]
+    instrucciones: Instruccion[]
 
     /**
      * Variables definidas para cada modulo
@@ -1223,19 +1223,14 @@ export namespace N3 {
     }
 
     /**
-     * Numero de sub-enunciado correspondiante a cada linea de codigo fuente
+     * Numero de instruccion correspondiante a cada linea de codigo fuente
      */
-    subEnunciados: {
+    lineaFuentePorNumeroInstruccion: {
       [numeroLinea: number]: number
     }
   }
 
-  export interface lineasPorModulo {
-    principal: { enunciados: number[], subEnunciados: number[] }
-    [m: string]: { enunciados: number[], subEnunciados: number[] }
-  }
-
-  export enum TipoEnunciado {
+  export enum TipoInstruccion {
     SUMAR = 0,
     RESTAR,
     DIV_REAL,
@@ -1274,7 +1269,7 @@ export namespace N3 {
     INIT_ARR
   }
 
-  export type Enunciado = 
+  export type Instruccion = 
     SUMAR
     | RESTAR
     | DIV_REAL
@@ -1313,148 +1308,148 @@ export namespace N3 {
     | INIT_ARR
   
   export interface SUMAR {
-    tipo: TipoEnunciado.SUMAR
+    tipo: TipoInstruccion.SUMAR
   }
 
   export interface RESTAR {
-    tipo: TipoEnunciado.RESTAR
+    tipo: TipoInstruccion.RESTAR
   }
   export interface DIV_REAL {
-    tipo: TipoEnunciado.DIV_REAL
+    tipo: TipoInstruccion.DIV_REAL
   }
   export interface DIV_ENTERO {
-    tipo: TipoEnunciado.DIV_ENTERO
+    tipo: TipoInstruccion.DIV_ENTERO
   }
   export interface MODULO {
-    tipo: TipoEnunciado.MODULO
+    tipo: TipoInstruccion.MODULO
   }
   export interface MULTIPLICAR {
-    tipo: TipoEnunciado.MULTIPLICAR
+    tipo: TipoInstruccion.MULTIPLICAR
   }
   export interface ELEVAR {
-    tipo: TipoEnunciado.ELEVAR
+    tipo: TipoInstruccion.ELEVAR
   }
   export interface NEGAR {
-    tipo: TipoEnunciado.NEGAR
+    tipo: TipoInstruccion.NEGAR
   }
   export interface NOT {
-    tipo: TipoEnunciado.NOT
+    tipo: TipoInstruccion.NOT
   }
   export interface AND {
-    tipo: TipoEnunciado.AND
+    tipo: TipoInstruccion.AND
   }
   export interface OR {
-    tipo: TipoEnunciado.OR
+    tipo: TipoInstruccion.OR
   }
   export interface MENOR {
-    tipo: TipoEnunciado.MENOR
+    tipo: TipoInstruccion.MENOR
   }
   export interface MENORIGUAL {
-    tipo: TipoEnunciado.MENORIGUAL
+    tipo: TipoInstruccion.MENORIGUAL
   }
   export interface MAYOR {
-    tipo: TipoEnunciado.MAYOR
+    tipo: TipoInstruccion.MAYOR
   }
   export interface MAYORIGUAL {
-    tipo: TipoEnunciado.MAYORIGUAL
+    tipo: TipoInstruccion.MAYORIGUAL
   }
   export interface IGUAL {
-    tipo: TipoEnunciado.IGUAL
+    tipo: TipoInstruccion.IGUAL
   }
   export interface DIFERENTE {
-    tipo: TipoEnunciado.DIFERENTE
+    tipo: TipoInstruccion.DIFERENTE
   }
   export interface APILAR {
-    tipo: TipoEnunciado.APILAR
+    tipo: TipoInstruccion.APILAR
     valor: string | number | boolean
   }
 
   export interface APILAR_VAR {
-    tipo: TipoEnunciado.APILAR_VAR
+    tipo: TipoInstruccion.APILAR_VAR
     nombreVariable: string
   }
 
   export interface APILAR_ARR {
-    tipo: TipoEnunciado.APILAR_ARR
+    tipo: TipoInstruccion.APILAR_ARR
     nombreVariable: string
     cantidadIndices: number
   }
 
   export interface ASIGNAR {
-    tipo: TipoEnunciado.ASIGNAR
+    tipo: TipoInstruccion.ASIGNAR
     nombreVariable: string
   }
 
   export interface ASIGNAR_ARR {
-    tipo: TipoEnunciado.ASIGNAR_ARR
+    tipo: TipoInstruccion.ASIGNAR_ARR
     nombreVariable: string
     cantidadIndices: number
   }
   
   export interface APILAR_R {
-    tipo: TipoEnunciado.APILAR_R
+    tipo: TipoInstruccion.APILAR_R
   }
 
   export interface ASIGNAR_R {
-    tipo: TipoEnunciado.ASIGNAR_R
+    tipo: TipoInstruccion.ASIGNAR_R
   }
 
   export interface JIF {
-    tipo: TipoEnunciado.JIF
+    tipo: TipoInstruccion.JIF
     numeroLinea: number
   }
 
   export interface JIT {
-    tipo: TipoEnunciado.JIT
+    tipo: TipoInstruccion.JIT
     numeroLinea: number
   }
 
   export interface JMP {
-    tipo: TipoEnunciado.JMP
+    tipo: TipoInstruccion.JMP
     numeroLinea: number
   }
 
   export interface LLAMAR {
-    tipo: TipoEnunciado.LLAMAR
+    tipo: TipoInstruccion.LLAMAR
     nombreModulo: string
   }
 
   export interface LEER {
-    tipo: TipoEnunciado.LEER
+    tipo: TipoInstruccion.LEER
     nombreVariable: string
     tipoVariable: Typed.AtomicType | Typed.StringType
   }
 
   export interface ESCRIBIR {
-    tipo: TipoEnunciado.ESCRIBIR
+    tipo: TipoInstruccion.ESCRIBIR
   }
 
   export interface CONCATENAR {
-    tipo: TipoEnunciado.CONCATENAR
+    tipo: TipoInstruccion.CONCATENAR
     cantidadCaracteres: number
   }
 
   export interface ASIGNAR_CAD {
-    tipo: TipoEnunciado.ASIGNAR_CAD
+    tipo: TipoInstruccion.ASIGNAR_CAD
     nombreVariable: string
     longitudCadena: number
     cantidadIndices: number
   }
 
   export interface REFERENCIA {
-    tipo: TipoEnunciado.REFERENCIA
+    tipo: TipoInstruccion.REFERENCIA
     nombreReferencia: string
     nombreVariable: string
     cantidadIndices: number
   }
 
   export interface CREAR_MEMORIA {
-    tipo: TipoEnunciado.CREAR_MEMORIA
+    tipo: TipoInstruccion.CREAR_MEMORIA
     nombreModulo: string
   }
 
   export interface COPIAR_ARR {
-    tipo: TipoEnunciado.COPIAR_ARR
+    tipo: TipoInstruccion.COPIAR_ARR
     nombreObjetivo: string
     cantidadIndicesObjetivo: number
     nombreFuente: string
@@ -1462,7 +1457,7 @@ export namespace N3 {
   }
   
   export interface INIT_ARR {
-    tipo: TipoEnunciado.INIT_ARR
+    tipo: TipoInstruccion.INIT_ARR
     nombreArregloObjetivo: string
     nombreArregloFuente: string
     /**
@@ -1836,3 +1831,15 @@ export enum VarState {
 }
 
 export type VarInfo = { type: 'scalar' | 'vector', state: VarState }
+
+/**
+ * Estado del evaluador
+ */
+export enum Estado {
+  EJECUTANDO_PROGRAMA = 0,
+  ESPERANDO_LECTURA, // luego de una llamada a leer
+  ESPERANDO_ESCRITURA, // al hacer una llamada a "escribir"
+  ESPERANDO_PASO, // luego de haber ejecutado un paso o sub-paso
+  PROGRAMA_FINALIZADO,
+  ERROR_ENCONTRADO
+}

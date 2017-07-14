@@ -12,7 +12,7 @@ export default class TrasnformadorEvaluable {
         [m: string]: { inicio: number, fin: number }
     }
 
-    private subEnunciados: {
+    private instruccions: {
         [numeroLinea: number]: number
     }
 
@@ -22,18 +22,18 @@ export default class TrasnformadorEvaluable {
         this.ultimaLinea = 0
         this.rangoModulo = { principal: { inicio: 0, fin: 0 } }
         this.nombreModuloActual = ""
-        this.subEnunciados = {}
+        this.instruccions = {}
     }
 
     transformar(p: Typed.Program): Success<N3.ProgramaCompilado> {
         const resultadoFinal: N3.ProgramaCompilado = {
-            enunciados: [],
+            instrucciones: [],
             rangoModulo: { principal: { inicio: 0, fin: 0 } },
-            subEnunciados: {},
+            lineaFuentePorNumeroInstruccion: {},
             variablesLocales: { principal: {} }
         }
 
-        let enunciados: N3.Enunciado[] = []
+        let enunciados: N3.Instruccion[] = []
 
         for (let clave in p.modules) {
             const moduloOriginal = p.modules[clave]
@@ -55,17 +55,17 @@ export default class TrasnformadorEvaluable {
             }
         }
 
-        resultadoFinal.enunciados = enunciados
+        resultadoFinal.instrucciones = enunciados
         resultadoFinal.rangoModulo = this.rangoModulo
-        resultadoFinal.subEnunciados = this.subEnunciados
+        resultadoFinal.lineaFuentePorNumeroInstruccion = this.instruccions
 
         return { error: false, result: resultadoFinal }
     }
 
-    private transformarModuloPrincipal(m: Typed.Module): N3.Enunciado[] {
+    private transformarModuloPrincipal(m: Typed.Module): N3.Instruccion[] {
         this.nombreModuloActual = "principal"
 
-        let enunciados: N3.Enunciado[] = []
+        let enunciados: N3.Instruccion[] = []
 
         for (let enunciado of m.body) {
             const enunciadoTransformado = this.transformarEnunciado(enunciado)
@@ -78,20 +78,20 @@ export default class TrasnformadorEvaluable {
         return enunciados
     }
 
-    private transformarModulo(m: Typed.Module): N3.Enunciado[] {
-        const inicializarParametros: N3.Enunciado[] = []
+    private transformarModulo(m: Typed.Module): N3.Instruccion[] {
+        const inicializarParametros: N3.Instruccion[] = []
 
         // inicializar, de atras para adelante, los parametros que no sean arreglos o referencias
         for (let i = m.parameters.length - 1; i >= 0; i--) {
             const param = m.parameters[i]
             if (!param.by_ref && !param.is_array) {
-                const asignacion: N3.ASIGNAR = { tipo: N3.TipoEnunciado.ASIGNAR, nombreVariable: param.name }
+                const asignacion: N3.ASIGNAR = { tipo: N3.TipoInstruccion.ASIGNAR, nombreVariable: param.name }
                 inicializarParametros.push(asignacion)
                 this.ultimaLinea += 1
             }
         }
 
-        let enunciados: N3.Enunciado[] = []
+        let enunciados: N3.Instruccion[] = []
 
         for (let enunciado of m.body) {
             const enunciadoTransformado = this.transformarEnunciado(enunciado)
@@ -104,7 +104,7 @@ export default class TrasnformadorEvaluable {
         return [...inicializarParametros, ...enunciados]
     }
 
-    private transformarEnunciado(e: Typed.Statement): N3.Enunciado[] {
+    private transformarEnunciado(e: Typed.Statement): N3.Instruccion[] {
         switch (e.type) {
             case "assignment":
                 return this.transformarAsignacion(e)
@@ -123,8 +123,8 @@ export default class TrasnformadorEvaluable {
         }
     }
 
-    private transformarAsignacion(e: Typed.Assignment): N3.Enunciado[] {
-        this.subEnunciados[e.pos.line] = this.ultimaLinea
+    private transformarAsignacion(e: Typed.Assignment): N3.Instruccion[] {
+        this.instruccions[e.pos.line] = this.ultimaLinea
 
         const variableObjetivo = e.left
         const expresionAsignada = e.right
@@ -147,8 +147,8 @@ export default class TrasnformadorEvaluable {
 
                 const cantidadIndices = variableObjetivo.indexes.length
 
-                // sub-enunciado de asignacion
-                const asignacion: N3.ASIGNAR_ARR = { tipo: N3.TipoEnunciado.ASIGNAR_ARR, nombreVariable: variableObjetivo.name, cantidadIndices }
+                // instruccion de asignacion
+                const asignacion: N3.ASIGNAR_ARR = { tipo: N3.TipoInstruccion.ASIGNAR_ARR, nombreVariable: variableObjetivo.name, cantidadIndices }
 
                 const enunciadoTransformado = [...apilarExpresion, ...apilarIndices, asignacion]
 
@@ -167,7 +167,7 @@ export default class TrasnformadorEvaluable {
                     const longitudCadena = e.typings.right.length
 
                     const asignacion: N3.ASIGNAR_CAD = {
-                        tipo: N3.TipoEnunciado.ASIGNAR_CAD,
+                        tipo: N3.TipoInstruccion.ASIGNAR_CAD,
                         nombreVariable: variableObjetivo.name,
                         cantidadIndices,
                         longitudCadena
@@ -201,7 +201,7 @@ export default class TrasnformadorEvaluable {
                     const cantidadIndicesFuente = vectorFuente.indexes.length
 
                     const asignacion: N3.COPIAR_ARR = {
-                        tipo: N3.TipoEnunciado.COPIAR_ARR,
+                        tipo: N3.TipoInstruccion.COPIAR_ARR,
                         nombreObjetivo,
                         cantidadIndicesObjetivo,
                         nombreFuente,
@@ -218,8 +218,8 @@ export default class TrasnformadorEvaluable {
             // Sub-enunciados que resultan de transformar la expresion
             const apilarExpresion = this.transformarExpresion(expresionAsignada)
 
-            // sub-enunciado de asignacion
-            const asignacion: N3.ASIGNAR = { tipo: N3.TipoEnunciado.ASIGNAR, nombreVariable: variableObjetivo.name }
+            // instruccion de asignacion
+            const asignacion: N3.ASIGNAR = { tipo: N3.TipoInstruccion.ASIGNAR, nombreVariable: variableObjetivo.name }
 
             const enunciadoTransformado = [...apilarExpresion, asignacion]
 
@@ -227,8 +227,8 @@ export default class TrasnformadorEvaluable {
         }
     }
 
-    private transformarSi(e: Typed.If): N3.Enunciado[] {
-        this.subEnunciados[e.pos.line] = this.ultimaLinea
+    private transformarSi(e: Typed.If): N3.Instruccion[] {
+        this.instruccions[e.pos.line] = this.ultimaLinea
 
         // transformar condicion
 
@@ -236,46 +236,46 @@ export default class TrasnformadorEvaluable {
         
         // transformar rama verdadera
         
-        let subEnunciadosVerdadero: N3.Enunciado[] = []
+        let instruccionsVerdadero: N3.Instruccion[] = []
 
         for (let enunciado of e.true_branch) {
-            subEnunciadosVerdadero = [...subEnunciadosVerdadero, ...this.transformarEnunciado(enunciado)]
+            instruccionsVerdadero = [...instruccionsVerdadero, ...this.transformarEnunciado(enunciado)]
         }
 
         // transformar rama falsa
 
-        let subEnunciadosFalso: N3.Enunciado[] = []
+        let instruccionsFalso: N3.Instruccion[] = []
 
         for (let enunciado of e.false_branch) {
-            subEnunciadosFalso = [...subEnunciadosFalso, ...this.transformarEnunciado(enunciado)]
+            instruccionsFalso = [...instruccionsFalso, ...this.transformarEnunciado(enunciado)]
         }
 
         // Agregar saltos segun sea necesario y retornar resultado
-        if (subEnunciadosVerdadero.length == 0 && subEnunciadosFalso.length == 0) {
+        if (instruccionsVerdadero.length == 0 && instruccionsFalso.length == 0) {
             // si ambas ramas estan vacias, no retornar ningun enunciado...
             return []
         }
-        else if (subEnunciadosVerdadero.length > 0 && subEnunciadosFalso.length == 0) {
+        else if (instruccionsVerdadero.length > 0 && instruccionsFalso.length == 0) {
             // Si solo la rama verdadera tiene algo, agregar salto para los casos
             // en los que la condicion da falso
 
-            const numeroLinea = this.ultimaLinea + apilarCondicion.length + subEnunciadosVerdadero.length + 1
+            const numeroLinea = this.ultimaLinea + apilarCondicion.length + instruccionsVerdadero.length + 1
 
-            const saltoEnFalso: N3.JIF = { tipo: N3.TipoEnunciado.JIF, numeroLinea }
+            const saltoEnFalso: N3.JIF = { tipo: N3.TipoInstruccion.JIF, numeroLinea }
 
-            const resultadoFinal: N3.Enunciado[] = [...apilarCondicion, saltoEnFalso, ...subEnunciadosVerdadero]
+            const resultadoFinal: N3.Instruccion[] = [...apilarCondicion, saltoEnFalso, ...instruccionsVerdadero]
 
             return resultadoFinal
         }
-        else if (subEnunciadosVerdadero.length == 0 && subEnunciadosFalso.length > 0) {
+        else if (instruccionsVerdadero.length == 0 && instruccionsFalso.length > 0) {
             // Si solo la rama verdadera tiene algo (por algun motivo...), agregar salto para los casos
             // en los que la condicion da verdadero
 
-            const numeroLinea = this.ultimaLinea + apilarCondicion.length + subEnunciadosFalso.length + 1
+            const numeroLinea = this.ultimaLinea + apilarCondicion.length + instruccionsFalso.length + 1
 
-            const saltoEnVerdadero: N3.JIT = { tipo: N3.TipoEnunciado.JIT, numeroLinea }
+            const saltoEnVerdadero: N3.JIT = { tipo: N3.TipoInstruccion.JIT, numeroLinea }
 
-            const resultadoFinal: N3.Enunciado[] = [...apilarCondicion, saltoEnVerdadero, ...subEnunciadosFalso]
+            const resultadoFinal: N3.Instruccion[] = [...apilarCondicion, saltoEnVerdadero, ...instruccionsFalso]
 
             return resultadoFinal
         }
@@ -284,32 +284,32 @@ export default class TrasnformadorEvaluable {
             // Un salto condicional para cuando la condicion da falso que permita ir a la rama falsa
             // Un salto incondicional como ultimo enunciado de la rama verdadera para saltearse la rama falsa
 
-            const inicioRamaFalsa = this.ultimaLinea + apilarCondicion.length + 1 + subEnunciadosVerdadero.length + 1
+            const inicioRamaFalsa = this.ultimaLinea + apilarCondicion.length + 1 + instruccionsVerdadero.length + 1
 
-            const saltarARamaFalsa: N3.JIF = { tipo: N3.TipoEnunciado.JIF, numeroLinea: inicioRamaFalsa }
+            const saltarARamaFalsa: N3.JIF = { tipo: N3.TipoInstruccion.JIF, numeroLinea: inicioRamaFalsa }
 
-            const finRamaFalsa = this.ultimaLinea + apilarCondicion.length + 1 + subEnunciadosVerdadero.length + 1 + subEnunciadosFalso.length
+            const finRamaFalsa = this.ultimaLinea + apilarCondicion.length + 1 + instruccionsVerdadero.length + 1 + instruccionsFalso.length
             
-            const saltearRamaFalsa: N3.JMP = { tipo: N3.TipoEnunciado.JMP, numeroLinea: finRamaFalsa }
+            const saltearRamaFalsa: N3.JMP = { tipo: N3.TipoInstruccion.JMP, numeroLinea: finRamaFalsa }
 
-            const resultadoFinal: N3.Enunciado[] = [
+            const resultadoFinal: N3.Instruccion[] = [
                 ...apilarCondicion,
                 saltarARamaFalsa,
-                ...subEnunciadosVerdadero,
+                ...instruccionsVerdadero,
                 saltearRamaFalsa,
-                ...subEnunciadosFalso
+                ...instruccionsFalso
             ]
 
             return resultadoFinal
         }
     }
 
-    private transformarMientras(e: Typed.While): N3.Enunciado[] {
-        this.subEnunciados[e.pos.line] = this.ultimaLinea
+    private transformarMientras(e: Typed.While): N3.Instruccion[] {
+        this.instruccions[e.pos.line] = this.ultimaLinea
 
         const apilarCondicion = this.transformarExpresion(e.condition)
 
-        let enunciadosBucle: N3.Enunciado[] = []
+        let enunciadosBucle: N3.Instruccion[] = []
 
         for (let enunciado of e.body) {
             enunciadosBucle = [...enunciadosBucle, ...this.transformarEnunciado(enunciado)]
@@ -317,19 +317,19 @@ export default class TrasnformadorEvaluable {
 
         // Salto condicional (solo salta si la condicion dio falso) para saltear el cuerpo del bucle
         const saltearBucle = this.ultimaLinea + apilarCondicion.length + 1 + enunciadosBucle.length + 1
-        const saltoCondicional: N3.JIF = { tipo: N3.TipoEnunciado.JIF, numeroLinea: saltearBucle }
+        const saltoCondicional: N3.JIF = { tipo: N3.TipoInstruccion.JIF, numeroLinea: saltearBucle }
 
         // Salto incondicional al principio de la evaluacion de la condicion
         const volverACondicion = this.ultimaLinea
-        const saltoIncondicional: N3.JMP = { tipo: N3.TipoEnunciado.JMP, numeroLinea: volverACondicion }
+        const saltoIncondicional: N3.JMP = { tipo: N3.TipoInstruccion.JMP, numeroLinea: volverACondicion }
 
         return [...apilarCondicion, saltoCondicional, ...enunciadosBucle, saltoIncondicional]
     }
 
-    private transformarHastaQue(e: Typed.Until): N3.Enunciado[] {
-        this.subEnunciados[e.pos.line] = this.ultimaLinea
+    private transformarHastaQue(e: Typed.Until): N3.Instruccion[] {
+        this.instruccions[e.pos.line] = this.ultimaLinea
 
-        let enunciadosBucle: N3.Enunciado[] = []
+        let enunciadosBucle: N3.Instruccion[] = []
 
         for (let enunciado of e.body) {
             enunciadosBucle = [...enunciadosBucle, ...this.transformarEnunciado(enunciado)]
@@ -339,13 +339,13 @@ export default class TrasnformadorEvaluable {
 
         // Salto condicional (solo si la condicion dio falso) para volver al tope del bucle
         const volverATope = this.ultimaLinea
-        const saltoCondicional: N3.JIF = { tipo: N3.TipoEnunciado.JIF, numeroLinea: volverATope }
+        const saltoCondicional: N3.JIF = { tipo: N3.TipoInstruccion.JIF, numeroLinea: volverATope }
 
         return [...enunciadosBucle, ...apilarCondicion, saltoCondicional]
     }
 
-    private transformarPara(e: Typed.For): N3.Enunciado[] {
-        this.subEnunciados[e.pos.line] = this.ultimaLinea
+    private transformarPara(e: Typed.For): N3.Instruccion[] {
+        this.instruccions[e.pos.line] = this.ultimaLinea
 
         // inicializacion
         // evaluar valor final
@@ -359,11 +359,11 @@ export default class TrasnformadorEvaluable {
 
         const valorFinal = this.transformarExpresion(e.last_value)
 
-        const guardarValorFinal: N3.ASIGNAR_R = { tipo: N3.TipoEnunciado.ASIGNAR_R }
+        const guardarValorFinal: N3.ASIGNAR_R = { tipo: N3.TipoInstruccion.ASIGNAR_R }
 
         const condicion = this.crearCondicionPara(e.counter_init.left)
 
-        let enunciadosBucle: N3.Enunciado[] = []
+        let enunciadosBucle: N3.Instruccion[] = []
 
         for (let enunciado of e.body) {
             enunciadosBucle = [...enunciadosBucle, ...this.transformarEnunciado(enunciado)]
@@ -374,22 +374,22 @@ export default class TrasnformadorEvaluable {
         const base = this.ultimaLinea + inicializacion.length + valorFinal.length + 1 /* guardarValorFinal */ + condicion.length
 
         const saltearBucle = base + enunciadosBucle.length + incremento.length + 2 // los dos saltos
-        const saltoCondicional: N3.JIT = { tipo: N3.TipoEnunciado.JIT, numeroLinea: saltearBucle }
+        const saltoCondicional: N3.JIT = { tipo: N3.TipoInstruccion.JIT, numeroLinea: saltearBucle }
 
         const volverACondicion = this.ultimaLinea + inicializacion.length + valorFinal.length + 1
-        const saltoIncondicional: N3.JMP = { tipo: N3.TipoEnunciado.JMP, numeroLinea: volverACondicion }
+        const saltoIncondicional: N3.JMP = { tipo: N3.TipoInstruccion.JMP, numeroLinea: volverACondicion }
 
         return [...inicializacion, ...valorFinal, guardarValorFinal, ...condicion, saltoCondicional, ...enunciadosBucle, ...incremento, saltoIncondicional]
     }
 
-    private transformarRetornar(e: Typed.Return): N3.Enunciado[] {
-        this.subEnunciados[e.pos.line] = this.ultimaLinea
+    private transformarRetornar(e: Typed.Return): N3.Instruccion[] {
+        this.instruccions[e.pos.line] = this.ultimaLinea
 
         return this.transformarExpresion(e.expression)
     }
 
-    private transformarLlamado(e: Typed.Call): N3.Enunciado[] {
-        this.subEnunciados[e.pos.line] = this.ultimaLinea
+    private transformarLlamado(e: Typed.Call): N3.Instruccion[] {
+        this.instruccions[e.pos.line] = this.ultimaLinea
 
         // La transformacion para los llamados a "leer" y "escribir" es diferente
         // a la transformacion de llamados a modulos del usuario.
@@ -397,12 +397,12 @@ export default class TrasnformadorEvaluable {
         if (e.name == "escribir") {
             // Hay que generar un llamado a escribir por cada
             // argumento
-            let llamadosAEscribir: N3.Enunciado[] = []
+            let llamadosAEscribir: N3.Instruccion[] = []
 
             const apilarArgumentos = e.args.map(this.transformarExpresion)
 
             for (let argumento of apilarArgumentos) {
-                const escribir: N3.ESCRIBIR = { tipo: N3.TipoEnunciado.ESCRIBIR }
+                const escribir: N3.ESCRIBIR = { tipo: N3.TipoInstruccion.ESCRIBIR }
                 llamadosAEscribir = [...llamadosAEscribir, ...argumento, escribir]
             }
 
@@ -412,7 +412,7 @@ export default class TrasnformadorEvaluable {
             // Hay que generar un llamado a leer por cada argumento
             // De la misma manera, tiene que haber una asignacion
             // despues de cada lectura
-            let llamadosALeer: N3.Enunciado[] = []
+            let llamadosALeer: N3.Instruccion[] = []
 
             for (let i = 0; i < e.args.length; i++) {
                 /**
@@ -423,13 +423,13 @@ export default class TrasnformadorEvaluable {
                 const arg = e.args[i][0] as Typed.Invocation
 
                 const leer: N3.LEER = {
-                    tipo: N3.TipoEnunciado.LEER,
+                    tipo: N3.TipoInstruccion.LEER,
                     nombreVariable: arg.name,
                     tipoVariable: arg.typings.type as (Typed.AtomicType | Typed.StringType)
                 }
 
                 if (!arg.is_array) {
-                    const asignacion: N3.ASIGNAR = { tipo: N3.TipoEnunciado.ASIGNAR, nombreVariable: arg.name }
+                    const asignacion: N3.ASIGNAR = { tipo: N3.TipoInstruccion.ASIGNAR, nombreVariable: arg.name }
                     
                     llamadosALeer = [...llamadosALeer, leer, asignacion]
                 }
@@ -437,7 +437,7 @@ export default class TrasnformadorEvaluable {
                     const apilarIndices = arg.indexes.map(this.transformarExpresion).reduce(this.concatenarEnunciados, [])
 
                     const asignacion: N3.ASIGNAR_ARR = {
-                        tipo: N3.TipoEnunciado.ASIGNAR_ARR,
+                        tipo: N3.TipoInstruccion.ASIGNAR_ARR,
                         nombreVariable: arg.name,
                         cantidadIndices: arg.indexes.length
                     }
@@ -449,9 +449,9 @@ export default class TrasnformadorEvaluable {
             return llamadosALeer
         }
         else {
-            const crearMemoria: N3.CREAR_MEMORIA = { tipo: N3.TipoEnunciado.CREAR_MEMORIA, nombreModulo: e.name }
+            const crearMemoria: N3.CREAR_MEMORIA = { tipo: N3.TipoInstruccion.CREAR_MEMORIA, nombreModulo: e.name }
 
-            let argumentos: N3.Enunciado[] = []
+            let argumentos: N3.Instruccion[] = []
 
             for (let i = 0; i < e.args.length; i++) {
                 const arg = e.args[i]
@@ -468,7 +468,7 @@ export default class TrasnformadorEvaluable {
                     const apilarIndices = invocacion.indexes.map(this.transformarExpresion).reduce(this.concatenarEnunciados, [])
 
                     const crearReferencia: N3.REFERENCIA = {
-                        tipo: N3.TipoEnunciado.REFERENCIA,
+                        tipo: N3.TipoInstruccion.REFERENCIA,
                         nombreReferencia: param.name,
                         nombreVariable: invocacion.name,
                         cantidadIndices: invocacion.indexes.length
@@ -497,7 +497,7 @@ export default class TrasnformadorEvaluable {
                         const apilarIndices = arregloFuente.indexes.map(this.transformarExpresion).reduce(this.concatenarEnunciados, [])
 
                         const inicializarArreglo: N3.INIT_ARR = {
-                            tipo: N3.TipoEnunciado.INIT_ARR,
+                            tipo: N3.TipoInstruccion.INIT_ARR,
                             nombreArregloObjetivo: param.name,
                             nombreArregloFuente: arregloFuente.name,
                             cantidadIndices: arregloFuente.indexes.length
@@ -513,110 +513,110 @@ export default class TrasnformadorEvaluable {
                 }
             }
 
-            const llamado: N3.LLAMAR = { tipo: N3.TipoEnunciado.LLAMAR, nombreModulo: e.name }
+            const llamado: N3.LLAMAR = { tipo: N3.TipoInstruccion.LLAMAR, nombreModulo: e.name }
 
             return [crearMemoria, ...argumentos, llamado]
         }
     }
 
-    private crearCondicionPara(i: Typed.Invocation): N3.Enunciado[] {
+    private crearCondicionPara(i: Typed.Invocation): N3.Instruccion[] {
         const invocacion = this.transformarInvocacion(i)
-        const valorFinal: N3.APILAR_R = { tipo: N3.TipoEnunciado.APILAR_R }
-        const comparacion: N3.MAYOR = { tipo: N3.TipoEnunciado.MAYOR }
+        const valorFinal: N3.APILAR_R = { tipo: N3.TipoInstruccion.APILAR_R }
+        const comparacion: N3.MAYOR = { tipo: N3.TipoInstruccion.MAYOR }
         return [...invocacion, valorFinal, comparacion]
     }
 
-    private crearIncrementoPara(i: Typed.Invocation): N3.Enunciado[] {
+    private crearIncrementoPara(i: Typed.Invocation): N3.Instruccion[] {
         const invocacion = this.transformarInvocacion(i)
-        const apilarUno: N3.APILAR = { tipo: N3.TipoEnunciado.APILAR, valor: 1 }
-        const suma: N3.SUMAR = { tipo: N3.TipoEnunciado.SUMAR }
+        const apilarUno: N3.APILAR = { tipo: N3.TipoInstruccion.APILAR, valor: 1 }
+        const suma: N3.SUMAR = { tipo: N3.TipoInstruccion.SUMAR }
 
         if (i.is_array) {
             const apilarIndices = i.indexes.map(this.transformarExpresion).reduce(this.concatenarEnunciados, [])
             const cantidadIndices = i.indexes.length
             const nombreVariable = i.name
-            const asignacion: N3.ASIGNAR_ARR = { tipo: N3.TipoEnunciado.ASIGNAR_ARR, nombreVariable, cantidadIndices}
+            const asignacion: N3.ASIGNAR_ARR = { tipo: N3.TipoInstruccion.ASIGNAR_ARR, nombreVariable, cantidadIndices}
             return [...invocacion, apilarUno, suma, ...apilarIndices, asignacion]
         }
         else {
-            const asignacion: N3.ASIGNAR = { tipo: N3.TipoEnunciado.ASIGNAR, nombreVariable: i.name }
+            const asignacion: N3.ASIGNAR = { tipo: N3.TipoInstruccion.ASIGNAR, nombreVariable: i.name }
             return [...invocacion, apilarUno, suma, asignacion]
         }
     }
 
-    private transformarExpresion(exp: Typed.ExpElement[]): N3.Enunciado[] {
-        const resultado: N3.Enunciado[] = []
+    private transformarExpresion(exp: Typed.ExpElement[]): N3.Instruccion[] {
+        const resultado: N3.Instruccion[] = []
         for (let elemento of exp){
             switch (elemento.type) {
                 case 'literal':
-                    resultado.push({ tipo: N3.TipoEnunciado.APILAR, valor: elemento.value })
+                    resultado.push({ tipo: N3.TipoInstruccion.APILAR, valor: elemento.value })
                 break
                 case 'invocation': {
                     const apilarInvocacion = this.transformarInvocacion(elemento)
-                    for (let subEnunciado of apilarInvocacion) {
-                        resultado.push(subEnunciado)
+                    for (let instruccion of apilarInvocacion) {
+                        resultado.push(instruccion)
                     }
                 }
                 break
                 case 'operator':
                     switch ((elemento as S0.OperatorElement).name) {
                         case 'times':
-                            resultado.push({ tipo: N3.TipoEnunciado.MULTIPLICAR })
+                            resultado.push({ tipo: N3.TipoInstruccion.MULTIPLICAR })
                             break
                         case 'slash':
-                            resultado.push({ tipo: N3.TipoEnunciado.DIV_REAL })
+                            resultado.push({ tipo: N3.TipoInstruccion.DIV_REAL })
                             break
                         case 'power':
-                            resultado.push({ tipo: N3.TipoEnunciado.ELEVAR })
+                            resultado.push({ tipo: N3.TipoInstruccion.ELEVAR })
                             break
                         case 'div':
-                            resultado.push({ tipo: N3.TipoEnunciado.DIV_ENTERO })
+                            resultado.push({ tipo: N3.TipoInstruccion.DIV_ENTERO })
                             break
                         case 'mod':
-                            resultado.push({ tipo: N3.TipoEnunciado.MODULO })
+                            resultado.push({ tipo: N3.TipoInstruccion.MODULO })
                             break
                         case 'minus':
-                            resultado.push({ tipo: N3.TipoEnunciado.RESTAR })
+                            resultado.push({ tipo: N3.TipoInstruccion.RESTAR })
                             break
                         case 'plus':
-                            resultado.push({ tipo: N3.TipoEnunciado.SUMAR })
+                            resultado.push({ tipo: N3.TipoInstruccion.SUMAR })
                             break
                         case 'minor':
-                            resultado.push({ tipo: N3.TipoEnunciado.MENOR })
+                            resultado.push({ tipo: N3.TipoInstruccion.MENOR })
                             break
                         case 'minor-eq':
-                            resultado.push({ tipo: N3.TipoEnunciado.MENORIGUAL })
+                            resultado.push({ tipo: N3.TipoInstruccion.MENORIGUAL })
                             break
                         case 'major':
-                            resultado.push({ tipo: N3.TipoEnunciado.MAYOR })
+                            resultado.push({ tipo: N3.TipoInstruccion.MAYOR })
                             break
                         case 'major-eq':
-                            resultado.push({ tipo: N3.TipoEnunciado.MAYORIGUAL })
+                            resultado.push({ tipo: N3.TipoInstruccion.MAYORIGUAL })
                             break
                         case 'equal':
-                            resultado.push({ tipo: N3.TipoEnunciado.IGUAL })
+                            resultado.push({ tipo: N3.TipoInstruccion.IGUAL })
                             break
                         case 'not':
-                            resultado.push({ tipo: N3.TipoEnunciado.NOT })
+                            resultado.push({ tipo: N3.TipoInstruccion.NOT })
                             break
                         case 'different':
-                            resultado.push({ tipo: N3.TipoEnunciado.DIFERENTE })
+                            resultado.push({ tipo: N3.TipoInstruccion.DIFERENTE })
                             break
                         case 'and':
-                            resultado.push({ tipo: N3.TipoEnunciado.AND })
+                            resultado.push({ tipo: N3.TipoInstruccion.AND })
                             break
                         case 'or':
-                            resultado.push({ tipo: N3.TipoEnunciado.OR })
+                            resultado.push({ tipo: N3.TipoInstruccion.OR })
                             break
                         case 'neg':
-                            resultado.push({ tipo: N3.TipoEnunciado.NEGAR })
+                            resultado.push({ tipo: N3.TipoInstruccion.NEGAR })
                             break
                     }
                 break
                 case 'call': {
                     const llamado = this.transformarLlamado(elemento)
-                    for (let subEnunciado of llamado) {
-                        resultado.push(subEnunciado)
+                    for (let instruccion of llamado) {
+                        resultado.push(instruccion)
                     }
                 }
                 break
@@ -625,7 +625,7 @@ export default class TrasnformadorEvaluable {
         return resultado
     }
 
-    private transformarInvocacion(i: Typed.Invocation): N3.Enunciado[] {
+    private transformarInvocacion(i: Typed.Invocation): N3.Instruccion[] {
         // Hay dos alternativas:
         // 1 - Se invoca una variable
         // 2 - Se invoca un arreglo
@@ -634,7 +634,7 @@ export default class TrasnformadorEvaluable {
 
         if (i.is_array == false) {
             // 1 - Se invoca una variable
-            const invocacion: N3.APILAR_VAR = { tipo: N3.TipoEnunciado.APILAR_VAR, nombreVariable: i.name }
+            const invocacion: N3.APILAR_VAR = { tipo: N3.TipoInstruccion.APILAR_VAR, nombreVariable: i.name }
             return [invocacion]
         }
         else {
@@ -646,7 +646,7 @@ export default class TrasnformadorEvaluable {
 
                 const cantidadIndices = i.indexes.length
 
-                const invocacion: N3.APILAR_ARR = { tipo: N3.TipoEnunciado.APILAR_ARR, nombreVariable: i.name, cantidadIndices }
+                const invocacion: N3.APILAR_ARR = { tipo: N3.TipoInstruccion.APILAR_ARR, nombreVariable: i.name, cantidadIndices }
 
                 return [...apilarIndices, invocacion]
             }
@@ -660,7 +660,7 @@ export default class TrasnformadorEvaluable {
                 // Generar un juego de indices por cada invocacion necesaria. Siguiendo el ejemplo, hacen falta 3 juegos de indices.
                 const indicesInvocaciones = this.generarIndices(i.indexes, i.dimensions)
                 
-                let resultadoFinal: N3.Enunciado[] = []
+                let resultadoFinal: N3.Instruccion[] = []
 
                 const nombreVariable = i.name
 
@@ -669,7 +669,7 @@ export default class TrasnformadorEvaluable {
                 for (let indices of indicesInvocaciones) {
                     const apilarIndices = indices.map(this.transformarExpresion).reduce(this.concatenarEnunciados, [])
 
-                    const invocacion: N3.APILAR_ARR = { tipo: N3.TipoEnunciado.APILAR_ARR, nombreVariable, cantidadIndices}
+                    const invocacion: N3.APILAR_ARR = { tipo: N3.TipoInstruccion.APILAR_ARR, nombreVariable, cantidadIndices}
 
                     resultadoFinal = [...resultadoFinal, ...apilarIndices, invocacion]
                 }
@@ -711,7 +711,7 @@ export default class TrasnformadorEvaluable {
         return literalNumerico
     }
 
-    private concatenarEnunciados(a: N3.Enunciado[], b: N3.Enunciado[]): N3.Enunciado[] {
+    private concatenarEnunciados(a: N3.Instruccion[], b: N3.Instruccion[]): N3.Instruccion[] {
         return [...a, ...b]
     }
 }

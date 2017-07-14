@@ -1,19 +1,10 @@
 // Clase que se encarga de ejecutar un programa.
 
-import { N3, Typed, Value, Memoria, Referencia, Escalar, Vector2, Failure, Success } from './interfaces'
+import { N3, Estado, Typed, Value, Memoria, Referencia, Escalar, Vector2, Failure, Success } from './interfaces'
 
 import { drop } from './utility/helpers'
 
-export enum Estado {
-    EJECUTANDO_PROGRAMA = 0,
-    ESPERANDO_LECTURA, // luego de una llamada a leer
-    ESPERANDO_ESCRITURA, // al hacer una llamada a "escribir"
-    ESPERANDO_PASO, // luego de haber ejecutado un paso o sub-paso
-    PROGRAMA_FINALIZADO,
-    ERROR_ENCONTRADO
-}
-
-export class Evaluador {
+export default class Evaluador {
 
     private programaActual: N3.ProgramaCompilado
 
@@ -53,8 +44,8 @@ export class Evaluador {
     private lecturaPendiente: { nombreVariable: string, tipoVariable: Typed.AtomicType | Typed.StringType }
     private escrituraPendiente: Value
 
-    // atributos necesarios para convertir un numero de sub enunciado a un numero de linea fuente
-    private numerosSubEnunciados: number[]
+    // atributos necesarios para convertir un numero de instruccion a un numero de linea fuente
+    private numerosInstrucciones: number[]
     private numerosLineasFuente:  number[]
 
     constructor(programaCompilado: N3.ProgramaCompilado) {
@@ -87,10 +78,10 @@ export class Evaluador {
         this.lecturaPendiente = null
         this.escrituraPendiente = null
 
-        this.numerosLineasFuente = Object.keys(this.programaActual.subEnunciados).map(i => Number(i))
-        this.numerosSubEnunciados = []
-        for (let k in this.programaActual.subEnunciados) {
-            this.numerosSubEnunciados.push(this.programaActual.subEnunciados[k])
+        this.numerosLineasFuente = Object.keys(this.programaActual.lineaFuentePorNumeroInstruccion).map(i => Number(i))
+        this.numerosInstrucciones = []
+        for (let k in this.programaActual.lineaFuentePorNumeroInstruccion) {
+            this.numerosInstrucciones.push(this.programaActual.lineaFuentePorNumeroInstruccion[k])
         }
 
         /**
@@ -132,31 +123,31 @@ export class Evaluador {
 
     agregarBreakpoint(numeroLinea: number) {
         /**
-         * Si el numero de linea tiene un sub-enunciado asociado, registrar un bp
+         * Si el numero de linea tiene un instruccion asociado, registrar un bp
          */
-        if (numeroLinea in this.programaActual.subEnunciados) {
-            const numeroSubEnunciado = this.programaActual.subEnunciados[numeroLinea]
+        if (numeroLinea in this.programaActual.lineaFuentePorNumeroInstruccion) {
+            const numeroSubEnunciado = this.programaActual.lineaFuentePorNumeroInstruccion[numeroLinea]
 
             // insertar nuevo breakpoint ordenadamente
             const indiceMayor = encontrarMayor(numeroSubEnunciado, this.breakpointsRegistrados)
             this.breakpointsRegistrados = insertarEn(indiceMayor, numeroSubEnunciado, this.breakpointsRegistrados)
         }
         /**
-         * Si no, buscar el siguiente numero de linea que tenga un sub-enunciado
+         * Si no, buscar el siguiente numero de linea que tenga un instruccion
          * y registrar un bp para ese.
          */
         else {
-            const lineasConSubEnunciado = Object.keys(this.programaActual.subEnunciados).map(k => Number(k))
+            const lineasConSubEnunciado = Object.keys(this.programaActual.lineaFuentePorNumeroInstruccion).map(k => Number(k))
 
             /**
-             * Buscar el indice de la siguiente linea que tiene un sub-enunciado correspondiente.
+             * Buscar el indice de la siguiente linea que tiene un instruccion correspondiente.
              */
             const indiceLineaSiguiente = encontrarMayor(numeroLinea, lineasConSubEnunciado)
 
             /**
              * Registrar el bp
              */
-            const numeroSubEnunciado = this.programaActual.subEnunciados[lineasConSubEnunciado[indiceLineaSiguiente]]
+            const numeroSubEnunciado = this.programaActual.lineaFuentePorNumeroInstruccion[lineasConSubEnunciado[indiceLineaSiguiente]]
             const indiceMayor = encontrarMayor(numeroSubEnunciado, this.breakpointsRegistrados)
             this.breakpointsRegistrados = insertarEn(indiceMayor, numeroSubEnunciado, this.breakpointsRegistrados)
         }
@@ -164,31 +155,31 @@ export class Evaluador {
 
     quitarBreakpoint(numeroLinea: number) {
         /**
-         * Si el numero de linea tiene un sub-enunciado asociado, registrar un bp
+         * Si el numero de linea tiene un instruccion asociado, registrar un bp
          */
-        if (numeroLinea in this.programaActual.subEnunciados) {
-            const numeroSubEnunciado = this.programaActual.subEnunciados[numeroLinea]
+        if (numeroLinea in this.programaActual.lineaFuentePorNumeroInstruccion) {
+            const numeroSubEnunciado = this.programaActual.lineaFuentePorNumeroInstruccion[numeroLinea]
 
             // buscar el indice del breakpoint a eliminar
             const indice = busquedaBinaria(numeroSubEnunciado, this.breakpointsRegistrados)
             this.breakpointsRegistrados = removerDe(indice, this.breakpointsRegistrados)
         }
         /**
-         * Si no, buscar el siguiente numero de linea que tenga un sub-enunciado
+         * Si no, buscar el siguiente numero de linea que tenga un instruccion
          * y registrar un bp para ese.
          */
         else {
-            const lineasConSubEnunciado = Object.keys(this.programaActual.subEnunciados).map(k => Number(k))
+            const lineasConSubEnunciado = Object.keys(this.programaActual.lineaFuentePorNumeroInstruccion).map(k => Number(k))
 
             /**
-             * Buscar el indice de la siguiente linea que tiene un sub-enunciado correspondiente.
+             * Buscar el indice de la siguiente linea que tiene un instruccion correspondiente.
              */
             const indiceLineaSiguiente = encontrarMayor(numeroLinea, lineasConSubEnunciado)
 
             /**
              * Buscar el indice del bp a eliminar
              */
-            const numeroSubEnunciado = this.programaActual.subEnunciados[lineasConSubEnunciado[indiceLineaSiguiente]]
+            const numeroSubEnunciado = this.programaActual.lineaFuentePorNumeroInstruccion[lineasConSubEnunciado[indiceLineaSiguiente]]
             const indice = busquedaBinaria(numeroSubEnunciado, this.breakpointsRegistrados)
             this.breakpointsRegistrados = removerDe(indice, this.breakpointsRegistrados)
         }
@@ -332,7 +323,7 @@ export class Evaluador {
             }
             
 
-            this.evaluarSubEnunciado(this.programaActual.enunciados[this.contadorInstruccion])
+            this.evaluarSubEnunciado(this.programaActual.instrucciones[this.contadorInstruccion])
 
             this.incrementarContadorInstruccion()
         }
@@ -361,16 +352,16 @@ export class Evaluador {
 
         let i = 0
 
-        const l = this.numerosSubEnunciados.length
+        const l = this.numerosInstrucciones.length
 
-        while (i < l && this.numerosSubEnunciados[i] < numeroInstruccion && !indiceEncontrado) {
+        while (i < l && this.numerosInstrucciones[i] < numeroInstruccion && !indiceEncontrado) {
             i++
 
             if (i == l) {
                 indiceEncontrado = true;
                 indice = i - 1
             }
-            else if (this.numerosSubEnunciados[i] == numeroInstruccion) {
+            else if (this.numerosInstrucciones[i] == numeroInstruccion) {
                 indiceEncontrado = true
                 indice = i
             }
@@ -380,7 +371,7 @@ export class Evaluador {
     }
 
     /**
-     * Ejecuta sub-enunciados hasta encontrarse con uno que tiene un
+     * Ejecuta instruccions hasta encontrarse con uno que tiene un
      * enunciado correspondiente en el codigo fuente.
      */
     ejecutarEnunciadoSiguiente() {
@@ -401,7 +392,7 @@ export class Evaluador {
      * @param n numero de linea que buscar entre las lineas del modulo
      */
     private esLineaFuente(n: number): boolean {
-        return n in this.programaActual.subEnunciados
+        return n in this.programaActual.lineaFuentePorNumeroInstruccion
     }
 
     private ejecutarSubEnunciadoSiguiente() {
@@ -412,7 +403,7 @@ export class Evaluador {
         else {
             this.breakpointCumplido = false
 
-            this.evaluarSubEnunciado(this.programaActual.enunciados[this.contadorInstruccion])
+            this.evaluarSubEnunciado(this.programaActual.instrucciones[this.contadorInstruccion])
 
             this.incrementarContadorInstruccion()
         }
@@ -420,7 +411,7 @@ export class Evaluador {
 
     /**
      * Este metodo se encarga de incrementar el contador de instruccion.
-     * Si luego del incremento el contador apunta a un sub-enunciado
+     * Si luego del incremento el contador apunta a un instruccion
      * que no existe en el modulo que esta en ejecucion, desapila dicho modulo
      * y pone en ejecucion al siguiente. Si no hay modulos que desapilar, entonces
      * significa que el programa ha finalizado.
@@ -469,109 +460,109 @@ export class Evaluador {
         return existe(numeroLinea, this.breakpointsRegistrados)
     }
 
-    private evaluarSubEnunciado(subEnunciado: N3.Enunciado) {
-        switch (subEnunciado.tipo) {
-            case N3.TipoEnunciado.SUMAR:
+    private evaluarSubEnunciado(instruccion: N3.Instruccion) {
+        switch (instruccion.tipo) {
+            case N3.TipoInstruccion.SUMAR:
                 this.SUMAR()
                 break
-            case N3.TipoEnunciado.RESTAR:
+            case N3.TipoInstruccion.RESTAR:
                 this.RESTAR()
                 break
-            case N3.TipoEnunciado.DIV_REAL:
+            case N3.TipoInstruccion.DIV_REAL:
                 this.DIV_REAL()
                 break
-            case N3.TipoEnunciado.DIV_ENTERO:
+            case N3.TipoInstruccion.DIV_ENTERO:
                 this.DIV_ENTERO()
                 break
-            case N3.TipoEnunciado.MODULO:
+            case N3.TipoInstruccion.MODULO:
                 this.MODULO()
                 break
-            case N3.TipoEnunciado.MULTIPLICAR:
+            case N3.TipoInstruccion.MULTIPLICAR:
                 this.MULTIPLICAR()
                 break
-            case N3.TipoEnunciado.ELEVAR:
+            case N3.TipoInstruccion.ELEVAR:
                 this.ELEVAR()
                 break
-            case N3.TipoEnunciado.NEGAR:
+            case N3.TipoInstruccion.NEGAR:
                 this.NEGAR()
                 break
-            case N3.TipoEnunciado.NOT:
+            case N3.TipoInstruccion.NOT:
                 this.NOT()
                 break
-            case N3.TipoEnunciado.AND:
+            case N3.TipoInstruccion.AND:
                 this.AND()
                 break
-            case N3.TipoEnunciado.OR:
+            case N3.TipoInstruccion.OR:
                 this.OR()
                 break
-            case N3.TipoEnunciado.MENOR:
+            case N3.TipoInstruccion.MENOR:
                 this.MENOR()
                 break
-            case N3.TipoEnunciado.MENORIGUAL:
+            case N3.TipoInstruccion.MENORIGUAL:
                 this.MENORIGUAL()
                 break
-            case N3.TipoEnunciado.MAYOR:
+            case N3.TipoInstruccion.MAYOR:
                 this.MAYOR()
                 break
-            case N3.TipoEnunciado.MAYORIGUAL:
+            case N3.TipoInstruccion.MAYORIGUAL:
                 this.MAYORIGUAL()
                 break
-            case N3.TipoEnunciado.IGUAL:
+            case N3.TipoInstruccion.IGUAL:
                 this.IGUAL()
                 break
-            case N3.TipoEnunciado.DIFERENTE:
+            case N3.TipoInstruccion.DIFERENTE:
                 this.DIFERENTE()
                 break
-            case N3.TipoEnunciado.APILAR:
-                this.APILAR(subEnunciado)
+            case N3.TipoInstruccion.APILAR:
+                this.APILAR(instruccion)
                 break
-            case N3.TipoEnunciado.APILAR_VAR:
-                this.APILAR_VAR(subEnunciado)
+            case N3.TipoInstruccion.APILAR_VAR:
+                this.APILAR_VAR(instruccion)
                 break
-            case N3.TipoEnunciado.APILAR_ARR:
-                this.APILAR_ARR(subEnunciado)
+            case N3.TipoInstruccion.APILAR_ARR:
+                this.APILAR_ARR(instruccion)
                 break
-            case N3.TipoEnunciado.ASIGNAR:
-                this.ASIGNAR(subEnunciado)
+            case N3.TipoInstruccion.ASIGNAR:
+                this.ASIGNAR(instruccion)
                 break
-            case N3.TipoEnunciado.ASIGNAR_ARR:
-                this.ASIGNAR_ARR(subEnunciado)
+            case N3.TipoInstruccion.ASIGNAR_ARR:
+                this.ASIGNAR_ARR(instruccion)
                 break
-            case N3.TipoEnunciado.APILAR_R:
+            case N3.TipoInstruccion.APILAR_R:
                 this.APILAR_R()
                 break
-            case N3.TipoEnunciado.ASIGNAR_R:
+            case N3.TipoInstruccion.ASIGNAR_R:
                 this.ASIGNAR_R()
                 break
-            case N3.TipoEnunciado.LLAMAR:
-                this.LLAMAR(subEnunciado)
+            case N3.TipoInstruccion.LLAMAR:
+                this.LLAMAR(instruccion)
                 break
-            case N3.TipoEnunciado.LEER:
-                this.LEER(subEnunciado)
+            case N3.TipoInstruccion.LEER:
+                this.LEER(instruccion)
                 break
-            case N3.TipoEnunciado.ESCRIBIR:
+            case N3.TipoInstruccion.ESCRIBIR:
                 this.ESCRIBIR()
                 break
-            case N3.TipoEnunciado.REFERENCIA:
-                this.REFERENCIA(subEnunciado)
+            case N3.TipoInstruccion.REFERENCIA:
+                this.REFERENCIA(instruccion)
                 break
-            case N3.TipoEnunciado.CREAR_MEMORIA:
-                this.CREAR_MEMORIA(subEnunciado)
+            case N3.TipoInstruccion.CREAR_MEMORIA:
+                this.CREAR_MEMORIA(instruccion)
                 break
-            case N3.TipoEnunciado.JIF:
-                this.JIF(subEnunciado)
+            case N3.TipoInstruccion.JIF:
+                this.JIF(instruccion)
                 break
-            case N3.TipoEnunciado.JIT:
-                this.JIT(subEnunciado)
+            case N3.TipoInstruccion.JIT:
+                this.JIT(instruccion)
                 break
-            case N3.TipoEnunciado.JMP:
-                this.JMP(subEnunciado)
+            case N3.TipoInstruccion.JMP:
+                this.JMP(instruccion)
                 break
-            case N3.TipoEnunciado.COPIAR_ARR:
-                this.COPIAR_ARR(subEnunciado)
+            case N3.TipoInstruccion.COPIAR_ARR:
+                this.COPIAR_ARR(instruccion)
                 break
-            case N3.TipoEnunciado.INIT_ARR:
-                this.INIT_ARR(subEnunciado)
+            case N3.TipoInstruccion.INIT_ARR:
+                this.INIT_ARR(instruccion)
                 break
         }
     }
@@ -693,17 +684,17 @@ export class Evaluador {
         return this.estadoActual
     }
 
-    private APILAR(subEnunciado: N3.APILAR) {
-        this.pilaValores.push(subEnunciado.valor)
+    private APILAR(instruccion: N3.APILAR) {
+        this.pilaValores.push(instruccion.valor)
     }
 
-    private APILAR_VAR(subEnunciado: N3.APILAR_VAR) {
+    private APILAR_VAR(instruccion: N3.APILAR_VAR) {
         /**
          * El type assert es correcto porque el verificador de tipos
          * ya garantizó que la variable que se apilará es un escalar
          * o una referencia a uno
          */
-        const variableOReferencia = this.recuperarVariable(subEnunciado.nombreVariable) as (Referencia | Escalar)
+        const variableOReferencia = this.recuperarVariable(instruccion.nombreVariable) as (Referencia | Escalar)
 
         if (variableOReferencia.tipo == "escalar") {
             // esto no es necesario, solo hace que el codigo sea mas legible (discutible...)
@@ -747,16 +738,16 @@ export class Evaluador {
         }
     }
 
-    private APILAR_ARR(subEnunciado: N3.APILAR_ARR) {
+    private APILAR_ARR(instruccion: N3.APILAR_ARR) {
         /**
          * El type assert es correcto porque el verificador de tipos
          * ya garantizó que la variable que se apilará es un vector
          * o una referencia a uno.
          */
-        const variableOReferencia = this.recuperarVariable(subEnunciado.nombreVariable) as (Referencia | Vector2)
+        const variableOReferencia = this.recuperarVariable(instruccion.nombreVariable) as (Referencia | Vector2)
 
         if (variableOReferencia.tipo == "vector") {
-            const indices = this.recuperarIndices(subEnunciado.cantidadIndices).map(i => i - 1)
+            const indices = this.recuperarIndices(instruccion.cantidadIndices).map(i => i - 1)
 
             const indice = this.calcularIndice(indices, variableOReferencia.dimensiones)
 
@@ -770,7 +761,7 @@ export class Evaluador {
 
             const variable = referenciaResuelta.variable as Vector2
 
-            const indices = [...referenciaResuelta.indicesPrevios, ...this.recuperarIndices(subEnunciado.cantidadIndices)].map(i => i - 1)
+            const indices = [...referenciaResuelta.indicesPrevios, ...this.recuperarIndices(instruccion.cantidadIndices)].map(i => i - 1)
 
             const indice = this.calcularIndice(indices, variable.dimensiones)
 
@@ -778,13 +769,13 @@ export class Evaluador {
         }
     }
 
-    private ASIGNAR(subEnunciado: N3.ASIGNAR) {
+    private ASIGNAR(instruccion: N3.ASIGNAR) {
         /**
          * El type assert es correcto porque el verificador de tipos
          * ya garantizó que la variable que se apilará es un escalar
          * o una referencia a uno
          */
-        const variableOReferencia = this.recuperarVariable(subEnunciado.nombreVariable) as (Referencia | Escalar)
+        const variableOReferencia = this.recuperarVariable(instruccion.nombreVariable) as (Referencia | Escalar)
 
         if (variableOReferencia.tipo == "escalar") {
             variableOReferencia.valor = this.pilaValores.pop()
@@ -825,16 +816,16 @@ export class Evaluador {
         }
     }
 
-    private ASIGNAR_ARR(subEnunciado: N3.ASIGNAR_ARR) {
+    private ASIGNAR_ARR(instruccion: N3.ASIGNAR_ARR) {
         /**
          * El type assert es correcto porque el verificador de tipos
          * ya garantizó que la variable que se apilará es un escalar
          * o una referencia a uno
          */
-        const variableOReferencia = this.recuperarVariable(subEnunciado.nombreVariable) as (Referencia | Vector2)
+        const variableOReferencia = this.recuperarVariable(instruccion.nombreVariable) as (Referencia | Vector2)
 
         if (variableOReferencia.tipo == "vector") {
-            const indices = this.recuperarIndices(subEnunciado.cantidadIndices).map(i => i - 1)
+            const indices = this.recuperarIndices(instruccion.cantidadIndices).map(i => i - 1)
 
             const indice = this.calcularIndice(indices, variableOReferencia.dimensiones)
 
@@ -848,7 +839,7 @@ export class Evaluador {
 
             const variable = referenciaResuelta.variable as Vector2
 
-            const indices = [...referenciaResuelta.indicesPrevios, ...this.recuperarIndices(subEnunciado.cantidadIndices)].map(i => i - 1)
+            const indices = [...referenciaResuelta.indicesPrevios, ...this.recuperarIndices(instruccion.cantidadIndices)].map(i => i - 1)
 
             const indice = this.calcularIndice(indices, variable.dimensiones)
 
@@ -863,7 +854,7 @@ export class Evaluador {
         this.registro = this.pilaValores.pop()
     }
 
-    private LLAMAR(subEnunciado: N3.LLAMAR) {
+    private LLAMAR(instruccion: N3.LLAMAR) {
         // apilar el modulo actual
         this.pilaNombresModulo.push(this.nombreModuloActual)
 
@@ -877,19 +868,19 @@ export class Evaluador {
 
         this.memoriaProximoModulo = null
 
-        // poner contador instruccion en el primer sub-enunciado del modulo llamado
-        const rangoModuloLlamado = this.programaActual.rangoModulo[subEnunciado.nombreModulo]
+        // poner contador instruccion en el primer instruccion del modulo llamado
+        const rangoModuloLlamado = this.programaActual.rangoModulo[instruccion.nombreModulo]
         this.contadorInstruccion = rangoModuloLlamado.inicio
 
         // establecer moduloActual = moduloLLamado
-        this.nombreModuloActual = subEnunciado.nombreModulo
+        this.nombreModuloActual = instruccion.nombreModulo
 
         // poner bandera moduloLlamado en verdadero
         this.moduloLLamado = true
     }
 
-    private LEER(subEnunciado: N3.LEER) {
-        this.lecturaPendiente = { nombreVariable: subEnunciado.nombreVariable, tipoVariable: subEnunciado.tipoVariable }
+    private LEER(instruccion: N3.LEER) {
+        this.lecturaPendiente = { nombreVariable: instruccion.nombreVariable, tipoVariable: instruccion.tipoVariable }
         this.estadoActual = Estado.ESPERANDO_LECTURA
     }
 
@@ -898,49 +889,49 @@ export class Evaluador {
         this.estadoActual = Estado.ESPERANDO_ESCRITURA
     }
 
-    private REFERENCIA(subEnunciado: N3.REFERENCIA) {
-        const indices = this.recuperarIndices(subEnunciado.cantidadIndices)
-        const referencia = this.memoriaProximoModulo[subEnunciado.nombreReferencia] as Referencia
+    private REFERENCIA(instruccion: N3.REFERENCIA) {
+        const indices = this.recuperarIndices(instruccion.cantidadIndices)
+        const referencia = this.memoriaProximoModulo[instruccion.nombreReferencia] as Referencia
         // Cargar la referencia con los datos necesarios. La referencia en si fue creada durante un llamado a CREAR_MEMORIA.
         referencia.indices = indices
-        referencia.nombreVariable = subEnunciado.nombreVariable
+        referencia.nombreVariable = instruccion.nombreVariable
     }
 
-    private CREAR_MEMORIA(subEnunciado: N3.CREAR_MEMORIA) {
+    private CREAR_MEMORIA(instruccion: N3.CREAR_MEMORIA) {
         // crear espacio de memoria del modulo que va a ser llamado
-        this.memoriaProximoModulo = this.crearMemoriaModulo(subEnunciado.nombreModulo)
+        this.memoriaProximoModulo = this.crearMemoriaModulo(instruccion.nombreModulo)
     }
 
-    private JIF(subEnunciado: N3.JIF) {
+    private JIF(instruccion: N3.JIF) {
         const condicion = this.pilaValores.pop() as boolean
 
         /**
          * Saltar solo si la condicion evaluó a "falso"
          */
         if (condicion == false) {
-            this.contadorInstruccion = subEnunciado.numeroLinea
+            this.contadorInstruccion = instruccion.numeroLinea
             this.saltoRealizado = true
         }
     }
     
-    private JIT(subEnunciado: N3.JIT) {
+    private JIT(instruccion: N3.JIT) {
         const condicion = this.pilaValores.pop() as boolean
 
         /**
          * Saltar solo si la condicion evaluó a "verdadero"
          */
         if (condicion == true) {
-            this.contadorInstruccion = subEnunciado.numeroLinea
+            this.contadorInstruccion = instruccion.numeroLinea
             this.saltoRealizado = true
         }
     }
 
-    private JMP(subEnunciado: N3.JMP) {
-        this.contadorInstruccion = subEnunciado.numeroLinea
+    private JMP(instruccion: N3.JMP) {
+        this.contadorInstruccion = instruccion.numeroLinea
         this.saltoRealizado = true
     }
 
-    private COPIAR_ARR(subEnunciado: N3.COPIAR_ARR) {
+    private COPIAR_ARR(instruccion: N3.COPIAR_ARR) {
         // Vector objetivo (al cual se copian los datos)
         let vectorA: Vector2
 
@@ -953,9 +944,9 @@ export class Evaluador {
         // Indices para el vector fuente
         let indicesB: number[]
 
-        const variableOReferenciaA = this.recuperarVariable(subEnunciado.nombreObjetivo) as (Referencia | Vector2)
+        const variableOReferenciaA = this.recuperarVariable(instruccion.nombreObjetivo) as (Referencia | Vector2)
 
-        const variableOReferenciaB = this.recuperarVariable(subEnunciado.nombreFuente) as (Referencia | Vector2)
+        const variableOReferenciaB = this.recuperarVariable(instruccion.nombreFuente) as (Referencia | Vector2)
 
         // Resvoler el vector fuente primero porque sus indices estan al tope de la pila
         if (variableOReferenciaB.tipo == "referencia") {
@@ -963,11 +954,11 @@ export class Evaluador {
 
             vectorB = referenciaResuelta.variable as Vector2
 
-            indicesB = [...referenciaResuelta.indicesPrevios, ...this.recuperarIndices(subEnunciado.cantidadIndicesFuente)].map(i => i - 1)
+            indicesB = [...referenciaResuelta.indicesPrevios, ...this.recuperarIndices(instruccion.cantidadIndicesFuente)].map(i => i - 1)
         }
         else {
             vectorB = variableOReferenciaB
-            indicesB = this.recuperarIndices(subEnunciado.cantidadIndicesFuente).map(i => i - 1)
+            indicesB = this.recuperarIndices(instruccion.cantidadIndicesFuente).map(i => i - 1)
         }
 
         // Resolver el vector objetivo
@@ -976,11 +967,11 @@ export class Evaluador {
 
             vectorA = referenciaResuelta.variable as Vector2
 
-            indicesA = [...referenciaResuelta.indicesPrevios, ...this.recuperarIndices(subEnunciado.cantidadIndicesObjetivo)].map(i => i - 1)
+            indicesA = [...referenciaResuelta.indicesPrevios, ...this.recuperarIndices(instruccion.cantidadIndicesObjetivo)].map(i => i - 1)
         }
         else {
             vectorA = variableOReferenciaA
-            indicesA = this.recuperarIndices(subEnunciado.cantidadIndicesObjetivo).map(i => i - 1)
+            indicesA = this.recuperarIndices(instruccion.cantidadIndicesObjetivo).map(i => i - 1)
         }
 
         // Indice de la primer celda de A a la que se copia un valor...
@@ -997,26 +988,26 @@ export class Evaluador {
         }
     }
 
-    private INIT_ARR(subEnunciado: N3.INIT_ARR) {
-        const vectorObjetivo = this.memoriaProximoModulo[subEnunciado.nombreArregloObjetivo] as Vector2
+    private INIT_ARR(instruccion: N3.INIT_ARR) {
+        const vectorObjetivo = this.memoriaProximoModulo[instruccion.nombreArregloObjetivo] as Vector2
 
         let vectorFuente: Vector2
         let indicesVectorFuente
 
         // variable o referencia al vector fuente
-        const variableOReferencia = this.recuperarVariable(subEnunciado.nombreArregloFuente) as Vector2 | Referencia
+        const variableOReferencia = this.recuperarVariable(instruccion.nombreArregloFuente) as Vector2 | Referencia
 
         if (variableOReferencia.tipo == "referencia") {
             const referenciaResuelta = this.resolverReferencia(variableOReferencia)
 
             vectorFuente = referenciaResuelta.variable as Vector2
 
-            indicesVectorFuente = [...referenciaResuelta.indicesPrevios, ...this.recuperarIndices(subEnunciado.cantidadIndices)].map(i => i - 1)
+            indicesVectorFuente = [...referenciaResuelta.indicesPrevios, ...this.recuperarIndices(instruccion.cantidadIndices)].map(i => i - 1)
         }
         else {
             vectorFuente = variableOReferencia
 
-            indicesVectorFuente = this.recuperarIndices(subEnunciado.cantidadIndices).map(i => i - 1)
+            indicesVectorFuente = this.recuperarIndices(instruccion.cantidadIndices).map(i => i - 1)
         }
 
         const indiceBase = this.calcularIndice(indicesVectorFuente, vectorFuente.dimensiones)
