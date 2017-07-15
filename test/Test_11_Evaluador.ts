@@ -283,7 +283,7 @@ describe('Evaluador', () => {
         ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.numeroLineaFuente.should.equal(7)
+        reporte.result.numeroLineaFuente.should.equal(3)
 
         const asignacion = ev.consultarVariableEscalar('a', 5000)
 
@@ -310,7 +310,7 @@ describe('Evaluador', () => {
         ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.numeroLineaFuente.should.equal(7)
+        reporte.result.numeroLineaFuente.should.equal(3)
 
         const asignacion = ev.consultarVariableEscalar('a', 6000)
 
@@ -335,7 +335,7 @@ describe('Evaluador', () => {
         ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.numeroLineaFuente.should.equal(5)
+        reporte.result.numeroLineaFuente.should.equal(3)
 
         const asignacion = ev.consultarVariableEscalar('a', 3)
 
@@ -359,7 +359,7 @@ describe('Evaluador', () => {
         ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.numeroLineaFuente.should.equal(4)
+        reporte.result.numeroLineaFuente.should.equal(3)
 
         const asignacionA = ev.consultarVariableEscalar('a', 4)
 
@@ -409,10 +409,8 @@ describe('Evaluador', () => {
 
         const reporte = ev.ejecutarPrograma()
 
-        ev.ejecutarPrograma()
-
         reporte.error.should.equal(false)
-        reporte.result.numeroLineaFuente.should.equal(5)
+        reporte.result.numeroLineaFuente.should.equal(3)
 
         const asignacion = ev.consultarVariableEscalar('b', 3000)
 
@@ -454,7 +452,7 @@ describe('Evaluador', () => {
         reporte = ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.numeroLineaFuente.should.equal(4)
+        reporte.result.numeroLineaFuente.should.equal(3)
 
         const asignacion = ev.consultarVariableEscalar('a', 1000)
 
@@ -512,7 +510,7 @@ describe('Evaluador', () => {
         reporte = ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.numeroLineaFuente.should.equal(4)
+        reporte.result.numeroLineaFuente.should.equal(3)
 
         asignacion = ev.consultarVariableEscalar('a', 1000)
 
@@ -551,7 +549,7 @@ describe('Evaluador', () => {
         reporte = ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.numeroLineaFuente.should.equal(9)
+        reporte.result.numeroLineaFuente.should.equal(3)
 
         // probar que luego de la llamada a == 95
         asignacion = ev.consultarVariableEscalar('a', 95)
@@ -604,7 +602,7 @@ describe('Evaluador', () => {
         reporte = ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.numeroLineaFuente.should.equal(10)
+        reporte.result.numeroLineaFuente.should.equal(3)
     })
 
     it('Llamado a un modulo que toma una matriz como parametro', () => {
@@ -662,7 +660,7 @@ describe('Evaluador', () => {
         reporte = ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
-        reporte.result.numeroLineaFuente.should.equal(12)
+        reporte.result.numeroLineaFuente.should.equal(3)
     })
 
     it('Llamado a una funcion que suma dos numeros', () => {
@@ -690,6 +688,81 @@ describe('Evaluador', () => {
 
         // probar que luego de la c == 12
         let asignacion = ev.consultarVariableEscalar('c', 12)
+
+        asignacion.should.equal(true)
+    })
+
+    it('Programa ejecutado paso a paso', () => {
+        const code = `variables
+        entero a, b, c
+        inicio
+        a <- 5
+        b <- 7
+        c <- 12
+        fin`
+
+        const programaCompilado = compilador.compilar(code)
+
+        const ev = new Evaluador(programaCompilado.result as N3.ProgramaCompilado)
+
+        /**
+         * Iniciar ejecucion paso a paso. El evaluador se detiene
+         * ANTES de ejecutar el primer enunciado del programa.
+         */
+        let reporte = ev.ejecutarEnunciadoSiguiente()
+
+        reporte.error.should.equal(false)
+        reporte.result.numeroLineaFuente.should.equal(3)
+
+        /**
+         * Dar paso, el evaluador ejecuta el primer enunciado
+         * y se detiene ANTES de ejecutar el segundo.
+         */
+        reporte = ev.ejecutarEnunciadoSiguiente()
+
+        reporte.error.should.equal(false)
+        reporte.result.numeroLineaFuente.should.equal(4)
+
+        /**
+         * Verificar que luego de la ejecucion del primer enunciado
+         * a == 5.
+         */
+        let asignacion = ev.consultarVariableEscalar('a', 5)
+
+        asignacion.should.equal(true)
+
+        /**
+         * El evaluador ejecuta el segundo enunciado
+         * y se detiene antes del tercero
+         */
+        reporte = ev.ejecutarEnunciadoSiguiente()
+
+        reporte.error.should.equal(false)
+        reporte.result.numeroLineaFuente.should.equal(5)
+
+        /**
+         * Verificar segunda asignacion.
+         */
+        asignacion = ev.consultarVariableEscalar('b', 7)
+
+        asignacion.should.equal(true)
+
+        /**
+         * Ejecutar ultimo enunciado.
+         */
+        reporte = ev.ejecutarEnunciadoSiguiente()
+
+        reporte.error.should.equal(false)
+
+        /**
+         * Cuando el programa finaliza el evaluador devuelve
+         * el numero de linea del primer enunciado del modulo
+         * principal.
+         */
+        reporte.result.numeroLineaFuente.should.equal(3)
+
+        // Verificar tercer asignacion.
+        asignacion = ev.consultarVariableEscalar('c', 12)
 
         asignacion.should.equal(true)
     })

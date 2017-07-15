@@ -1375,7 +1375,7 @@ export class Interprete {
   cargarPrograma(codigo: string): Failure<Errors.Compilation[]> | Success<N3.ProgramaCompilado>;
   programaFinalizado(): boolean;
   ejecutarHastaElFinal(): Failure<null> | Success<MensajeInterprete>;
-  darPaso(): void;
+  darPaso(): Failure<null> | Success<MensajeInterprete>;
   obtenerEscrituraPendiente(): string | number | boolean;
   enviarLectura(k: any): void;
   agregarBreakpoint(n: number): void;

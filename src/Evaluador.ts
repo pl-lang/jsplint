@@ -59,7 +59,7 @@ export default class Evaluador {
 
         this.memoriaModuloActual = memoriaModuloPrincipal
 
-        this.lineaVisitada = true
+        this.lineaVisitada = false
         this.moduloLLamado = false
         this.saltoRealizado = false
 
@@ -351,8 +351,14 @@ export default class Evaluador {
         }
 
         if (this.estadoActual != Estado.ERROR_ENCONTRADO) {
-            const numeroLineaFuente = this.aLineaFuente(this.contadorInstruccion)
-            return { error: false, result: { numeroLineaFuente, numeroInstruccion: this.contadorInstruccion } }
+            if (this.estadoActual == Estado.PROGRAMA_FINALIZADO) {
+                const numeroLineaFuente = this.aLineaFuente(0)
+                return { error: false, result: { numeroLineaFuente, numeroInstruccion: 0 } }
+            }
+            else {
+                const numeroLineaFuente = this.aLineaFuente(this.contadorInstruccion)
+                return { error: false, result: { numeroLineaFuente, numeroInstruccion: this.contadorInstruccion } }
+            }
         }
         else {
             return { error: true, result: null }
@@ -368,16 +374,18 @@ export default class Evaluador {
 
         const l = this.numerosInstrucciones.length
 
-        while (i < l && this.numerosInstrucciones[i] < numeroInstruccion && !indiceEncontrado) {
-            i++
-
-            if (i == l) {
-                indiceEncontrado = true;
-                indice = i - 1
+        while (i < l && !indiceEncontrado) {
+            if (numeroInstruccion > this.numerosInstrucciones[i]) {
+                i++
             }
-            else if (this.numerosInstrucciones[i] == numeroInstruccion) {
+            else {
                 indiceEncontrado = true
-                indice = i
+                if (numeroInstruccion == this.numerosInstrucciones[i]) {
+                    indice = i
+                }
+                else {
+                    indice = i - 1
+                }
             }
         }
 
@@ -388,16 +396,62 @@ export default class Evaluador {
      * Ejecuta instruccions hasta encontrarse con uno que tiene un
      * enunciado correspondiente en el codigo fuente.
      */
-    ejecutarEnunciadoSiguiente() {
-        while (this.sePuedeEjecutar() && (!this.esLineaFuente(this.contadorInstruccion) || this.lineaVisitada)) {
-            if (this.lineaVisitada) {
+    ejecutarEnunciadoSiguiente(): Failure<null> | Success<{ numeroLineaFuente: number, numeroInstruccion: number }> {
+        let esFuente = this.esLineaFuente(this.contadorInstruccion)
+        let fueVisitada = this.lineaVisitada
+        let esBP = this.hayBreakpoint(this.contadorInstruccion)
+        let BPCumplido = this.breakpointCumplido
+
+        while (this.sePuedeEjecutar() && (!esFuente || fueVisitada) && (!esBP || BPCumplido)) {
+            if (esBP) {
+                this.breakpointCumplido = false
+            }
+            /**
+             * Si la instruccion que se esta por ejecutar corresponde a 
+             * una linea fuente hay que poner lineaVisitada en falso.
+             * De otra manera la ejecucion no se va a frenar cuando se
+             * alcance la PROXIMA instruccion que correpsonda a una linea
+             * fuente. Algo similar ocurre con el BP ahí arriba.
+             */
+            if (esFuente) {
                 this.lineaVisitada = false
             }
-            this.ejecutarSubEnunciadoSiguiente()
+
+            this.evaluarSubEnunciado(this.programaActual.instrucciones[this.contadorInstruccion])
+
+            this.incrementarContadorInstruccion()
+
+            esFuente = this.esLineaFuente(this.contadorInstruccion)
+            fueVisitada = this.lineaVisitada
+            esBP = this.hayBreakpoint(this.contadorInstruccion)
+            BPCumplido = this.breakpointCumplido
         }
         
-        if (this.esLineaFuente(this.contadorInstruccion)) {
+        /**
+         * Cuando se sale del bucle de ejecucion porque la linea tiene un
+         * breakpoint o corresponde a una linea fuente hay que poner la bandera
+         * correspondiente en verdadero.
+         */
+        if (esBP) {
+            this.breakpointCumplido = true
+        }
+
+        if (esFuente) {
             this.lineaVisitada = true
+        }
+
+        if (this.estadoActual != Estado.ERROR_ENCONTRADO) {
+            if (this.estadoActual == Estado.PROGRAMA_FINALIZADO) {
+                const numeroLineaFuente = this.aLineaFuente(0)
+                return { error: false, result: { numeroLineaFuente, numeroInstruccion: 0 } }
+            }
+            else {
+                const numeroLineaFuente = this.aLineaFuente(this.contadorInstruccion)
+                return { error: false, result: { numeroLineaFuente, numeroInstruccion: this.contadorInstruccion } }
+            }
+        }
+        else {
+            return { error: true, result: null }
         }
     }
 
@@ -406,7 +460,7 @@ export default class Evaluador {
      * @param n numero de linea que buscar entre las lineas del modulo
      */
     private esLineaFuente(n: number): boolean {
-        return n in this.programaActual.lineaFuentePorNumeroInstruccion
+        return existe(n, this.numerosInstrucciones)
     }
 
     private ejecutarSubEnunciadoSiguiente() {

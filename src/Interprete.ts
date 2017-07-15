@@ -61,9 +61,33 @@ export default class Interprete {
         }
     }
 
-    darPaso() {
+    darPaso(): Failure<null> | Success<MensajeInterprete> {
+        if (this.programaCargado) {
+            const reporte = this.evaluador.ejecutarEnunciadoSiguiente()
 
+            if (reporte.error == true) {
+                return reporte
+            }
+            else {
+                if (this.evaluador.hayEscrituraPendiente()) {
+                    const { numeroLineaFuente, numeroInstruccion } = reporte.result
+                    return { error: false, result: { accion: Accion.ESCRIBIR, numeroLineaFuente, numeroInstruccion } }
+                }
+                else if (this.evaluador.hayLecturaPendiente()) {
+                    const { numeroLineaFuente, numeroInstruccion } = reporte.result
+                    return { error: false, result: { accion: Accion.LEER, numeroLineaFuente, numeroInstruccion } }
+                }
+                else {
+                    const { numeroLineaFuente, numeroInstruccion } = reporte.result
+                    return { error: false, result: { accion: Accion.NADA, numeroLineaFuente, numeroInstruccion } }
+                }
+            }
+        }
+        else {
+            throw new Error("No se puede ejecutar el programa porque no hay ningun programa cargado")
+        }
     }
+
 
     obtenerEscrituraPendiente() {
         if (this.programaCargado) {
