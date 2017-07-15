@@ -455,6 +455,26 @@ export default class Evaluador {
         }
     }
 
+    ejecutarInstruccion(): Failure<null> | Success<{ numeroLineaFuente: number, numeroInstruccion: number }> {
+        this.evaluarSubEnunciado(this.programaActual.instrucciones[this.contadorInstruccion])
+
+        this.incrementarContadorInstruccion()
+
+        if (this.estadoActual != Estado.ERROR_ENCONTRADO) {
+            if (this.estadoActual == Estado.PROGRAMA_FINALIZADO) {
+                const numeroLineaFuente = this.aLineaFuente(0)
+                return { error: false, result: { numeroLineaFuente, numeroInstruccion: 0 } }
+            }
+            else {
+                const numeroLineaFuente = this.aLineaFuente(this.contadorInstruccion)
+                return { error: false, result: { numeroLineaFuente, numeroInstruccion: this.contadorInstruccion } }
+            }
+        }
+        else {
+            return { error: true, result: null }
+        }
+    }
+
     /**
      * Dice si un numero de linea dado corresponde a una de las lineas de codigo fuente
      * @param n numero de linea que buscar entre las lineas del modulo
