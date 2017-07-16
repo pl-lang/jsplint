@@ -867,6 +867,7 @@ export default class Evaluador {
                 const variable = referenciaResuelta.variable as Escalar
 
                 variable.valor = this.pilaValores.pop()
+                variable.inicialiazado = true
             }
             else {
                 /**
@@ -885,6 +886,7 @@ export default class Evaluador {
                 const indice = this.calcularIndice(referenciaResuelta.indicesPrevios.map(i => i - 1), variable.dimensiones)
 
                 variable.valores[indice] = this.pilaValores.pop()
+                variable.inicialiazado = true
             }
         }
     }
@@ -903,6 +905,7 @@ export default class Evaluador {
             const indice = this.calcularIndice(indices, variableOReferencia.dimensiones)
 
             variableOReferencia.valores[indice] = this.pilaValores.pop()
+            variableOReferencia.inicialiazado = true
         }
         else {
             // esto no es necesario, solo hace que el codigo sea mas legible (discutible...)
@@ -917,6 +920,7 @@ export default class Evaluador {
             const indice = this.calcularIndice(indices, variable.dimensiones)
 
             variable.valores[indice] = this.pilaValores.pop()
+            variable.inicialiazado = true
         }
     }
 
