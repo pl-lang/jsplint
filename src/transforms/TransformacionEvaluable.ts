@@ -75,6 +75,12 @@ export default class TrasnformadorEvaluable {
             this.ultimaLinea += enunciadoTransformado.length
         }
 
+        const detener: N3.DETENER = { tipo: N3.TipoInstruccion.DETENER }
+
+        enunciados.push(detener)
+
+        this.ultimaLinea += 1
+
         return enunciados
     }
 
@@ -101,7 +107,18 @@ export default class TrasnformadorEvaluable {
             this.ultimaLinea += enunciadoTransformado.length
         }
 
-        return [...inicializarParametros, ...enunciados]
+        /**
+         * Si el modulo es un procedimiento, hay que agregar una instruccion
+         * de retorno al final.
+         */
+        if (m.module_type == "procedure") {
+            const retornar: N3.RETORNAR = { tipo: N3.TipoInstruccion.RETORNAR }
+            this.ultimaLinea += 1
+            return [...inicializarParametros, ...enunciados, retornar]
+        }
+        else {
+            return [...inicializarParametros, ...enunciados]
+        }
     }
 
     private transformarEnunciado(e: Typed.Statement): N3.Instruccion[] {
@@ -385,7 +402,11 @@ export default class TrasnformadorEvaluable {
     private transformarRetornar(e: Typed.Return): N3.Instruccion[] {
         this.instruccions[e.pos.line] = this.ultimaLinea
 
-        return this.transformarExpresion(e.expression)
+        const apilarExpresion = this.transformarExpresion(e.expression)
+
+        const retornar: N3.RETORNAR = { tipo: N3.TipoInstruccion.RETORNAR }
+        
+        return [...apilarExpresion, retornar]
     }
 
     private transformarLlamado(e: Typed.Call): N3.Instruccion[] {

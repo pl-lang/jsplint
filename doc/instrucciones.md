@@ -44,6 +44,8 @@ JMP X: Saltar incondicionalmente. Salta a la instruccion numero X.
 
 LLAMAR X: llamar al modulo con nombre X
 
+RETORNAR: retorna a la instruccion donde un modulo fue llamado.
+
 LEER X, Y: Leer un valor de para la variable X de tipo Y.
 
 ESCRIBIR: Tomar el valor al tope de la pila y lo escribe.
@@ -66,3 +68,5 @@ vez que el modulo es llamado, "memoriaProximoModulo" pasa a ser "memoriaModuloAc
 COPIAR ARR U, V, X, Y: copiar los contenidos del vector X con Y indices al vector U con V indices. U y X son los nombres de los vectores, V e Y son numeros.
 
 INIT ARR X, Y, Z: inicializa el arreglo de nombre X de un modulo con un arreglo Y (invocado con Z indices) pasado como argumento en la llamada. Z es un numero (cantida de indices).
+
+DETENER: detiene la ejecucion del programa.

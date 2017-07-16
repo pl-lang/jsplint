@@ -100,6 +100,8 @@ function procesar_enunciado (e: N3.Instruccion) : string {
             return `JMP ${e.numeroLinea}`
         case N3.TipoInstruccion.LLAMAR:
             return `LLAMAR ${e.nombreModulo}`
+        case N3.TipoInstruccion.RETORNAR:
+            return `RETORNAR`
         case N3.TipoInstruccion.LEER:
             return `LEER ${e.nombreVariable} ${convertirTipoCadena(e.tipoVariable)}`
         case N3.TipoInstruccion.ESCRIBIR:
@@ -116,6 +118,8 @@ function procesar_enunciado (e: N3.Instruccion) : string {
             return `COPIAR_ARR ${e.nombreObjetivo} ${e.cantidadIndicesObjetivo} ${e.nombreFuente} ${e.cantidadIndicesFuente}`
         case N3.TipoInstruccion.INIT_ARR:
             return `INIT_ARR ${e.nombreArregloObjetivo} ${e.nombreArregloFuente} ${e.cantidadIndices}`
+        case N3.TipoInstruccion.DETENER:
+            return `DETENER`
     }
 }
 

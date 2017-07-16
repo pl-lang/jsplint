@@ -512,30 +512,9 @@ export default class Evaluador {
             else {
                 this.saltoRealizado = false
             }
-
-            this.desapilarModulo()
         }
         else {
             this.moduloLLamado = false
-        }
-    }
-
-    /**
-     * Desapila modulos hasta encontrar uno cuya ejecucion no haya finalizado, o finaliza la ejecucion del programa.
-     */
-    private desapilarModulo() {
-        while (this.sePuedeEjecutar() && (this.contadorInstruccion >= this.programaActual.rangoModulo[this.nombreModuloActual].fin)) {
-            if (this.pilaContadorInstruccion.length > 0) {
-
-                this.nombreModuloActual = this.pilaNombresModulo.pop()
-
-                this.contadorInstruccion = this.pilaContadorInstruccion.pop()
-
-                this.contadorInstruccion++
-            }
-            else {
-                this.estadoActual = Estado.PROGRAMA_FINALIZADO
-            }
         }
     }
 
@@ -625,6 +604,9 @@ export default class Evaluador {
             case N3.TipoInstruccion.LLAMAR:
                 this.LLAMAR(instruccion)
                 break
+            case N3.TipoInstruccion.RETORNAR:
+                this.RETORNAR()
+                break
             case N3.TipoInstruccion.LEER:
                 this.LEER(instruccion)
                 break
@@ -651,6 +633,9 @@ export default class Evaluador {
                 break
             case N3.TipoInstruccion.INIT_ARR:
                 this.INIT_ARR(instruccion)
+                break
+            case N3.TipoInstruccion.DETENER:
+                this.DETENER()
                 break
         }
     }
@@ -967,6 +952,14 @@ export default class Evaluador {
         this.moduloLLamado = true
     }
 
+    private RETORNAR() {
+        this.nombreModuloActual = this.pilaNombresModulo.pop()
+
+        this.contadorInstruccion = this.pilaContadorInstruccion.pop()
+
+        this.memoriaModuloActual = this.pilaMemoria.pop()
+    }
+
     private LEER(instruccion: N3.LEER) {
         this.lecturaPendiente = { nombreVariable: instruccion.nombreVariable, tipoVariable: instruccion.tipoVariable }
         this.estadoActual = Estado.ESPERANDO_LECTURA
@@ -1107,6 +1100,10 @@ export default class Evaluador {
         for (let i = 0, l = vectorObjetivo.valores.length; i < l; i++) {
             vectorObjetivo.valores[i] = vectorFuente.valores[indiceBase + i]
         }
+    }
+
+    private DETENER() {
+        this.estadoActual = Estado.PROGRAMA_FINALIZADO
     }
 
     private recuperarVariable(nombreVariable: string): Escalar | Vector2 | Referencia {

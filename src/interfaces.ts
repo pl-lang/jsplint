@@ -1259,6 +1259,7 @@ export namespace N3 {
     JIT,
     JMP,
     LLAMAR,
+    RETORNAR,
     LEER,
     ESCRIBIR,
     ASIGNAR_CAD,
@@ -1266,7 +1267,8 @@ export namespace N3 {
     REFERENCIA,
     CREAR_MEMORIA,
     COPIAR_ARR,
-    INIT_ARR
+    INIT_ARR,
+    DETENER
   }
 
   export type Instruccion = 
@@ -1298,6 +1300,7 @@ export namespace N3 {
     | JIT
     | JMP
     | LLAMAR
+    | RETORNAR
     | LEER
     | ESCRIBIR
     | ASIGNAR_CAD
@@ -1306,6 +1309,7 @@ export namespace N3 {
     | CREAR_MEMORIA
     | COPIAR_ARR
     | INIT_ARR
+    | DETENER
   
   export interface SUMAR {
     tipo: TipoInstruccion.SUMAR
@@ -1414,6 +1418,10 @@ export namespace N3 {
     nombreModulo: string
   }
 
+  export interface RETORNAR {
+    tipo: TipoInstruccion.RETORNAR
+  }
+
   export interface LEER {
     tipo: TipoInstruccion.LEER
     nombreVariable: string
@@ -1465,6 +1473,10 @@ export namespace N3 {
      * arreglo fuente.
      */
     cantidadIndices: number
+  }
+
+  export interface DETENER {
+    tipo: TipoInstruccion.DETENER
   }
 }
 
