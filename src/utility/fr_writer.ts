@@ -2,21 +2,6 @@ import {Failure, Success, ParsedProgram, N3} from '../interfaces'
 
 import { stringify as convertirTipoCadena } from './helpers'
 
-import transform from '../transforms/transform'
-
-import Parser from '../parser/Parser'
-
-function parse (s: string) {
-    const p = new Parser()
-
-    p.on('lexical-error', console.log)
-    p.on('syntax-error', console.log)
-
-    return p.parse(s)
-}
-
-const espacios = 2
-
 export default function fr_writer (p: N3.ProgramaCompilado) : string {
     // TODO: actualizar esto para que separe el codigo de los modulos...
     let enunciados = p.instrucciones.map((e, i) => `: ${procesar_enunciado(e)}`)
