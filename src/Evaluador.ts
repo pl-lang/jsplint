@@ -1,8 +1,8 @@
 // Clase que se encarga de ejecutar un programa.
 
-import { N3, Estado, Typed, Value, Memoria, Referencia, Escalar, Vector2, Failure, Success } from './interfaces'
+import { N3, Estado, Typed, Value, Memoria, Referencia, Escalar, Vector2, Failure, Success, ValorCeldaArreglo } from './interfaces'
 
-import { drop } from './utility/helpers'
+import { drop, arr_counter_inc } from './utility/helpers'
 
 export default class Evaluador {
 
@@ -472,6 +472,93 @@ export default class Evaluador {
         }
         else {
             return { error: true, result: null }
+        }
+    }
+
+    obtenerAmbitoActual(): string {
+        return this.nombreModuloActual
+    }
+
+    inspeccionarExpresion(exp: { tipo: Typed.Type, instrucciones: N3.Instruccion[] }): Failure<null> | Success<Value | ValorCeldaArreglo[]> {
+        if (exp.tipo.kind == 'array') {
+            // En este caso la expresion es la invocacion de un arreglo
+            // pero como en la pila no puede quedar un arreglo de valores
+            // voy a evaluar las instrucciones hasta la ante-ultima, es decir,
+            // voy a evaluar los indices.
+            // Con los indices evaluados puedo ver desde que celda en adelante
+            // hay que recuperar los valores del arreglo. El indice celda final es
+            // el indice que resulta de juntar los indices provistos con las dimensiones
+            // restantes...
+
+            // Cantidad de elementos en la pila ANTES de evaluar los indices
+            const elementosPila = this.pilaValores.length
+
+            for (let i = 0, l = exp.instrucciones.length - 1; i < l; i++) {
+                // por ahora (22/07/2017) entre la evaluacion de cada indice
+                // hay una instruccion APILAR_ARR; las ignoro porque solo
+                // necesito la ultima...
+                if (exp.instrucciones[i].tipo != N3.TipoInstruccion.APILAR_ARR) {
+                    this.evaluarSubEnunciado(exp.instrucciones[i])
+                }
+            }
+
+            const cantidadIndices = this.pilaValores.length - elementosPila
+
+            const indices = this.recuperarIndices(cantidadIndices)
+
+            const nombreVariable = (exp.instrucciones[exp.instrucciones.length] as N3.APILAR_ARR).nombreVariable
+
+            const variableOReferencia = this.recuperarVariable(nombreVariable) as (Referencia | Vector2)
+
+            let arregloInvocado: Vector2[] = null
+            let indicePrimerCelda: number = null
+            let indiceUltimaCelda: number = null
+
+            if (variableOReferencia.tipo == 'referencia') {
+                const referenciaResuelta = this.resolverReferencia(variableOReferencia)
+                const arreglo = referenciaResuelta.variable as Vector2
+                const indicesPrevios = referenciaResuelta.indicesPrevios
+
+                const indicePrimerElemento = [...indicesPrevios, ...indices, 1]
+                indicePrimerCelda = this.calcularIndice(indicePrimerElemento.map(i => i - 1), arreglo.dimensiones)
+                const indiceUltimoElemento = [...indicesPrevios, ...indices, ...drop(indicesPrevios.length + indices.length, arreglo.dimensiones)]
+                indiceUltimaCelda = this.calcularIndice(indiceUltimoElemento.map(i => i - 1), arreglo.dimensiones)
+
+                let indiceVectorial = indicePrimerElemento
+                const valoresArreglo: ValorCeldaArreglo[] = []
+
+                for (let i = indicePrimerCelda; i <= indiceUltimaCelda; i++) {
+                    valoresArreglo.push({ indice: indiceVectorial, valor: arreglo.valores[i] })
+                    arr_counter_inc(indiceVectorial, arreglo.dimensiones, 1)
+                }
+
+                return { error: false, result: valoresArreglo }
+                
+            }
+            else {
+                const indicePrimerElemento = [...indices, 1]
+                indicePrimerCelda = this.calcularIndice(indicePrimerElemento.map(i => i - 1), variableOReferencia.dimensiones)
+                const indiceUltimoElemento = [...indices, ...drop(indices.length, variableOReferencia.dimensiones)]
+                indiceUltimaCelda = this.calcularIndice(indiceUltimoElemento.map(i => i - 1), variableOReferencia.dimensiones)
+
+                let indiceVectorial = indicePrimerElemento
+                const valoresArreglo: ValorCeldaArreglo[] = []
+
+                for (let i = indicePrimerCelda; i <= indiceUltimaCelda; i++) {
+                    valoresArreglo.push({ indice: indiceVectorial, valor: variableOReferencia.valores[i] })
+                    arr_counter_inc(indiceVectorial, variableOReferencia.dimensiones, 1)
+                }
+
+                return { error: false, result: valoresArreglo }
+            }
+        }
+        else {
+            // En este caso simplemente hay que evaluar la expresion y devolver el valor
+            // al tope de la pila.
+            for (let i = 0, l = exp.instrucciones.length; i < l; i++) {
+                this.evaluarSubEnunciado(exp.instrucciones[i])
+            }
+            return { error: false, result:  this.pilaValores.pop() }
         }
     }
 
