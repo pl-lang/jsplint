@@ -4,7 +4,7 @@ import Compilador from '../src/Compilador'
 
 import Evaluador from '../src/Evaluador'
 
-import { N3, Escalar, Vector2, Estado } from '../src/interfaces'
+import { N3, Escalar, Vector2, Estado, EscalarInspeccionado, ArregloInspeccionado } from '../src/interfaces'
 
 import fr_writer from '../src/utility/fr_writer'
 
@@ -765,5 +765,178 @@ describe('Evaluador', () => {
         asignacion = ev.consultarVariableEscalar('c', 12)
 
         asignacion.should.equal(true)
+    })
+
+    it('Inspeccionar expresion: 2 + 2', () => {
+        const code = `variables
+        inicio
+        fin`
+
+        const programaCompilado = compilador.compilar(code)
+
+        const ev = new Evaluador(programaCompilado.result as N3.ProgramaCompilado)
+
+        const expresionCompilada = compilador.compilarExpresion('2 + 2', 'principal')
+
+        expresionCompilada.error.should.equal(false)
+
+        const inspeccion = ev.inspeccionarExpresion(expresionCompilada.result as N3.ExpresionCompilada)
+
+        inspeccion.error.should.equal(false)
+        
+        const resultado = inspeccion.result as EscalarInspeccionado
+
+        resultado.valor.should.equal(4)
+    })
+
+    it('Inspeccionar expresion: a + 2', () => {
+        const code = `variables
+            entero a
+        inicio
+            a <- 3
+        fin`
+
+        const programaCompilado = compilador.compilar(code)
+
+        const ev = new Evaluador(programaCompilado.result as N3.ProgramaCompilado)
+
+        ev.ejecutarPrograma()
+
+        const expresionCompilada = compilador.compilarExpresion('a + 2', 'principal')
+
+        expresionCompilada.error.should.equal(false)
+
+        const inspeccion = ev.inspeccionarExpresion(expresionCompilada.result as N3.ExpresionCompilada)
+
+        inspeccion.error.should.equal(false)
+
+        const resultado = inspeccion.result as EscalarInspeccionado
+
+        resultado.valor.should.equal(5)
+    })
+
+    it('Inspeccionar valores de un vector', () => {
+        const code = `variables
+            entero a[2]
+        inicio
+            a[1] <- 1
+            a[2] <- 2
+        fin`
+
+        const programaCompilado = compilador.compilar(code)
+
+        const ev = new Evaluador(programaCompilado.result as N3.ProgramaCompilado)
+
+        ev.ejecutarPrograma()
+
+        const expresionCompilada = compilador.compilarExpresion('a', 'principal')
+
+        expresionCompilada.error.should.equal(false)
+
+        const inspeccion = ev.inspeccionarExpresion(expresionCompilada.result as N3.ExpresionCompilada)
+
+        inspeccion.error.should.equal(false)
+
+        const resultado = inspeccion.result as ArregloInspeccionado
+
+        resultado.celdas.should.deepEqual([
+            { indice: [1], valor: 1 },
+            { indice: [2], valor: 2 }
+        ])
+    })
+
+    it('Inspeccionar valores de una matriz', () => {
+        const code = `variables
+            entero a[2, 2]
+        inicio
+            a[1, 1] <- 1
+            a[1, 2] <- 2
+            a[2, 1] <- 3
+            a[2, 2] <- 4
+        fin`
+
+        const programaCompilado = compilador.compilar(code)
+
+        const ev = new Evaluador(programaCompilado.result as N3.ProgramaCompilado)
+
+        ev.ejecutarPrograma()
+
+        const expresionCompilada = compilador.compilarExpresion('a', 'principal')
+
+        expresionCompilada.error.should.equal(false)
+
+        const inspeccion = ev.inspeccionarExpresion(expresionCompilada.result as N3.ExpresionCompilada)
+
+        inspeccion.error.should.equal(false)
+
+        const resultado = inspeccion.result as ArregloInspeccionado
+
+        resultado.celdas.should.deepEqual([
+            { indice: [1, 1], valor: 1 },
+            { indice: [1, 2], valor: 2 },
+            { indice: [2, 1], valor: 3 },
+            { indice: [2, 2], valor: 4 }
+        ])
+    })
+
+    it('Inspeccionar valores de una fila de una matriz', () => {
+        const code = `variables
+            entero a[2, 2]
+        inicio
+            a[1, 1] <- 1
+            a[1, 2] <- 2
+        fin`
+
+        const programaCompilado = compilador.compilar(code)
+
+        const ev = new Evaluador(programaCompilado.result as N3.ProgramaCompilado)
+
+        ev.ejecutarPrograma()
+
+        const expresionCompilada = compilador.compilarExpresion('a[1]', 'principal')
+
+        expresionCompilada.error.should.equal(false)
+
+        const inspeccion = ev.inspeccionarExpresion(expresionCompilada.result as N3.ExpresionCompilada)
+
+        inspeccion.error.should.equal(false)
+
+        const resultado = inspeccion.result as ArregloInspeccionado
+
+        resultado.celdas.should.deepEqual([
+            { indice: [1, 1], valor: 1 },
+            { indice: [1, 2], valor: 2 }
+        ])
+    })
+
+    it('Inspeccionar funcion que suma dos numeros', () => {
+        const code = `variables
+        entero a, b, c
+        inicio
+        a <- 5
+        b <- 7
+        c <- sumar(a, b)
+        fin
+        
+        entero funcion sumar(entero x, entero y)
+        inicio
+        retornar x + y
+        finfuncion`
+
+        const programaCompilado = compilador.compilar(code)
+
+        const ev = new Evaluador(programaCompilado.result as N3.ProgramaCompilado)
+
+        const expresionCompilada = compilador.compilarExpresion('sumar(2, 2)', 'principal')
+
+        expresionCompilada.error.should.equal(false)
+
+        const inspeccion = ev.inspeccionarExpresion(expresionCompilada.result as N3.ExpresionCompilada)
+
+        inspeccion.error.should.equal(false)
+
+        const resultado = inspeccion.result as EscalarInspeccionado
+
+        resultado.valor.should.equal(4)
     })
 })

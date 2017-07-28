@@ -1,11 +1,11 @@
 'use strict'
 
 import Emitter from '../utility/Emitter'
-import {Failure, Success, Token} from '../interfaces'
+import {Failure, Success, Token, SymbolKind} from '../interfaces'
 import SourceWrapper from './SourceWrapper'
 import Lexer from './Lexer'
 import TokenQueue from './TokenQueue'
-import {MainModule as MainModulePattern, skipWhiteSpace} from './Patterns'
+import {MainModule as MainModulePattern, Expression, skipWhiteSpace} from './Patterns'
 import {FunctionModule as FunctionPattern, ProcedureModule as ProcedurePattern} from './Patterns'
 import {S0, ParsedProgram, Errors} from '../interfaces'
 
@@ -70,6 +70,27 @@ export default class Parser extends Emitter {
       this.emit('parsing-finished', {error:false})
 
       return {error:false, result}
+    }
+  }
+
+  leerExpresion(e: string): Failure<Errors.Pattern[] | Errors.Lexical[]> | Success<S0.ExpElement[]> {
+    const source = new SourceWrapper(e)
+    const lexer = new Lexer()
+
+    const lexer_report = lexer.tokenize(source)
+
+    if (lexer_report.error == true) {
+      return lexer_report
+    }
+    else {
+      const tokens = new TokenQueue(lexer_report.result)
+      const expresion = Expression(tokens, tk => tk == SymbolKind.EOL || tk == SymbolKind.EOF)
+      if (expresion.error == true) {
+        return { error: true, result: [expresion.result] }
+      }
+      else {
+        return expresion
+      }
     }
   }
 }

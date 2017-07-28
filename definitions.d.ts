@@ -1364,6 +1364,25 @@ export declare enum Accion {
   ESCRIBIR = 2,
 }
 
+export type ValorExpresionInspeccionada = EscalarInspeccionado | ArregloInspeccionado
+
+export interface EscalarInspeccionado {
+  tipo: TipoValorInspeccionado.ESCALAR
+  valor: Value
+}
+
+export interface ArregloInspeccionado {
+  tipo: TipoValorInspeccionado.CELDAS
+  celdas: ValorCeldaArreglo[]
+}
+
+export enum TipoValorInspeccionado {
+  ESCALAR = 0,
+  CELDAS = 1
+}
+
+export type ValorCeldaArreglo = { indice: number[], valor: Value }
+
 /**
  * EXPORTS DE ESTE MODULO
  */
@@ -1375,9 +1394,10 @@ export class Interprete {
   cargarPrograma(codigo: string): Failure<Errors.Compilation[]> | Success<N3.ProgramaCompilado>;
   programaFinalizado(): boolean;
   ejecutarHastaElFinal(): Failure<null> | Success<MensajeInterprete>;
-  ejecutarInstruccion(): Failure<null> | Success<MensajeInterprete>;
   darPaso(): Failure<null> | Success<MensajeInterprete>;
+  ejecutarInstruccion(): Failure<null> | Success<MensajeInterprete>;
   obtenerEscrituraPendiente(): string | number | boolean;
+  inspeccionarExpresion(expresion: string): Failure<(Errors.Pattern | Errors.Lexical | S2.Error | Typed.Error | Errors.TypeError)[]> | Success<ValorExpresionInspeccionada>;
   enviarLectura(k: any): void;
   agregarBreakpoint(n: number): void;
   quitarBreakpoint(n: number): void;

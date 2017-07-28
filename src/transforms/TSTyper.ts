@@ -1,7 +1,7 @@
 import {Failure, Success, S0, S2, Typed, Errors} from '../interfaces'
 import {drop, types_are_equal, stringify, type_literal} from '../utility/helpers'
 
-export default function transform (ast: S2.AST): Failure<Typed.Error[]>|Success<Typed.Program> {
+export function transform (ast: S2.AST): Failure<Typed.Error[]>|Success<Typed.Program> {
     let errors: Typed.Error[] = []
 
     const typed_program: Typed.Program = {
@@ -506,7 +506,7 @@ function transform_assignment (a: S2.Assignment, mn: string, p: S2.AST): Failure
     }
 }
 
-function type_expression (es: S2.ExpElement[], mn: string, p: S2.AST): Failure<Typed.Error[]>|Success<Typed.ExpElement[]> {
+export function type_expression (es: S2.ExpElement[], mn: string, p: S2.AST): Failure<Typed.Error[]>|Success<Typed.ExpElement[]> {
     const typed_exp: Typed.ExpElement[] = []
     let errors: Typed.Error[] = []
 
@@ -704,7 +704,7 @@ function type_indexes (indexes: S2.ExpElement[][], mn: string, p: S2.AST): Failu
  * Por ejemplo: entero + entero = entero; entero + real = real
  */
 
-function calculate_type(exp: Typed.ExpElement[]): Failure<Typed.Error[]>|Success<Typed.Type> {
+export function calculate_type(exp: Typed.ExpElement[]): Failure<Typed.Error[]>|Success<Typed.Type> {
     let stack: Typed.Type[] = []
     let errors: Typed.Error[] = []
 

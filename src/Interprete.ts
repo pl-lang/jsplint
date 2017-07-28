@@ -5,7 +5,7 @@ import { type_literal as creaTipoLiteral } from './utility/helpers'
 import { types_are_equal as tiposIguales } from './utility/helpers'
 import { stringify as tipoACadena } from './utility/helpers'
 
-import { N3, Errors, Failure, Success, Accion, MensajeInterprete } from './interfaces'
+import { N3, Errors, Failure, Success, Accion, MensajeInterprete, ValorExpresionInspeccionada, Value, S2, Typed } from './interfaces'
 
 export default class Interprete {
     private compilador: Compilador
@@ -121,6 +121,24 @@ export default class Interprete {
         }
         else {
             throw new Error("No se puede establecer un breakpoint porque no hay ningun programa cargado.")
+        }
+    }
+
+    inspeccionarExpresion(expresion: string): Failure<(Errors.Pattern | Errors.Lexical | S2.Error | Typed.Error | Errors.TypeError)[]> | Success<ValorExpresionInspeccionada> {
+        const expresionCompilada = this.compilador.compilarExpresion(expresion, this.evaluador.obtenerAmbitoActual())
+
+        if (expresionCompilada.error == false) {
+            const expresionEvaluada = this.evaluador.inspeccionarExpresion(expresionCompilada.result)
+
+            if (expresionEvaluada.error == false) {
+                return expresionEvaluada
+            }
+            else {
+                throw new Error("LA EXPRESION INSPECCIONADA TIRO UN ERROR AL SER EVALUADA")
+            }
+        }
+        else {
+            return expresionCompilada
         }
     }
 

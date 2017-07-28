@@ -1,7 +1,7 @@
-import {Typed, Failure, Success, Errors} from '../interfaces'
+import {S1, Typed, Failure, Success, Errors} from '../interfaces'
 import {types_are_equal, stringify} from '../utility/helpers'
 
-export default function check (p: Typed.Program): Errors.TypeError[] {
+export function check (p: Typed.Program): Errors.TypeError[] {
     let errors: Errors.TypeError[] = []
 
     for (let mn in p.modules) {
@@ -410,4 +410,116 @@ function check_invocation(i: Typed.Invocation): Failure<Errors.TypeError[]>|Succ
     else {
         return {error: false, result: i.typings.type}
     }
+}
+
+export function revisarInspeccion(e: Typed.ExpElement[], p: Typed.Program): Errors.TypeError[] {
+    /**
+     * Para que una expresion que está por ser inspeccionada
+     * no tenga errores de tipado todas las invocaciones que
+     * contenga deben pasar la revision de invocaciones y
+     * todas las llamadas que contenga deben pasar la revision
+     * de llamadas. ADEMAS, sus llamadas deben invocar
+     * solo funciones PURAS, o sea, funciones que no tomen
+     * parametros por referencia y que solo modifiquen variables
+     * locales.
+     */
+    let errores: Errors.TypeError[] = []
+
+    for (let elemento of e) {
+        if (elemento.type == 'call') {
+            /**
+             * Buscar errores en el llamado
+             */
+            const erroresEncontrados = check_call(elemento)
+            if (erroresEncontrados.error == true) {
+                errores = [...errores, ...erroresEncontrados.result]
+            }
+
+            /**
+             * Verificar que la funcion sea pura
+             */
+            if (!esFuncionPura(elemento, p)) {
+                const error: Errors.FuncionImpura = {
+                    nombreFuncion: elemento.name,
+                    pos: elemento.pos,
+                    reason: 'funcion-impura',
+                    where: 'typechecker'
+                }
+                errores = [...errores, error]
+            }
+        }
+        else if (elemento.type == 'invocation') {
+            const erroresEncontrados = check_invocation(elemento)
+
+            if (erroresEncontrados.error == true) {
+                errores = [...errores, ...erroresEncontrados.result]
+            }
+
+            /**
+             * Si hay indices, hay que revisar que todos los que
+             * tengan llamados a funciones sea puros.
+             */
+            if (elemento.indexes.length > 0 ) {
+                const indexes = elemento.indexes
+                for (let i of indexes) {
+                    for (let e of i) {
+                        if (e.type == 'call') {
+                            /**
+                             * Verificar que la funcion sea pura
+                             */
+                            if (!esFuncionPura(e, p)) {
+                                const error: Errors.FuncionImpura = {
+                                    nombreFuncion: e.name,
+                                    pos: e.pos,
+                                    reason: 'funcion-impura',
+                                    where: 'typechecker'
+                                }
+                                errores = [...errores, error]
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return errores
+}
+
+function esFuncionPura(l: Typed.Call, p: Typed.Program): boolean {
+    const moduloLlamado = p.modules[l.name]
+    const localesModulo = p.variables_per_module[l.name]
+    return !tomaPorReferencia(moduloLlamado) && !tieneAsignacionGlobal(moduloLlamado, localesModulo)
+}
+
+/**
+ * Dice si el modulo invocado toma al menos un valor por referencia
+ * @param c LLamado a un modulo
+ */
+function tomaPorReferencia(m: Typed.Module): boolean {
+    return m.parameters.filter(p => p.by_ref).length > 0
+}
+
+/**
+ * Dice si un modulo hace al menos una asignacion a una variable global
+ * @param m modulo que se va a revisar
+ * @param variables variables locales del modulo que se revisara
+ */
+function tieneAsignacionGlobal(m: Typed.Module, variables: S1.VariableDict): boolean {
+    let asignacionGlobal = false
+
+    const asignaciones: Typed.Assignment[] = m.body.filter(e => e.type == 'assignment') as Typed.Assignment[]
+
+    const l = asignaciones.length
+
+    if (l > 0) {
+        for (let i = 0; !asignacionGlobal && i < l; i++) {
+            const a = asignaciones[i]
+            if (!(a.left.name in variables)) {
+                asignacionGlobal = true
+            }
+        }
+    }
+
+    return asignacionGlobal
 }

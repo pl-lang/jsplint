@@ -9,7 +9,7 @@
 
 import {Failure, Success, S0, S1, S2, Errors} from '../interfaces'
 
-export default function transform (ast: S1.AST) : Failure<S2.Error[]> | Success<S2.AST> {
+export function transform (ast: S1.AST) : Failure<S2.Error[]> | Success<S2.AST> {
   const new_ast = {
     modules: {
       main: null,
@@ -488,7 +488,7 @@ function transform_invocation_exp(invocation: S0.InvocationValue, ast: S1.AST, m
   }
 }
 
-function transform_expression (expression: S0.ExpElement[], ast: S1.AST, module_name: string) : Failure<S2.Error[]> | Success<S2.ExpElement[]>  {
+export function transform_expression (expression: S0.ExpElement[], ast: S1.AST, module_name: string) : Failure<S2.Error[]> | Success<S2.ExpElement[]>  {
   const errors_found: S2.Error[] = []
   const output: S2.ExpElement[] = []
 

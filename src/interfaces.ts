@@ -37,7 +37,8 @@ export namespace Errors {
   | BadIndex
   | LongString
   | BadRefArg
-  | BadReadArg;
+  | BadReadArg
+  | FuncionImpura;
 
   export interface Base {
     reason: string
@@ -246,6 +247,12 @@ export namespace Errors {
     where: 'typechecker'
     declared: string
     received: string
+  }
+
+  export interface FuncionImpura extends Base {
+    reason: 'funcion-impura'
+    where: 'typechecker'
+    nombreFuncion: string
   }
 }
 
@@ -584,11 +591,11 @@ export namespace S1 {
     return_type: 'ninguno'
   }
 
-  export type Statement = S0.Call | Assignment | If | While | For | Until | S0.Return
+  export type Statement = S0.Call | S0.Assignment | If | While | For | Until | S0.Return
 
-  export interface Assignment extends S0.Assignment {
-    body: Statement[]
-  }
+  // export interface Assignment extends S0.Assignment {
+  //   body: Statement[]
+  // }
 
   export interface If extends S0.If {
     true_branch: Statement[]
@@ -1230,6 +1237,8 @@ export namespace N3 {
     }
   }
 
+  export type ExpresionCompilada = { tipo: Typed.Type, instrucciones: Instruccion[]}
+
   export enum TipoInstruccion {
     SUMAR = 0,
     RESTAR,
@@ -1866,3 +1875,22 @@ export enum Accion {
   LEER,
   ESCRIBIR,
 }
+
+export type ValorExpresionInspeccionada = EscalarInspeccionado | ArregloInspeccionado
+
+export interface EscalarInspeccionado {
+  tipo: TipoValorInspeccionado.ESCALAR
+  valor: Value
+}
+
+export interface ArregloInspeccionado {
+  tipo: TipoValorInspeccionado.CELDAS
+  celdas: ValorCeldaArreglo[]
+}
+
+export enum TipoValorInspeccionado {
+  ESCALAR = 0,
+  CELDAS
+}
+
+export type ValorCeldaArreglo = { indice: number[], valor: Value }

@@ -12,7 +12,7 @@ export default class TrasnformadorEvaluable {
         [m: string]: { inicio: number, fin: number }
     }
 
-    private instruccions: {
+    private instrucciones: {
         [numeroLinea: number]: number
     }
 
@@ -22,10 +22,15 @@ export default class TrasnformadorEvaluable {
         this.ultimaLinea = 0
         this.rangoModulo = { principal: { inicio: 0, fin: 0 } }
         this.nombreModuloActual = ""
-        this.instruccions = {}
+        this.instrucciones = {}
     }
 
     transformar(p: Typed.Program): Success<N3.ProgramaCompilado> {
+        this.ultimaLinea = 0
+        this.rangoModulo = { principal: { inicio: 0, fin: 0 } }
+        this.nombreModuloActual = ""
+        this.instrucciones = {}
+
         const resultadoFinal: N3.ProgramaCompilado = {
             instrucciones: [],
             rangoModulo: { principal: { inicio: 0, fin: 0 } },
@@ -57,7 +62,7 @@ export default class TrasnformadorEvaluable {
 
         resultadoFinal.instrucciones = enunciados
         resultadoFinal.rangoModulo = this.rangoModulo
-        resultadoFinal.lineaFuentePorNumeroInstruccion = this.instruccions
+        resultadoFinal.lineaFuentePorNumeroInstruccion = this.instrucciones
 
         return { error: false, result: resultadoFinal }
     }
@@ -141,7 +146,7 @@ export default class TrasnformadorEvaluable {
     }
 
     private transformarAsignacion(e: Typed.Assignment): N3.Instruccion[] {
-        this.instruccions[e.pos.line] = this.ultimaLinea
+        this.instrucciones[e.pos.line] = this.ultimaLinea
 
         const variableObjetivo = e.left
         const expresionAsignada = e.right
@@ -245,7 +250,7 @@ export default class TrasnformadorEvaluable {
     }
 
     private transformarSi(e: Typed.If): N3.Instruccion[] {
-        this.instruccions[e.pos.line] = this.ultimaLinea
+        this.instrucciones[e.pos.line] = this.ultimaLinea
 
         // transformar condicion
 
@@ -322,7 +327,7 @@ export default class TrasnformadorEvaluable {
     }
 
     private transformarMientras(e: Typed.While): N3.Instruccion[] {
-        this.instruccions[e.pos.line] = this.ultimaLinea
+        this.instrucciones[e.pos.line] = this.ultimaLinea
 
         const apilarCondicion = this.transformarExpresion(e.condition)
 
@@ -344,7 +349,7 @@ export default class TrasnformadorEvaluable {
     }
 
     private transformarHastaQue(e: Typed.Until): N3.Instruccion[] {
-        this.instruccions[e.pos.line] = this.ultimaLinea
+        this.instrucciones[e.pos.line] = this.ultimaLinea
 
         let enunciadosBucle: N3.Instruccion[] = []
 
@@ -362,7 +367,7 @@ export default class TrasnformadorEvaluable {
     }
 
     private transformarPara(e: Typed.For): N3.Instruccion[] {
-        this.instruccions[e.pos.line] = this.ultimaLinea
+        this.instrucciones[e.pos.line] = this.ultimaLinea
 
         // inicializacion
         // evaluar valor final
@@ -400,7 +405,7 @@ export default class TrasnformadorEvaluable {
     }
 
     private transformarRetornar(e: Typed.Return): N3.Instruccion[] {
-        this.instruccions[e.pos.line] = this.ultimaLinea
+        this.instrucciones[e.pos.line] = this.ultimaLinea
 
         const apilarExpresion = this.transformarExpresion(e.expression)
 
@@ -410,7 +415,7 @@ export default class TrasnformadorEvaluable {
     }
 
     private transformarLlamado(e: Typed.Call): N3.Instruccion[] {
-        this.instruccions[e.pos.line] = this.ultimaLinea
+        this.instrucciones[e.pos.line] = this.ultimaLinea
 
         // La transformacion para los llamados a "leer" y "escribir" es diferente
         // a la transformacion de llamados a modulos del usuario.
@@ -565,7 +570,7 @@ export default class TrasnformadorEvaluable {
         }
     }
 
-    private transformarExpresion(exp: Typed.ExpElement[]): N3.Instruccion[] {
+    transformarExpresion(exp: Typed.ExpElement[]): N3.Instruccion[] {
         let resultado: N3.Instruccion[] = []
         for (let elemento of exp){
             switch (elemento.type) {
@@ -681,7 +686,7 @@ export default class TrasnformadorEvaluable {
 
                 const nombreVariable = i.name
 
-                const cantidadIndices = i.indexes.length
+                const cantidadIndices = indicesInvocaciones[0].length
 
                 for (let indices of indicesInvocaciones) {
                     const apilarIndices = indices.map(x => this.transformarExpresion(x)).reduce((p, c) => this.concatenarEnunciados(p, c), [])
