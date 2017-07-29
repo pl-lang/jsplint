@@ -1063,4 +1063,29 @@ describe('Evaluador', () => {
         const a4 = ev.consultarVariableVectorial('a', [1, 4], 'a')
         a4.should.equal(true)
     })
+
+    it('Leer un numero y guardarlo en una variable', () => {
+        const code = `variables
+        entero a
+        inicio
+        leer(a)
+        fin`
+
+        const programaCompilado = compilador.compilar(code)
+
+        const ev = new Evaluador(programaCompilado.result as N3.ProgramaCompilado)
+
+        let reporte = ev.ejecutarPrograma()
+
+        reporte.error.should.equal(false)
+
+        ev.leer(7)
+
+        reporte = ev.ejecutarPrograma()
+
+        reporte.error.should.equal(false)
+
+        const a = ev.consultarVariableEscalar('a', 7)
+        a.should.equal(true)
+    })
 })
