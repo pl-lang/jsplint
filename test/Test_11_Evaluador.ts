@@ -939,4 +939,60 @@ describe('Evaluador', () => {
 
         resultado.valor.should.equal(4)
     })
+
+    it('Asignar una cadena a un vector de caracteres', () => {
+        const code = `variables
+        caracter a[4]
+        inicio
+        a <- "hola"
+        fin`
+
+        const programaCompilado = compilador.compilar(code)
+
+        const ev = new Evaluador(programaCompilado.result as N3.ProgramaCompilado)
+
+        const reporte = ev.ejecutarPrograma()
+
+        reporte.error.should.equal(false)
+
+        const a1 = ev.consultarVariableVectorial('a', [1], 'h')
+        a1.should.equal(true)
+
+        const a2 = ev.consultarVariableVectorial('a', [2], 'o')
+        a2.should.equal(true)
+
+        const a3 = ev.consultarVariableVectorial('a', [3], 'l')
+        a3.should.equal(true)
+        
+        const a4 = ev.consultarVariableVectorial('a', [4], 'a')
+        a4.should.equal(true)
+    })
+
+    it.only('Asignar una cadena a una fila de una matriz de caracteres', () => {
+        const code = `variables
+        caracter a[2, 4]
+        inicio
+        a[1] <- "hola"
+        fin`
+
+        const programaCompilado = compilador.compilar(code)
+
+        const ev = new Evaluador(programaCompilado.result as N3.ProgramaCompilado)
+
+        const reporte = ev.ejecutarPrograma()
+
+        reporte.error.should.equal(false)
+
+        const a1 = ev.consultarVariableVectorial('a', [1, 1], 'h')
+        a1.should.equal(true)
+
+        const a2 = ev.consultarVariableVectorial('a', [1, 2], 'o')
+        a2.should.equal(true)
+
+        const a3 = ev.consultarVariableVectorial('a', [1, 3], 'l')
+        a3.should.equal(true)
+
+        const a4 = ev.consultarVariableVectorial('a', [1, 4], 'a')
+        a4.should.equal(true)
+    })
 })

@@ -184,6 +184,9 @@ export default class TrasnformadorEvaluable {
                     // Sub-enunciados que resultan de transformar la expresion
                     const apilarCadena = this.transformarExpresion(expresionAsignada)
 
+                    // Sub-enunciados que resultan de transformar cada una de las expresiones de los indices
+                    const apilarIndices = variableObjetivo.indexes.map(x => this.transformarExpresion(x)).reduce((p, c) => this.concatenarEnunciados(p, c), [])
+
                     const cantidadIndices = variableObjetivo.indexes.length
 
                     const longitudCadena = e.typings.right.length
@@ -195,7 +198,7 @@ export default class TrasnformadorEvaluable {
                         longitudCadena
                     }
 
-                    const enunciadoTransformado = [...apilarCadena, asignacion]
+                    const enunciadoTransformado = [...apilarIndices, ...apilarCadena, asignacion]
 
                     return enunciadoTransformado
                 }

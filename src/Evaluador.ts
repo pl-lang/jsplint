@@ -721,6 +721,9 @@ export default class Evaluador {
             case N3.TipoInstruccion.ESCRIBIR:
                 this.ESCRIBIR()
                 break
+            case N3.TipoInstruccion.ASIGNAR_CAD:
+                this.ASIGNAR_CAD(instruccion)
+                break
             case N3.TipoInstruccion.REFERENCIA:
                 this.REFERENCIA(instruccion)
                 break
@@ -1080,6 +1083,34 @@ export default class Evaluador {
     private ESCRIBIR() {
         this.escrituraPendiente = this.pilaValores.pop()
         this.estadoActual = Estado.ESPERANDO_ESCRITURA
+    }
+
+    private ASIGNAR_CAD(instruccion: N3.ASIGNAR_CAD) {
+        // Cadena que sera asignadas, está al tope de la pila
+        const cadena = this.pilaValores.pop() as string
+
+        const variableOReferencia = this.recuperarVariable(instruccion.nombreVariable)
+
+        let variableObjetivo: Vector2
+        let indices: number[]
+
+        if (variableOReferencia.tipo == "referencia") {
+            const { variable, indicesPrevios } = this.resolverReferencia(variableOReferencia)
+
+            variableObjetivo = variable as Vector2
+
+            indices = [...indicesPrevios, ...this.desapilar(instruccion.cantidadIndices)]
+        }
+        else {
+            variableObjetivo = variableOReferencia as Vector2
+            indices = this.desapilar(instruccion.cantidadIndices)
+        }
+
+        const indicePrimerCelda = this.calcularIndice(indices.map(i => i - 1), variableObjetivo.dimensiones)
+
+        for (let i = 0, indice = indicePrimerCelda, l = instruccion.longitudCadena; i < l; i++, indice++) {
+            variableObjetivo.valores[indice] = cadena[i]
+        }
     }
 
     private REFERENCIA(instruccion: N3.REFERENCIA) {
