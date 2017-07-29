@@ -92,7 +92,7 @@ function procesar_enunciado (e: N3.Instruccion) : string {
         case N3.TipoInstruccion.ESCRIBIR:
             return `ESCRIBIR`
         case N3.TipoInstruccion.ASIGNAR_CAD:
-            return `ASIGNAR_CAD ${e.nombreVariable} ${e.longitudCadena} ${e.cantidadIndices}`
+            return `ASIGNAR_CAD ${e.nombreVariable} ${e.cantidadIndices}`
         case N3.TipoInstruccion.CONCATENAR:
             return `CONCATENAR ${e.cantidadCaracteres}`
         case N3.TipoInstruccion.REFERENCIA:

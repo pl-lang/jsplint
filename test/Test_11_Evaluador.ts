@@ -968,7 +968,7 @@ describe('Evaluador', () => {
         a4.should.equal(true)
     })
 
-    it.only('Asignar una cadena a una fila de una matriz de caracteres', () => {
+    it('Asignar una cadena a una fila de una matriz de caracteres', () => {
         const code = `variables
         caracter a[2, 4]
         inicio
@@ -980,6 +980,74 @@ describe('Evaluador', () => {
         const ev = new Evaluador(programaCompilado.result as N3.ProgramaCompilado)
 
         const reporte = ev.ejecutarPrograma()
+
+        reporte.error.should.equal(false)
+
+        const a1 = ev.consultarVariableVectorial('a', [1, 1], 'h')
+        a1.should.equal(true)
+
+        const a2 = ev.consultarVariableVectorial('a', [1, 2], 'o')
+        a2.should.equal(true)
+
+        const a3 = ev.consultarVariableVectorial('a', [1, 3], 'l')
+        a3.should.equal(true)
+
+        const a4 = ev.consultarVariableVectorial('a', [1, 4], 'a')
+        a4.should.equal(true)
+    })
+
+    it('Leer una cadena y guardarla en un vector', () => {
+        const code = `variables
+        caracter a[4]
+        inicio
+        leer(a)
+        fin`
+
+        const programaCompilado = compilador.compilar(code)
+
+        const ev = new Evaluador(programaCompilado.result as N3.ProgramaCompilado)
+
+        let reporte = ev.ejecutarPrograma()
+
+        reporte.error.should.equal(false)
+
+        ev.leer('hola')
+
+        reporte = ev.ejecutarPrograma()
+
+        reporte.error.should.equal(false)
+
+        const a1 = ev.consultarVariableVectorial('a', [1], 'h')
+        a1.should.equal(true)
+
+        const a2 = ev.consultarVariableVectorial('a', [2], 'o')
+        a2.should.equal(true)
+
+        const a3 = ev.consultarVariableVectorial('a', [3], 'l')
+        a3.should.equal(true)
+
+        const a4 = ev.consultarVariableVectorial('a', [4], 'a')
+        a4.should.equal(true)
+    })
+
+    it('Leer una cadena y guardarla en una fila de una matriz', () => {
+        const code = `variables
+        caracter a[3, 4]
+        inicio
+        leer(a[1])
+        fin`
+
+        const programaCompilado = compilador.compilar(code)
+
+        const ev = new Evaluador(programaCompilado.result as N3.ProgramaCompilado)
+
+        let reporte = ev.ejecutarPrograma()
+
+        reporte.error.should.equal(false)
+
+        ev.leer('hola')
+
+        reporte = ev.ejecutarPrograma()
 
         reporte.error.should.equal(false)
 

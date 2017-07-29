@@ -54,8 +54,7 @@ ESCRIBIR: Tomar el valor al tope de la pila y lo escribe.
 
 CONCATENAR X: toma X caracteres de la pila, los concatena, y apila el resultado.
 
-ASIGNAR CAD X, Y, Z: asigna la cadena al tope de la pila a la variable X, de longitud Y, a partir de la celda determinada con los primeros Z indices
-al tope de la pila y las longitudes de las dimensiones de X.
+ASIGNAR CAD X, Y: asigna la cadena al tope de la pila a la variable X a partir de la celda determinada con los primeros Y indices en la pila.
 
 ## Otras operaciones
 

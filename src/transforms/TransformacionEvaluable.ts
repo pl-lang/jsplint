@@ -189,13 +189,10 @@ export default class TrasnformadorEvaluable {
 
                     const cantidadIndices = variableObjetivo.indexes.length
 
-                    const longitudCadena = e.typings.right.length
-
                     const asignacion: N3.ASIGNAR_CAD = {
                         tipo: N3.TipoInstruccion.ASIGNAR_CAD,
                         nombreVariable: variableObjetivo.name,
-                        cantidadIndices,
-                        longitudCadena
+                        cantidadIndices
                     }
 
                     const enunciadoTransformado = [...apilarIndices, ...apilarCadena, asignacion]
@@ -463,15 +460,28 @@ export default class TrasnformadorEvaluable {
                     llamadosALeer = [...llamadosALeer, leer, asignacion]
                 }
                 else {
-                    const apilarIndices = arg.indexes.map(x => this.transformarExpresion(x)).reduce((p, c) => this.concatenarEnunciados(p, c), [])
+                    if (arg.typings.type instanceof Typed.StringType) {
+                        const apilarIndices = arg.indexes.map(x => this.transformarExpresion(x)).reduce((p, c) => this.concatenarEnunciados(p, c), [])
 
-                    const asignacion: N3.ASIGNAR_ARR = {
-                        tipo: N3.TipoInstruccion.ASIGNAR_ARR,
-                        nombreVariable: arg.name,
-                        cantidadIndices: arg.indexes.length
+                        const asignacion: N3.ASIGNAR_CAD = {
+                            tipo: N3.TipoInstruccion.ASIGNAR_CAD,
+                            nombreVariable: arg.name,
+                            cantidadIndices: arg.indexes.length
+                        }
+
+                        llamadosALeer = [...llamadosALeer, ...apilarIndices, leer, asignacion]
                     }
+                    else {
+                        const apilarIndices = arg.indexes.map(x => this.transformarExpresion(x)).reduce((p, c) => this.concatenarEnunciados(p, c), [])
 
-                    llamadosALeer = [...llamadosALeer, leer, ...apilarIndices, asignacion]
+                        const asignacion: N3.ASIGNAR_ARR = {
+                            tipo: N3.TipoInstruccion.ASIGNAR_ARR,
+                            nombreVariable: arg.name,
+                            cantidadIndices: arg.indexes.length
+                        }
+
+                        llamadosALeer = [...llamadosALeer, leer, ...apilarIndices, asignacion]
+                    }
                 }
             }
 

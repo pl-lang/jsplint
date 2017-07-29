@@ -1108,7 +1108,7 @@ export default class Evaluador {
 
         const indicePrimerCelda = this.calcularIndice(indices.map(i => i - 1), variableObjetivo.dimensiones)
 
-        for (let i = 0, indice = indicePrimerCelda, l = instruccion.longitudCadena; i < l; i++, indice++) {
+        for (let i = 0, indice = indicePrimerCelda, l = cadena.length; i < l; i++, indice++) {
             variableObjetivo.valores[indice] = cadena[i]
         }
     }

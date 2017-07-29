@@ -1449,7 +1449,6 @@ export namespace N3 {
   export interface ASIGNAR_CAD {
     tipo: TipoInstruccion.ASIGNAR_CAD
     nombreVariable: string
-    longitudCadena: number
     cantidadIndices: number
   }
 
