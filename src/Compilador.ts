@@ -10,6 +10,8 @@ import TransformadorEvaluable from '../src/transforms/TransformacionEvaluable'
 
 import { check as revisarTipos, revisarInspeccion } from '../src/typechecker/TSChecker'
 
+import { type_literal as tiparLiteral } from './utility/helpers'
+
 import { transform as asignarTipos, type_expression as tiparExpresion, calculate_type as calcularTipo } from '../src/transforms/TSTyper'
 
 export default class Compilador {
@@ -137,6 +139,17 @@ export default class Compilador {
         }
         else {
             throw new Error('No hay ningun progama cargado, no se puede compilar la expresion.')
+        }
+    }
+
+    tiparLectura(cadenaLeida: string) {
+        const literalLeido = this.parser.leerLiteral(cadenaLeida)
+
+        if (literalLeido.error == false) {
+            const literalTipado = tiparLiteral(literalLeido.result)
+        }
+        else {
+
         }
     }
 }
