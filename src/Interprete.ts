@@ -5,7 +5,7 @@ import { type_literal as creaTipoLiteral } from './utility/helpers'
 import { types_are_equal as tiposIguales } from './utility/helpers'
 import { stringify as tipoACadena } from './utility/helpers'
 
-import { N3, Errors, Failure, Success, Accion, MensajeInterprete, ValorExpresionInspeccionada, Value, S2, Typed } from './interfaces'
+import { N3, Errors, Failure, Success, Accion, MensajeInterprete, ValorExpresionInspeccionada, Value, S2, Typed, DatosLectura } from './interfaces'
 
 export default class Interprete {
     private compilador: Compilador
@@ -120,7 +120,16 @@ export default class Interprete {
             return this.evaluador.obtenerEscrituraPendiente()
         }
         else {
-            throw new Error("No se puede establecer un breakpoint porque no hay ningun programa cargado.")
+            throw new Error("No se puede obtener la escritura pendiente porque no hay un programa cargado.")
+        }
+    }
+
+    obtenerLecturaPendiente() {
+        if (this.programaCargado) {
+            return this.evaluador.obtenerLecturaPendiente()
+        }
+        else {
+            throw new Error("No se puede obtener la lectura pendiente porque no hay un programa cargado.")
         }
     }
 
@@ -142,8 +151,44 @@ export default class Interprete {
         }
     }
 
-    enviarLectura(k: any) {
+    verificarLectura(lectura: DatosLectura, cadenaLeida: string): Failure<null> | Success<Value> {
         // verificar que lo que se leyo sea del tipo esperado...etc...
+        const lecturaAnalizada = this.compilador
+    }
+
+    parse(value: string): S0.LiteralValue {
+        let v: Value = null
+
+        if (/^\d+$/.test(value)) {
+            /**
+             * es un entero
+             */
+            v = parseInt(value)
+        }
+        else if (/^\d+(\.\d+)?$/.test(value)) {
+            /**
+             * es un real
+             */
+            v = parseFloat(value)
+        }
+        else if (/^(verdadero|falso)$/.test(value)) {
+            /**
+             * es un booleano
+             */
+            v = value == 'verdadero'
+        }
+        else {
+            /**
+             * es una cadena
+             */
+            v = value
+        }
+
+        return { type: 'literal', value: v }
+    }
+
+    enviarLectura(valor: Value) {
+        this.evaluador.leer(valor)
     }
 
     agregarBreakpoint(n: number) {
