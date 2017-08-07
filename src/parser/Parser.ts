@@ -5,7 +5,7 @@ import {Failure, Success, Token, SymbolKind} from '../interfaces'
 import SourceWrapper from './SourceWrapper'
 import Lexer from './Lexer'
 import TokenQueue from './TokenQueue'
-import {MainModule as MainModulePattern, Expression, skipWhiteSpace} from './Patterns'
+import {MainModule as MainModulePattern, Expression, Literal, skipWhiteSpace} from './Patterns'
 import {FunctionModule as FunctionPattern, ProcedureModule as ProcedurePattern} from './Patterns'
 import {S0, ParsedProgram, Errors} from '../interfaces'
 
@@ -90,6 +90,29 @@ export default class Parser extends Emitter {
       }
       else {
         return expresion
+      }
+    }
+  }
+
+  leerLiteral(l: string): Failure<(Errors.Lexical | Errors.Pattern)[]> | Success<S0.LiteralValue> {
+    const fuente = new SourceWrapper(l)
+    const lexer = new Lexer()
+
+    const reporte = lexer.tokenize(fuente)
+
+    if (reporte.error == true)  {
+      return reporte
+    }
+    else {
+      const tokens = new TokenQueue(reporte.result)
+      const valor = Literal(tokens)
+
+      if (valor.error == true) {
+        const errores = [valor.result]
+        return { error: true, result: errores }
+      }
+      else {
+        return valor
       }
     }
   }
