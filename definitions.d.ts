@@ -1383,6 +1383,8 @@ export enum TipoValorInspeccionado {
 
 export type ValorCeldaArreglo = { indice: number[], valor: Value }
 
+export type DatosLectura = { nombreVariable: string, tipoVariable: Typed.AtomicType | Typed.StringType }
+
 /**
  * EXPORTS DE ESTE MODULO
  */
