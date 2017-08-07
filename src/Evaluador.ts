@@ -1,6 +1,6 @@
 // Clase que se encarga de ejecutar un programa.
 
-import { N3, Estado, Typed, Value, Memoria, Referencia, Escalar, Vector2, Failure, Success } from './interfaces'
+import { N3, Estado, Typed, Value, Memoria, Referencia, Escalar, Vector2, Failure, Success, DatosLectura } from './interfaces'
 
 import { ValorCeldaArreglo, TipoValorInspeccionado, ValorExpresionInspeccionada, ArregloInspeccionado, EscalarInspeccionado  } from './interfaces'
 
@@ -106,8 +106,24 @@ export default class Evaluador {
         return this.estadoActual == Estado.ESPERANDO_LECTURA
     }
 
-    obtenerLecturaPendiente(): { nombreVariable: string, tipoVariable: Typed.AtomicType | Typed.StringType } {
-        return this.lecturaPendiente
+    obtenerLecturaPendiente(): DatosLectura {
+        /**
+         * Cuando este metodo se ejecuta, en lo que al Evaluador respecta, la
+         * lectura fue realizada. Ahora hay que determinar en que estado
+         * queda el evaluador luego de esto.
+         */
+        if (this.contadorInstruccion == this.programaActual.instrucciones.length) {
+            this.estadoActual = Estado.PROGRAMA_FINALIZADO
+        }
+        else {
+            this.estadoActual = Estado.EJECUTANDO_PROGRAMA
+        }
+
+        const lecturaPendiente = this.lecturaPendiente
+
+        this.lecturaPendiente = null
+
+        return lecturaPendiente
     }
 
     leer(v: Value) {
