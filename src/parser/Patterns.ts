@@ -58,6 +58,31 @@ export function Integer(source: TokenQueue) : Failure<Errors.Pattern> | Success<
   }
 }
 
+export function Literal(source: TokenQueue): Failure<Errors.Pattern> | Success<S0.LiteralValue> {
+  const tokenActual = source.current()
+
+  if (isLiteralTokenType(tokenActual.kind)) {
+    let value: number | boolean | string
+
+    if (tokenActual.kind == ReservedKind.Verdadero || tokenActual.kind == ReservedKind.Falso)
+      value = tokenActual.kind == ReservedKind.Verdadero
+    else
+      value = tokenActual.value
+
+    source.next()
+
+    return { error: false, result: { type: 'literal', value } }
+  }
+  else {
+    const unexpected = tokenActual.kind
+    const expected = ['literal']
+    const reason = '@value-expected-expression'
+    const column = tokenActual.column
+    const line = tokenActual.line
+    return { error: true, result: { unexpected, expected, reason, pos: { column, line }, where: 'parser' } }
+  }  
+}
+
 /**
  * Captura la dimension de un arreglo
  */
