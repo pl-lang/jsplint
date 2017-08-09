@@ -15,7 +15,7 @@ export interface Position {
 }
 export declare namespace Errors {
   type Compilation = Lexical | Pattern | RepeatedVar | UndefinedModule | UndefinedVariable | TypeError | Typed.Error;
-  type TypeError = IncompatibleArgument | IncompatibleTypes | BadWriteArg | BadCondition | BadCounter | BadInitValue | BadLastValue | BadReturn | WrongArgAmount | BadIndex | LongString | BadRefArg | BadReadArg;
+  type TypeError = IncompatibleArgument | IncompatibleTypes | BadWriteArg | BadCondition | BadCounter | BadInitValue | BadLastValue | BadReturn | WrongArgAmount | BadIndex | LongString | BadRefArg | BadReadArg | FuncionImpura | TipoIncorrectoValorLeido;
   interface Base {
     reason: string;
     where: string;
@@ -198,6 +198,19 @@ export declare namespace Errors {
     where: 'typechecker';
     declared: string;
     received: string;
+  }
+  
+  export interface FuncionImpura extends Base {
+    reason: 'funcion-impura'
+    where: 'typechecker'
+    nombreFuncion: string
+  }
+
+  export interface TipoIncorrectoValorLeido extends Base {
+    reason: 'tipo-incorrecto-valor-leido'
+    where: 'interpreter'
+    tipoEsperado: string
+    tipoLeido: string
   }
 }
 /**
@@ -1399,8 +1412,9 @@ export class Interprete {
   darPaso(): Failure<null> | Success<MensajeInterprete>;
   ejecutarInstruccion(): Failure<null> | Success<MensajeInterprete>;
   obtenerEscrituraPendiente(): string | number | boolean;
+  obtenerLecturaPendiente(): DatosLectura;
   inspeccionarExpresion(expresion: string): Failure<(Errors.Pattern | Errors.Lexical | S2.Error | Typed.Error | Errors.TypeError)[]> | Success<ValorExpresionInspeccionada>;
-  enviarLectura(k: any): void;
+  leer(lectura: DatosLectura, cadenaLeida: string): Failure<(Errors.Lexical | Errors.Pattern | Errors.TypeError)[]> | Success<null>;
   agregarBreakpoint(n: number): void;
   quitarBreakpoint(n: number): void;
 }
