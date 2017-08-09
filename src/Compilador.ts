@@ -142,14 +142,16 @@ export default class Compilador {
         }
     }
 
-    tiparLectura(cadenaLeida: string) {
+    tiparLectura(cadenaLeida: string): Failure<(Errors.Lexical | Errors.Pattern)[]> | Success<Typed.Literal> {
         const literalLeido = this.parser.leerLiteral(cadenaLeida)
 
         if (literalLeido.error == false) {
             const literalTipado = tiparLiteral(literalLeido.result)
+
+            return { error: false, result: literalTipado }
         }
         else {
-
+            return literalLeido
         }
     }
 }
