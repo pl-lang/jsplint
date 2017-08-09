@@ -38,7 +38,8 @@ export namespace Errors {
   | LongString
   | BadRefArg
   | BadReadArg
-  | FuncionImpura;
+  | FuncionImpura
+  | TipoIncorrectoValorLeido;
 
   export interface Base {
     reason: string
@@ -253,6 +254,13 @@ export namespace Errors {
     reason: 'funcion-impura'
     where: 'typechecker'
     nombreFuncion: string
+  }
+
+  export interface TipoIncorrectoValorLeido extends Base {
+    reason: 'tipo-incorrecto-valor-leido'
+    where: 'interpreter'
+    tipoEsperado: string
+    tipoLeido: string
   }
 }
 
