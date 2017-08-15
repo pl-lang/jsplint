@@ -1414,7 +1414,7 @@ export class Interprete {
   obtenerEscrituraPendiente(): string | number | boolean;
   obtenerLecturaPendiente(): DatosLectura;
   inspeccionarExpresion(expresion: string): Failure<(Errors.Pattern | Errors.Lexical | S2.Error | Typed.Error | Errors.TypeError)[]> | Success<ValorExpresionInspeccionada>;
-  leer(lectura: DatosLectura, cadenaLeida: string): Failure<(Errors.Lexical | Errors.Pattern | Errors.TypeError)[]> | Success<null>;
+  leer(cadenaLeida: string): Failure<(Errors.Lexical | Errors.Pattern | Errors.TypeError)[]> | Success<null>;
   agregarBreakpoint(n: number): void;
   quitarBreakpoint(n: number): void;
 }

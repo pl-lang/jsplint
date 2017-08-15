@@ -151,8 +151,10 @@ export default class Interprete {
         }
     }
 
-    leer(lectura: DatosLectura, cadenaLeida: string): Failure<(Errors.Lexical | Errors.Pattern | Errors.TypeError)[]> | Success<null> {
+    leer(cadenaLeida: string): Failure<(Errors.Lexical | Errors.Pattern | Errors.TypeError)[]> | Success<null> {
         if (this.evaluador.hayLecturaPendiente()) {
+            const lectura = this.obtenerLecturaPendiente()
+
             const lecturaAnalizada = this.compilador.tiparLectura(cadenaLeida)
 
             if (lecturaAnalizada.error == false) {
@@ -163,7 +165,8 @@ export default class Interprete {
                         reason: 'tipo-incorrecto-valor-leido',
                         where: 'interpreter',
                         tipoEsperado: tipoACadena(lectura.tipoVariable),
-                        tipoLeido: tipoACadena(tipoLectura)
+                        tipoLeido: tipoACadena(tipoLectura),
+                        nombreVariable: lectura.nombreVariable
                     }
                     return { error: true, result: [errorEncontrado] }
                 }

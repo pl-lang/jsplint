@@ -4,7 +4,9 @@ import Compilador from '../src/Compilador'
 
 import Evaluador from '../src/Evaluador'
 
-import { N3, Escalar, Vector2, Estado, EscalarInspeccionado, ArregloInspeccionado } from '../src/interfaces'
+import Interprete from '../src/Interprete'
+
+import { N3, Escalar, Vector2, Estado, EscalarInspeccionado, ArregloInspeccionado, Accion, Errors } from '../src/interfaces'
 
 import fr_writer from '../src/utility/fr_writer'
 
@@ -1087,5 +1089,61 @@ describe('Evaluador', () => {
 
         const a = ev.consultarVariableEscalar('a', 7)
         a.should.equal(true)
+    })
+})
+
+describe('Interprete', () => {
+    it('Se lee un valor del tipo solicitado correctamente', () => {
+        const interprete = new Interprete()
+
+        const code = `variables
+        entero a
+        inicio
+        leer(a)
+        fin`
+
+        const reporteCarga =  interprete.cargarPrograma(code)
+
+        reporteCarga.error.should.equal(false)
+
+        const reporteEjecucion = interprete.ejecutarHastaElFinal()
+
+        reporteEjecucion.error.should.equal(false)
+
+        reporteEjecucion.result.accion.should.equal(Accion.LEER)
+
+        const reporteLectura = interprete.leer('27')
+
+        reporteLectura.error.should.equal(false)
+    })
+
+    it('Leer un valor del tipo incorrecto devuelve un error', () => {
+        const interprete = new Interprete()
+
+        const code = `variables
+        entero a
+        inicio
+        leer(a)
+        fin`
+
+        const reporteCarga = interprete.cargarPrograma(code)
+
+        reporteCarga.error.should.equal(false)
+
+        const reporteEjecucion = interprete.ejecutarHastaElFinal()
+
+        reporteEjecucion.error.should.equal(false)
+
+        reporteEjecucion.result.accion.should.equal(Accion.LEER)
+
+        const reporteLectura = interprete.leer('23.4')
+
+        reporteLectura.error.should.equal(true)
+
+        const errorEncontrado = (reporteLectura.result as Errors.TipoIncorrectoValorLeido[])[0]
+
+        errorEncontrado.nombreVariable.should.equal('a')
+        errorEncontrado.tipoEsperado.should.equal('entero')
+        errorEncontrado.tipoLeido.should.equal('real')
     })
 })

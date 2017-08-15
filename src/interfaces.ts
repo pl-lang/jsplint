@@ -261,6 +261,7 @@ export namespace Errors {
     where: 'interpreter'
     tipoEsperado: string
     tipoLeido: string
+    nombreVariable: string
   }
 }
 
