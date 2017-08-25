@@ -76,8 +76,6 @@ export default class TrasnformadorEvaluable {
             const enunciadoTransformado = this.transformarEnunciado(enunciado)
 
             enunciados = [...enunciados, ...enunciadoTransformado]
-
-            this.ultimaLinea += enunciadoTransformado.length
         }
 
         const detener: N3.DETENER = { tipo: N3.TipoInstruccion.DETENER }
@@ -108,8 +106,6 @@ export default class TrasnformadorEvaluable {
             const enunciadoTransformado = this.transformarEnunciado(enunciado)
 
             enunciados = [...enunciados, ...enunciadoTransformado]
-
-            this.ultimaLinea += enunciadoTransformado.length
         }
 
         /**
@@ -127,26 +123,40 @@ export default class TrasnformadorEvaluable {
     }
 
     private transformarEnunciado(e: Typed.Statement): N3.Instruccion[] {
+        this.instrucciones[e.pos.line] = this.ultimaLinea
+
+        let instrucciones: N3.Instruccion[]
+
         switch (e.type) {
             case "assignment":
-                return this.transformarAsignacion(e)
+                instrucciones = this.transformarAsignacion(e)
+                break
             case "if":
-                return this.transformarSi(e)
+                instrucciones = this.transformarSi(e)
+                break
             case "while":
-                return this.transformarMientras(e)
+                instrucciones = this.transformarMientras(e)
+                break
             case "until":
-                return this.transformarHastaQue(e)
+                instrucciones = this.transformarHastaQue(e)
+                break
             case "return":
-                return this.transformarRetornar(e)
+                instrucciones = this.transformarRetornar(e)
+                break
             case "for":
-                return this.transformarPara(e)
+                instrucciones = this.transformarPara(e)
+                break
             case "call":
-                return this.transformarLlamado(e)
+                instrucciones = this.transformarLlamado(e)
+                break
         }
+        
+        this.ultimaLinea += instrucciones.length
+
+        return instrucciones
     }
 
     private transformarAsignacion(e: Typed.Assignment): N3.Instruccion[] {
-        this.instrucciones[e.pos.line] = this.ultimaLinea
 
         const variableObjetivo = e.left
         const expresionAsignada = e.right
@@ -250,7 +260,7 @@ export default class TrasnformadorEvaluable {
     }
 
     private transformarSi(e: Typed.If): N3.Instruccion[] {
-        this.instrucciones[e.pos.line] = this.ultimaLinea
+        const lineaBase = this.ultimaLinea
 
         // transformar condicion
 
@@ -281,7 +291,7 @@ export default class TrasnformadorEvaluable {
             // Si solo la rama verdadera tiene algo, agregar salto para los casos
             // en los que la condicion da falso
 
-            const numeroLinea = this.ultimaLinea + apilarCondicion.length + instruccionsVerdadero.length + 1
+            const numeroLinea = lineaBase + apilarCondicion.length + instruccionsVerdadero.length + 1
 
             const saltoEnFalso: N3.JIF = { tipo: N3.TipoInstruccion.JIF, numeroLinea }
 
@@ -293,7 +303,7 @@ export default class TrasnformadorEvaluable {
             // Si solo la rama verdadera tiene algo (por algun motivo...), agregar salto para los casos
             // en los que la condicion da verdadero
 
-            const numeroLinea = this.ultimaLinea + apilarCondicion.length + instruccionsFalso.length + 1
+            const numeroLinea = lineaBase + apilarCondicion.length + instruccionsFalso.length + 1
 
             const saltoEnVerdadero: N3.JIT = { tipo: N3.TipoInstruccion.JIT, numeroLinea }
 
@@ -306,11 +316,11 @@ export default class TrasnformadorEvaluable {
             // Un salto condicional para cuando la condicion da falso que permita ir a la rama falsa
             // Un salto incondicional como ultimo enunciado de la rama verdadera para saltearse la rama falsa
 
-            const inicioRamaFalsa = this.ultimaLinea + apilarCondicion.length + 1 + instruccionsVerdadero.length + 1
+            const inicioRamaFalsa = lineaBase + apilarCondicion.length + 1 + instruccionsVerdadero.length + 1
 
             const saltarARamaFalsa: N3.JIF = { tipo: N3.TipoInstruccion.JIF, numeroLinea: inicioRamaFalsa }
 
-            const finRamaFalsa = this.ultimaLinea + apilarCondicion.length + 1 + instruccionsVerdadero.length + 1 + instruccionsFalso.length
+            const finRamaFalsa = lineaBase + apilarCondicion.length + 1 + instruccionsVerdadero.length + 1 + instruccionsFalso.length
             
             const saltearRamaFalsa: N3.JMP = { tipo: N3.TipoInstruccion.JMP, numeroLinea: finRamaFalsa }
 
@@ -327,7 +337,7 @@ export default class TrasnformadorEvaluable {
     }
 
     private transformarMientras(e: Typed.While): N3.Instruccion[] {
-        this.instrucciones[e.pos.line] = this.ultimaLinea
+        const lineaBase = this.ultimaLinea
 
         const apilarCondicion = this.transformarExpresion(e.condition)
 
@@ -338,18 +348,18 @@ export default class TrasnformadorEvaluable {
         }
 
         // Salto condicional (solo salta si la condicion dio falso) para saltear el cuerpo del bucle
-        const saltearBucle = this.ultimaLinea + apilarCondicion.length + 1 + enunciadosBucle.length + 1
+        const saltearBucle = lineaBase + apilarCondicion.length + 1 + enunciadosBucle.length + 1
         const saltoCondicional: N3.JIF = { tipo: N3.TipoInstruccion.JIF, numeroLinea: saltearBucle }
 
         // Salto incondicional al principio de la evaluacion de la condicion
-        const volverACondicion = this.ultimaLinea
+        const volverACondicion = lineaBase
         const saltoIncondicional: N3.JMP = { tipo: N3.TipoInstruccion.JMP, numeroLinea: volverACondicion }
 
         return [...apilarCondicion, saltoCondicional, ...enunciadosBucle, saltoIncondicional]
     }
 
     private transformarHastaQue(e: Typed.Until): N3.Instruccion[] {
-        this.instrucciones[e.pos.line] = this.ultimaLinea
+        const lineaBase = this.ultimaLinea
 
         let enunciadosBucle: N3.Instruccion[] = []
 
@@ -360,14 +370,14 @@ export default class TrasnformadorEvaluable {
         const apilarCondicion = this.transformarExpresion(e.condition)
 
         // Salto condicional (solo si la condicion dio falso) para volver al tope del bucle
-        const volverATope = this.ultimaLinea
+        const volverATope = lineaBase
         const saltoCondicional: N3.JIF = { tipo: N3.TipoInstruccion.JIF, numeroLinea: volverATope }
 
         return [...enunciadosBucle, ...apilarCondicion, saltoCondicional]
     }
 
     private transformarPara(e: Typed.For): N3.Instruccion[] {
-        this.instrucciones[e.pos.line] = this.ultimaLinea
+        const lineaBase = this.ultimaLinea
 
         // inicializacion
         // evaluar valor final
@@ -393,19 +403,18 @@ export default class TrasnformadorEvaluable {
 
         const incremento = this.crearIncrementoPara(e.counter_init.left)
 
-        const base = this.ultimaLinea + inicializacion.length + valorFinal.length + 1 /* guardarValorFinal */ + condicion.length
+        const base = lineaBase + inicializacion.length + valorFinal.length + 1 /* guardarValorFinal */ + condicion.length
 
         const saltearBucle = base + enunciadosBucle.length + incremento.length + 2 // los dos saltos
         const saltoCondicional: N3.JIT = { tipo: N3.TipoInstruccion.JIT, numeroLinea: saltearBucle }
 
-        const volverACondicion = this.ultimaLinea + inicializacion.length + valorFinal.length + 1
+        const volverACondicion = lineaBase + inicializacion.length + valorFinal.length + 1
         const saltoIncondicional: N3.JMP = { tipo: N3.TipoInstruccion.JMP, numeroLinea: volverACondicion }
 
         return [...inicializacion, ...valorFinal, guardarValorFinal, ...condicion, saltoCondicional, ...enunciadosBucle, ...incremento, saltoIncondicional]
     }
 
     private transformarRetornar(e: Typed.Return): N3.Instruccion[] {
-        this.instrucciones[e.pos.line] = this.ultimaLinea
 
         const apilarExpresion = this.transformarExpresion(e.expression)
 
@@ -415,7 +424,6 @@ export default class TrasnformadorEvaluable {
     }
 
     private transformarLlamado(e: Typed.Call): N3.Instruccion[] {
-        this.instrucciones[e.pos.line] = this.ultimaLinea
 
         // La transformacion para los llamados a "leer" y "escribir" es diferente
         // a la transformacion de llamados a modulos del usuario.
